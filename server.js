@@ -9,58 +9,50 @@ const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 
-console.log("Bot Starting - Token:",!!TOKEN,"PhoneID:",!!PHONE_NUMBER_ID);
-
 const ASSETS = {
   posters: {
-    welcome: "https://ibb.co/FbptYg3F",
-    customer: "https://ibb.co/3XsWd3p",
-    driver: "https://ibb.co/2153CSjp",
-    business: "https://ibb.co/3yjrdVxk",
-    opportunity: "https://ibb.co/gbPYBbMt",
-    freeRecharge: "https://ibb.co/LXVpRKQp"
+    welcome: "https://i.ibb.co/FbptYg3F/welcome.jpg", // Change to your direct.jpg link if ibb.co page link fails
+    customer: "https://i.ibb.co/3XsWd3p/customer.jpg",
+    driver: "https://i.ibb.co/2153CSjp/driver.jpg",
+    business: "https://i.ibb.co/3yjrdVxk/business.jpg",
+    opportunity: "https://i.ibb.co/gbPYBbMt/opportunity.jpg",
+    freeRecharge: "https://i.ibb.co/LXVpRKQp/free-recharge.jpg"
   },
   apps: {
     customer: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
     driver: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia_driver"
   },
   videos: {
-    opp_1: "https://youtu.be/YOUR_DISTRICT_VIDEO_LINK", // <-- PASTE YOUR LINKS HERE
-    opp_2: "https://youtu.be/YOUR_CORPORATION_VIDEO",
-    opp_3: "https://youtu.be/YOUR_MUNICIPALITY_VIDEO",
-    opp_4: "https://youtu.be/YOUR_TAXI_CENTER_VIDEO",
-    opp_5: "https://youtu.be/YOUR_DIRECTORY_VIDEO"
+    main_opp: "https://youtu.be/8ZnDlvbgG_c?si=a5ONBZg6Oe8WuGTP",
+    opp_1: "https://youtu.be/_y2JeFHBnqg?si=igKYEPjGheuARuZe",
+    opp_2: "https://youtu.be/GqolfqgHiCU?si=ySBbc_qLD2mLyBmN",
+    opp_3: "https://youtu.be/GqolfqgHiCU?si=qTxRIIeq7iP5X5Jh",
+    opp_4: "https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW",
+    opp_5: "https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW"
   }
 };
 
 const sessions = {};
-function getSession(p) { if (!sessions[p]) sessions[p] = { lang: "EN", stage: "NEW", lastOpp: "" }; return sessions[p]; }
+function getSession(p) { if (!sessions[p]) sessions[p] = { lang: "EN", stage: "NEW", lastOpp: "", lastType: "" }; return sessions[p]; }
 
 async function sendText(to, body) {
-  if (!TOKEN ||!PHONE_NUMBER_ID) return;
   try { await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`, { messaging_product:"whatsapp", to, type:"text", text:{ body } }, { headers:{ Authorization:`Bearer ${TOKEN}` } }); }
-  catch (e) { console.log("Text err:", e.response?.data || e.message); }
+  catch (e) { console.log("Text err"); }
 }
 async function sendImage(to, link, caption) {
-  if (!TOKEN ||!PHONE_NUMBER_ID) return;
   try { await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`, { messaging_product:"whatsapp", to, type:"image", image:{ link, caption } }, { headers:{ Authorization:`Bearer ${TOKEN}` } }); }
-  catch (e) { console.log("Image err, fallback text"); await sendText(to, caption); }
+  catch (e) { console.log("Image failed, fallback"); await sendText(to, caption); }
 }
 async function sendButtons(to, body, buttons) {
-  if (!TOKEN ||!PHONE_NUMBER_ID) return;
   try { await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text: body }, action:{ buttons: buttons.map(b=>({ type:"reply", reply:{ id:b.id, title:b.title.substring(0,20) } })) } } }, { headers:{ Authorization:`Bearer ${TOKEN}` } }); }
-  catch (e) { console.log("Btn err:", e.response?.data || e.message); await sendText(to, body + "\nOptions: " + buttons.map(b=>b.title).join(" | ")); }
+  catch (e) { await sendText(to, body); }
 }
 async function sendList(to, body, buttonText, sections) {
-  if (!TOKEN ||!PHONE_NUMBER_ID) return;
   try { await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"list", body:{ text: body }, action:{ button: buttonText, sections } } }, { headers:{ Authorization:`Bearer ${TOKEN}` } }); }
-  catch (e) { console.log("List err:", e.response?.data || e.message); await sendText(to, body); }
+  catch (e) { await sendText(to, body); }
 }
 
-app.get('/webhook', (req, res) => {
-  if (req.query['hub.verify_token'] === VERIFY_TOKEN) res.send(req.query['hub.challenge']);
-  else res.sendStatus(403);
-});
+app.get('/webhook', (req, res) => { if (req.query['hub.verify_token'] === VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 
 app.post('/webhook', async (req, res) => {
   try {
@@ -70,118 +62,151 @@ app.post('/webhook', async (req, res) => {
     let input = msg.type === "interactive"? (msg.interactive.button_reply?.id || msg.interactive.list_reply?.id || "") : (msg.text?.body?.trim().toUpperCase() || "");
     const rawText = msg.text?.body || "";
     const s = getSession(from);
-    console.log("From:", from, "Input:", input, "Lang:", s.lang);
+    console.log("Input:", input, "Lang:", s.lang, "Stage:", s.stage);
 
-    // IF USER IS SENDING DATA AFTER INTERESTED
-    if (s.stage === "DATA" &&!input.startsWith("opp_") &&!["menu","back_to_opp","opp_interested"].includes(input)) {
-      console.log("LEAD CAPTURED:", from, rawText, "For:", s.lastOpp);
-      await sendText(from, s.lang==="ML"?"✅ വിവരങ്ങൾ ലഭിച്ചു! ഞങ്ങളുടെ ടീം ഉടൻ ബന്ധപ്പെടും 🙏":s.lang==="HI"?"✅ जानकारी मिली! हमारी टीम जल्द संपर्क करेगी 🙏":"✅ Details Received! Our team will contact you soon 🙏\nThank you for interest in " + s.lastOpp);
+    // LEAD CAPTURE - AFTER PROCEED / CLAIM
+    if (s.stage === "DATA" &&!["menu","back_to_opp","opp_interested","driver_benefit","driver_claim","activate","business_list"].includes(input) &&!input.startsWith("opp_") &&!["customer","driver","business","opportunity"].includes(input)) {
+      console.log("LEAD CAPTURED:", from, rawText, s.lastType, s.lastOpp);
+      await sendImage(from, ASSETS.posters.welcome, s.lang==="ML"?"✅ വിവരങ്ങൾ ലഭിച്ചു! ടീം ഉടൻ ബന്ധപ്പെടും":s.lang==="HI"?"✅ जानकारी मिली!":"✅ Details Received! Our team will contact you soon 🙏\nLead for: " + (s.lastOpp || s.lastType));
       s.stage = "MENU";
-      await sendButtons(from, s.lang==="ML"?"വേറെ എന്തെങ്കിലും അറിയണോ?":s.lang==="HI"?"क्या आप कुछ और जानना चाहते हैं?":"Want to explore more?", [
-        { id: "back_to_opp", title: s.lang==="ML"?"മറ്റ് അവസരങ്ങൾ":"Other Options" },
-        { id: "menu", title: "Main Menu" }
+      await sendButtons(from, s.lang==="ML"?"മറ്റെന്തെങ്കിലും അറിയണോ?":s.lang==="HI"?"क्या और जानना चाहते हैं?":"Want to explore more?", [
+        { id: "menu", title: "Main Menu" },
+        { id: "back_to_opp", title: "Other Options" }
       ]);
       return res.sendStatus(200);
     }
 
-    // 1. START
     if (s.stage === "NEW" || ["HI","HELLO","HEY","HLO","START"].includes(input)) {
       s.stage = "LANG";
-      await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏");
-      await sendButtons(from, "Please select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക", [
+      await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏\n50+ Franchisees in Kerala");
+      await sendButtons(from, "Select language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക", [
         { id: "lang_en", title: "English" }, { id: "lang_hi", title: "Hindi" }, { id: "lang_ml", title: "Malayalam" }
       ]);
       return res.sendStatus(200);
     }
 
-    // 2. LANG
     if (s.stage === "LANG" || input.startsWith("lang_")) {
-      if (input.includes("lang_en") || input==="A") s.lang="EN";
-      else if (input.includes("lang_hi") || input==="B") s.lang="HI";
-      else if (input.includes("lang_ml") || input==="C") s.lang="ML";
+      if (input.includes("en")||input==="A") s.lang="EN"; else if (input.includes("hi")||input==="B") s.lang="HI"; else if (input.includes("ml")||input==="C") s.lang="ML";
       s.stage = "MENU";
       const menuText = s.lang==="ML"?"നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?":s.lang==="HI"?"आप क्या जानना चाहते हैं?":"What would you like to know?";
-      const custDesc = s.lang==="ML"?"ക്യാബ് അല്ലെങ്കിൽ ബിസിനസ്":s.lang==="HI"?"कैब या बिजनेस खोजें":"Find a cab or business";
-      const driverDesc = s.lang==="ML"?"ചേരൂ & സമ്പാദിക്കൂ":s.lang==="HI"?"जुड़ें और कमाएं":"Join & earn";
-      const busDesc = s.lang==="ML"?"ഷോപ്പ് രജിസ്റ്റർ ചെയ്യുക":s.lang==="HI"?"दुकान रजिस्टर करें":"Register shop";
       await sendList(from, menuText, "Main Menu", [{ title:"Menu", rows:[
-        { id:"customer", title:s.lang==="ML"?"കസ്റ്റമർ":s.lang==="HI"?"कस्टमर":"Customer", description:custDesc },
-        { id:"driver", title:s.lang==="ML"?"ഡ്രൈവർ":s.lang==="HI"?"ड्राइवर":"Driver", description:driverDesc },
-        { id:"business", title:s.lang==="ML"?"ബിസിനസ്":s.lang==="HI"?"बिजनेस":"Business", description:busDesc },
+        { id:"customer", title:s.lang==="ML"?"കസ്റ്റമർ":s.lang==="HI"?"कस्टमर":"Customer", description: s.lang==="ML"?"ക്യാബ് അല്ലെങ്കിൽ ബിസിനസ്":s.lang==="HI"?"कैब या बिजनेस खोजें":"Find a cab or business" },
+        { id:"driver", title:s.lang==="ML"?"ഡ്രൈവർ":s.lang==="HI"?"ड्राइवर":"Driver", description: s.lang==="ML"?"ചേരൂ & സമ്പാദിക്കൂ":s.lang==="HI"?"जुड़ें और कमाएं":"Join & earn" },
+        { id:"business", title:s.lang==="ML"?"ബിസിനസ്":s.lang==="HI"?"बिजनेस":"Business", description: s.lang==="ML"?"ഷോപ്പ് രജിസ്റ്റർ ചെയ്യുക":s.lang==="HI"?"दुकान रजिस्टर करें":"Register shop" },
         { id:"opportunity", title:s.lang==="ML"?"അവസരങ്ങൾ":s.lang==="HI"?"अवसर":"Opportunities", description:"Franchise" }
       ]}]);
       return res.sendStatus(200);
     }
 
-    // 3. MAIN MENU - WITH YOUR NEW DESCRIPTION
+    // MAIN MENU
     if (["customer","driver","business","opportunity","menu"].includes(input)) {
-      const custDesc = s.lang==="ML"?"ക്യാബ് അല്ലെങ്കിൽ ബിസിനസ്":s.lang==="HI"?"कैब या बिजनेस खोजें":"Find a cab or business";
-      const driverDesc = s.lang==="ML"?"ചേരൂ & സമ്പാദിക്കൂ":s.lang==="HI"?"जुड़ें और कमाएं":"Join & earn";
-      const busDesc = s.lang==="ML"?"ഷോപ്പ് രജിസ്റ്റർ ചെയ്യുക":s.lang==="HI"?"दुकान रजिस्टर करें":"Register shop";
       if (input==="customer") {
-        await sendImage(from, ASSETS.posters.customer, "Customer - Find a cab or business");
-        await sendButtons(from, `Download: ${ASSETS.apps.customer}`, [{id:"activate",title:"Claim"},{id:"menu",title:"Main Menu"}]);
+        await sendImage(from, ASSETS.posters.customer, s.lang==="ML"?"കസ്റ്റമർ ആപ്പ് - ക്യാബ് അല്ലെങ്കിൽ ബിസിനസ് കണ്ടെത്തുക":s.lang==="HI"?"कस्टमर - कैब या बिजनेस खोजें":"Customer - Find a cab or business\n✅ Taxi\n✅ Delivery\n✅ Offers");
+        await sendButtons(from, `📲 Download Customer App:\n${ASSETS.apps.customer}`, [
+          { id:"activate", title: s.lang==="ML"?"ക്ലെയിം ചെയ്യുക":s.lang==="HI"?"क्लेम करें":"Claim Now" },
+          { id:"menu", title:"Main Menu" }
+        ]);
       } else if (input==="driver") {
-        await sendImage(from, ASSETS.posters.driver, "Driver");
-        await sendButtons(from, `Auto Rs.33 Car Rs.49 - ${ASSETS.apps.driver}`, [{id:"driver_benefit",title:"Free Recharge"},{id:"menu",title:"Main Menu"}]);
+        await sendImage(from, ASSETS.posters.driver, "Driver - Join & Earn Daily!\nAuto Rs.33 Car Rs.49");
+        await sendButtons(from, `🚕 Driver App:\n${ASSETS.apps.driver}\n\nClick Free Recharge to know benefits`, [
+          { id:"driver_benefit", title:"Free Recharge" },
+          { id:"menu", title:"Main Menu" }
+        ]);
       } else if (input==="business") {
-        await sendImage(from, ASSETS.posters.business, "Business Registration");
-        await sendButtons(from, "Register your business", [{id:"business_list",title:"How to List"},{id:"menu",title:"Main Menu"}]);
+        await sendImage(from, ASSETS.posters.business, "Business Registration - All India");
+        await sendButtons(from, "Register your shop & get more customers", [
+          { id:"business_list", title:"How to List" },
+          { id:"menu", title:"Main Menu" }
+        ]);
       } else if (input==="opportunity") {
         await sendImage(from, ASSETS.posters.opportunity, "4 Opportunities Under One Brand");
-        await sendList(from, s.lang==="ML"?"അവസരം തിരഞ്ഞെടുക്കുക":s.lang==="HI"?"अवसर चुनें":"Select Opportunity", "Select", [{title:"Opp", rows:[
-          {id:"opp_1",title:"District Franchisee"},{id:"opp_2",title:"Corporation"},{id:"opp_3",title:"Municipality"},{id:"opp_4",title:"Taxi Center"},{id:"opp_5",title:"Directory"}
+        await sendText(from, `🎥 *Opportunity Overview:*\n${ASSETS.videos.main_opp}`);
+        await sendList(from, "Select Franchisee Level", "Select", [{title:"Levels", rows:[
+          {id:"opp_1",title:"District Franchisee", description:"Full District"},
+          {id:"opp_2",title:"Corporation Franchisee", description:"Corporation"},
+          {id:"opp_3",title:"Municipality Franchisee", description:"Municipality"},
+          {id:"opp_4",title:"Taxi Business Center", description:"Online Taxi"},
+          {id:"opp_5",title:"Business Listing Center", description:"Business Listing"}
         ]}]);
       } else if (input==="menu") {
         const menuText = s.lang==="ML"?"നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?":s.lang==="HI"?"आप क्या जानना चाहते हैं?":"What would you like to know?";
-        await sendList(from, menuText, "Main Menu", [{title:"Menu", rows:[
-          { id:"customer", title:s.lang==="ML"?"കസ്റ്റമർ":s.lang==="HI"?"कस्टमर":"Customer", description:custDesc },
-          { id:"driver", title:s.lang==="ML"?"ഡ്രൈവർ":s.lang==="HI"?"ड्राइवर":"Driver", description:driverDesc },
-          { id:"business", title:s.lang==="ML"?"ബിസിനസ്":s.lang==="HI"?"बिजनेस":"Business", description:busDesc },
+        await sendList(from, menuText, "Main Menu", [{ title:"Menu", rows:[
+          { id:"customer", title:s.lang==="ML"?"കസ്റ്റമർ":s.lang==="HI"?"कस्टमर":"Customer", description: s.lang==="ML"?"ക്യാബ് അല്ലെങ്കിൽ ബിസിനസ്":s.lang==="HI"?"कैब या बिजनेस खोजें":"Find a cab or business" },
+          { id:"driver", title:s.lang==="ML"?"ഡ്രൈവർ":s.lang==="HI"?"ड्राइवर":"Driver", description: s.lang==="ML"?"ചേരൂ & സമ്പാദിക്കൂ":s.lang==="HI"?"जुड़ें और कमाएं":"Join & earn" },
+          { id:"business", title:s.lang==="ML"?"ബിസിനസ്":s.lang==="HI"?"बिजनेस":"Business", description: s.lang==="ML"?"ഷോപ്പ് രജിസ്റ്റർ ചെയ്യുക":s.lang==="HI"?"दुकान रजिस्टर करें":"Register shop" },
           { id:"opportunity", title:s.lang==="ML"?"അവസരങ്ങൾ":s.lang==="HI"?"अवसर":"Opportunities", description:"Franchise" }
         ]}]);
       }
       return res.sendStatus(200);
     }
 
-    // 4. FRANCHISEE VIDEO + CONFIRMATION - THIS WAS MISSING BEFORE - NOW FIXED
+    // DRIVER FREE RECHARGE - IMAGE MAINTAINED
+    if (input==="driver_benefit") {
+      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 FREE Recharge Benefit!\nList vehicle & get FREE recharge");
+      await sendButtons(from, `Get FREE recharge now:\n${ASSETS.apps.driver}`, [
+        { id:"driver_claim", title:"Claim Now" },
+        { id:"menu", title:"Main Menu" }
+      ]);
+      return res.sendStatus(200);
+    }
+
+    // ALL CLAIM HANDLERS - FIXED - NO MORE "Type Hi to restart"
+    if (input==="driver_claim") {
+      s.lastType = "Driver - Free Recharge Claim";
+      await sendImage(from, ASSETS.posters.driver, "Driver Claim Received!");
+      await sendText(from, s.lang==="ML"?"ദയവായി വിവരങ്ങൾ അയയ്ക്കുക:\nName:\nMobile:\nVehicle No:\nLocation:":s.lang==="HI"?"कृपया विवरण भेजें:\nName:\nMobile:\nVehicle:":"Please send details for Driver Claim:\nName:\nMobile:\nVehicle No:\nLocation:");
+      s.stage="DATA";
+      return res.sendStatus(200);
+    }
+
+    if (input==="activate") {
+      s.lastType = "Customer - Activation";
+      await sendImage(from, ASSETS.posters.customer, "Customer Activation");
+      await sendText(from, s.lang==="ML"?"വിവരങ്ങൾ അയയ്ക്കുക:\nName:\nMobile:\nLocation:":s.lang==="HI"?"विवरण भेजें:":"Please send for Customer Activation:\nName:\nMobile:\nLocation:");
+      s.stage="DATA";
+      return res.sendStatus(200);
+    }
+
+    if (input==="business_list") {
+      s.lastType = "Business Listing";
+      await sendImage(from, ASSETS.posters.business, "How to List Your Business");
+      await sendText(from, s.lang==="ML"?"ബിസിനസ് രജിസ്റ്റർ ചെയ്യാൻ വിവരങ്ങൾ അയയ്ക്കുക:\nShop Name:\nMobile:\nLocation:":s.lang==="HI"?"बिजनेस रजिस्टर के लिए विवरण भेजें:":"Send details to Register Business:\nShop Name:\nMobile:\nCategory:\nLocation:");
+      s.stage="DATA";
+      return res.sendStatus(200);
+    }
+
+    // FRANCHISEE VIDEOS
     const OPP_DETAILS = {
-      opp_1: { EN: "💼 *District Franchisee*\nFull District Rights\nHigh Income\nInvestment: Contact us", HI: "💼 *जिला फ्रेंचाइजी*", ML: "💼 *ജില്ലാ ഫ്രാഞ്ചൈസി*" },
-      opp_2: { EN: "🏙️ *Corporation Franchisee*", HI: "🏙️ *निगम*", ML: "🏙️ *കോർപ്പറേഷൻ*" },
-      opp_3: { EN: "🏘️ *Municipality Franchisee*", HI: "🏘️ *नगर पालिका*", ML: "🏘️ *മുനിസിപ്പാലിറ്റി*" },
-      opp_4: { EN: "🚕 *Taxi Business Center*", HI: "🚕 *टैक्सी सेंटर*", ML: "🚕 *ടാക്സി സെന്റർ*" },
-      opp_5: { EN: "📖 *Directory Business Center*", HI: "📖 *डायरेक्टरी*", ML: "📖 *ഡയറക്ടറി*" }
+      opp_1: "💼 *District Level Franchisee*\nFull District Rights",
+      opp_2: "🏙️ *Corporation Level Franchisee*\nCorporation Rights",
+      opp_3: "🏘️ *Municipality Level Franchisee*\nMunicipality Rights",
+      opp_4: "🚕 *Business Center - Online Taxi*",
+      opp_5: "📖 *Business Center - Business Listing*"
     };
 
     if (input.startsWith("opp_") && OPP_DETAILS[input]) {
       s.lastOpp = input;
-      const detail = OPP_DETAILS[input][s.lang] || OPP_DETAILS[input]["EN"];
       const video = ASSETS.videos[input];
-      await sendText(from, `${detail}\n\n🎥 *Watch Video:*\n${video}\n\n${s.lang==="ML"?"വീഡിയോ കണ്ടതിനു ശേഷം തുടരുക":s.lang==="HI"?"वीडियो देखने के बाद आगे बढ़ें":"Watch video then proceed"}`);
-      await sendButtons(from, s.lang==="ML"?"നിങ്ങൾക്ക് തുടരാൻ താൽപ്പര്യമുണ്ടോ?":s.lang==="HI"?"क्या आप आगे बढ़ना चाहते हैं?":"Do you want to proceed further?", [
-        { id: "opp_interested", title: s.lang==="ML"?"മുന്നോട്ട്":s.lang==="HI"?"आगे बढ़ें":"Proceed" },
-        { id: "back_to_opp", title: s.lang==="ML"?"മറ്റ് അവസരങ്ങൾ":s.lang==="HI"?"अन्य अवसर":"Other Options" },
+      await sendImage(from, ASSETS.posters.opportunity, OPP_DETAILS[input]);
+      await sendText(from, `🎥 *Watch Video:*\n${video}\n\nWatch video then proceed`);
+      await sendButtons(from, "Do you want to proceed further?", [
+        { id: "opp_interested", title: "Proceed" },
+        { id: "back_to_opp", title: "Other Options" },
         { id: "menu", title: "Main Menu" }
       ]);
       return res.sendStatus(200);
     }
 
     if (input==="back_to_opp") {
-      await sendList(from, s.lang==="ML"?"മറ്റ് അവസരങ്ങൾ":s.lang==="HI"?"अन्य अवसर चुनें":"Select Another Opportunity", "Select", [{title:"Opp", rows:[
-        {id:"opp_1",title:"District Franchisee"},{id:"opp_2",title:"Corporation"},{id:"opp_3",title:"Municipality"},{id:"opp_4",title:"Taxi Center"},{id:"opp_5",title:"Directory"}
+      await sendList(from, "Select Another Opportunity", "Select", [{title:"Levels", rows:[
+        {id:"opp_1",title:"District Franchisee"},{id:"opp_2",title:"Corporation"},{id:"opp_3",title:"Municipality"},{id:"opp_4",title:"Taxi Center"},{id:"opp_5",title:"Business Listing"}
       ]}]);
       return res.sendStatus(200);
     }
 
     if (input==="opp_interested") {
-      await sendText(from, s.lang==="ML"?"ദയവായി വിവരങ്ങൾ അയയ്ക്കുക:\nName:\nMobile:\nLocation:\nInvestment:":s.lang==="HI"?"कृपया विवरण भेजें:\nName:\nMobile:\nLocation:":`Please send details:\nName:\nMobile:\nLocation:\nFranchisee: ${s.lastOpp}\n\nOur team will call you`);
+      await sendText(from, `Please send details for ${s.lastOpp}:\nName:\nMobile:\nLocation:\nInvestment Range:`);
       s.stage="DATA";
-      return res.sendStatus(200);
-    }
-
-    if (input==="driver_benefit") {
-      await sendImage(from, ASSETS.posters.freeRecharge, "FREE Recharge!");
-      await sendButtons(from, `Get FREE recharge - ${ASSETS.apps.driver}`, [{id:"driver_claim",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
 
@@ -193,7 +218,5 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => res.send('Bizmapia - Video + Confirmation ✅'));
+app.get('/', (req, res) => res.send('Bizmapia Bot - All Images + Videos Fixed ✅'));
 app.listen(PORT, () => console.log(`Running ${PORT}`));
-process.on('unhandledRejection', r => console.log("Rej:", r));
-process.on('uncaughtException', e => console.log("Exc:", e.message));
