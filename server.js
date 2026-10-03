@@ -1,1 +1,1 @@
-curl -X POST "https://graph.facebook.com/v20.0/840420252491106/messages" -H "Authorization: Bearer YOUR_REAL_TOKEN" -H "Content-Type: application/json" -d "{\"messaging_product\":\"whatsapp\",\"to\":\"91YOUR_PERSONAL_NUMBER\",\"type\":\"text\",\"text\":{\"body\":\"Test from 85901\"}}"
+curl -X POST "https://graph.facebook.com/v20.0/840420252491106/messages" -H "Authorization: Bearer YOUR_REAL_TOKEN" -H "Content-Type: application/json" -d "{\"messaging_product\":\"whatsapp\",\"to\":\"919567742507\",\"type\":\"text\",\"text\":{\"body\":\"Test from 85901\"}}"
