@@ -10,6 +10,10 @@ const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 const REMINDER_FILE = "/tmp/reminders.json";
+const LEADS_FILE = "/tmp/leads.json";
+
+// YOUR GOOGLE SHEET CONNECTED ✅
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw1Fbh_oWL7J_Bd3_-3HXpyF6FvEMw7XjqBOjVjF50eGcuTyCdEkBRSohYfiBkZNJ4i/exec";
 
 const ASSETS = {
   posters: {
@@ -46,7 +50,21 @@ async function sendList(to, body, buttonText, sections){ try{ await axios.post(`
 
 function loadReminders(){ try{ if(fs.existsSync(REMINDER_FILE)) return JSON.parse(fs.readFileSync(REMINDER_FILE)); }catch(e){} return []; }
 function saveReminders(list){ try{ fs.writeFileSync(REMINDER_FILE, JSON.stringify(list)); }catch(e){} }
-function addReminder(phone, type){ const list = loadReminders(); list.push({ phone, type, claimedAt: Date.now(), sent1h:false, sent24h:false, sent48h:false, sent72h:false }); saveReminders(list); console.log(`CRM_LEAD | Phone:${phone} | Type:${type}`); }
+
+async function saveLeadToSheet(phone, data){
+  try{
+    let leads = [];
+    if(fs.existsSync(LEADS_FILE)) leads = JSON.parse(fs.readFileSync(LEADS_FILE));
+    leads.push({ time: new Date().toISOString(), phone,...data });
+    fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+  }catch(e){}
+  try{
+    await axios.post(GOOGLE_SHEET_URL, { phone,...data });
+    console.log("✅ Sheet Saved:", phone, data.type);
+  }catch(e){ console.log("Sheet fail:", e.message); }
+}
+
+function addReminder(phone, type){ const list = loadReminders(); list.push({ phone, type, claimedAt: Date.now(), sent1h:false, sent24h:false, sent48h:false, sent72h:false }); saveReminders(list); saveLeadToSheet(phone, {type:type}); }
 async function checkReminders(){
   let list = loadReminders(); let changed=false; const now=Date.now();
   for(let r of list){
@@ -60,50 +78,47 @@ async function checkReminders(){
 }
 setInterval(checkReminders, 5*60*1000);
 
-function getOppName(id){
-  const map={
-    OPP_1:"District Franchisee (10L > 15L Investment)",
-    OPP_2:"Corporation Franchisee (5L Investment)",
-    OPP_3:"Municipality Franchisee (4L Investment)",
-    OPP_4:"Business Center - Online Taxi (1L Investment)",
-    OPP_5:"Business Center - Business Directory (1L Investment)"
-  };
-  return map[id]||id;
-}
+function getOppName(id){ const map={ OPP_1:"District Franchisee (10L > 15L)", OPP_2:"Corporation Franchisee (5L)", OPP_3:"Municipality Franchisee (4L)", OPP_4:"Business Center - Online Taxi (1L)", OPP_5:"Business Center - Business Directory (1L)" }; return map[id]||id; }
 function getOppFeeCard(id){
   const cards={
-    OPP_1: `━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹10 Lakhs to ₹15 Lakhs\n📍 *Coverage:* Full District Rights\n👑 *Level:* Highest - 1 District = 1 Franchisee\n💸 *Income:* Highest Income Potential\n━━━━━━━━━━━━━━━━━━━━━━`,
-    OPP_2: `━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹5 Lakhs Only\n📍 *Coverage:* Full Corporation Rights\n🏙️ *Level:* Corporation Level\n💸 *Income:* High City Level Income\n━━━━━━━━━━━━━━━━━━━━━━`,
-    OPP_3: `━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹4 Lakhs Only\n📍 *Coverage:* Municipality Rights\n🏡 *Level:* Municipality Level\n💸 *Income:* Town Level Income\n━━━━━━━━━━━━━━━━━━━━━━`,
-    OPP_4: `━━━━━━━━━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - ONLINE TAXI*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only\n📍 *Coverage:* Taxi Business Center\n🚖 *Business:* Online Taxi\n💸 *Income:* Daily Rides Income\n━━━━━━━━━━━━━━━━━━━━━━`,
-    OPP_5: `━━━━━━━━━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - BUSINESS DIRECTORY*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only\n📍 *Coverage:* Business Listing Center\n📚 *Business:* Business Directory\n💸 *Income:* Listing Income\n━━━━━━━━━━━━━━━━━━━━━━`
+    OPP_1: `━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹10 Lakhs to ₹15 Lakhs\n📍 *Coverage:* Full District Rights\n👑 *Level:* Highest\n━━━━━━━━━━━━━━━━━━━━━━`,
+    OPP_2: `━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹5 Lakhs Only\n📍 *Coverage:* Full Corporation Rights\n━━━━━━━━━━━━━━━━━━━━━━`,
+    OPP_3: `━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹4 Lakhs Only\n━━━━━━━━━━━━━━━━━━━━━━`,
+    OPP_4: `━━━━━━━━━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - ONLINE TAXI*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only\n━━━━━━━━━━━━━━━━━━━━━━`,
+    OPP_5: `━━━━━━━━━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - BUSINESS DIRECTORY*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only\n━━━━━━━━━━━━━━━━━━━━━━`
   };
   return cards[id]||"";
 }
 function scheduleOppDecision(phone, oppName){
   if(oppTimers[phone]) clearTimeout(oppTimers[phone]);
   oppTimers[phone] = setTimeout(async ()=>{
-    await sendText(phone, `⏰ *You want to grab this opportunity?*\n\nYou viewed *${oppName}* 5 mins ago.`);
+    await sendText(phone, `⏰ *You want to grab this opportunity?*\nYou viewed *${oppName}* 5 mins ago.`);
     await sendButtons(phone, "You want to grab this opportunity?", [{id:"opp_yes", title:"Yes"}, {id:"opp_no", title:"No"}, {id:"opp_search", title:"Search Other"}]);
   }, 5*60*1000);
 }
 
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 app.get('/check-reminders', async (req,res)=>{ await checkReminders(); res.send('Checked'); });
-app.get('/',(req,res)=>res.send('Bizmapia Bot Final Fixed ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot with Sheet CRM ✅'));
+app.get('/admin/leads', (req,res)=>{
+  try{
+    if(!fs.existsSync(LEADS_FILE)) return res.send("No leads yet");
+    const leads = JSON.parse(fs.readFileSync(LEADS_FILE));
+    let html = "<h2>Bizmapia CRM Leads</h2><table border=1 cellpadding=8><tr><th>Time</th><th>Phone</th><th>Type</th><th>Franchise</th><th>Name</th><th>Contact</th><th>Place</th><th>Occupation</th></tr>";
+    leads.reverse().forEach(l=>{ html+=`<tr><td>${l.time}</td><td>${l.phone}</td><td>${l.type||''}</td><td>${l.franchise||''}</td><td>${l.name||''}</td><td>${l.contact||''}</td><td>${l.place||''}</td><td>${l.occupation||''}</td></tr>`; });
+    html+="</table>"; res.send(html);
+  }catch(e){ res.send("Error: "+e.message); }
+});
 
 app.post('/webhook', async (req,res)=>{
   try{
     const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
     if(!msg) return res.sendStatus(200);
     const from = msg.from;
-
-    // ===== CRITICAL FIX FOR YOUR SCREENSHOT BUG - Uppercase all IDs =====
     let rawId = msg.type==="interactive"? (msg.interactive.button_reply?.id || msg.interactive.list_reply?.id || "") : "";
     let input = rawId? rawId.toUpperCase() : (msg.text?.body?.trim().toUpperCase() || "");
     const rawText = msg.text?.body || "";
     const s = getSession(from);
-
     if(input.includes("OPP") && custTimers[from]) clearTimeout(custTimers[from]);
 
     if(s.stage==="FORM_NAME"){ s.form.name = rawText; s.stage="FORM_CONTACT"; await sendText(from, `Thanks ${rawText} 🙏\n\n*Contact number :-*\nEnter mobile:`); return res.sendStatus(200); }
@@ -117,19 +132,15 @@ app.post('/webhook', async (req,res)=>{
     }
     if(s.stage==="FORM_OCCUPATION" || input.startsWith("OCC_")){
       if(input.startsWith("OCC_")){ const m={OCC_RUNNING:"Running business",OCC_PLANNING:"Planning to start a business",OCC_EMPLOYEE:"Employee",OCC_PARTNER:"Business Partner",OCC_NRI:"NRI",OCC_RETIRED:"Retired"}; s.form.occupation = m[input]||input; } else { s.form.occupation = rawText; }
-      console.log(`CRM_LEAD | Phone:${from} | Franchise:${s.lastOpp} | Name:${s.form.name} | Contact:${s.form.contact} | Place:${s.form.place} | Occupation:${s.form.occupation}`);
-      await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nEnquiry for ${getOppName(s.lastOpp)} received!\nName: ${s.form.name}\nContact: ${s.form.contact}\nPlace: ${s.form.place}\nOccupation: ${s.form.occupation}\nTeam will contact in 24h 🙏`);
-      s.stage="MENU"; s.form={};
-      return res.sendStatus(200);
+      await saveLeadToSheet(from, { type:"Franchisee_Lead", franchise:getOppName(s.lastOpp), name:s.form.name, contact:s.form.contact, place:s.form.place, occupation:s.form.occupation });
+      await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nEnquiry for ${getOppName(s.lastOpp)} received!\nOur team will contact in 24h 🙏`);
+      s.stage="MENU"; s.form={}; return res.sendStatus(200);
     }
-
     if(s.stage==="DATA" && rawText.length>3 &&!input.startsWith("OPP_") &&!input.startsWith("OCC_") &&!["MENU","VIEW_OPP_LEVELS","OPP_YES","OPP_NO","OPP_SEARCH","DRIVER_BENEFIT","DRIVER_CLAIM","ACTIVATE","BUSINESS_LIST","CUSTOMER","DRIVER","BUSINESS","OPPORTUNITY"].includes(input)){
-      console.log(`CRM_LEAD | Phone:${from} | Type:${s.lastOpp} | Details:${rawText}`);
+      await saveLeadToSheet(from, { type: s.lastOpp||"Business_Lead", details: rawText });
       await sendImage(from, ASSETS.posters.welcome, "✅ Details Received! Team will contact soon 🙏");
-      s.stage="MENU"; await sendButtons(from,"Explore more?",[{id:"menu",title:"Main Menu"}]);
-      return res.sendStatus(200);
+      s.stage="MENU"; return res.sendStatus(200);
     }
-
     if(s.stage==="NEW" || ["HI","HELLO","HEY","HLO","START","HAI"].includes(input)){
       s.stage="LANG";
       await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏");
@@ -148,34 +159,33 @@ app.post('/webhook', async (req,res)=>{
       ]}]);
       return res.sendStatus(200);
     }
-
     if(input==="CUSTOMER"){
-      await sendImage(from, ASSETS.posters.customer, "Customer - Find a cab or business\n✅ Taxi ✅ Delivery ✅ Offers");
+      await sendImage(from, ASSETS.posters.customer, "Customer - Find a cab or business");
       await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}`);
       await sendButtons(from,"Choose:",[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="ACTIVATE"){
-      console.log(`CRM_LEAD | Phone:${from} | Type:Customer_ClaimNow`);
+      await saveLeadToSheet(from, { type:"Customer_ClaimNow" });
       await sendText(from,`✅ *Offer Activated!*\n📲 ${ASSETS.apps.customer}`);
       if(custTimers[from]) clearTimeout(custTimers[from]);
       custTimers[from]=setTimeout(async()=>{ await sendText(from,`⏰ *Reminder: Activate your trip discount*\n${ASSETS.apps.customer}`); },5*60*1000);
       return res.sendStatus(200);
     }
     if(input==="DRIVER"){
-      await sendImage(from, ASSETS.posters.driver, "Driver - Join & Earn Daily!\nAuto Rs.33 Car Rs.49\n✅ Benefit free recharge by listing your vehicle");
+      await sendImage(from, ASSETS.posters.driver, "Driver - Join & Earn Daily!\nAuto Rs.33 Car Rs.49");
       await sendText(from,`🚕 *Benefit free recharge by listing your vehicle*\n📲 ${ASSETS.apps.driver}`);
       await sendButtons(from,"Claim:",[{id:"driver_benefit",title:"Free Recharge"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="DRIVER_BENEFIT"){
-      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 FREE Recharge Benefit! List your vehicle & get FREE recharge");
+      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 FREE Recharge Benefit!");
       await sendText(from,`📲 Get FREE Recharge:\n${ASSETS.apps.driver}`);
       await sendButtons(from,"Claim:",[{id:"driver_claim",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="DRIVER_CLAIM"){
-      await sendText(from,`✅ *Your free recharge going to activate on your account, keep your vehicle verified and ready to accept trip*\n📲 ${ASSETS.apps.driver}`);
+      await sendText(from,`✅ *Your free recharge going to activate*\n📲 ${ASSETS.apps.driver}`);
       addReminder(from,"Driver_FreeRecharge");
       return res.sendStatus(200);
     }
@@ -187,7 +197,7 @@ app.post('/webhook', async (req,res)=>{
     if(input==="BUSINESS_LIST"){ await sendText(from,"Send details:\nShop Name:\nMobile:\nCategory:\nLocation:"); s.stage="DATA"; s.lastOpp="Business"; return res.sendStatus(200); }
 
     if(input==="OPPORTUNITY" || input==="OPPORTUNITIES_FRANCHISE" || input==="VIEW_OPP_LEVELS" || input==="OPP_SEARCH"){
-      await sendImage(from, ASSETS.posters.opportunity, "4 Business Opportunities Under One Brand - Bizmapia\nGrow Your Business And Build A Successful Future\nHigh Returns & Complete Support!");
+      await sendImage(from, ASSETS.posters.opportunity, "4 Business Opportunities Under One Brand - Bizmapia\nHigh Returns & Complete Support!");
       await new Promise(r=>setTimeout(r,1000));
       await sendText(from,`Want to know about Bizmapia company? Click the video link here 👇\n\n🎥 ${ASSETS.videos.main_opp}`);
       await new Promise(r=>setTimeout(r,1000));
@@ -205,31 +215,25 @@ app.post('/webhook', async (req,res)=>{
         {id:"opp_3", title:"Municipality (4L)"}
       ]);
       await new Promise(r=>setTimeout(r,800));
-      await sendButtons(from,"More Opportunities - Select any one to proceed:",[
+      await sendButtons(from,"More Opportunities:",[
         {id:"opp_4", title:"Taxi Center (1L)"},
         {id:"opp_5", title:"Directory (1L)"},
         {id:"menu", title:"Main Menu"}
       ]);
       return res.sendStatus(200);
     }
-
     if(["OPP_1","OPP_2","OPP_3","OPP_4","OPP_5"].includes(input)){
       s.lastOpp = input;
       await sendImage(from, ASSETS.posters.opportunity, `${getOppName(input)} - Bizmapia`);
       await new Promise(r=>setTimeout(r,800));
       await sendText(from, getOppFeeCard(input));
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from,`🎥 *${getOppName(input)} - Watch to get full awareness:*\n${ASSETS.videos[input.toLowerCase()]}\n\nWatch full video to understand investment, income & infrastructure.`);
+      await sendText(from,`🎥 *${getOppName(input)} - Watch to get full awareness:*\n${ASSETS.videos[input.toLowerCase()]}`);
       scheduleOppDecision(from, getOppName(input));
       await new Promise(r=>setTimeout(r,800));
-      await sendButtons(from,"You want to grab this opportunity?",[
-        {id:"opp_yes", title:"Yes"},
-        {id:"opp_no", title:"No"},
-        {id:"opp_search", title:"Search Other"}
-      ]);
+      await sendButtons(from,"You want to grab this opportunity?",[{id:"opp_yes", title:"Yes"},{id:"opp_no", title:"No"},{id:"opp_search", title:"Search Other"}]);
       return res.sendStatus(200);
     }
-
     if(input==="OPP_YES"){
       if(oppTimers[from]) clearTimeout(oppTimers[from]);
       s.stage="FORM_NAME"; s.form={};
@@ -238,18 +242,16 @@ app.post('/webhook', async (req,res)=>{
     }
     if(input==="OPP_NO"){
       if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      console.log(`CRM_LEAD | Phone:${from} | Type:Opted_Out | Franchise:${s.lastOpp}`);
-      await sendText(from, `You are successfully opt out from our business enquiry 🙏\n\nIf you change mind, type *HI* to start again.`);
+      await saveLeadToSheet(from, { type:"Opted_Out", franchise:getOppName(s.lastOpp) });
+      await sendText(from, `You are successfully opt out 🙏\nType *HI* to start again.`);
       s.stage="NEW"; return res.sendStatus(200);
     }
-
     if(input==="MENU"){
       await sendList(from,"What would you like to know?","Main Menu",[{title:"Menu",rows:[
         {id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"}
       ]}]);
       return res.sendStatus(200);
     }
-
     await sendText(from,"━━━━━━━━━━━━━━━\n🔄 *RESTART MENU*\n👉 Type *HI* to Start Again 👈\n━━━━━━━━━━━━━━━\n\nJust send *Hi* 🙏");
     res.sendStatus(200);
   }catch(err){ console.log(err); res.sendStatus(200); }
