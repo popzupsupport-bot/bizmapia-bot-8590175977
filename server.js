@@ -1,183 +1,259 @@
-// =======================================================
-// BIZMAPIA - WHATSAPP BOT - FINAL HD ALL INDIA - 2026
-// 5 Greetings + 2 Chained Reminders (10min + 10min)
-// =======================================================
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const qrcode = require('qrcode-terminal');
+const P = require('pino');
+
 const app = express();
 app.use(express.json());
+app.use(express.static(__dirname));
+const PORT = process.env.PORT || 10000;
 
-// =======================================================
-// CONFIG - REPLACE WITH YOUR GITHUB RAW LINKS AFTER UPLOAD
-// =======================================================
-const GITHUB_BASE = "https://raw.githubusercontent.com/popzupsupport-bot/bizmapia-bot-8590175977/main/";
-
-const IMAGES = {
-  // --- 5 GREETING IMAGES ---
-  MAIN: GITHUB_BASE + "bizmapia_welcome_HD_1080.jpg", // Main Chat Welcome
-  CUSTOMER: GITHUB_BASE + "bizmapia_customer_welcome_HD.jpg", // Customer App - All India
-  DRIVER: GITHUB_BASE + "bizmapia_driver_welcome_HD.jpg", // Driver App - All India
-  BUSINESS_REG: GITHUB_BASE + "bizmapia_business_reg_HD.jpg", // Business Registration
-  BUSINESS_OPP: GITHUB_BASE + "bizmapia_biz_opp_HD.jpg", // Business Opportunity
-
-  // --- 2 REMINDER IMAGES (Chained 10min + 10min) ---
-  BENEFIT_FREE_RECHARGE: GITHUB_BASE + "bizmapia_benefit_reminder_HD.jpg", // After 10 min
-  YEARLY_DISCOUNT: GITHUB_BASE + "bizmapia_1year_discount_HD.jpg" // After 20 min (10 min after previous)
+const ASSETS = {
+  images: {
+    welcome: ['bizmapia_welcome_HD_1080.jpg', 'bizmapia_welcome_HD.jpg'],
+    customer: ['bizmapia_customer_welcome_HD.jpg'],
+    driver: ['bizmapia_driver_welcome_HD.jpg'],
+    business: ['bizmapia_business_reg_HD.jpg'],
+    opportunity: ['bizmapia_biz_opp_HD.jpg'],
+    benefit: ['bizmapia_benefit_reminder_HD.jpg'],
+    discount: ['bizmapia_1year_discount_HD.jpg']
+  },
+  apps: {
+    customer: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
+    driver: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia_driver"
+  },
+  videos: {
+    main_opp: "https://youtu.be/8ZnDlvbgG_c?si=a5ONBZg6Oe8WuGTP",
+    opp_1: "https://youtu.be/_y2JeFHBnqg?si=igKYEPjGheuARuZe",
+    opp_2: "https://youtu.be/GqolfqgHiCU?si=ySBbc_qLD2mLyBmN",
+    opp_3: "https://youtu.be/GqolfqgHiCU?si=qTxRIIeq7iP5X5Jh",
+    opp_4: "https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW",
+    opp_5: "https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW"
+  }
 };
 
-// Store active reminder timers to avoid duplicate
-const activeReminders = new Map();
+const sessions = {};
+const oppTimers = {};
+const custTimers = {};
 
-// =======================================================
-// WHATSAPP SEND FUNCTION - EDIT THIS WITH YOUR API
-// =======================================================
-async function sendWhatsAppMessage(phone, content) {
-  // REPLACE WITH YOUR WHATSAPP API (Meta / WATI / Interakt etc)
-  // Example for Meta Cloud API:
-  /*
-  await fetch(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${WHATSAPP_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: phone,
-      type: "image",
-      image: { link: content.image, caption: content.caption }
-    })
-  });
-  */
-  console.log(`Sending to ${phone}:`, content.caption?.substring(0,50));
+function getSession(phone){
+  if(!sessions[phone]) sessions[phone]={ lang:"EN", stage:"NEW", lastOpp:"", form:{}, name:"" };
+  return sessions[phone];
 }
-
-// =======================================================
-// GREETING LOGIC - BASED ON USER SELECTION
-// =======================================================
-function getGreetingForType(type) {
-  switch(type) {
-    case "customer":
-    case "customer_app":
-      return {
-        image: IMAGES.CUSTOMER,
-        text: `*Welcome to Bizmapia Customer App!* 🙏\n\n= NOW AVAILABLE TO SERVE YOU - ALL INDIA =\n\n✅ Discount Rates on All Trips\n✅ Auto, Car, Bike, Premium - All Available\n✅ 24x7 Service Anywhere in India\n\nReply with your requirement!`
-      };
-    case "driver":
-    case "driver_app":
-      return {
-        image: IMAGES.DRIVER,
-        text: `*Welcome to Bizmapia Driver App!* 🚕\n\n= NOW AVAILABLE TO SERVE YOU - ALL INDIA =\n\n✅ Low Daily Charging Plans\n✅ 33/- Recharge - Unlimited Trips\n✅ Earn Daily Incentive + Income\n\nDownload App & Register Now!`
-      };
-    case "business_reg":
-    case "business_register":
-      return {
-        image: IMAGES.BUSINESS_REG,
-        text: `*Welcome to Bizmapia Business Listing!* 🏪\n\nGet More Customers from Local Search!\n\n✅ 3 Plans: Basic ₹99, Silver ₹199, Golden ₹299\n✅ Advertise Offers as Posters & Videos\n✅ Grow Visibility & Sales\n\nReply YES to register!`
-      };
-    case "business_opp":
-    case "opportunity":
-      return {
-        image: IMAGES.BUSINESS_OPP,
-        text: `*Welcome to Bizmapia Business Opportunities!* 💼\n\n= Get Business Opportunity From Anywhere in India =\n\n✅ States, Districts, Municipalities, Corporations, Panchayaths\n✅ Earn Daily & Monthly Income\n✅ Meroating Income Model\n\nTogether We Create More Opportunities!`
-      };
-    default:
-      return {
-        image: IMAGES.MAIN,
-        text: `*Welcome to Bizmapia Chat!* 👋\n\nWe are here to help you with:\n\n1️⃣ Customer App - Book Rides\n2️⃣ Driver App - Join as Driver\n3️⃣ Business Registration - List Your Shop\n4️⃣ Business Opportunity - Franchise\n\nReply with option number!`
-      };
+function getImagePath(key){
+  const list = ASSETS.images[key] || [];
+  for(let name of list){
+    const full = path.join(__dirname, name);
+    if(fs.existsSync(full)) return full;
   }
+  return null;
 }
-
-// =======================================================
-// CHAINED REMINDER - 10 MIN + 10 MIN LOGIC
-// =======================================================
-function scheduleChainedReminders(phone) {
-  // Clear existing timer if any
-  if (activeReminders.has(phone)) {
-    clearTimeout(activeReminders.get(phone).timer1);
-    clearTimeout(activeReminders.get(phone).timer2);
-  }
-
-  // TIMER 1: After 10 minutes - Benefit Free Recharge
-  const timer1 = setTimeout(async () => {
-    console.log(`Sending 10-min Benefit Reminder to ${phone}`);
-    await sendWhatsAppMessage(phone, {
-      image: IMAGES.BENEFIT_FREE_RECHARGE,
-      caption: `🔔 *Reminder - Benefit: Free Recharge by Listing Vehicle!* (1/2)\n\n*കേരളത്തിലെ ഏത് ടൗണിലും കേവലം 33 രൂപ റീചാർജിൽ 24 മണിക്കൂർ പരിധിയില്ലാത്ത ട്രിപ്പുകൾ!*\n\n✅ *DAILY CHARGING PLANS:*\n• 33 Rupees Plan: Min Charge 30, Additional 22.5/KM\n• 49 Rupees Plan: Min Charge 140, Additional 27/KM\n\n🎁 *INCENTIVE:*\n• GET 100 KM for (Hatchback)\n• Rs.200/- (Sedan)\n• Rs.250/- (Premium/SUV)\n\n👉 *Action:* Login to Driver App > Add Driver & Vehicle Details > Get Approval > Type "TEST RUN"\n\nAvailable in all towns in INDIA 🇮🇳\n#bizmapia #keralataxi`
-    });
-
-    // TIMER 2: 10 minutes AFTER Timer 1 (Total 20 min) - Yearly Discount
-    const timer2 = setTimeout(async () => {
-      console.log(`Sending 20-min Yearly Discount Reminder to ${phone}`);
-      await sendWhatsAppMessage(phone, {
-        image: IMAGES.YEARLY_DISCOUNT,
-        caption: `🎉 *Reminder 2/2 - Benefit 1 Year Subscription & Get Discount!*\n\n*Save More with Yearly Plan!*\n\n🟢 *Basic Plan:*\nMonthly ₹99/- | Yearly ₹999/- | *You Save ₹198/-*\n\n⚪ *Silver Plan:*\nMonthly ₹199/- | Yearly ₹1999/- | *You Save ₹398/-*\n\n🟡 *Golden Plan:*\nMonthly ₹299/- | Yearly ₹2999/- | *You Save ₹598/-*\n\n✨ *Key Benefits:*\n📍 Get More Local Visibility\n🔍 Customer Search\n📈 Grow Your Business\n🤝 Build Trust\n\n📢 *Advertise Your Business Locally* as posters & videos and get more sales!\n\nReply *YEARLY* to activate discount now!`
-      });
-      activeReminders.delete(phone);
-    }, 10 * 60 * 1000); // 10 minutes after first reminder
-
-    // Save timer2
-    const existing = activeReminders.get(phone) || {};
-    activeReminders.set(phone, { ...existing, timer2 });
-
-  }, 10 * 60 * 1000); // 10 minutes = 600,000 ms
-
-  activeReminders.set(phone, { timer1, timer2: null });
-  console.log(`Chained reminders scheduled for ${phone} - 10min + 10min`);
+function getOppName(id){
+  const map={
+    opp_1:"District Franchisee (10L > 15L Investment)",
+    opp_2:"Corporation Franchisee (5L Investment)",
+    opp_3:"Municipality Franchisee (4L Investment)",
+    opp_4:"Business Center - Online Taxi (1L Investment)",
+    opp_5:"Business Center - Business Directory (1L Investment)"
+  };
+  return map[id]||id;
 }
-
-function cancelReminders(phone) {
-  if (activeReminders.has(phone)) {
-    const { timer1, timer2 } = activeReminders.get(phone);
-    if (timer1) clearTimeout(timer1);
-    if (timer2) clearTimeout(timer2);
-    activeReminders.delete(phone);
-    console.log(`Reminders cancelled for ${phone} - user completed action`);
-  }
-}
-
-// =======================================================
-// WEBHOOK - MAIN CHAT HANDLER
-// =======================================================
-app.post('/webhook', async (req, res) => {
-  const phone = req.body.phone || req.body.from;
-  const message = (req.body.message || "").toLowerCase();
-
-  let greeting;
-
-  if (message.includes("customer") || message == "1") {
-    greeting = getGreetingForType("customer");
-  } else if (message.includes("driver") || message == "2") {
-    greeting = getGreetingForType("driver");
-    // START CHAINED REMINDER FOR DRIVER
-    scheduleChainedReminders(phone);
-  } else if (message.includes("business") && message.includes("regist")) {
-    greeting = getGreetingForType("business_reg");
-    // START CHAINED REMINDER FOR BUSINESS
-    scheduleChainedReminders(phone);
-  } else if (message.includes("opportunity") || message == "4") {
-    greeting = getGreetingForType("business_opp");
-  } else if (message.includes("test run") || message.includes("completed") || message.includes("yearly")) {
-    // User completed action - cancel reminders
-    cancelReminders(phone);
-    greeting = {
-      image: null,
-      text: `✅ Thank you! Your registration is being verified. Our team will contact you shortly! 🙏`
+function getOppFeeCard(id, lang){
+  if(lang==="ML"){
+    const cards={
+      opp_1: `━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n━━━━━━━━━━━━━━\n💰 നിക്ഷേപം: ₹10 ലക്ഷം മുതൽ ₹15 ലക്ഷം വരെ\n📍 കവറേജ്: മുഴുവൻ ജില്ല അവകാശം\n👑 ലെവൽ: ഏറ്റവും ഉയർന്നത്`,
+      opp_2: `━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n━━━━━━━━━━━━━━\n💰 നിക്ഷേപം: ₹5 ലക്ഷം മാത്രം`,
+      opp_3: `━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n━━━━━━━━━━━━━━\n💰 നിക്ഷേപം: ₹4 ലക്ഷം മാത്രം`,
+      opp_4: `━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - TAXI*\n━━━━━━━━━━━━━━\n💰 നിക്ഷേപം: ₹1 ലക്ഷം മാത്രം`,
+      opp_5: `━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - DIRECTORY*\n━━━━━━━━━━━━━━\n💰 നിക്ഷേപം: ₹1 ലക്ഷം മാത്രം`
     };
-  } else {
-    greeting = getGreetingForType("main");
+    return cards[id]||"";
   }
+  const cards={
+    opp_1: `━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹10 Lakhs to ₹15 Lakhs\n📍 *Coverage:* Full District Rights\n👑 *Level:* Highest - 1 District = 1 Franchisee\n💸 *Income:* Highest Income Potential`,
+    opp_2: `━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹5 Lakhs Only\n📍 *Coverage:* Full Corporation Rights`,
+    opp_3: `━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹4 Lakhs Only`,
+    opp_4: `━━━━━━━━━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - ONLINE TAXI*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only`,
+    opp_5: `━━━━━━━━━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - BUSINESS DIRECTORY*\n━━━━━━━━━━━━━━━━━━━━━━\n💰 *Investment:* ₹1 Lakh Only`
+  };
+  return cards[id]||"";
+}
+function t(lang, en, hi, ml){
+  if(lang==="ML") return ml;
+  if(lang==="HI") return hi;
+  return en;
+}
 
-  // Send greeting
-  await sendWhatsAppMessage(phone, {
-    image: greeting.image,
-    caption: greeting.text
+async function startBot(){
+  const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+  const sock = makeWASocket({ auth: state, logger: P({ level: 'silent' }), browser: ["Bizmapia Bot", "Chrome", "1.0.0"] });
+
+  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('connection.update', async (update)=>{
+    const { connection, lastDisconnect, qr } = update;
+    if(qr) qrcode.generate(qr,{small:true});
+    if(connection==='close'){
+      const shouldReconnect = lastDisconnect?.error?.output?.statusCode!== DisconnectReason.loggedOut;
+      if(shouldReconnect) startBot();
+    } else if(connection==='open'){
+      console.log("==> Your service is live");
+      console.log("==> WhatsApp Connected Successfully!");
+    }
   });
 
-  res.sendStatus(200);
-});
+  sock.ev.on('messages.upsert', async (m)=>{
+    try{
+      const msg = m.messages[0];
+      if(!msg.message || msg.key.fromMe) return;
+      const from = msg.key.remoteJid;
+      if(!from) return;
 
-app.get('/', (req, res) => res.send('Bizmapia Bot - ALL INDIA HD - Running ✅'));
+      const msgType = Object.keys(msg.message)[0];
+      let body = '';
+      if(msgType==='conversation') body = msg.message.conversation;
+      else if(msgType==='extendedTextMessage') body = msg.message.extendedTextMessage.text;
+      else if(msgType==='buttonsResponseMessage') body = msg.message.buttonsResponseMessage.selectedButtonId;
+      else if(msgType==='listResponseMessage') body = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+      const rawText = (body || '').trim();
+      const input = rawText.toUpperCase();
+      const s = getSession(from);
+      console.log(`Received from ${from}: ${rawText}`);
+
+      if(s.stage==="FORM_NAME"){
+        s.form.name = rawText; s.stage="FORM_CONTACT";
+        await sock.sendMessage(from, { text: t(s.lang, `Thanks ${rawText} 🙏\n\n*Contact number :-*`, `धन्यवाद ${rawText} 🙏\n\n*संपर्क नंबर :-*`, `നന്ദി ${rawText} 🙏\n\n*ബന്ധപ്പെടാനുള്ള നമ്പർ :-*`) });
+        return;
+      }
+      if(s.stage==="FORM_CONTACT"){
+        s.form.contact = rawText; s.stage="FORM_PLACE";
+        await sock.sendMessage(from, { text: t(s.lang, "*Place :-*\nPlease enter your place / city:", "*स्थान :-*", "*സ്ഥലം :-*") });
+        return;
+      }
+      if(s.stage==="FORM_PLACE"){
+        s.form.place = rawText; s.stage="FORM_OCCUPATION";
+        await sock.sendMessage(from, {
+          text: "*Current occupation :-*\n1. Running business\n2. Planning to start a business\n3. Employee\n4. Business Partner\n5. NRI\n6. Retired",
+          buttons: [
+            {buttonId:"occ_running", buttonText:{displayText:"Running business"}, type:1},
+            {buttonId:"occ_planning", buttonText:{displayText:"Planning"}, type:1},
+            {buttonId:"occ_employee", buttonText:{displayText:"Employee"}, type:1}
+          ]
+        });
+        return;
+      }
+      if(s.stage==="FORM_OCCUPATION" || input.startsWith("OCC_")){
+        const mapOcc={OCC_RUNNING:"Running business",OCC_PLANNING:"Planning to start a business",OCC_EMPLOYEE:"Employee",OCC_PARTNER:"Business Partner",OCC_NRI:"NRI",OCC_RETIRED:"Retired","1":"Running business","2":"Planning to start a business","3":"Employee","4":"Business Partner","5":"NRI","6":"Retired"};
+        s.form.occupation = mapOcc[input] || rawText;
+        console.log(`CRM_LEAD | Phone:${from} | Type:Franchisee_Lead | Franchise:${s.lastOpp} | Name:${s.form.name} | Contact:${s.form.contact} | Place:${s.form.place} | Occupation:${s.form.occupation}`);
+        const img = getImagePath('discount');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: `✅ Thank you ${s.form.name}!\nYour enquiry for ${getOppName(s.lastOpp)} received!\nName: ${s.form.name}\nContact: ${s.form.contact}\nPlace: ${s.form.place}\nOccupation: ${s.form.occupation}\n\nOur team will contact within 24 hours 🙏` });
+        s.stage="MENU"; s.form={};
+        await sock.sendMessage(from, { text: "Explore more?", buttons:[{buttonId:"view_opp_levels", buttonText:{displayText:"View Opportunities"}, type:1},{buttonId:"menu", buttonText:{displayText:"Main Menu"}, type:1}] });
+        return;
+      }
+
+      if(s.stage==="NEW" || ["HI","HELLO","HEY","HLO","START","HAI"].includes(input)){
+        s.stage="LANG";
+        const welcomeImg = getImagePath('welcome');
+        if(welcomeImg) await sock.sendMessage(from, { image: fs.readFileSync(welcomeImg), caption: "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏" });
+        await sock.sendMessage(from, {
+          text: "Select language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക",
+          buttons:[
+            {buttonId:"lang_en", buttonText:{displayText:"English"}, type:1},
+            {buttonId:"lang_hi", buttonText:{displayText:"Hindi - हिंदी"}, type:1},
+            {buttonId:"lang_ml", buttonText:{displayText:"Malayalam - മലയാളം"}, type:1}
+          ]
+        });
+        return;
+      }
+
+      if(s.stage==="LANG" || input.startsWith("LANG_")){
+        if(input.includes("EN")) s.lang="EN"; else if(input.includes("HI")) s.lang="HI"; else if(input.includes("ML")) s.lang="ML";
+        s.stage="MENU";
+        const menuText = t(s.lang, "What would you like to know?", "आप क्या जानना चाहते हैं?", "നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?");
+        await sock.sendMessage(from, { text: menuText, buttons:[{buttonId:"customer", buttonText:{displayText:"Customer"}, type:1},{buttonId:"driver", buttonText:{displayText:"Driver"}, type:1},{buttonId:"business", buttonText:{displayText:"Business"}, type:1},{buttonId:"opportunity", buttonText:{displayText:"Opportunities"}, type:1}] });
+        return;
+      }
+
+      if(input==="CUSTOMER"){
+        const img = getImagePath('customer');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: `Customer - Find a cab or business\n📲 ${ASSETS.apps.customer}` });
+        await sock.sendMessage(from, { text: "Choose:", buttons:[{buttonId:"activate", buttonText:{displayText:"Claim Now"}, type:1},{buttonId:"menu", buttonText:{displayText:"Main Menu"}, type:1}] });
+        return;
+      }
+      if(input==="ACTIVATE"){
+        await sock.sendMessage(from, { text: `✅ Offer Activated!\n${ASSETS.apps.customer}` });
+        if(custTimers[from]) clearTimeout(custTimers[from]);
+        custTimers[from]=setTimeout(async()=>{ await sock.sendMessage(from, { text: `⏰ Reminder: Activate your trip discount\n${ASSETS.apps.customer}` }); },5*60*1000);
+        return;
+      }
+      if(input==="DRIVER" || input==="DRIVER_BENEFIT"){
+        const img = input==="DRIVER_BENEFIT"? getImagePath('benefit') : getImagePath('driver');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: `Driver - Join & Earn\n📲 ${ASSETS.apps.driver}` });
+        await sock.sendMessage(from, { text: "Claim:", buttons:[{buttonId:"driver_claim", buttonText:{displayText:"Claim Now"}, type:1},{buttonId:"menu", buttonText:{displayText:"Main Menu"}, type:1}] });
+        return;
+      }
+      if(input==="DRIVER_CLAIM"){
+        await sock.sendMessage(from, { text: `✅ Your free recharge going to activate\n📲 ${ASSETS.apps.driver}` });
+        return;
+      }
+      if(input==="BUSINESS"){
+        const img = getImagePath('business');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: "Business Registration" });
+        await sock.sendMessage(from, { text: "Register:", buttons:[{buttonId:"business_list", buttonText:{displayText:"How to List"}, type:1},{buttonId:"menu", buttonText:{displayText:"Main Menu"}, type:1}] });
+        return;
+      }
+      if(input==="OPPORTUNITY" || input==="VIEW_OPP_LEVELS" || input==="OPP_SEARCH"){
+        const img = getImagePath('opportunity');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: "4 Business Opportunities Under One Brand - Bizmapia" });
+        await sock.sendMessage(from, { text: `Want to know about Bizmapia? 🎥 ${ASSETS.videos.main_opp}` });
+        await sock.sendMessage(from, {
+          text: t(s.lang, "💰 Select your franchisee level:", "💰 फ्रेंचाइजी स्तर चुनें:", "💰 ഫ്രാഞ്ചൈസി ലെവൽ തിരഞ്ഞെടുക്കുക:"),
+          buttons:[{buttonId:"opp_1", buttonText:{displayText:"District (10L>15L)"}, type:1},{buttonId:"opp_2", buttonText:{displayText:"Corporation (5L)"}, type:1},{buttonId:"opp_3", buttonText:{displayText:"Municipality (4L)"}, type:1}]
+        });
+        await sock.sendMessage(from, { text: "More:", buttons:[{buttonId:"opp_4", buttonText:{displayText:"Taxi Center (1L)"}, type:1},{buttonId:"opp_5", buttonText:{displayText:"Directory (1L)"}, type:1},{buttonId:"menu", buttonText:{displayText:"Main Menu"}, type:1}] });
+        return;
+      }
+      if(["OPP_1","OPP_2","OPP_3","OPP_4","OPP_5"].includes(input)){
+        s.lastOpp=input;
+        const img = getImagePath('opportunity');
+        if(img) await sock.sendMessage(from, { image: fs.readFileSync(img), caption: `${getOppName(input)} - Bizmapia` });
+        await sock.sendMessage(from, { text: getOppFeeCard(input, s.lang) });
+        await sock.sendMessage(from, { text: `🎥 Watch: ${ASSETS.videos[input.toLowerCase()]}` });
+        if(oppTimers[from]) clearTimeout(oppTimers[from]);
+        oppTimers[from]=setTimeout(async()=>{
+          await sock.sendMessage(from, {
+            text: t(s.lang, `⏰ You want to grab this opportunity? You viewed ${getOppName(input)} 5 mins ago.`, `⏰ क्या आप यह अवसर लेना चाहते हैं?`, `⏰ ഈ അവസരം നിങ്ങൾക്ക് വേണോ?`),
+            buttons:[{buttonId:"opp_yes", buttonText:{displayText:"Yes"}, type:1},{buttonId:"opp_no", buttonText:{displayText:"No"}, type:1},{buttonId:"opp_search", buttonText:{displayText:"Search Other"}, type:1}]
+          });
+        },5*60*1000);
+        await sock.sendMessage(from, { text: "You want to grab this opportunity?", buttons:[{buttonId:"opp_yes", buttonText:{displayText:"Yes"}, type:1},{buttonId:"opp_no", buttonText:{displayText:"No"}, type:1},{buttonId:"opp_search", buttonText:{displayText:"Search Other"}, type:1}] });
+        return;
+      }
+      if(input==="OPP_YES"){
+        if(oppTimers[from]) clearTimeout(oppTimers[from]);
+        s.stage="FORM_NAME"; s.form={};
+        await sock.sendMessage(from, { text: t(s.lang, `Great! You want to grab this opportunity 🎉\n\n*${getOppName(s.lastOpp)}*\n\n*Name :-*\nEnter your full name:`, `बढ़िया! नाम दर्ज करें:`, `മികച്ചത്! പേര് നൽകുക: ${getOppName(s.lastOpp)}`) });
+        return;
+      }
+      if(input==="OPP_NO"){
+        if(oppTimers[from]) clearTimeout(oppTimers[from]);
+        await sock.sendMessage(from, { text: t(s.lang, "You are successfully opt out 🙏 Type *HI* to start again.", "आप बाहर निकल गए", "നിങ്ങൾ ഒഴിവാക്കി") });
+        s.stage="NEW"; return;
+      }
+      if(input==="MENU"){
+        await sock.sendMessage(from, { text: "Main Menu", buttons:[{buttonId:"customer", buttonText:{displayText:"Customer"}, type:1},{buttonId:"driver", buttonText:{displayText:"Driver"}, type:1},{buttonId:"business", buttonText:{displayText:"Business"}, type:1},{buttonId:"opportunity", buttonText:{displayText:"Opportunities"}, type:1}] });
+        return;
+      }
+      await sock.sendMessage(from, { text: "🔄 Type *HI* to Start Again 🙏" });
+    }catch(err){ console.error("Error:", err); }
+  });
+}
+
+app.get('/', (req,res)=>res.send('Bizmapia Bot Full - HD + Malayalam + Language ✅'));
+app.get('/health', (req,res)=>res.send('OK'));
+startBot();
+app.listen(PORT, ()=>{ console.log(`Server running on ${PORT}`); console.log("==> Your service is live"); });
