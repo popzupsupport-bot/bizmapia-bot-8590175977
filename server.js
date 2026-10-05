@@ -57,29 +57,23 @@ async function startBot() {
 
         let reply = ''
         const lower = text.toLowerCase()
-
-        // LANGUAGE DETECT
         const isML = /[\u0D00-\u0D7F]/.test(text)
-        const isHI = /[\u0900-\u097F]/.test(text)
 
-        if (isImage) reply = isML ? 'ഫോട്ടോയ്ക്ക് നന്ദി! 📸' : 'Thanks for image 📸 Team will check. Reply HI'
-        else if (isVideo) reply = isML ? 'വീഡിയോയ്ക്ക് നന്ദി! 🎥' : 'Thanks for video 🎥 Received!'
-        else if (lower.includes('app') || lower === '4' || lower.includes('download')) reply = `📱 BizMapia App:\nhttps://play.google.com/store/apps/details?id=com.bizmapia.app\nwww.bizmapia.com`
+        if (isImage) reply = isML ? 'ഫോട്ടോയ്ക്ക് നന്ദി! 📸 Team check ചെയ്യും. HI എന്ന് അയക്കൂ' : 'Thanks for image 📸 Team will check. Reply HI for menu'
+        else if (isVideo) reply = isML ? 'വീഡിയോയ്ക്ക് നന്ദി! 🎥 ലഭിച്ചു' : 'Thanks for video 🎥 Received! Reply HI'
+        else if (lower.includes('app') || lower === '4' || lower.includes('download')) reply = `📱 *BizMapia App*\nhttps://play.google.com/store/apps/details?id=com.bizmapia.app\nwww.bizmapia.com`
         else if (['hi','hello','hai','hey'].includes(lower) || lower.startsWith('hi')) {
-          reply = isML ? `ഹായ് 👋 BizMapia സ്വാഗതം!\n1️⃣ Business Center 1Lac\n2️⃣ District Franchisee 10-15Lac\n1-വിവരം 2-അപേക്ഷ 4-ആപ്പ്` : 
-                  isHI ? `नमस्ते 👋 BizMapia में स्वागत!\n1️⃣ Business Center 1Lakh\n2️⃣ District 10-15Lakh\nReply 1-Details 4-App` :
-                  `Hi 👋 Welcome to *BizMapia*!\n1️⃣ Business Center - 1 Lac\n2️⃣ District Franchisee - 10-15 Lac\nReply: 1-Details, 2-Apply, 4-App Link`
-        } else if (text) reply = `Thanks for "${text}" 🙏 Team will reply soon!\nReply *HI* for menu`
-        else reply = `Hi 👋 BizMapia here! Reply HI`
+          reply = isML ? `ഹായ് 👋 *BizMapia* സ്വാഗതം!\n1️⃣ Business Center - 1 Lac\n2️⃣ District Franchisee - 10-15 Lac\nറിപ്ലൈ: 1-വിവരം, 2-അപേക്ഷ, 4-ആപ്പ്` : `Hi 👋 Welcome to *BizMapia*!\n1️⃣ Business Center - 1 Lac\n2️⃣ District Franchisee - 10-15 Lac\nReply: 1-Details, 2-Apply, 3-Support, 4-App Link\nwww.bizmapia.com`
+        } else if (text) reply = `Thanks for "${text}" 🙏 Our team will reply soon!\nReply *HI* for menu, *4* for App Link`
+        else reply = `Hi 👋 Welcome to BizMapia! Reply HI`
 
         if (reply) {
           await sock.sendMessage(from, { text: reply })
           console.log(`✅ REPLIED to ${from}`)
         }
       } catch (e) {
-        // IGNORE Bad MAC errors - don't crash
         if (e.message && e.message.includes('Bad MAC')) {
-          console.log('⚠️ Ignored Bad MAC (old message), waiting for new messages...')
+          console.log('⚠️ Ignored Bad MAC old msg')
           continue
         }
         console.error('Reply error:', e.message)
@@ -90,10 +84,10 @@ async function startBot() {
 
 app.get('/', (req,res)=>res.send(`<h1>BizMapia Bot ${isConnected?'✅ CONNECTED':'⏳'}</h1><a href="/qr">QR</a> | <a href="/clear">Clear</a>`))
 app.get('/qr', async (req,res)=>{
-  if (isConnected) return res.send('<h1>✅ Connected! Ready</h1><p>Test from other phone now</p>')
-  if (!qrCodeData) return res.send('Generating...<script>setTimeout(()=>location.reload(),2000)</script>')
+  if (isConnected) return res.send('<h1>✅ Connected! Ready to test from 95677</h1>')
+  if (!qrCodeData) return res.send('Generating QR...<script>setTimeout(()=>location.reload(),2000)</script>')
   const img = await qrcode.toDataURL(qrCodeData)
-  res.send(`<center><img src="${img}" width="350"/><p>Scan with 85901</p></center><script>setTimeout(()=>location.reload(),15000)</script>`)
+  res.send(`<center><img src="${img}" width="350"/><p>Scan with 85901 phone</p></center><script>setTimeout(()=>location.reload(),15000)</script>`)
 })
 app.get('/clear', (req,res)=>{
   try{fs.rmSync('./auth_info',{recursive:true,force:true})}catch(e){}
