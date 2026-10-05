@@ -144,13 +144,7 @@ app.get('/qr', (req,res)=>{
   if(!qrCodeData) return res.send(sock?'<h2>Connected ✅</h2>':'<h2>Generating QR... Refresh 10 sec</h2><a href="/pair">Try Pairing Code</a>');
   res.send(`<div style="text-align:center"><h2>Scan with 8590175977</h2><img src="${qrCodeData}" width="300"><p><a href="/pair">Pairing Code (Better)</a></p></div>`);
 });
-app.get('/clear', (req,res)=>{
-  try {
-    fs.rmSync('./auth_info', {recursive:true, force:true});
-    console.log("Auth cleared by /clear");
-    res.send("<h2>✅ Session Cleared! Now go to Render > Manual Deploy > Clear build cache & Deploy</h2>");
-  } catch(e){ res.send("Error: "+e.message); }
-});
+app.get('/pair', (req,res)=>{
   if(pairingCode) res.send(`<div style="text-align:center"><h1 style="font-size:55px; letter-spacing:8px; margin-top:50px;">${pairingCode}</h1><h3>WhatsApp > Linked Devices > Link with phone number > Enter this code</h3></div>`);
   else res.send(sock?'<h2>Already Connected ✅</h2>':'<h2>Generating Pairing Code... Refresh after 10 sec</h2>');
 });
