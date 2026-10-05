@@ -55,7 +55,62 @@ async function startBot() {
     }
   })
 
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    sock.ev.on('messages.upsert', async (m) => {
+    console.log('🔥 RAW EVENT:', JSON.stringify(m).substring(0,500))
+    try {
+      const messages = m.messages
+      const type = m.type
+      console.log(`📨 Type: ${type} Count: ${messages?.length}`)
+      if (!messages) return
+      for (let msg of messages) {
+        console.log('📩 RAW MSG JID:', msg.key?.remoteJid, 'fromMe:', msg.key?.fromMe)
+        if (!msg.message) { console.log('❌ No message content'); continue }
+        if (msg.key.fromMe) { console.log('⏭️ fromMe skip'); continue }
+        
+        const from = msg.key.remoteJid
+        if (from === 'status@broadcast') continue
+        
+        let text = ''
+        try {
+          text = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.buttonsResponseMessage?.selectedButtonId || msg.message.listResponseMessage?.singleSelectReply?.selectedRowId || msg.message.imageMessage?.caption || ''
+          console.log(`✅ TEXT EXTRACTED: "${text}" from ${from}`)
+        } catch (e) {
+          console.log('⚠️ Decrypt fail IGNORED for', from, e.message)
+          continue
+        }
+        
+        if (!text) { console.log('⚠️ Empty text, ignoring'); continue }
+        const clean = text.trim().toLowerCase()
+        console.log(`📩 FROM ${from}: ${text}`)
+
+        let reply = ''
+        if (['hi','hello','hey','menu','start','hello 123'].includes(clean)) {
+          reply = `Hi 👋 Welcome to BizMapia!\n\n1️⃣ Business Center - 1 Lac\n2️⃣ Business Registration\n3️⃣ Driver Registration\n4️⃣ Customer Care\n5️⃣ Business Opportunity\n\nReply with number (1-5)`
+        } else if (clean === '1') {
+          reply = `🏢 *Business Center - 1 Lac*\nInvestment: Rs 1,00,000\nEarning: 30k-50k/month\n\nType *YES* to know more`
+        } else if (clean === '2') {
+          reply = `📝 *Business Registration*\nSend your:\nName, Place, Business Type`
+        } else if (clean === '3') {
+          reply = `🚗 *Driver Registration*\nSend License + Vehicle details`
+        } else if (clean === '4') {
+          reply = `📞 *Customer Care*: 8590175977\nWe will call you soon!`
+        } else if (clean === '5') {
+          reply = `💼 *Business Opportunity*\nGreat income with BizMapia! Type *DETAILS*`
+        } else {
+          reply = `Thanks for messaging BizMapia! 🙏\nType *Hi* to see menu`
+        }
+
+        try {
+          await sock.sendMessage(from, { text: reply })
+          console.log(`✅ REPLIED to ${from}: ${reply.substring(0,50)}`)
+        } catch (err) {
+          console.log('Send failed:', err.message)
+        }
+      }
+    } catch (err) {
+      console.log('upsert error (ignored):', err.message)
+    }
+  }), async ({ messages, type }) => {
     try {
       if (type !== 'notify') return
       for (let msg of messages) {
