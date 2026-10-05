@@ -1,127 +1,195 @@
-import express from 'express';
-import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
-import fs from 'fs';
-import qrcode from 'qrcode';
-import cors from 'cors';
-import pino from 'pino';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
+const express = require('express')
+const qrcode = require('qrcode')
+const fs = require('fs')
+const pino = require('pino')
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const app = express();
-app.use(express.json());
-app.use(cors());
-app.use(express.static(__dirname));
-const PORT = process.env.PORT || 10000;
+const app = express()
+const PORT = process.env.PORT || 10000
+let qrCodeData = ''
+let sock = null
+let isConnected = false
 
-let sock = null;
-let qrCodeData = null;
-let pairingCode = null;
-const PHONE_NUMBER = "918590175977";
-const userStages = new Map();
-
-// === ASSETS ===
-const ASSETS = {
-  images: { welcome: ['bizmapia_welcome_HD_1080.jpg','bizmapia_welcome_HD.jpg','bizmapia_welcome.jpg'], customer: ['bizmapia_customer_welcome_HD.jpg'], driver: ['bizmapia_driver_welcome_HD.jpg'], business: ['bizmapia_business_reg_HD.jpg'], opportunity: ['bizmapia_biz_opp_HD.jpg'] },
-  apps: { customer: 'https://play.google.com/store/apps/details?id=com.bizmapia.customer', driver: 'https://play.google.com/store/apps/details?id=com.bizmapia.driver', business: 'https://play.google.com/store/apps/details?id=com.bizmapia.business' }
-};
-
-// === LANGUAGES - FULL ===
-const LANG = {
-  en: {
-    welcome: `👋 *Welcome to Bizmapia!*\n\n🇮🇳 India's Fastest Growing Local Business Network\n\nPlease select your language:\n\n1️⃣ English\n2️⃣ हिंदी (Hindi)\n3️⃣ മലയാളം (Malayalam)\n\nReply with 1, 2 or 3`,
-    menu: `✅ *English Selected*\n\n*How can we help you?*\n\n1️⃣ Customer App - Order Food, Grocery\n2️⃣ Driver / Delivery Partner - Earn ₹25k-40k\n3️⃣ Business Registration - FREE\n4️⃣ Business Opportunity - Partner\n5️⃣ Help & Support\n\nReply with number (1-5)`,
-    customer: `📱 *Bizmapia Customer App*\nOrder in 30 mins!\n\n👉 Download:\n${'https://play.google.com/store/apps/details?id=com.bizmapia.customer'}\n\nType *hi* for menu`,
-    driver: `🚚 *Driver Job*\nEarn ₹25k-40k\n\n👉 ${'https://play.google.com/store/apps/details?id=com.bizmapia.driver'}\n\nType *hi*`,
-    business: `🏪 *Business FREE Registration*\n\n👉 ${'https://play.google.com/store/apps/details?id=com.bizmapia.business'}\n\nType *hi*`,
-    opportunity: `💼 *Business Opportunity*\nReply INTERESTED\n\nType *hi*`,
-    help: `📞 Support: 8590175977\nType *hi*`
-  },
-  hi: {
-    menu: `✅ *हिंदी चुनी गई*\n\n1️⃣ कस्टमर ऐप\n2️⃣ ड्राइवर जॉब - ₹25k-40k\n3️⃣ बिजनेस रजिस्ट्रेशन FREE\n4️⃣ बिजनेस अपॉर्चुनिटी\n5️⃣ हेल्प\n\nनंबर भेजें (1-5)`,
-    customer: `📱 *कस्टमर ऐप*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.customer\n\n*hi* टाइप करें`,
-    driver: `🚚 *ड्राइवर बनें - ₹25k-40k*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.driver\n*hi*`,
-    business: `🏪 *बिजनेस FREE*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.business\n*hi*`,
-    opportunity: `💼 *बिजनेस अपॉर्चुनिटी*\nINTERESTED लिखें\n*hi*`,
-    help: `📞 8590175977\n*hi*`
-  },
-  ml: {
-    menu: `✅ *മലയാളം*\n\n1️⃣ കസ്റ്റമർ ആപ്പ്\n2️⃣ ഡ്രൈവർ ജോലി - ₹25k-40k\n3️⃣ ബിസിനസ് FREE\n4️⃣ അവസരം\n5️⃣ ഹെൽപ്പ്\n\nനമ്പർ (1-5)`,
-    customer: `📱 *കസ്റ്റമർ ആപ്പ്*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.customer\n*hi*`,
-    driver: `🚚 *ഡ്രൈവർ - ₹25k-40k*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.driver\n*hi*`,
-    business: `🏪 *ബിസിനസ് FREE*\n👉 https://play.google.com/store/apps/details?id=com.bizmapia.business\n*hi*`,
-    opportunity: `💼 *അവസരം*\nINTERESTED\n*hi*`,
-    help: `📞 8590175977\n*hi*`
-  }
-};
-
-function getLang(user, key){ return (LANG[user.lang||'en'] && LANG[user.lang||'en'][key]) || LANG.en[key]; }
-async function sendImg(to, names, caption){
-  try{
-    for(let n of names){ const p=path.join(__dirname,n); if(fs.existsSync(p)){ await sock.sendMessage(to,{image:fs.readFileSync(p),caption}); return; } }
-    await sock.sendMessage(to,{text:caption});
-  }catch(e){ await sock.sendMessage(to,{text:caption}); }
+// ===== LANGUAGE DETECTOR =====
+function detectLanguage(text) {
+  if (!text) return 'en'
+  // Malayalam Unicode range
+  if (/[\u0D00-\u0D7F]/.test(text)) return 'ml'
+  // Hindi / Devanagari
+  if (/[\u0900-\u097F]/.test(text)) return 'hi'
+  // Tamil
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta'
+  // Check common Malayalam words in English letters
+  const mlWords = ['ente', 'njan', 'sherikk', 'enthina', 'engane', 'evide', 'samsaarikkam', 'business', 'malayalam']
+  const lower = text.toLowerCase()
+  if (mlWords.some(w => lower.includes(w)) && lower.includes('malayalam')) return 'ml_translit'
+  return 'en'
 }
 
-async function startBot(){
-  const { state, saveCreds } = await useMultiFileAuthState('auth_info');
-  sock = makeWASocket({ auth: state, logger: pino({level:'silent'}), browser: ['Bizmapia','Chrome','1.0'] });
-  sock.ev.on('creds.update', saveCreds);
-  if(!state.creds.registered){ setTimeout(async()=>{ try{ pairingCode = await sock.requestPairingCode(PHONE_NUMBER); console.log("PAIRING CODE: "+pairingCode);}catch(e){} }, 3000); }
-  sock.ev.on('connection.update', async (update)=>{
-    const { connection, lastDisconnect, qr } = update;
-    if(qr) qrCodeData = await qrcode.toDataURL(qr);
-    if(connection==='open'){ console.log("✅ 8590175977 Connected!"); qrCodeData=null; pairingCode=null; }
-    if(connection==='close'){ const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut; if(shouldReconnect) startBot(); }
-  });
-  sock.ev.on('messages.upsert', async ({messages})=>{
-    for(const msg of messages){
-      if(!msg.message || msg.key.fromMe) continue;
-      const from = msg.key.remoteJid;
-      if(from.includes('status@broadcast')) continue;
-      const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || "").trim();
-      const lower = text.toLowerCase();
-      if(!userStages.has(from)) userStages.set(from,{stage:'NEW',lang:'en'});
-      let user = userStages.get(from);
-      if(lower==='hi' || lower==='hello' || lower==='hai' || user.stage==='NEW'){
-        await sendImg(from, ASSETS.images.welcome, LANG.en.welcome);
-        user.stage='LANG'; continue;
-      }
-      if(user.stage==='LANG'){
-        if(lower==='1' || lower.includes('english')){ user.lang='en'; user.stage='MENU'; await sock.sendMessage(from,{text:LANG.en.menu}); }
-        else if(lower==='2' || lower.includes('hindi') || lower.includes('हिंदी')){ user.lang='hi'; user.stage='MENU'; await sock.sendMessage(from,{text:LANG.hi.menu}); }
-        else if(lower==='3' || lower.includes('malayalam') || lower.includes('മലയാളം')){ user.lang='ml'; user.stage='MENU'; await sock.sendMessage(from,{text:LANG.ml.menu}); }
-        else{ await sock.sendMessage(from,{text:LANG.en.welcome}); }
-        continue;
-      }
-      if(user.stage==='MENU'){
-        if(lower==='1') await sendImg(from, ASSETS.images.customer, getLang(user,'customer'));
-        else if(lower==='2') await sendImg(from, ASSETS.images.driver, getLang(user,'driver'));
-        else if(lower==='3') await sendImg(from, ASSETS.images.business, getLang(user,'business'));
-        else if(lower==='4') await sendImg(from, ASSETS.images.opportunity, getLang(user,'opportunity'));
-        else if(lower==='5') await sock.sendMessage(from,{text:getLang(user,'help')});
-        else await sock.sendMessage(from,{text:getLang(user,'menu')});
+function getReplyByLanguage(lang, type) {
+  const replies = {
+    en: {
+      menu: `Hi 👋 Welcome to *BizMapia*!\n\n🇮🇳 India's Trusted Business Opportunity\n\n💼 *Opportunities:*\n1️⃣ *Business Center (Online Taxi)* - 1 Lac\n2️⃣ *District Franchisee* - 10-15 Lac\n\nReply: 1-Details, 2-Apply, 3-Support, 4-App Link\nwww.bizmapia.com`,
+      thanks: `Thanks for the image! 📸 Our team will check it and reply soon. Reply HI for menu.`,
+      video: `Thanks for the video! 🎥 Received. Our team will view and contact you.\nReply HI for menu.`,
+      app: `📱 *BizMapia App Download*\n\nAndroid: https://play.google.com/store/apps/details?id=com.bizmapia.app\n\nWebsite: www.bizmapia.com\n\nDownload app to see all business opportunities!`
+    },
+    ml: {
+      menu: `ഹായ് 👋 *BizMapia* യിലേക്ക് സ്വാഗതം!\n\n💼 *ബിസിനസ്സ് അവസരങ്ങൾ:*\n1️⃣ ബിസിനസ്സ് സെന്റർ (ഓൺലൈൻ ടാക്സി) - 1 ലക്ഷം\n2️⃣ ഡിസ്ട്രിക്റ്റ് ഫ്രാഞ്ചൈസി - 10-15 ലക്ഷം\n\nറിപ്ലൈ: 1-വിവരങ്ങൾ, 2-അപേക്ഷ, 3-സപ്പോർട്ട്, 4-ആപ്പ് ലിങ്ക്`,
+      thanks: `ഫോട്ടോയ്ക്ക് നന്ദി! 📸 ടീം പരിശോധിച്ച് മറുപടി നൽകും. മെനുവിന് HI എന്ന് റിപ്ലൈ ചെയ്യൂ.`,
+      video: `വീഡിയോയ്ക്ക് നന്ദി! 🎥 ലഭിച്ചു. ടീം കണ്ട് ബന്ധപ്പെടും.`,
+      app: `📱 *BizMapia App ഡൗൺലോഡ്*\n\nAndroid: https://play.google.com/store/apps/details?id=com.bizmapia.app\n\nwww.bizmapia.com`
+    },
+    hi: {
+      menu: `नमस्ते 👋 *BizMapia* में आपका स्वागत है!\n\n💼 *बिजनेस अवसर:*\n1️⃣ बिजनेस सेंटर (ऑनलाइन टैक्सी) - 1 लाख\n2️⃣ डिस्ट्रिक्ट फ्रेंचाइजी - 10-15 लाख\n\nरिप्लाई: 1-जानकारी, 2-आवेदन, 3-सपोर्ट, 4-ऐप लिंक`,
+      thanks: `फोटो के लिए धन्यवाद! 📸 टीम चेक करके जवाब देगी।`,
+      video: `वीडियो के लिए धन्यवाद! 🎥 प्राप्त हुआ।`,
+      app: `📱 *BizMapia App डाउनलोड*\n\nhttps://play.google.com/store/apps/details?id=com.bizmapia.app`
+    }
+  }
+  return replies[lang]?.[type] || replies['en'][type]
+}
+
+async function startBot() {
+  const { version } = await fetchLatestBaileysVersion()
+  const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
+
+  sock = makeWASocket({
+    version,
+    auth: state,
+    logger: pino({ level: 'silent' }),
+    printQRInTerminal: false,
+    browser: ['BizMapia Bot', 'Chrome', '1.0.0'],
+    markOnlineOnConnect: true,
+  })
+
+  sock.ev.on('creds.update', saveCreds)
+
+  sock.ev.on('connection.update', async (update) => {
+    const { connection, lastDisconnect, qr } = update
+    if (qr) { qrCodeData = qr; isConnected = false; console.log('NEW QR GENERATED - /qr') }
+    if (connection === 'close') {
+      isConnected = false
+      const shouldReconnect = lastDisconnect?.error?.output?.statusCode!== DisconnectReason.loggedOut
+      if (shouldReconnect) setTimeout(() => startBot(), 3000)
+    } else if (connection === 'open') {
+      isConnected = true; qrCodeData = ''; console.log('✅ 8590175977 Connected!')
+    }
+  })
+
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type!== 'notify') return
+    for (const msg of messages) {
+      try {
+        if (!msg.message) continue
+        if (msg.key.remoteJid === 'status@broadcast') continue
+        if (msg.key.fromMe) continue
+        const from = msg.key.remoteJid
+        if (from.endsWith('@g.us')) continue
+
+        // ===== EXTRACT ALL MESSAGE TYPES =====
+        let text = ''
+        let isImage =!!msg.message.imageMessage
+        let isVideo =!!msg.message.videoMessage
+        let isDocument =!!msg.message.documentMessage
+        let isLocation =!!msg.message.locationMessage
+        let hasAppLink = false
+
+        if (msg.message.conversation) text = msg.message.conversation
+        else if (msg.message.extendedTextMessage?.text) text = msg.message.extendedTextMessage.text
+        else if (msg.message.imageMessage?.caption) text = msg.message.imageMessage.caption
+        else if (msg.message.videoMessage?.caption) text = msg.message.videoMessage.caption
+        else if (msg.message.documentMessage?.caption) text = msg.message.documentMessage.caption
+
+        console.log(`📩 ${isImage?'[IMAGE]':''}${isVideo?'[VIDEO]':''}${isDocument?'[DOC]':''} from ${from}: ${text || 'media'}`)
+
+        // ===== DETECT APP LINKS =====
+        const combinedText = text + ' ' + (msg.message.extendedTextMessage?.matchedText || '')
+        if (combinedText.match(/play\.google\.com|bizmapia\.com\/app|app link|apk|download app/i) || combinedText.includes('bizmapia')) {
+          hasAppLink = combinedText.toLowerCase().includes('app')
+        }
+
+        const lang = detectLanguage(text)
+        const lower = text.toLowerCase().trim()
+        let replyText = ''
+
+        // ===== 1. HANDLE IMAGE =====
+        if (isImage) {
+          if (text) {
+            replyText = getReplyByLanguage(lang, 'thanks') + `\n\nYou wrote: "${text}"\nOur team will review.`
+          } else {
+            replyText = getReplyByLanguage(lang, 'thanks')
+          }
+        }
+        // ===== 2. HANDLE VIDEO =====
+        else if (isVideo) {
+          replyText = getReplyByLanguage(lang, 'video')
+        }
+        // ===== 3. HANDLE APP LINK REQUEST =====
+        else if (hasAppLink || lower.includes('app link') || lower === '4' || lower.includes('download')) {
+          replyText = getReplyByLanguage(lang, 'app')
+        }
+        // ===== 4. HANDLE DOCUMENT / LOCATION =====
+        else if (isDocument) {
+          replyText = `📄 Document received! Thanks. Our team will check.\nReply HI for menu.`
+        }
+        else if (isLocation) {
+          replyText = `📍 Location received! Thanks for sharing. Our team will contact you based on your city.\nReply HI for menu.`
+        }
+        // ===== 5. HANDLE TEXT WITH LANGUAGE SUPPORT =====
+        else if (['hi','hello','hai','hey','hii','helo','namaste','namaskaram'].includes(lower) || lower.startsWith('hi ') || lower.startsWith('hello')) {
+          replyText = getReplyByLanguage(lang === 'ml_translit'? 'ml' : lang, 'menu')
+        }
+        else if (lower === '1' || lower.includes('detail') || lower.includes('oppertunity') || lower.includes('vivaram')) {
+          if (lang === 'ml') {
+            replyText = `📊 *BizMapia വിവരങ്ങൾ*\n\n*1. Business Center (1 Lac)*\n✅ ഓൺലൈൻ ടാക്സി ബുക്കിംഗ് സെന്റർ\n✅ വീട്ടിൽ നിന്ന് ജോലി\n✅ മാസ വരുമാനം 30k-60k\n\n*2. District Franchisee (10-15 Lac)*\n✅ മുഴുവൻ ജില്ലയുടെ അവകാശം\n✅ ഉയർന്ന കമ്മീഷൻ\n\nഏതാണ് താൽപ്പര്യം? 1 അല്ലെങ്കിൽ 2 റിപ്ലൈ ചെയ്യൂ.`
+          } else if (lang === 'hi') {
+            replyText = `📊 *BizMapia जानकारी*\n\n*1. Business Center (1 Lakh)*\n✅ ऑनलाइन टैक्सी बुकिंग सेंटर\n✅ घर से काम\n✅ मासिक आय 30k-60k\n\n*2. District Franchisee (10-15 Lakh)*\n✅ पूरे जिले का अधिकार\n\nकौन सा पसंद है? 1 या 2 भेजें।`
+          } else {
+            replyText = `📊 *BizMapia Details*\n\n*1. Business Center (1 Lac)*\n✅ Online Taxi Booking Center\n✅ Work from home\n✅ Monthly 30k-60k\n\n*2. District Franchisee (10-15 Lac)*\n✅ Full District Rights\n✅ High commission\n\nWhich one? Reply 1 or 2.`
+          }
+        }
+        else if (lower === '2' || lower.includes('apply') || lower.includes('form') || lower.includes('apeksha')) {
+          replyText = getReplyByLanguage(lang === 'ml_translit'? 'ml' : lang, 'menu').includes('BizMapia')? `📝 Share details:\nFull Name:\nCity:\nPhone:\nInterest: (Business Center/District)\n\nTeam will call in 24hrs!` : `📝 Details share cheyyu:\nName:\nCity:\nPhone:\n\nTeam vilikkum!`
+        }
+        else if (lower === '3' || lower.includes('support') || lower.includes('call') || lower.includes('talk')) {
+          replyText = `📞 *Support*\nCall/WhatsApp: +91 85901 75977\n10 AM - 6 PM\nwww.bizmapia.com`
+        }
+        else if (text) {
+          // Default with language
+          if (lang === 'ml') {
+            replyText = `നന്ദി! "${text}" എന്ന നിങ്ങളുടെ മെസ്സേജ് ലഭിച്ചു 🙏\nടീം ഉടൻ മറുപടി നൽകും.\n\nമെനുവിന് HI എന്ന് അയക്കൂ.`
+          } else if (lang === 'hi') {
+            replyText = `धन्यवाद! आपका मैसेज "${text}" मिला 🙏\nटीम जल्द जवाब देगी।\n\nमेनू के लिए HI भेजें।`
+          } else {
+            replyText = `Thanks for "${text}" 🙏\nOur team will reply soon!\n\nReply *HI* for menu\n*4* for App Link\nwww.bizmapia.com`
+          }
+        }
+
+        if (replyText) {
+          await sock.sendMessage(from, { text: replyText })
+          console.log(`✅ Replied [${lang}] to ${from}`)
+        }
+
+      } catch (err) {
+        console.error('Handler error:', err)
       }
     }
-  });
+  })
 }
 
-// --- ROUTES ---
-app.get('/clear', (req,res)=>{
-  try{
-    if(fs.existsSync('./auth_info')) fs.rmSync('./auth_info',{recursive:true, force:true});
-    res.send("<h2>✅ Session Cleared! Now go to Render > Manual Deploy > Clear build cache & Deploy</h2>");
-  }catch(e){ res.send("Error: "+e.message); }
-});
-app.get('/', (req,res)=>res.send(`<h2>Bizmapia 8590175977 - ${sock?'Connected ✅':'Starting...'}</h2><a href='/qr'>QR</a> | <a href='/pair'>Pairing</a> | <a href='/clear'>Clear Session</a>`));
-app.get('/qr', (req,res)=>{
-  if(!qrCodeData) return res.send(sock?'<h2>Connected ✅</h2>':'<h2>Generating QR... Refresh</h2><a href="/pair">Pairing Code</a>');
-  res.send(`<div style="text-align:center"><h2>Scan with 8590175977</h2><img src="${qrCodeData}" width="300"><p><a href="/pair">Pairing Code</a></p></div>`);
-});
-app.get('/pair', (req,res)=>{
-  if(pairingCode) res.send(`<div style="text-align:center"><h1 style="font-size:55px;letter-spacing:8px;margin-top:50px;">${pairingCode}</h1><h3>WhatsApp > Linked Devices > Link with phone number</h3></div>`);
-  else res.send(sock?'<h2>Already Connected ✅</h2>':'<h2>Generating Code... Refresh 10 sec</h2>');
-});
-
-app.listen(PORT, ()=>{ console.log(`Server on ${PORT}`); startBot(); });
+app.get('/', (req, res) => res.send(`<h1>BizMapia Bot</h1><p>Status: ${isConnected?'✅ CONNECTED':'⏳ Connecting'} | <a href="/qr">QR</a> | <a href="/clear">Clear</a></p>`))
+app.get('/qr', async (req, res) => {
+  if (isConnected) return res.send('<h1>✅ Connected!</h1>')
+  if (!qrCodeData) return res.send('<h1>Wait 5 sec...</h1><script>setTimeout(()=>location.reload(),2000)</script>')
+  const qrImage = await qrcode.toDataURL(qrCodeData)
+  res.send(`<div style="text-align:center"><h1>Scan QR</h1><img src="${qrImage}" width="350"/><script>setTimeout(()=>location.reload(),15000)</script></div>`)
+})
+app.get('/clear', (req, res) => {
+  try { fs.rmSync('./auth_info', {recursive:true, force:true}) } catch(e){}
+  qrCodeData=''; isConnected=false
+  res.send('Cleared! Redeploy now')
+  setTimeout(()=>process.exit(0),1000)
+})
+app.listen(PORT, ()=>console.log('Server on '+PORT))
+startBot()
