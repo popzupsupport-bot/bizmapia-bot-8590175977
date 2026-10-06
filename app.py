@@ -1,86 +1,53 @@
-import os
-import requests
 from flask import Flask, request
+import os, requests
 
 app = Flask(__name__)
 
-# --- Load from Render Environment (NEVER hardcode tokens here) ---
-VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "popzup123")
-ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN", "")
-PHONE_ID = os.environ.get("PHONE_NUMBER_ID", "")
-# Meta API Version
-API_VERSION = "v20.0"
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "bizmapia_official_123")
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
+PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
-    return "Bot is live! - PopzUp / Bizmapia", 200
+    return "Bot is live! Bizmapia"
 
 @app.route("/webhook", methods=["GET"])
-def verify_webhook():
-    # For Meta verification
+def verify():
     mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
-
     if mode == "subscribe" and token == VERIFY_TOKEN:
-        print("WEBHOOK VERIFIED!")
+        print(f"✅ WEBHOOK VERIFIED")
         return challenge, 200
-    else:
-        return "Verification failed", 403
+    return "Verification failed", 403
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    data = request.get_json()
+    print(f"📩 INCOMING: {data}") # This will now show in Render Logs
+
     try:
-        data = request.get_json()
-        print(f"WEBHOOK POST RECEIVED: {data}")
+        entry = data["entry"][0]["changes"][0]["value"]
+        if "messages" in entry:
+            msg = entry["messages"][0]
+            from_num = msg["from"]
+            text = msg["text"]["body"]
+            print(f"From {from_num}: {text}")
 
-        if not data:
-            return "OK", 200
-
-        for entry in data.get("entry", []):
-            for change in entry.get("changes", []):
-                value = change.get("value", {})
-                messages = value.get("messages", [])
-
-                if not messages:
-                    continue
-
-                msg = messages[0]
-                from_num = msg.get("from")
-                msg_type = msg.get("type")
-
-                if msg_type == "text":
-                    text = msg.get("text", {}).get("body", "").lower().strip()
-                    print(f"Message from {from_num}: {text}")
-
-                    # Simple reply logic
-                    if text in ["hi", "hello", "hey", "menu", "start"]:
-                        reply_text = "👋 Welcome to PopzUp / Bizmapia!\n\n✅ Bot is WORKING!\n\nType:\n1. menu\n2. help\n3. test"
-                    else:
-                        reply_text = f"Hello!! You said: {text}\n\nBot is WORKING! 🤖\n\nType: menu"
-
-                    # Send reply
-                    url = f"https://graph.facebook.com/{API_VERSION}/{PHONE_ID}/messages"
-                    headers = {
-                        "Authorization": f"Bearer {ACCESS_TOKEN}",
-                        "Content-Type": "application/json"
-                    }
-                    payload = {
-                        "messaging_product": "whatsapp",
-                        "to": from_num,
-                        "type": "text",
-                        "text": {"body": reply_text}
-                    }
-
-                    r = requests.post(url, headers=headers, json=payload)
-                    print(f"Reply status: {r.status_code} {r.text}")
-
+            # Reply
+            url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
+            headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}", "Content-Type": "application/json"}
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": from_num,
+                "text": {"body": f"You said: {text}\n\nBizmapia bot is working! 🚀"}
+            }
+            r = requests.post(url, headers=headers, json=payload)
+            print(f"Reply status: {r.status_code} {r.text}")
     except Exception as e:
         print(f"Error: {e}")
 
     return "OK", 200
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    print(f"Starting on port {port}")
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
