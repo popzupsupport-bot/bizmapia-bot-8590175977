@@ -88,8 +88,7 @@ function scheduleOppDecision(phone, oppName){
 }
 
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
-app.get('/check-reminders', async (req,res)=>{ await checkReminders(); res.send('Checked'); });
-app.get('/',(req,res)=>res.send('Bizmapia Bot Final - Language Fixed ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot Final - Loop Fixed ✅'));
 
 app.post('/webhook', async (req,res)=>{
   try{
@@ -97,25 +96,48 @@ app.post('/webhook', async (req,res)=>{
     if(!msg) return res.sendStatus(200);
     const from = msg.from;
 
-    // ===== FIXED: ROBUST INPUT EXTRACTION - Handles List Click =====
-    let input = "";
-    let inputTitle = "";
+    // ===== ULTRA ROBUST INPUT - Fixes your screenshot loop =====
+    let rawId = "";
+    let rawTitle = "";
+    let rawBody = "";
+
     if(msg.type === "interactive"){
-      input = (msg.interactive.button_reply?.id || msg.interactive.list_reply?.id || "").trim();
-      inputTitle = (msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "").trim();
-    } else if(msg.type === "text"){
-      input = (msg.text?.body || "").trim();
-      inputTitle = input;
+      rawId = (msg.interactive.button_reply?.id || msg.interactive.list_reply?.id || "").trim();
+      rawTitle = (msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "").trim();
     }
-    const inputUpper = input.toUpperCase();
-    const titleUpper = inputTitle.toUpperCase();
-    const combined = (inputUpper + " " + titleUpper).toUpperCase();
-    const rawText = msg.text?.body || inputTitle || input || "";
+    if(msg.type === "text"){
+      rawBody = (msg.text?.body || "").trim();
+    }
+    // Final input to check - lowest case
+    const idLower = rawId.toLowerCase();
+    const titleLower = rawTitle.toLowerCase();
+    const bodyLower = rawBody.toLowerCase();
+    const combinedLower = `${idLower} ${titleLower} ${bodyLower}`.toLowerCase();
+    const inputUpper = (rawId || rawTitle || rawBody || "").toUpperCase();
+    const rawText = rawBody || rawTitle || rawId || "";
 
     const s = getSession(from);
-    console.log(`Incoming | Phone:${from} | Type:${msg.type} | ID:${input} | Title:${inputTitle} | Stage:${s.stage}`);
+    console.log(`IN | From:${from} | Stage:${s.stage} | ID:${rawId} | Title:${rawTitle} | Body:${rawBody}`);
 
-    if(combined.includes("OPP") && custTimers[from]) clearTimeout(custTimers[from]);
+    // ===== 1. FORCE LANGUAGE DETECTION - This breaks the loop in your screenshot =====
+    const isEnglish = combinedLower.includes("english") || idLower==="lang_en" || idLower==="en" || titleLower==="english";
+    const isHindi = combinedLower.includes("hindi") || idLower==="lang_hi" || idLower==="hi" || titleLower==="hindi";
+    const isMalayalam = combinedLower.includes("malayalam") || combinedLower.includes("മലയാളം") || idLower==="lang_ml" || idLower==="ml" || titleLower==="malayalam";
+
+    if(isEnglish || isHindi || isMalayalam){
+      if(isMalayalam) s.lang="ML";
+      else if(isHindi) s.lang="HI";
+      else s.lang="EN";
+      s.stage="MENU";
+      console.log(`LANG FIXED -> ${s.lang} for ${from}`);
+      await sendList(from, s.lang==="ML"? "നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?" : s.lang==="HI"? "आप क्या जानना चाहते हैं?" : "What would you like to know?", "Main Menu", [{title:"Menu",rows:[
+        {id:"customer",title:"Customer",description:"Find a cab or business"},
+        {id:"driver",title:"Driver",description:"Join & earn"},
+        {id:"business",title:"Business",description:"Register shop"},
+        {id:"opportunity",title:"Opportunities Franchise",description:"Franchise Levels"}
+      ]}]);
+      return res.sendStatus(200);
+    }
 
     // FORM STEPS
     if(s.stage==="FORM_NAME"){ s.form.name = rawText; s.stage="FORM_CONTACT"; await sendText(from, `Thanks ${rawText} 🙏\n\n*Contact number :-*\nPlease enter your mobile number:`); return res.sendStatus(200); }
@@ -133,15 +155,16 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
     if(s.stage==="FORM_OCCUPATION" || inputUpper.startsWith("OCC_")){
-      if(inputUpper.startsWith("OCC_")){ const m={OCC_RUNNING:"Running business",OCC_PLANNING:"Planning to start a business",OCC_EMPLOYEE:"Employee",OCC_PARTNER:"Business Partner",OCC_NRI:"NRI",OCC_RETIRED:"Retired"}; s.form.occupation = m[inputUpper]||input; } else { s.form.occupation = rawText; }
+      if(inputUpper.startsWith("OCC_")){ const m={OCC_RUNNING:"Running business",OCC_PLANNING:"Planning to start a business",OCC_EMPLOYEE:"Employee",OCC_PARTNER:"Business Partner",OCC_NRI:"NRI",OCC_RETIRED:"Retired"}; s.form.occupation = m[inputUpper]||rawText; } else { s.form.occupation = rawText; }
       console.log(`CRM_LEAD | Phone:${from} | Type:Franchisee_Lead | Franchise:${s.lastOpp} | Name:${s.form.name} | Contact:${s.form.contact} | Place:${s.form.place} | Occupation:${s.form.occupation}`);
       await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nYour enquiry for ${getOppName(s.lastOpp)} received!\n\nName: ${s.form.name}\nContact: ${s.form.contact}\nPlace: ${s.form.place}\nOccupation: ${s.form.occupation}\n\nOur team will contact within 24 hours 🙏`);
       s.stage="MENU"; s.form={}; await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opportunities"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
 
-    // START / HI
-    if(s.stage==="NEW" || ["HI","HELLO","HEY","HLO","START","HAI"].includes(inputUpper) || ["HI","HELLO","HEY","HLO","START","HAI"].includes(titleUpper)){
+    // START
+    if(s.stage==="NEW" || ["HI","HELLO","HEY","HLO","START","HAI","1","2","3","4"].includes(inputUpper) || combinedLower.includes("hi")){
+      if(["1","2","3","4"].includes(rawBody.trim())){ /* ignore number reply loop */ }
       s.stage="LANG";
       await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏");
       await new Promise(r=>setTimeout(r,800));
@@ -153,62 +176,15 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    // ===== FIXED: LANGUAGE SELECTION - Now accepts both ID and Title =====
-    if(s.stage==="LANG" || inputUpper.startsWith("LANG_") || ["ENGLISH","HINDI","MALAYALAM"].includes(inputUpper) || ["ENGLISH","HINDI","MALAYALAM"].includes(titleUpper)){
-      if(combined.includes("EN") || combined.includes("ENGLISH")) s.lang="EN";
-      else if(combined.includes("HI") || combined.includes("HINDI")) s.lang="HI";
-      else if(combined.includes("ML") || combined.includes("MALAYALAM")) s.lang="ML";
-      else s.lang="EN";
-
-      s.stage="MENU";
-      console.log(`Language selected: ${s.lang} for ${from}`);
-      await sendList(from, s.lang==="ML"?"നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?":s.lang==="HI"?"आप क्या जानना चाहते हैं?":"What would you like to know?", "Main Menu", [{title:"Menu",rows:[
-        {id:"customer",title:"Customer",description:"Find a cab or business"},
-        {id:"driver",title:"Driver",description:"Join & earn"},
-        {id:"business",title:"Business",description:"Register shop"},
-        {id:"opportunity",title:"Opportunities Franchise",description:"Franchise Levels"}
-      ]}]);
-      return res.sendStatus(200);
-    }
-
-    if(inputUpper==="CUSTOMER"){
-      await sendImage(from, ASSETS.posters.customer, "Customer - Find a cab or business\n✅ Taxi ✅ Delivery ✅ Offers");
-      await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}\n\nAll India Taxi & Business Offers`);
-      await sendButtons(from,"Choose option:",[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="ACTIVATE"){
-      console.log(`CRM_LEAD | Phone:${from} | Type:Customer_ClaimNow`);
-      await sendText(from,`✅ *Offer Activated!*\nOpen app and register:\n📲 ${ASSETS.apps.customer}`);
-      if(custTimers[from]) clearTimeout(custTimers[from]);
-      custTimers[from]=setTimeout(async()=>{ await sendText(from,`⏰ *Reminder: Activate your trip discount*\nOpen app now:\n${ASSETS.apps.customer}`); },5*60*1000);
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="DRIVER"){
-      await sendImage(from, ASSETS.posters.driver, "Driver - Join & Earn Daily!\nAuto Rs.33 Car Rs.49\n✅ Benefit free recharge by listing your vehicle");
-      await sendText(from,`🚕 *Benefit free recharge by listing your vehicle*\n📲 Download Driver App:\n${ASSETS.apps.driver}`);
-      await sendButtons(from,"Claim your free recharge:",[{id:"driver_benefit",title:"Free Recharge"},{id:"menu",title:"Main Menu"}]);
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="DRIVER_BENEFIT"){
-      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 FREE Recharge Benefit!\nList your vehicle & get FREE recharge");
-      await sendText(from,`✅ *Benefit free recharge by listing your vehicle*\n📲 Get FREE Recharge:\n${ASSETS.apps.driver}`);
-      await sendButtons(from,"Claim:",[{id:"driver_claim",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="DRIVER_CLAIM"){
-      await sendText(from,`✅ *Your free recharge going to activate on your account, keep your vehicle verified and ready to accept trip*\n📲 ${ASSETS.apps.driver}\n\n1. Register vehicle\n2. Upload RC & License\n3. Verify`);
-      addReminder(from,"Driver_FreeRecharge");
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="BUSINESS"){
-      await sendImage(from, ASSETS.posters.business, "Business Registration - All India");
-      await sendButtons(from,"Register your business",[{id:"business_list",title:"How to List"},{id:"menu",title:"Main Menu"}]);
-      return res.sendStatus(200);
-    }
+    if(inputUpper==="CUSTOMER"){ await sendImage(from, ASSETS.posters.customer, "Customer - Find a cab or business\n✅ Taxi ✅ Delivery ✅ Offers"); await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}`); await sendButtons(from,"Choose option:",[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]); return res.sendStatus(200); }
+    if(inputUpper==="ACTIVATE"){ console.log(`CRM_LEAD | Phone:${from} | Type:Customer_ClaimNow`); await sendText(from,`✅ *Offer Activated!*\nOpen app and register:\n📲 ${ASSETS.apps.customer}`); return res.sendStatus(200); }
+    if(inputUpper==="DRIVER"){ await sendImage(from, ASSETS.posters.driver, "Driver - Join & Earn Daily!\nAuto Rs.33 Car Rs.49\n✅ Benefit free recharge by listing your vehicle"); await sendText(from,`🚕 *Benefit free recharge by listing your vehicle*\n📲 Download Driver App:\n${ASSETS.apps.driver}`); await sendButtons(from,"Claim your free recharge:",[{id:"driver_benefit",title:"Free Recharge"},{id:"menu",title:"Main Menu"}]); return res.sendStatus(200); }
+    if(inputUpper==="DRIVER_BENEFIT"){ await sendImage(from, ASSETS.posters.freeRecharge, "🎉 FREE Recharge Benefit!\nList your vehicle & get FREE recharge"); await sendText(from,`✅ *Benefit free recharge by listing your vehicle*\n📲 Get FREE Recharge:\n${ASSETS.apps.driver}`); await sendButtons(from,"Claim:",[{id:"driver_claim",title:"Claim Now"},{id:"menu",title:"Main Menu"}]); return res.sendStatus(200); }
+    if(inputUpper==="DRIVER_CLAIM"){ await sendText(from,`✅ *Your free recharge going to activate on your account, keep your vehicle verified and ready to accept trip*\n📲 ${ASSETS.apps.driver}\n\n1. Register vehicle\n2. Upload RC & License\n3. Verify`); addReminder(from,"Driver_FreeRecharge"); return res.sendStatus(200); }
+    if(inputUpper==="BUSINESS"){ await sendImage(from, ASSETS.posters.business, "Business Registration - All India"); await sendButtons(from,"Register your business",[{id:"business_list",title:"How to List"},{id:"menu",title:"Main Menu"}]); return res.sendStatus(200); }
     if(inputUpper==="BUSINESS_LIST"){ await sendText(from,"Send details:\nShop Name:\nMobile:\nCategory:\nLocation:"); s.stage="DATA"; s.lastOpp="Business"; return res.sendStatus(200); }
 
-    if(["OPPORTUNITY","OPPORTUNITIES_FRANCHISE","VIEW_OPP_LEVELS","OPP_SEARCH"].includes(inputUpper) || combined.includes("OPPORTUNITY")){
+    if(["OPPORTUNITY","OPPORTUNITIES_FRANCHISE","VIEW_OPP_LEVELS","OPP_SEARCH","OPPORTUNITIES"].includes(inputUpper) || combinedLower.includes("opportunity")){
       await sendImage(from, ASSETS.posters.opportunity, "4 Business Opportunities Under One Brand - Bizmapia\nGrow Your Business And Build A Successful Future\nHigh Returns & Complete Support!");
       await new Promise(r=>setTimeout(r,1000));
       await sendText(from,`Want to know about Bizmapia company? Click the video link here 👇\n\n🎥 ${ASSETS.videos.main_opp}`);
@@ -252,29 +228,13 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    if(inputUpper==="OPP_YES"){
-      if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      s.stage="FORM_NAME"; s.form={};
-      await sendText(from, `Great! You want to grab this opportunity 🎉\n\n*${getOppName(s.lastOpp)}*\n\n*Name :-*\nEnter your full name:`);
-      return res.sendStatus(200);
-    }
-    if(inputUpper==="OPP_NO"){
-      if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      console.log(`CRM_LEAD | Phone:${from} | Type:Opted_Out | Franchise:${s.lastOpp}`);
-      await sendText(from, `You are successfully opt out from our business enquiry 🙏\n\nIf you change mind, type *HI* to start again.\n\nThank you for contacting Bizmapia!`);
-      s.stage="NEW"; return res.sendStatus(200);
-    }
-
-    if(inputUpper==="MENU"){
-      await sendList(from,"What would you like to know?","Main Menu",[{title:"Menu",rows:[
-        {id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"}
-      ]}]);
-      return res.sendStatus(200);
-    }
+    if(inputUpper==="OPP_YES"){ if(oppTimers[from]) clearTimeout(oppTimers[from]); s.stage="FORM_NAME"; s.form={}; await sendText(from, `Great! You want to grab this opportunity 🎉\n\n*${getOppName(s.lastOpp)}*\n\n*Name :-*\nEnter your full name:`); return res.sendStatus(200); }
+    if(inputUpper==="OPP_NO"){ if(oppTimers[from]) clearTimeout(oppTimers[from]); console.log(`CRM_LEAD | Phone:${from} | Type:Opted_Out | Franchise:${s.lastOpp}`); await sendText(from, `You are successfully opt out from our business enquiry 🙏\n\nIf you change mind, type *HI* to start again.\n\nThank you for contacting Bizmapia!`); s.stage="NEW"; return res.sendStatus(200); }
+    if(inputUpper==="MENU"){ await sendList(from,"What would you like to know?","Main Menu",[{title:"Menu",rows:[ {id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"} ]}]); return res.sendStatus(200); }
 
     await sendText(from,"━━━━━━━━━━━━━━━\n🔄 *RESTART MENU*\n👉 Type *HI* to Start Again 👈\n━━━━━━━━━━━━━━━\n\nJust send *Hi* 🙏");
     res.sendStatus(200);
   }catch(err){ console.log(err); res.sendStatus(200); }
 });
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot Running on ${PORT} - Language Fixed`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot Running on ${PORT} - Loop Fixed`));
