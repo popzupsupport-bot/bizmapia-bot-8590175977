@@ -11,16 +11,17 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 const REMINDER_FILE = "/tmp/reminders.json";
 
-// === 7 POSTERS - ALL 1080x1080 HD - UPLOAD THE FIXED ONES I GAVE YOU AND REPLACE LINKS ===
+// === 7 POSTERS - ALL HD DIRECT LINKS - 100% FULL VISIBLE NO FADE ===
+// FIXED: Replaced i.ibb.co with files.catbox.moe direct JPEGs you uploaded
 const ASSETS = {
   posters: {
-    welcome: "https://i.ibb.co/NEW/welcome-final-1080.jpg", // 1 - NEW Bizmapia Chat girl poster you just gave
-    customer: "https://i.ibb.co/3XsWd3p/customer.jpg", // 2
-    driver: "https://i.ibb.co/2153CSjp/driver.jpg", // 3
-    business: "https://i.ibb.co/3yjrdVxk/business.jpg", // 4
-    opportunity: "https://i.ibb.co/gbPYBbMt/opportunity.jpg", // 5
-    freeRecharge: "https://i.ibb.co/LXVpRKQp/free-recharge.jpg", // 6 - 33rs auto poster for driver reminder
-    businessBenefit: "https://i.ibb.co/NEW/business-benefit-yearly.jpg" // 7 - Yearly discount poster
+    welcome: "https://files.catbox.moe/zmj6te.jpg", // 1 - Welcome Bizmapia Chat (HD)
+    customer: "https://files.catbox.moe/nbjslu.jpg", // 2 - Customer App All India (HD)
+    driver: "https://files.catbox.moe/2trzp7.jpg", // 3 - Driver App All India (HD)
+    business: "https://files.catbox.moe/sylcqa.jpg", // 4 - Business Registration (HD)
+    opportunity: "https://files.catbox.moe/y8m3lq.jpg", // 5 - Business Opportunities (HD)
+    freeRecharge: "https://files.catbox.moe/c03g3q.jpg", // 6 - Kerala 33rs Plan (HD) - for driver reminder
+    businessBenefit: "https://files.catbox.moe/8ayus6.jpg" // 7 - Yearly Subscription Discount (HD)
   },
   apps: {
     customer: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
@@ -84,7 +85,7 @@ function getOppFeeCard(id){
 }
 
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
-app.get('/',(req,res)=>res.send('Bizmapia Bot - All Tabs Fixed ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot - All Tabs Fixed HD ✅'));
 
 app.post('/webhook', async (req,res)=>{
   try{
@@ -95,14 +96,12 @@ app.post('/webhook', async (req,res)=>{
     if(processedIds.size > 1000) processedIds.clear();
 
     const from = msg.from;
-    // FIX: Keep original ID lowercase, don't uppercase everything
     let rawId = msg.type==="interactive"? (msg.interactive.button_reply?.id || msg.interactive.list_reply?.id || "") : (msg.text?.body?.trim() || "");
-    let input = rawId.toLowerCase(); // for menu matching
-    let inputUpper = rawId.toUpperCase(); // for OPP codes
+    let input = rawId.toLowerCase();
+    let inputUpper = rawId.toUpperCase();
     const rawText = msg.text?.body || "";
     const s = getSession(from);
 
-    // ===== FORM FLOW =====
     if(s.stage==="FORM_NAME"){
       s.form.name = rawText; s.stage="FORM_CONTACT";
       await sendText(from, `Thanks ${rawText} 🙏\n\n*Contact number :-*\nEnter mobile number:`);
@@ -133,7 +132,6 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    // ===== NEW USER =====
     if(s.stage==="NEW" || ["hi","hello","hey","hlo","start","hai"].includes(input)){
       s.stage="LANG"; s.form={}; s.lastOpp="";
       await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏\n\nThank you for reaching out! We are happy to connect with you.");
@@ -154,9 +152,7 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    // ===== MAIN TABS - FIXED WITH LOWERCASE MATCHING =====
     if(input==="customer"){
-      // IMAGE IN CORRECT POSITION - HD quality, with caption
       await sendImage(from, ASSETS.posters.customer, "🚕 *CUSTOMER - Find a cab or business*\n✅ Taxi ✅ Delivery ✅ Business Offers\nAll India Service");
       await new Promise(r=>setTimeout(r,800));
       await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}\n\nBook a ride easily & travel with confidence.`);
@@ -203,7 +199,6 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    // ===== OPPORTUNITY - FIXED =====
     if(["opportunity","opportunities_franchise","view_opp_levels","opp_search"].includes(input)){
       await sendImage(from, ASSETS.posters.opportunity, "💼 *4 Business Opportunities Under One Brand - Bizmapia*\nGrow Your Business And Build A Successful Future\nHigh Returns & Complete Support!");
       await new Promise(r=>setTimeout(r,800));
@@ -258,7 +253,6 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
 
-    // If in MENU and random text, show menu (not loop)
     if(s.stage==="MENU"){
       const menuText = s.lang==="ML"? "ദയവായി മെനുവിൽ നിന്ന് തിരഞ്ഞെടുക്കുക 👇" : s.lang==="HI"? "कृपया मेनू से चुनें 👇" : "Please select from menu below 👇";
       await sendList(from, menuText,"Main Menu",[{title:"Menu",rows:[{id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"}]}]);
@@ -270,4 +264,4 @@ app.post('/webhook', async (req,res)=>{
   }catch(err){ console.log(err); res.sendStatus(200); }
 });
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot Running - All Tabs Fixed on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot Running - HD Fixed on ${PORT}`));
