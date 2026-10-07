@@ -13,43 +13,26 @@ const PORT = process.env.PORT || 10000;
 const REMINDER_FILE = "/tmp/reminders.json";
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
-// === GOOGLE SHEET FIX - THIS WAS MISSING ===
+const CONTACT_NUMBER = "85901 75977";
+const EMAIL_ID = "bizmapia.com@gmail.com";
+const WEBSITE = "www.bizmapia.in";
+
 async function getSheetsClient() {
   try {
     let creds = process.env.GOOGLE_CREDENTIALS;
-    if (!creds) {
-      console.log("GOOGLE_CREDENTIALS missing");
-      return null;
-    }
+    if (!creds) return null;
     let credentials = JSON.parse(creds);
-    if (credentials.private_key) {
-      credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
-    }
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
-    });
+    if (credentials.private_key) credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+    const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
     return google.sheets({ version: 'v4', auth });
-  } catch (e) {
-    console.log("Sheets Auth Error:", e.message);
-    return null;
-  }
+  } catch (e) { return null; }
 }
-
 async function appendToSheet(row) {
   try {
     const sheets = await getSheetsClient();
     if (!sheets) return;
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: 'Sheet1!A:I',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [row] }
-    });
-    console.log("SHEET_WRITTEN_SUCCESS", row);
-  } catch (e) {
-    console.log("SHEET_WRITE_ERROR", e.message);
-  }
+    await sheets.spreadsheets.values.append({ spreadsheetId: SHEET_ID, range: 'Sheet1!A:I', valueInputOption: 'USER_ENTERED', requestBody: { values: [row] } });
+  } catch (e) {}
 }
 
 const ASSETS = {
@@ -60,7 +43,9 @@ const ASSETS = {
     business: "https://files.catbox.moe/sylcqa.jpg",
     opportunity: "https://files.catbox.moe/y8m3lq.jpg",
     freeRecharge: "https://files.catbox.moe/c03g3q.jpg",
-    businessBenefit: "https://files.catbox.moe/8ayus6.jpg"
+    businessBenefit: "https://files.catbox.moe/8ayus6.jpg",
+    franchiseBrochure: "https://files.catbox.moe/FRANCHISEE-NEW-BIZMAPIA.jpg",
+    businessBrochure: "https://files.catbox.moe/BUSINESS-NEW-BIZMAPIA.jpg"
   },
   apps: {
     customer: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
@@ -76,13 +61,19 @@ const ASSETS = {
   }
 };
 
+// === FULL TRANSLATIONS FIX ===
+const LANG_TEXT = {
+  EN: { whatToKnow: "What would you like to know?", selectMenu: "Please select from menu below 👇", hiAgain: "👉 Type *HI* to Start Again 🙏", customerH: "🚕 *CUSTOMER - Book a Taxi & Services*", driverH: "🚕 *DRIVER PARTNER - Attach Your Vehicle & Start Earning!*", businessH: "🏪 *BUSINESS OWNER - List Your Business & Get Customers*", oppH: "💼 *FRANCHISE OPPORTUNITY - Own a Franchise in Your Area*", oppSub: "4 Business Opportunities Under One Brand", formName: "*Name :-*\nEnter your full name:", formContact: "*Contact number :-*\nEnter mobile number:", formPlace: "*Place :-*\nEnter place / city:", formOcc: "*Current occupation :-*\nSelect:", yesNoQ: "You want to grab this opportunity?", thanksEnq: "✅ Thank you", team24: "Our team will contact within 24h 🙏" },
+  HI: { whatToKnow: "आप क्या जानना चाहते हैं?", selectMenu: "कृपया नीचे दिए गए मेनू से चुनें 👇", hiAgain: "👉 फिर से शुरू करने के लिए *HI* टाइप करें 🙏", customerH: "🚕 *कस्टमर - टैक्सी और सर्विस बुक करें*", driverH: "🚕 *ड्राइवर पार्टनर - अपनी गाड़ी जोड़ें और कमाना शुरू करें!*", businessH: "🏪 *बिजनेस ओनर - अपना बिजनेस लिस्ट करें और ग्राहक पाएं*", oppH: "💼 *फ्रेंचाइजी अवसर - अपने क्षेत्र में फ्रेंचाइजी लें*", oppSub: "एक ब्रांड के तहत 4 बिजनेस अवसर", formName: "*नाम :-*\nअपना पूरा नाम लिखें:", formContact: "*मोबाइल नंबर :-*\nअपना नंबर लिखें:", formPlace: "*जगह :-*\nअपना शहर लिखें:", formOcc: "*वर्तमान व्यवसाय :-*\nचुनें:", yesNoQ: "क्या आप यह अवसर लेना चाहते हैं?", thanksEnq: "✅ धन्यवाद", team24: "हमारी टीम 24 घंटे में संपर्क करेगी 🙏" },
+  ML: { whatToKnow: "നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?", selectMenu: "ദയവായി താഴെയുള്ള മെനുവിൽ നിന്ന് തിരഞ്ഞെടുക്കുക 👇", hiAgain: "👉 വീണ്ടും ആരംഭിക്കാൻ *HI* ടൈപ്പ് ചെയ്യുക 🙏", customerH: "🚕 *കസ്റ്റമർ - ടാക്സി & സർവീസുകൾ ബുക്ക് ചെയ്യുക*", driverH: "🚕 *ഡ്രൈവർ പാർട്ണർ - വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം നേടൂ!*", businessH: "🏪 *ബിസിനസ് ഓണർ - ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സിനെ നേടൂ*", oppH: "💼 *ഫ്രാഞ്ചൈസി അവസരം - ഏരിയയിൽ ഫ്രാഞ്ചൈസി സ്വന്തമാക്കൂ*", oppSub: "ഒരു ബ്രാൻഡിന് കീഴിൽ 4 ബിസിനസ് അവസരങ്ങൾ", formName: "*പേര് :-*\nനിങ്ങളുടെ പേര് നൽകുക:", formContact: "*ഫോൺ നമ്പർ :-*\nനമ്പർ നൽകുക:", formPlace: "*സ്ഥലം :-*\nനിങ്ങളുടെ സ്ഥലം നൽകുക:", formOcc: "*ജോലി :-*\nതിരഞ്ഞെടുക്കുക:", yesNoQ: "ഈ അവസരം സ്വന്തമാക്കാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?", thanksEnq: "✅ നന്ദി", team24: "ടീം 24 മണിക്കൂറിനുള്ളിൽ ബന്ധപ്പെടും 🙏" }
+};
+const getT = (lang, key) => (LANG_TEXT[lang] && LANG_TEXT[lang][key]) || LANG_TEXT.EN[key];
+
 const sessions = {};
 const oppTimers = {};
 const custTimers = {};
 const processedIds = new Set();
-
 function getSession(p){ if(!sessions[p]) sessions[p]={lang:"EN",stage:"NEW",lastOpp:"",form:{}}; return sessions[p]; }
-
 async function sendText(to, body){ try{ await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"text",text:{body}}, {headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){} }
 async function sendImage(to, link, caption){ try{ await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"image",image:{link,caption}}, {headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){ await sendText(to,caption); } }
 async function sendButtons(to, body, buttons){ try{ await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"button",body:{text:body},action:{buttons:buttons.map(b=>({type:"reply",reply:{id:b.id,title:b.title.substring(0,20)}}))}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){ await sendText(to,body); } }
@@ -91,48 +82,25 @@ async function sendList(to, body, buttonText, sections){ try{ await axios.post(`
 function loadReminders(){ try{ if(fs.existsSync(REMINDER_FILE)) return JSON.parse(fs.readFileSync(REMINDER_FILE)); }catch(e){} return []; }
 function saveReminders(list){ try{ fs.writeFileSync(REMINDER_FILE, JSON.stringify(list)); }catch(e){} }
 function addReminder(phone, type){ const list = loadReminders(); list.push({ phone, type, claimedAt: Date.now(), sent1h:false, sent24h:false, sent48h:false, sent72h:false }); saveReminders(list); }
-
-async function checkReminders(){
-  let list = loadReminders(); let changed=false; const now=Date.now();
-  for(let r of list){
-    const diffH = (now - r.claimedAt)/(1000*60*60);
-    if(!r.sent1h && diffH>=1){
-      await sendImage(r.phone, ASSETS.posters.freeRecharge, `⏰ *Your free recharge going to expire*\n\n33 Rupees Recharge - 24hr Unlimited Trips\nActivate now:\n${ASSETS.apps.driver}`);
-      r.sent1h=true; changed=true;
-    }
-    if(!r.sent24h && diffH>=24){ await sendText(r.phone,`🔔 *Re-activate discount*\nYour FREE recharge pending:\n${ASSETS.apps.driver}`); r.sent24h=true; changed=true; }
-    if(!r.sent48h && diffH>=48){ await sendText(r.phone,`💬 *Need help to verify?*\nTeam can help:\n${ASSETS.apps.driver}`); r.sent48h=true; changed=true; }
-    if(!r.sent72h && diffH>=72){ await sendText(r.phone,`😔 *Free recharge expired*\nStill join:\n${ASSETS.apps.driver}`); r.sent72h=true; changed=true; }
-  }
-  if(changed) saveReminders(list.filter(r=>!r.sent72h));
-}
+async function checkReminders(){ let list = loadReminders(); let changed=false; const now=Date.now(); for(let r of list){ const diffH = (now - r.claimedAt)/(1000*60*60); if(!r.sent1h && diffH>=1){ await sendImage(r.phone, ASSETS.posters.freeRecharge, `⏰ *Your free recharge going to expire*\n\n33 Rupees Recharge - 24hr Unlimited Trips\nActivate now:\n${ASSETS.apps.driver}`); r.sent1h=true; changed=true; } if(!r.sent24h && diffH>=24){ await sendText(r.phone,`🔔 *Re-activate discount*\nYour FREE recharge pending:\n${ASSETS.apps.driver}`); r.sent24h=true; changed=true; } if(!r.sent48h && diffH>=48){ await sendText(r.phone,`💬 *Need help to verify?*\nTeam can help:\n${ASSETS.apps.driver}`); r.sent48h=true; changed=true; } if(!r.sent72h && diffH>=72){ await sendText(r.phone,`😔 *Free recharge expired*\nStill join:\n${ASSETS.apps.driver}`); r.sent72h=true; changed=true; } } if(changed) saveReminders(list.filter(r=>!r.sent72h)); }
 setInterval(checkReminders, 5*60*1000);
 
-function getOppName(id){
-  const map={ opp_1:"District Franchisee (10L > 15L)", opp_2:"Corporation Franchisee (5L)", opp_3:"Municipality Franchisee (4L)", opp_4:"Taxi Center (1L)", opp_5:"Directory Center (1L)" };
-  return map[id]||id;
-}
-function getOppFeeCard(id){
-  const cards={
-    opp_1: `━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n💰 ₹10L > ₹15L Investment\n📍 Full District Rights\n👑 1 District = 1 Franchisee\n━━━━━━━━━━━━━━━━━━━━━━`,
-    opp_2: `━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n💰 ₹5L Only\n📍 Corporation Rights\n━━━━━━━━━━━━━━━━━━━━━━`,
-    opp_3: `━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n💰 ₹4L Only\n📍 Municipality Rights\n━━━━━━━━━━━━━━━━━━━━━━`,
-    opp_4: `━━━━━━━━━━━━━━━━━━━━━━\n🚕 *TAXI CENTER*\n💰 ₹1L Only\n━━━━━━━━━━━━━━━━━━━━━━`,
-    opp_5: `━━━━━━━━━━━━━━━━━━━━━━\n📖 *DIRECTORY CENTER*\n💰 ₹1L Only\n━━━━━━━━━━━━━━━━━━━━━━`
-  };
-  return cards[id]||"";
-}
+function getOppName(id){ const map={opp_1:"District Franchisee (10L-15L)",opp_2:"Corporation Franchisee (5L)",opp_3:"Municipality Franchisee (4L)",opp_4:"Business Center - Taxi (1L)",opp_5:"Business Center - Directory (1L)"}; return map[id]||id; }
+function getOppFeeCard(id){ const cards={ opp_1: `━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n💰 ₹10L-₹15L Investment\n📍 Full District Rights | 5 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}`, opp_2: `━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n💰 ₹5L Investment\n📍 Corporation Rights | 3 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━`, opp_3: `━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n💰 ₹4L Investment\n📍 Municipality Rights | 3 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━`, opp_4: `━━━━━━━━━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - TAXI*\n💰 ₹1L Investment\n📍 Area Rights | 1 Year MOU\n❌ No Rent / No Salary\n📢 Ad Support: 3 Months Selected Service\n━━━━━━━━━━━━━━━━━━━━━━`, opp_5: `━━━━━━━━━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - DIRECTORY*\n💰 ₹1L Investment\n📍 Area Rights | 1 Year MOU\n❌ No Rent / No Salary\n📢 Ad Support: 3 Months Selected Service\n━━━━━━━━━━━━━━━━━━━━━━` }; return cards[id]||""; }
+const OPP_MAP = { 'OPP_1': 'District Franchisee (10L-15L) - 5Y - Rent+Salary - 12M Ads', 'OPP_2': 'Corporation Franchisee (5L) - 3Y - Rent+Salary - 12M Ads', 'OPP_3': 'Municipality Franchisee (4L) - 3Y - Rent+Salary - 12M Ads', 'OPP_4': 'Business Center Taxi (1L) - 1Y - 3M Ads', 'OPP_5': 'Business Center Directory (1L) - 1Y - 3M Ads' };
 
-const OPP_MAP = {
-  'OPP_1': 'District Franchisee (10L > 15L)',
-  'OPP_2': 'Corporation Franchisee (5L)',
-  'OPP_3': 'Municipality Franchisee (4L)',
-  'OPP_4': 'Taxi Center (1L)',
-  'OPP_5': 'Directory Center (1L)'
-};
+function getMainMenuRows(lang){
+  if(lang==="HI"){
+    return [{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];
+  } else if(lang==="ML"){
+    return [{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];
+  } else {
+    return [{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];
+  }
+}
 
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
-app.get('/',(req,res)=>res.send('Bizmapia Bot - Sheet Fixed HD ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot - FINAL HINDI FIXED ✅'));
 
 app.post('/webhook', async (req,res)=>{
   try{
@@ -149,15 +117,11 @@ app.post('/webhook', async (req,res)=>{
     const rawText = msg.text?.body || "";
     const s = getSession(from);
 
-    if(s.stage==="FORM_NAME"){
-      s.form.name = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_CONTACT";
-      await sendText(from, `Thanks ${rawText} 🙏\n\n*Contact number :-*\nEnter mobile number:`);
-      return res.sendStatus(200);
-    }
-    if(s.stage==="FORM_CONTACT"){ s.form.contact = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_PLACE"; await sendText(from, `*Place :-*\nEnter place / city:`); return res.sendStatus(200); }
+    if(s.stage==="FORM_NAME"){ s.form.name = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_CONTACT"; await sendText(from, getT(s.lang,"formContact")); return res.sendStatus(200); }
+    if(s.stage==="FORM_CONTACT"){ s.form.contact = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_PLACE"; await sendText(from, getT(s.lang,"formPlace")); return res.sendStatus(200); }
     if(s.stage==="FORM_PLACE"){
       s.form.place = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_OCCUPATION";
-      await sendList(from, "*Current occupation :-*\nSelect:", "Select Occupation", [{title:"Occupation", rows:[
+      await sendList(from, getT(s.lang,"formOcc"), "Select Occupation", [{title:"Occupation", rows:[
         {id:"occ_running", title:"Running business"}, {id:"occ_planning", title:"Planning to start"}, {id:"occ_employee", title:"Employee"}, {id:"occ_partner", title:"Business Partner"}, {id:"occ_nri", title:"NRI"}, {id:"occ_retired", title:"Retired"}
       ]}]);
       return res.sendStatus(200);
@@ -165,34 +129,33 @@ app.post('/webhook', async (req,res)=>{
     if(s.stage==="FORM_OCCUPATION"){
       if(input.startsWith("occ_")){ const m={occ_running:"Running business",occ_planning:"Planning to start",occ_employee:"Employee",occ_partner:"Business Partner",occ_nri:"NRI",occ_retired:"Retired"}; s.form.occupation = m[input]||input; }
       else s.form.occupation = rawText.replace(/\n/g,' ').trim();
-
       const oppFullName = OPP_MAP[s.lastOpp] || getOppName(s.lastOpp.toLowerCase()) || s.lastOpp;
       const dateStr = new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'});
-      console.log(`CRM_LEAD | ${from} | ${s.lastOpp} | ${s.form.name} | ${s.form.contact} | ${s.form.place} | ${s.form.occupation}`);
-
       const sheetRow = [dateStr, from, 'Franchisee_Lead', oppFullName, s.form.name, s.form.contact, s.form.place, s.form.occupation, ''];
       await appendToSheet(sheetRow);
-
-      await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nYour enquiry for ${oppFullName} received!\nOur team will contact within 24h 🙏`);
+      await sendImage(from, ASSETS.posters.welcome, `${getT(s.lang,"thanksEnq")} ${s.form.name}!\n${getT(s.lang,"team24")}\nContact: ${CONTACT_NUMBER} / ${EMAIL_ID}`);
       s.stage="MENU"; s.form={}; s.lastOpp="";
+      await new Promise(r=>setTimeout(r, 2000));
+      await sendImage(from, ASSETS.posters.franchiseBrochure, `📄 Bizmapia Franchise Brochure\n12 Months Ad Support & 3 Months\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);
       await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opportunities"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(s.stage==="BUSINESS_DATA"){
-      console.log(`CRM_LEAD | ${from} | Business | ${rawText}`);
       const dateStr = new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'});
       const cleanBusiness = rawText.replace(/\n/g, ' | ').substring(0, 200);
       const sheetRow = [dateStr, from, 'Business_Lead', cleanBusiness, cleanBusiness, '', '', '', ''];
       await appendToSheet(sheetRow);
-      await sendImage(from, ASSETS.posters.welcome, "✅ Business Details Received! Team will contact soon 🙏\n\nYearly Plan saves up to ₹598!");
+      await sendImage(from, ASSETS.posters.welcome, `✅ Business Details Received! ${getT(s.lang,"team24")}`);
       s.stage="MENU"; s.lastOpp="";
+      await new Promise(r=>setTimeout(r, 2000));
+      await sendImage(from, ASSETS.posters.businessBrochure, `📄 Business Listing Benefits\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);
       await sendButtons(from,"What next?",[{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
 
     if(s.stage==="NEW" || ["hi","hello","hey","hlo","start","hai"].includes(input)){
       s.stage="LANG"; s.form={}; s.lastOpp="";
-      await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏\n\nThank you for reaching out! We are happy to connect with you.");
+      await sendImage(from, ASSETS.posters.welcome, "👋 Welcome to Bizmapia! Your Success, Our Platform 🙏\n\nThank you for reaching out!");
       await new Promise(r=>setTimeout(r,800));
       await sendButtons(from,"Select language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക",[{id:"lang_en",title:"English"},{id:"lang_hi",title:"Hindi"},{id:"lang_ml",title:"Malayalam"}]);
       return res.sendStatus(200);
@@ -200,21 +163,15 @@ app.post('/webhook', async (req,res)=>{
     if(s.stage==="LANG" || input.startsWith("lang_")){
       if(input.includes("en")) s.lang="EN"; else if(input.includes("hi")) s.lang="HI"; else if(input.includes("ml")) s.lang="ML";
       s.stage="MENU";
-      const menuText = s.lang==="ML"? "നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?" : s.lang==="HI"? "आप क्या जानना चाहते हैं?" : "What would you like to know?";
-      await sendList(from, menuText, "Main Menu", [{title:"Menu",rows:[
-        {id:"customer",title:"Customer",description:"Find a cab or business"},
-        {id:"driver",title:"Driver",description:"Join & earn"},
-        {id:"business",title:"Business",description:"Register shop"},
-        {id:"opportunity",title:"Opportunities Franchise",description:"Franchise Levels"}
-      ]}]);
+      await sendList(from, getT(s.lang,"whatToKnow"), "Main Menu", [{title:"Menu",rows: getMainMenuRows(s.lang)}]);
       return res.sendStatus(200);
     }
 
     if(input==="customer"){
-      await sendImage(from, ASSETS.posters.customer, "🚕 *CUSTOMER - Find a cab or business*\n✅ Taxi ✅ Delivery ✅ Business Offers\nAll India Service");
+      await sendImage(from, ASSETS.posters.customer, `${getT(s.lang,"customerH")}\n✅ Taxi ✅ Delivery ✅ Business Offers\nContact: ${CONTACT_NUMBER}`);
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}\n\nBook a ride easily & travel with confidence.`);
-      await sendButtons(from,"Choose:",[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
+      await sendText(from, `📲 *Download Customer App:*\n${ASSETS.apps.customer}`);
+      await sendButtons(from, getT(s.lang,"whatToKnow"),[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="activate"){
@@ -224,102 +181,84 @@ app.post('/webhook', async (req,res)=>{
       return res.sendStatus(200);
     }
     if(input==="driver"){
-      await sendImage(from, ASSETS.posters.driver, "🚕 *DRIVER - Join & Earn Daily!*\nAuto Rs.33 / Car Rs.49\n✅ Benefit free recharge by listing your vehicle");
+      await sendImage(from, ASSETS.posters.driver, `${getT(s.lang,"driverH")}\nAuto Rs.33 / Car Rs.49\nContact: ${CONTACT_NUMBER}`);
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from,`🚕 *Benefit free recharge by listing your vehicle*\n📲 Download Driver App:\n${ASSETS.apps.driver}`);
+      await sendText(from,`📲 Download Driver App:\n${ASSETS.apps.driver}`);
       await sendButtons(from,"Claim your free recharge:",[{id:"driver_benefit",title:"Free Recharge"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="driver_benefit"){
-      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 *FREE Recharge Benefit!*\nകേരളത്തിലെ ഏത് ടൗണിലും 33 രൂപ റീച്ചാർജ്ജിൽ 24 മണിക്കൂർ unlimited trips\nDaily Plans + Incentive 100KM Rs.200/250");
+      await sendImage(from, ASSETS.posters.freeRecharge, "🎉 *FREE Recharge Benefit!*\n33 Rs Recharge = 24hr Unlimited Trips");
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from,`✅ *Benefit free recharge by listing your vehicle*\n📲 Get FREE Recharge:\n${ASSETS.apps.driver}\n\nLogin -> Add Driver & Vehicle -> TEST RUN`);
+      await sendText(from,`📲 Get FREE Recharge:\n${ASSETS.apps.driver}`);
       await sendButtons(from,"Claim:",[{id:"driver_claim",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
-    if(input==="driver_claim"){
-      await sendText(from,`✅ *Your free recharge going to activate, keep your vehicle verified and ready to accept trip*\n📲 ${ASSETS.apps.driver}`);
-      addReminder(from,"Driver_FreeRecharge");
-      s.stage="MENU";
-      return res.sendStatus(200);
-    }
+    if(input==="driver_claim"){ await sendText(from,`✅ *Your free recharge going to activate*\n📲 ${ASSETS.apps.driver}`); addReminder(from,"Driver_FreeRecharge"); s.stage="MENU"; return res.sendStatus(200); }
     if(input==="business"){
-      await sendImage(from, ASSETS.posters.business, "🏪 *BUSINESS REGISTRATION - All India*\nGet More Local Visibility | More Customers | Higher Sales");
+      await sendImage(from, ASSETS.posters.business, `${getT(s.lang,"businessH")}\nGet More Local Visibility`);
       await new Promise(r=>setTimeout(r,800));
       await sendButtons(from,"Register your business",[{id:"business_list",title:"How to List"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(input==="business_list"){
-      await sendImage(from, ASSETS.posters.businessBenefit, "🎉 *Benefit 1 Year Subscription and Get Discount*\nBasic ₹999/yr Save ₹198 | Silver ₹1999/yr Save ₹398 | Golden ₹2999/yr Save ₹598\nKey Benefits: Local Visibility, Customer Search, Grow Business, Build Trust");
+      await sendImage(from, ASSETS.posters.businessBenefit, "🎉 *Benefit 1 Year Subscription and Get Discount*");
       await new Promise(r=>setTimeout(r,1000));
-      await sendText(from,"📝 *Send business details in ONE message:*\n\nShop Name:\nMobile:\nCategory:\nLocation:\n\nExample: My Shop, 9876543210, Grocery, Kollam");
+      await sendText(from,"📝 *Send business details in ONE message:*\n\nShop Name:\nMobile:\nCategory:\nLocation:");
       s.stage="BUSINESS_DATA"; s.lastOpp="Business";
       return res.sendStatus(200);
     }
 
-    if(["opportunity","opportunities_franchise","view_opp_levels","opp_search"].includes(input)){
-      await sendImage(from, ASSETS.posters.opportunity, "💼 *4 Business Opportunities Under One Brand - Bizmapia*\nGrow Your Business And Build A Successful Future\nHigh Returns & Complete Support!");
+    if(["opportunity","opportunities_franchise","view_opp_levels","opp_search","franchise_opportunity"].includes(input)){
+      await sendImage(from, ASSETS.posters.opportunity, `${getT(s.lang,"oppH")}\n${getT(s.lang,"oppSub")}\nContact: ${CONTACT_NUMBER} | ${EMAIL_ID}`);
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from,`🎥 Want to know about Bizmapia? Watch:\n${ASSETS.videos.main_opp}`);
+      await sendText(from,`🎥 Watch About Bizmapia:\n${ASSETS.videos.main_opp}`);
       await new Promise(r=>setTimeout(r,800));
-      await sendList(from,"💰 *Select franchisee level with Investment to know more:*", "View Opportunities", [{title:"All Opportunities With Fee",rows:[
-        {id:"opp_1",title:"District Franchisee",description:"💰 10L > 15L"},
-        {id:"opp_2",title:"Corporation Franchisee",description:"💰 5L"},
-        {id:"opp_3",title:"Municipality Franchisee",description:"💰 4L"},
-        {id:"opp_4",title:"Business Center - Online Taxi",description:"💰 1L"},
-        {id:"opp_5",title:"Business Center - Business Directory",description:"💰 1L"}
+      await sendList(from, `💰 Select Franchise Level:\nDistrict 10L-15L (5Y, 12M Ads)\nMuni/Corp 4L-5L (3Y, 12M Ads)\nBusiness Center 1L (1Y, 3M Ads)`, "View Opportunities", [{title:"All Franchise Opportunities",rows:[
+        {id:"opp_1",title:"District Franchisee",description:"💰 10L-15L | 5Y | 12M Ads"},
+        {id:"opp_2",title:"Corporation Franchisee",description:"💰 5L | 3Y | 12M Ads"},
+        {id:"opp_3",title:"Municipality Franchisee",description:"💰 4L | 3Y | 12M Ads"},
+        {id:"opp_4",title:"Business Center - Taxi",description:"💰 1L | 1Y | 3M Ads"},
+        {id:"opp_5",title:"Business Center - Directory",description:"💰 1L | 1Y | 3M Ads"}
       ]}]);
       await new Promise(r=>setTimeout(r,1200));
-      await sendButtons(from,"👇 If list not visible, select:",[{id:"opp_1", title:"District (10L>15L)"},{id:"opp_2", title:"Corporation (5L)"},{id:"opp_3", title:"Municipality (4L)"}]);
+      await sendButtons(from,"👇 If list not visible:",[{id:"opp_1", title:"District (10L-15L)"},{id:"opp_2", title:"Corporation (5L)"},{id:"opp_3", title:"Municipality (4L)"}]);
       await new Promise(r=>setTimeout(r,800));
-      await sendButtons(from,"More Opportunities:",[{id:"opp_4", title:"Taxi Center (1L)"},{id:"opp_5", title:"Directory (1L)"},{id:"menu", title:"Main Menu"}]);
+      await sendButtons(from,"More:",[{id:"opp_4", title:"Taxi Center (1L)"},{id:"opp_5", title:"Directory (1L)"},{id:"menu", title:"Main Menu"}]);
       return res.sendStatus(200);
     }
 
     if(["opp_1","opp_2","opp_3","opp_4","opp_5"].includes(input)){
       s.lastOpp = inputUpper;
-      await sendImage(from, ASSETS.posters.opportunity, `💼 *${getOppName(input)}* - Bizmapia Franchisee`);
+      await sendImage(from, ASSETS.posters.opportunity, `💼 *${getOppName(input)}*`);
       await new Promise(r=>setTimeout(r,800));
       await sendText(from, getOppFeeCard(input));
       await new Promise(r=>setTimeout(r,800));
-      await sendText(from,`🎥 *${getOppName(input)} - Watch full awareness:*\n${ASSETS.videos[input]}\n\nWatch to understand investment, income & infrastructure.`);
+      await sendText(from,`🎥 Watch full awareness:\n${ASSETS.videos[input]}\nContact: ${CONTACT_NUMBER}`);
       if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      oppTimers[from]=setTimeout(async()=>{
-        await sendButtons(from,`⏰ *You want to grab this opportunity?*\nYou viewed ${getOppName(input)} 5 mins ago.`, [{id:"opp_yes", title:"Yes"}, {id:"opp_no", title:"No"}, {id:"opp_search", title:"Search Other"}]);
-      },5*60*1000);
+      oppTimers[from]=setTimeout(async()=>{ await sendButtons(from,`⏰ ${getT(s.lang,"yesNoQ")}`, [{id:"opp_yes", title:"Yes"}, {id:"opp_no", title:"No"}, {id:"opp_search", title:"Search Other"}]); },5*60*1000);
       await new Promise(r=>setTimeout(r,800));
-      await sendButtons(from,"You want to grab this opportunity?",[{id:"opp_yes", title:"Yes"},{id:"opp_no", title:"No"},{id:"opp_search", title:"Search Other"}]);
+      await sendButtons(from, getT(s.lang,"yesNoQ"),[{id:"opp_yes", title:"Yes"},{id:"opp_no", title:"No"},{id:"opp_search", title:"Search Other"}]);
       return res.sendStatus(200);
     }
 
-    if(input==="opp_yes"){
-      if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      s.stage="FORM_NAME"; s.form={};
-      await sendText(from, `Great! You want to grab this opportunity 🎉\n\n*${getOppName(s.lastOpp.toLowerCase())}*\n\n*Name :-*\nEnter your full name:`);
-      return res.sendStatus(200);
-    }
-    if(input==="opp_no"){
-      if(oppTimers[from]) clearTimeout(oppTimers[from]);
-      await sendText(from, `You are opted out 🙏\nType *HI* to start again.\nThank you for contacting Bizmapia!`);
-      s.stage="NEW"; return res.sendStatus(200);
-    }
+    if(input==="opp_yes"){ if(oppTimers[from]) clearTimeout(oppTimers[from]); s.stage="FORM_NAME"; s.form={}; await sendText(from, getT(s.lang,"formName")); return res.sendStatus(200); }
+    if(input==="opp_no"){ if(oppTimers[from]) clearTimeout(oppTimers[from]); await sendText(from, `You are opted out 🙏\nType *HI* to start again.\nContact: ${CONTACT_NUMBER}`); s.stage="NEW"; return res.sendStatus(200); }
 
     if(input==="menu" || input==="view_opp_levels"){
       s.stage="MENU";
-      const menuText = s.lang==="ML"? "നിങ്ങൾ എന്താണ് അറിയാൻ ആഗ്രഹിക്കുന്നത്?" : s.lang==="HI"? "आप क्या जानना चाहते हैं?" : "What would you like to know?";
-      await sendList(from, menuText,"Main Menu",[{title:"Menu",rows:[{id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"}]}]);
+      await sendList(from, getT(s.lang,"whatToKnow"),"Main Menu",[{title:"Menu",rows: getMainMenuRows(s.lang)}]);
       return res.sendStatus(200);
     }
 
     if(s.stage==="MENU"){
-      const menuText = s.lang==="ML"? "ദയവായി മെനുവിൽ നിന്ന് തിരഞ്ഞെടുക്കുക 👇" : s.lang==="HI"? "कृपया मेनू से चुनें 👇" : "Please select from menu below 👇";
-      await sendList(from, menuText,"Main Menu",[{title:"Menu",rows:[{id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Opportunities"}]}]);
+      await sendList(from, getT(s.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows: getMainMenuRows(s.lang)}]);
       return res.sendStatus(200);
     }
 
-    await sendText(from,"👉 Type *HI* to Start Again 🙏");
+    await sendText(from, getT(s.lang,"hiAgain"));
     res.sendStatus(200);
   }catch(err){ console.log(err); res.sendStatus(200); }
 });
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot Running - SHEET FIXED on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot FINAL - Hindi Fixed - Running on ${PORT}`));
