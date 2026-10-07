@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
+const { google } = require('googleapis');
 const app = express();
 app.use(bodyParser.json());
 
@@ -10,18 +11,56 @@ const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 const REMINDER_FILE = "/tmp/reminders.json";
+const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
-// === 7 POSTERS - ALL HD DIRECT LINKS - 100% FULL VISIBLE NO FADE ===
-// FIXED: Replaced i.ibb.co with files.catbox.moe direct JPEGs you uploaded
+// === GOOGLE SHEET FIX - THIS WAS MISSING ===
+async function getSheetsClient() {
+  try {
+    let creds = process.env.GOOGLE_CREDENTIALS;
+    if (!creds) {
+      console.log("GOOGLE_CREDENTIALS missing");
+      return null;
+    }
+    let credentials = JSON.parse(creds);
+    if (credentials.private_key) {
+      credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+    return google.sheets({ version: 'v4', auth });
+  } catch (e) {
+    console.log("Sheets Auth Error:", e.message);
+    return null;
+  }
+}
+
+async function appendToSheet(row) {
+  try {
+    const sheets = await getSheetsClient();
+    if (!sheets) return;
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Sheet1!A:I',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [row] }
+    });
+    console.log("SHEET_WRITTEN_SUCCESS", row);
+  } catch (e) {
+    console.log("SHEET_WRITE_ERROR", e.message);
+  }
+}
+
 const ASSETS = {
   posters: {
-    welcome: "https://files.catbox.moe/zmj6te.jpg", // 1 - Welcome Bizmapia Chat (HD)
-    customer: "https://files.catbox.moe/nbjslu.jpg", // 2 - Customer App All India (HD)
-    driver: "https://files.catbox.moe/2trzp7.jpg", // 3 - Driver App All India (HD)
-    business: "https://files.catbox.moe/sylcqa.jpg", // 4 - Business Registration (HD)
-    opportunity: "https://files.catbox.moe/y8m3lq.jpg", // 5 - Business Opportunities (HD)
-    freeRecharge: "https://files.catbox.moe/c03g3q.jpg", // 6 - Kerala 33rs Plan (HD) - for driver reminder
-    businessBenefit: "https://files.catbox.moe/8ayus6.jpg" // 7 - Yearly Subscription Discount (HD)
+    welcome: "https://files.catbox.moe/zmj6te.jpg",
+    customer: "https://files.catbox.moe/nbjslu.jpg",
+    driver: "https://files.catbox.moe/2trzp7.jpg",
+    business: "https://files.catbox.moe/sylcqa.jpg",
+    opportunity: "https://files.catbox.moe/y8m3lq.jpg",
+    freeRecharge: "https://files.catbox.moe/c03g3q.jpg",
+    businessBenefit: "https://files.catbox.moe/8ayus6.jpg"
   },
   apps: {
     customer: "https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
@@ -84,8 +123,16 @@ function getOppFeeCard(id){
   return cards[id]||"";
 }
 
+const OPP_MAP = {
+  'OPP_1': 'District Franchisee (10L > 15L)',
+  'OPP_2': 'Corporation Franchisee (5L)',
+  'OPP_3': 'Municipality Franchisee (4L)',
+  'OPP_4': 'Taxi Center (1L)',
+  'OPP_5': 'Directory Center (1L)'
+};
+
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN) res.send(req.query['hub.challenge']); else res.sendStatus(403); });
-app.get('/',(req,res)=>res.send('Bizmapia Bot - All Tabs Fixed HD ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot - Sheet Fixed HD ✅'));
 
 app.post('/webhook', async (req,res)=>{
   try{
@@ -103,13 +150,13 @@ app.post('/webhook', async (req,res)=>{
     const s = getSession(from);
 
     if(s.stage==="FORM_NAME"){
-      s.form.name = rawText; s.stage="FORM_CONTACT";
+      s.form.name = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_CONTACT";
       await sendText(from, `Thanks ${rawText} 🙏\n\n*Contact number :-*\nEnter mobile number:`);
       return res.sendStatus(200);
     }
-    if(s.stage==="FORM_CONTACT"){ s.form.contact = rawText; s.stage="FORM_PLACE"; await sendText(from, `*Place :-*\nEnter place / city:`); return res.sendStatus(200); }
+    if(s.stage==="FORM_CONTACT"){ s.form.contact = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_PLACE"; await sendText(from, `*Place :-*\nEnter place / city:`); return res.sendStatus(200); }
     if(s.stage==="FORM_PLACE"){
-      s.form.place = rawText; s.stage="FORM_OCCUPATION";
+      s.form.place = rawText.replace(/\n/g,' ').trim(); s.stage="FORM_OCCUPATION";
       await sendList(from, "*Current occupation :-*\nSelect:", "Select Occupation", [{title:"Occupation", rows:[
         {id:"occ_running", title:"Running business"}, {id:"occ_planning", title:"Planning to start"}, {id:"occ_employee", title:"Employee"}, {id:"occ_partner", title:"Business Partner"}, {id:"occ_nri", title:"NRI"}, {id:"occ_retired", title:"Retired"}
       ]}]);
@@ -117,15 +164,26 @@ app.post('/webhook', async (req,res)=>{
     }
     if(s.stage==="FORM_OCCUPATION"){
       if(input.startsWith("occ_")){ const m={occ_running:"Running business",occ_planning:"Planning to start",occ_employee:"Employee",occ_partner:"Business Partner",occ_nri:"NRI",occ_retired:"Retired"}; s.form.occupation = m[input]||input; }
-      else s.form.occupation = rawText;
+      else s.form.occupation = rawText.replace(/\n/g,' ').trim();
+
+      const oppFullName = OPP_MAP[s.lastOpp] || getOppName(s.lastOpp.toLowerCase()) || s.lastOpp;
+      const dateStr = new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'});
       console.log(`CRM_LEAD | ${from} | ${s.lastOpp} | ${s.form.name} | ${s.form.contact} | ${s.form.place} | ${s.form.occupation}`);
-      await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nYour enquiry for ${getOppName(s.lastOpp)} received!\nOur team will contact within 24h 🙏`);
+
+      const sheetRow = [dateStr, from, 'Franchisee_Lead', oppFullName, s.form.name, s.form.contact, s.form.place, s.form.occupation, ''];
+      await appendToSheet(sheetRow);
+
+      await sendImage(from, ASSETS.posters.welcome, `✅ Thank you ${s.form.name}!\nYour enquiry for ${oppFullName} received!\nOur team will contact within 24h 🙏`);
       s.stage="MENU"; s.form={}; s.lastOpp="";
       await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opportunities"},{id:"menu",title:"Main Menu"}]);
       return res.sendStatus(200);
     }
     if(s.stage==="BUSINESS_DATA"){
       console.log(`CRM_LEAD | ${from} | Business | ${rawText}`);
+      const dateStr = new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'});
+      const cleanBusiness = rawText.replace(/\n/g, ' | ').substring(0, 200);
+      const sheetRow = [dateStr, from, 'Business_Lead', cleanBusiness, cleanBusiness, '', '', '', ''];
+      await appendToSheet(sheetRow);
       await sendImage(from, ASSETS.posters.welcome, "✅ Business Details Received! Team will contact soon 🙏\n\nYearly Plan saves up to ₹598!");
       s.stage="MENU"; s.lastOpp="";
       await sendButtons(from,"What next?",[{id:"menu",title:"Main Menu"}]);
@@ -264,4 +322,4 @@ app.post('/webhook', async (req,res)=>{
   }catch(err){ console.log(err); res.sendStatus(200); }
 });
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot Running - HD Fixed on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot Running - SHEET FIXED on ${PORT}`));
