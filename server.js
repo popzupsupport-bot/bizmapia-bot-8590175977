@@ -10,11 +10,18 @@ const VERIFY_TOKEN = "bizmapia_verify_2024";
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
-// FIX 1: Support both SHEET_ID and GOOGLE_SHEET_ID env
-const SHEET_ID = process.env.GOOGLE_SHEET_ID || process.env.SHEET_ID || process.env.GOOGLE_SHEET_ID_2;
+
+// ===== FIX 1: HARDCODED SHEET ID + ENV SUPPORT (100% FAIL-SAFE) =====
+const SHEET_ID = process.env.GOOGLE_SHEET_ID || process.env.SHEET_ID || process.env.GOOGLE_SHEET_ID_2 || "1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
+
 const CONTACT_NUMBER = "85901 75977";
 const EMAIL_ID = "bizmapia.com@gmail.com";
 const WEBSITE = "www.bizmapia.in";
+
+console.log("========== GOD MODE DEBUG ==========");
+console.log("SHEET_ID:", SHEET_ID? SHEET_ID.substring(0,25)+"..." : "MISSING!!!");
+console.log("GOOGLE_CREDENTIALS:", process.env.GOOGLE_CREDENTIALS? "EXISTS" : "MISSING!!!");
+console.log("====================================");
 
 // FIX 2: In-Memory pending (Render /tmp deletes files)
 const pendingChatsMemory = {};
@@ -40,10 +47,15 @@ async function getSheetsClient(){
 async function appendToSheet(row){
   try{
     const sheets=await getSheetsClient();
-    if(!sheets) return;
-    // Always write to A:I (9 cols) to match your current sheet
-    // Row: Date | Phone | Type | Details | Name | Contact | Place | Occupation | Lang/Status
-    let finalRow = row.slice(0,9); // Ensure only 9 cols
+    if(!sheets) {
+      console.error("[LEAD SHEET FAIL] No client");
+      return;
+    }
+    if(!SHEET_ID){
+      console.error("[LEAD SHEET FAIL] No SHEET_ID");
+      return;
+    }
+    let finalRow = row.slice(0,9);
     await sheets.spreadsheets.values.append({
       spreadsheetId:SHEET_ID,
       range:'Sheet1!A:I',
@@ -56,16 +68,18 @@ async function appendToSheet(row){
   }
 }
 
-// FIX 4: logAllChat now 9 cols - REALTIME CHAT TRACKING
+// FIX 4: GOD MODE REALTIME LOG - EVERY CHAT TRACKED
 async function logAllChat(phone, type, status, lang, stage, extra=''){
   try{
     const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-    // 9 cols: A Date, B Phone, C Type, D Details, E Name, F Contact, G Place, H Job, I Lang/Status/Stage
     const details = `${stage} | ${type} | ${status} | ${extra}`.substring(0,200);
     const langInfo = `${lang} | ${status} | ${stage}`;
     const row=[dateStr, phone, type, details, '', phone, '', stage, langInfo];
     const sheets=await getSheetsClient();
-    if(!sheets) return;
+    if(!sheets ||!SHEET_ID) {
+      console.error("[GOD MODE FAIL] No sheets or ID");
+      return;
+    }
     await sheets.spreadsheets.values.append({
       spreadsheetId:SHEET_ID,
       range:'Sheet1!A:I',
@@ -74,7 +88,7 @@ async function logAllChat(phone, type, status, lang, stage, extra=''){
     });
     console.log(`GOD MODE REALTIME LOG: ${phone} | ${stage} | ${type}`);
   }catch(e){
-    console.error("GOD MODE LOG FAILED:", e.message);
+    console.error("GOD MODE LOG FAILED:", e.message, e.response?.data);
   }
 }
 
@@ -95,7 +109,6 @@ function addReminder(phone,type){const list=loadReminders();list.push({phone,typ
 async function checkReminders(){let list=loadReminders();let changed=false;const now=Date.now();for(let r of list){const diffH=(now-r.claimedAt)/(1000*60*60);if(!r.sent1h&&diffH>=1){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *Your free recharge going to expire*\n\n33 Rupees Recharge - 24hr Unlimited Trips\nActivate now:\n${ASSETS.apps.driver}`);r.sent1h=true;changed=true;}if(!r.sent24h&&diffH>=24){await sendText(r.phone,`🔔 *Re-activate discount*\nYour FREE recharge pending:\n${ASSETS.apps.driver}`);r.sent24h=true;changed=true;}if(!r.sent48h&&diffH>=48){await sendText(r.phone,`💬 *Need help to verify?*\nTeam can help:\n${ASSETS.apps.driver}`);r.sent48h=true;changed=true;}if(!r.sent72h&&diffH>=72){await sendText(r.phone,`😔 *Free recharge expired*\nStill join:\n${ASSETS.apps.driver}`);r.sent72h=true;changed=true;}}if(changed)saveReminders(list.filter(r=>!r.sent72h));}
 setInterval(checkReminders,5*60*1000);
 
-// FIX 5: Pending chats now use memory + file both for Render safety
 function loadPendingChats(){return pendingChatsMemory;}
 function savePendingChats(data){Object.assign(pendingChatsMemory, data); try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(data));}catch(e){}}
 let pendingChats=pendingChatsMemory;
@@ -158,6 +171,13 @@ app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)r
 app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance ✅ Running on 10000'));
 app.get('/pending',(req,res)=>{res.json({total_pending:Object.keys(pendingChats).length,pending_chats:pendingChats,driver_reminders:loadReminders().length});});
 
+// ===== NEW TEST ENDPOINT - GOD MODE =====
+app.get('/test-sheet', async (req,res)=>{
+  console.log("TEST SHEET CALLED");
+  await logAllChat("919999999999", "TEST", "TEST_SHEET", "EN", "TEST_STAGE", "Manual browser test");
+  res.send(`✅ Test log sent to sheet! SHEET_ID: ${SHEET_ID} - Check Sheet & Render Logs! Time: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`);
+});
+
 app.post('/webhook',async(req,res)=>{
 try{
 const msg=req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
@@ -169,6 +189,10 @@ let rawId=msg.type==="interactive"?(msg.interactive.button_reply?.id||msg.intera
 let input=rawId.toLowerCase();let inputUpper=rawId.toUpperCase();
 const rawText=msg.text?.body||"";
 const s=getSession(from);
+
+// ===== GOD MODE - LOG EVERY SINGLE INBOUND AT TOP - REALTIME =====
+console.log(`[INBOUND] ${from} : ${rawText || rawId}`);
+await logAllChat(from, (rawText||rawId||"HI").substring(0,30), "INBOUND", s.lang, "CHAT_RECEIVED", `Raw: ${rawText||rawId}`.substring(0,150));
 
 if(s.stage==="FORM_NAME"){s.form.name=rawText.replace(/\n/g,' ').trim();s.stage="FORM_CONTACT";setPendingChat(from,s.lang,"FORM_CONTACT"); await logAllChat(from, 'FORM', 'NAME_GIVEN', s.lang, 'FORM_CONTACT', s.form.name); await sendText(from,getT(s.lang,"formContact"));return res.sendStatus(200);}
 if(s.stage==="FORM_CONTACT"){s.form.contact=rawText.replace(/\n/g,' ').trim();s.stage="FORM_PLACE";setPendingChat(from,s.lang,"FORM_PLACE"); await logAllChat(from, 'FORM', 'CONTACT_GIVEN', s.lang, 'FORM_PLACE', s.form.contact); await sendText(from,getT(s.lang,"formPlace"));return res.sendStatus(200);}
