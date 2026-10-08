@@ -15,7 +15,7 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID || process.env.SHEET_ID || process.
 
 const CONTACT_NUMBER = "85901 75977";
 const EMAIL_ID = "bizmapia.com@gmail.com";
-const WEBSITE = "www.bizmapia.in";
+const WEBSITE = "www.bizmapia.com";
 
 console.log("========== GOD MODE DEBUG ==========");
 console.log("SHEET_ID:", SHEET_ID? SHEET_ID.substring(0,25)+"..." : "MISSING!!!");
@@ -179,7 +179,7 @@ const OPP_MAP={'OPP_1':'District Franchisee (10L-15L) - 5Y - Rent+Salary - 12M A
 function getMainMenuRows(lang){if(lang==="HI"){return[{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];}else if(lang==="ML"){return[{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];}else{return[{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];}}
 
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance ✅ Running on 10000 - CatchAll Fixed'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance ✅ Running on 10000 - CatchAll Fixed - www.bizmapia.com'));
 app.get('/pending',(req,res)=>{res.json({total_pending:Object.keys(pendingChats).length,pending_chats:pendingChats,driver_reminders:loadReminders().length});});
 app.get('/test-sheet', async (req,res)=>{
   console.log("TEST SHEET CALLED");
@@ -260,4 +260,4 @@ if(input==="menu"||input==="view_opp_levels"){s.stage="MENU";setPendingChat(from
 if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from,getT(s.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows:getMainMenuRows(s.lang)}]);return res.sendStatus(200);}
 await sendText(from,getT(s.lang,"hiAgain"));res.sendStatus(200);}catch(err){console.log(err);res.sendStatus(200);}});
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance Running on ${PORT} - CatchAll Fixed`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance Running on ${PORT} - CatchAll Fixed - www.bizmapia.com`));
