@@ -11,7 +11,6 @@ const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const PORT = process.env.PORT || 10000;
 
-// ===== FIX 1: HARDCODED SHEET ID + ENV SUPPORT (100% FAIL-SAFE) =====
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || process.env.SHEET_ID || process.env.GOOGLE_SHEET_ID_2 || "1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
 
 const CONTACT_NUMBER = "85901 75977";
@@ -23,7 +22,6 @@ console.log("SHEET_ID:", SHEET_ID? SHEET_ID.substring(0,25)+"..." : "MISSING!!!"
 console.log("GOOGLE_CREDENTIALS:", process.env.GOOGLE_CREDENTIALS? "EXISTS" : "MISSING!!!");
 console.log("====================================");
 
-// FIX 2: In-Memory pending (Render /tmp deletes files)
 const pendingChatsMemory = {};
 
 async function getSheetsClient(){
@@ -43,7 +41,6 @@ async function getSheetsClient(){
   }
 }
 
-// FIX 3: REALTIME SHEET MAINTENANCE - 9 COLUMN COMPATIBLE
 async function appendToSheet(row){
   try{
     const sheets=await getSheetsClient();
@@ -68,7 +65,6 @@ async function appendToSheet(row){
   }
 }
 
-// FIX 4: GOD MODE REALTIME LOG - EVERY CHAT TRACKED
 async function logAllChat(phone, type, status, lang, stage, extra=''){
   try{
     const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
@@ -103,6 +99,21 @@ async function sendText(to,body){try{await axios.post(`https://graph.facebook.co
 async function sendImage(to,link,caption){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"image",image:{link,caption}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,caption);}}
 async function sendButtons(to,body,buttons){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"button",body:{text:body},action:{buttons:buttons.map(b=>({type:"reply",reply:{id:b.id,title:b.title.substring(0,20)}}))}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,body);}}
 async function sendList(to,body,buttonText,sections){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"list",body:{text:body},action:{button:buttonText,sections}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,body);}}
+
+// === AJO SIR NEW FUNCTION: Welcome TEXT ONLY + Language (No Poster) ===
+async function sendWelcomeTextAndLanguage(to){
+  const welcomeText = `👋 *Welcome to Bizmapia! Your Success, Our Platform* 🙏
+
+Thank you for reaching out to us!
+
+Please select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക 👇`;
+  await sendButtons(to, welcomeText, [
+    {id:"lang_en",title:"English"},
+    {id:"lang_hi",title:"Hindi"},
+    {id:"lang_ml",title:"Malayalam"}
+  ]);
+}
+
 function loadReminders(){try{if(fs.existsSync("/tmp/reminders.json"))return JSON.parse(fs.readFileSync("/tmp/reminders.json"));}catch(e){}return [];}
 function saveReminders(list){try{fs.writeFileSync("/tmp/reminders.json",JSON.stringify(list));}catch(e){}}
 function addReminder(phone,type){const list=loadReminders();list.push({phone,type,claimedAt:Date.now(),sent1h:false,sent24h:false,sent48h:false,sent72h:false});saveReminders(list);}
@@ -168,10 +179,8 @@ const OPP_MAP={'OPP_1':'District Franchisee (10L-15L) - 5Y - Rent+Salary - 12M A
 function getMainMenuRows(lang){if(lang==="HI"){return[{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];}else if(lang==="ML"){return[{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];}else{return[{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];}}
 
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance ✅ Running on 10000'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance ✅ Running on 10000 - CatchAll Fixed'));
 app.get('/pending',(req,res)=>{res.json({total_pending:Object.keys(pendingChats).length,pending_chats:pendingChats,driver_reminders:loadReminders().length});});
-
-// ===== NEW TEST ENDPOINT - GOD MODE =====
 app.get('/test-sheet', async (req,res)=>{
   console.log("TEST SHEET CALLED");
   await logAllChat("919999999999", "TEST", "TEST_SHEET", "EN", "TEST_STAGE", "Manual browser test");
@@ -190,10 +199,10 @@ let input=rawId.toLowerCase();let inputUpper=rawId.toUpperCase();
 const rawText=msg.text?.body||"";
 const s=getSession(from);
 
-// ===== GOD MODE - LOG EVERY SINGLE INBOUND AT TOP - REALTIME =====
 console.log(`[INBOUND] ${from} : ${rawText || rawId}`);
 await logAllChat(from, (rawText||rawId||"HI").substring(0,30), "INBOUND", s.lang, "CHAT_RECEIVED", `Raw: ${rawText||rawId}`.substring(0,150));
 
+// ===== FIXED STAGES - FORM STAGES SHOULD NOT TRIGGER CATCH-ALL =====
 if(s.stage==="FORM_NAME"){s.form.name=rawText.replace(/\n/g,' ').trim();s.stage="FORM_CONTACT";setPendingChat(from,s.lang,"FORM_CONTACT"); await logAllChat(from, 'FORM', 'NAME_GIVEN', s.lang, 'FORM_CONTACT', s.form.name); await sendText(from,getT(s.lang,"formContact"));return res.sendStatus(200);}
 if(s.stage==="FORM_CONTACT"){s.form.contact=rawText.replace(/\n/g,' ').trim();s.stage="FORM_PLACE";setPendingChat(from,s.lang,"FORM_PLACE"); await logAllChat(from, 'FORM', 'CONTACT_GIVEN', s.lang, 'FORM_PLACE', s.form.contact); await sendText(from,getT(s.lang,"formPlace"));return res.sendStatus(200);}
 if(s.stage==="FORM_PLACE"){s.form.place=rawText.replace(/\n/g,' ').trim();s.stage="FORM_OCCUPATION";setPendingChat(from,s.lang,"FORM_OCCUPATION"); await logAllChat(from, 'FORM', 'PLACE_GIVEN', s.lang, 'FORM_OCCUPATION', s.form.place); await sendList(from,getT(s.lang,"formOcc"),"Select Occupation",[{title:"Occupation",rows:[{id:"occ_running",title:"Running business"},{id:"occ_planning",title:"Planning to start"},{id:"occ_employee",title:"Employee"},{id:"occ_partner",title:"Business Partner"},{id:"occ_nri",title:"NRI"},{id:"occ_retired",title:"Retired"}]}]);return res.sendStatus(200);}
@@ -211,6 +220,29 @@ await sendImage(from,ASSETS.posters.franchiseBrochure,`📄 Bizmapia Franchise B
 await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opportunities"},{id:"menu",title:"Main Menu"}]);
 return res.sendStatus(200);}
 if(s.stage==="BUSINESS_DATA"){const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const cleanBusiness=rawText.replace(/\n/g,' | ').substring(0,200);const sheetRow=[dateStr,from,'Business_Lead',cleanBusiness,cleanBusiness,'','','',s.lang];await appendToSheet(sheetRow); await logAllChat(from, 'Business_Lead', 'COMPLETED', s.lang, 'BUSINESS_COMPLETED', cleanBusiness); clearPendingChat(from);await sendImage(from,ASSETS.posters.welcome,`✅ Business Details Received! ${getT(s.lang,"team24")}`);s.stage="MENU";s.lastOpp="";await new Promise(r=>setTimeout(r,2000));await sendImage(from,ASSETS.posters.businessBrochure,`📄 Business Listing Benefits\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);await sendButtons(from,"What next?",[{id:"menu",title:"Main Menu"}]);return res.sendStatus(200);}
+
+// ===== AJO SIR'S GOD MODE CATCH-ALL LOGIC - VALID BUTTONS LIST =====
+const VALID_IDS = [
+  'lang_en','lang_hi','lang_ml','english','hindi','malayalam',
+  'customer','driver','business','opportunity','opportunities_franchise','view_opp_levels','opp_search','franchise_opportunity',
+  'opp_1','opp_2','opp_3','opp_4','opp_5','opp_yes','opp_no',
+  'activate','driver_benefit','driver_claim','business_list',
+  'menu','view_opp_levels','occ_running','occ_planning','occ_employee','occ_partner','occ_nri','occ_retired',
+  'hi','hello','hey','hlo','start','hai'
+];
+
+const isInteractive = msg.type === "interactive";
+const isValidButton = VALID_IDS.some(v => input === v || input.includes(v) || inputUpper === v.toUpperCase()) || isInteractive;
+
+if(!isValidButton &&!["FORM_NAME","FORM_CONTACT","FORM_PLACE","FORM_OCCUPATION","BUSINESS_DATA"].includes(s.stage)){
+  console.log(`[CATCH-ALL] Invalid input "${rawText||rawId}" from ${from} -> Sending Welcome Text + Language (No Poster)`);
+  await logAllChat(from, 'CATCH_ALL', 'INVALID_INPUT', s.lang, 'WELCOME_SENT', `Invalid: ${rawText||rawId}`.substring(0,150));
+  s.stage="LANG";
+  setPendingChat(from,s.lang,"LANG_SELECTION");
+  await sendWelcomeTextAndLanguage(from);
+  return res.sendStatus(200);
+}
+
 if(s.stage==="NEW"||["hi","hello","hey","hlo","start","hai"].includes(input)){s.stage="LANG";s.form={};s.lastOpp="";setPendingChat(from,s.lang,"LANG_SELECTION"); await logAllChat(from, 'CHAT_STARTED', 'NEW_USER_HI', s.lang, 'LANG_SELECTION', 'User said HI'); await sendImage(from,ASSETS.posters.welcome,"👋 Welcome to Bizmapia! Your Success, Our Platform 🙏\n\nThank you for reaching out!");await new Promise(r=>setTimeout(r,800));await sendButtons(from,"Select language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക",[{id:"lang_en",title:"English"},{id:"lang_hi",title:"Hindi"},{id:"lang_ml",title:"Malayalam"}]);return res.sendStatus(200);}
 if(s.stage==="LANG"||input.startsWith("lang_")){if(input.includes("en"))s.lang="EN";else if(input.includes("hi"))s.lang="HI";else if(input.includes("ml"))s.lang="ML";s.stage="MENU";setPendingChat(from,s.lang,"MAIN_MENU"); await logAllChat(from, 'LANGUAGE_SELECTED', 'ACTIVE', s.lang, 'MAIN_MENU', `Selected ${s.lang}`); await sendList(from,getT(s.lang,"whatToKnow"),"Main Menu",[{title:"Menu",rows:getMainMenuRows(s.lang)}]);return res.sendStatus(200);}
 if(input==="customer"){setPendingChat(from,s.lang,"CUSTOMER_VIEWED"); await logAllChat(from, 'MENU_CLICK', 'CUSTOMER', s.lang, 'CUSTOMER_VIEWED', 'Clicked Customer'); await sendImage(from,ASSETS.posters.customer,`${getT(s.lang,"customerH")}\n✅ Taxi ✅ Delivery ✅ Business Offers\nContact: ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendText(from,`📲 *Download Customer App:*\n${ASSETS.apps.customer}`);await sendButtons(from,getT(s.lang,"whatToKnow"),[{id:"activate",title:"Claim Now"},{id:"menu",title:"Main Menu"}]);return res.sendStatus(200);}
@@ -228,4 +260,4 @@ if(input==="menu"||input==="view_opp_levels"){s.stage="MENU";setPendingChat(from
 if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from,getT(s.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows:getMainMenuRows(s.lang)}]);return res.sendStatus(200);}
 await sendText(from,getT(s.lang,"hiAgain"));res.sendStatus(200);}catch(err){console.log(err);res.sendStatus(200);}});
 
-app.listen(PORT,()=>console.log(`Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia Bot GOD MODE - ALL CHATS TRACKED - Realtime Sheet Maintenance Running on ${PORT} - CatchAll Fixed`));
