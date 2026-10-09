@@ -14,7 +14,7 @@ let sheetsClientCache=null;let sheetsClientTime=0;
 async function getSheetsClient(){
 try{
 let creds=process.env.GOOGLE_CREDENTIALS;if(!creds){console.log("❌ GOOGLE_CREDENTIALS missing");return null;}
-let credentials=JSON.parse(creds);if(credentials.private_key)credentials.private_key=credentials.private_key.replace(/\\n/g,'\n');
+let credentials=JSON.parse(creds);if(credentials.private_key)credentials.private_key=credentials.private_key.replace(/\\\\n/g,'\n').replace(/\\n/g,'\n')
 if(sheetsClientCache && (Date.now()-sheetsClientTime)<50*60*1000) return sheetsClientCache;
 const auth=new google.auth.GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/spreadsheets']});
 const client=await auth.getClient();const sheets=google.sheets({version:'v4',auth:client});
@@ -22,25 +22,30 @@ sheetsClientCache=sheets;sheetsClientTime=Date.now();
 console.log("✅ Sheets client:",credentials.client_email," SHEET:",SHEET_ID.substring(0,30));return sheets;
 }catch(e){console.log("❌ getSheetsClient",e.message);return null;}
 }
-let sheetQueue=[];let isProcessingQueue=false;
-async function processSheetQueue(){
-if(isProcessingQueue||sheetQueue.length===0)return;isProcessingQueue=true;
-while(sheetQueue.length>0){
-  const row=sheetQueue.shift();let retries=3;
+async function appendToSheet(row){
+  let retries=3;
   while(retries>0){
     try{
-      const sheets=await getSheetsClient();if(!sheets||!SHEET_ID)break;
+      const sheets=await getSheetsClient();if(!sheets||!SHEET_ID){console.log("❌ No sheets client");return false;}
       const finalRow=row.slice(0,9);while(finalRow.length<9)finalRow.push("");
-      await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[finalRow]}});
-      console.log("✅ SHEET OK:",finalRow[2],finalRow[3]?.substring(0,50),"->",SHEET_ID.substring(0,15));break;
+      const res=await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[finalRow]}});
+      console.log("✅✅ REAL SHEET WRITE OK:",finalRow[2],finalRow[3]?.substring(0,60),"->",res.data.updates.updatedRange," Sheet:",SHEET_ID.substring(0,20));
+      return true;
     }catch(e){
-      retries--;console.log(`⚠️ Sheet fail retries ${retries}:`,e.response?.data?.error?.message||e.message);
-      if(e.response?.status===429)await new Promise(r=>setTimeout(r,2000)); else if(retries>0)await new Promise(r=>setTimeout(r,1000));
+      retries--;
+      console.log(`❌ REAL SHEET ERROR retries ${retries}:`,e.response?.data?.error?.message||e.message,JSON.stringify(e.response?.data||{}).substring(0,500));
+      if(e.response?.status===429)await new Promise(r=>setTimeout(r,2000));else if(retries>0)await new Promise(r=>setTimeout(r,1000));else return false;
     }
   }
-  await new Promise(r=>setTimeout(r,600));
+  return false;
 }
-isProcessingQueue=false;
+async function logAllChat(phone,type,status,lang,stage,extra=''){
+try{
+const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+const details=`${stage} | ${type} | ${status} | ${extra}`.substring(0,490);
+const row=[dateStr,phone,type,details,phone,stage,`${lang} | ${status}`,extra.substring(0,200),lang];
+await appendToSheet(row);
+}catch(e){console.log("logAllChat error",e.message);}
 }
 async function appendToSheet(row){sheetQueue.push(row);processSheetQueue();return true;}
 async function logAllChat(phone,type,status,lang,stage,extra=''){
