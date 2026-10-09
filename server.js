@@ -1,14 +1,15 @@
+// fix deploy trigger - Oct 10 - V5.6 SHEET ID FIXED QKCp ONLY
 const express=require('express');const bodyParser=require('body-parser');const axios=require('axios');const fs=require('fs');const {google}=require('googleapis');const app=express();app.use(bodyParser.json());
 const VERIFY_TOKEN=process.env.VERIFY_TOKEN||"bizmapia_verify_2024";
 const TOKEN=process.env.WHATSAPP_TOKEN;const PHONE_NUMBER_ID=process.env.PHONE_NUMBER_ID;const PORT=process.env.PORT||10000;
-const SHEET_ID=process.env.GOOGLE_SHEET_ID||process.env.SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
+// FIXED: Removed old SHEET_ID fallback - ONLY QKCp ID now!
+const SHEET_ID=process.env.GOOGLE_SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
 const CONTACT_NUMBER="8590175977";const CONTACT_FULL="+918590175977";const EMAIL_ID="bizmapia.com@gmail.com";const WEBSITE="www.bizmapia.com";
 const WPBS_PAYMENT_LINK="https://rzp.io/rzp/WxKS0dZ";const WPBS_AMOUNT="₹2,500";
-console.log("========== V5.6 FINAL - 2 OPTION + DRIVER FIRST + SHEET QUEUE + CALL BUTTON + LIST FIXED ==========");
+console.log("========== V5.6 FINAL - SHEET ID FIX QKCp ONLY - "+SHEET_ID.substring(0,20)+" ==========");
 
 let pendingChatsMemory={};try{if(fs.existsSync("/tmp/pending_chats.json")){pendingChatsMemory=JSON.parse(fs.readFileSync("/tmp/pending_chats.json"));}}catch(e){pendingChatsMemory={};}
 
-// ===== V5.5 SHEET FIX WITH QUEUE + RETRY =====
 let sheetsClientCache=null;let sheetsClientTime=0;
 async function getSheetsClient(){
 try{
@@ -18,7 +19,7 @@ if(sheetsClientCache && (Date.now()-sheetsClientTime)<50*60*1000) return sheetsC
 const auth=new google.auth.GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/spreadsheets']});
 const client=await auth.getClient();const sheets=google.sheets({version:'v4',auth:client});
 sheetsClientCache=sheets;sheetsClientTime=Date.now();
-console.log("✅ Sheets client:",credentials.client_email);return sheets;
+console.log("✅ Sheets client:",credentials.client_email," SHEET:",SHEET_ID.substring(0,30));return sheets;
 }catch(e){console.log("❌ getSheetsClient",e.message);return null;}
 }
 let sheetQueue=[];let isProcessingQueue=false;
@@ -31,7 +32,7 @@ while(sheetQueue.length>0){
       const sheets=await getSheetsClient();if(!sheets||!SHEET_ID)break;
       const finalRow=row.slice(0,9);while(finalRow.length<9)finalRow.push("");
       await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[finalRow]}});
-      console.log("✅ SHEET OK:",finalRow[2],finalRow[3]?.substring(0,50));break;
+      console.log("✅ SHEET OK:",finalRow[2],finalRow[3]?.substring(0,50),"->",SHEET_ID.substring(0,15));break;
     }catch(e){
       retries--;console.log(`⚠️ Sheet fail retries ${retries}:`,e.response?.data?.error?.message||e.message);
       if(e.response?.status===429)await new Promise(r=>setTimeout(r,2000)); else if(retries>0)await new Promise(r=>setTimeout(r,1000));
@@ -107,10 +108,11 @@ async function sendTop2OptionMenu(to,lang){
 }
 
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('V5.6 FINAL - 2 OPTION + DRIVER FIRST + SHEET QUEUE LIVE ✅'));
+app.get('/',(req,res)=>res.send('V5.6 FINAL - SHEET ID FIX QKCp ONLY LIVE ✅ Sheet:'+SHEET_ID.substring(0,20)));
 app.get('/pending',(req,res)=>{res.json({total:Object.keys(pendingChats).length,pendingChats});});
-app.get('/test-sheet',async(req,res)=>{const ok=await appendToSheet([new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}),"919999999999","TEST_SHEET","Test V5.6","919999999999","TEST_STAGE","EN | TEST","Manual","EN"]);res.send(ok?"✅ Test sheet OK QUEUED":"❌ Failed");});
-app.get('/test-sheet-lead',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});await appendToSheet([dateStr,"919999999998","Franchisee_Lead","District Franchisee (10L-15L)","Test User","9999999998","Kochi","Running business","EN"]);await appendToSheet([dateStr,"919999999997","WPBS_Lead","WPBS L2 - Advance 2500","919999999997","919999999997","","PAID_L2","EN"]);res.send(`✅ Queued 2 leads - Check sheet in 5 sec!`);});
+app.get('/debug-sheet',(req,res)=>{res.json({sheet_id:SHEET_ID,google_sheet_env:process.env.GOOGLE_SHEET_ID?process.env.GOOGLE_SHEET_ID.substring(0,20):"missing",old_sheet_env:process.env.SHEET_ID?process.env.SHEET_ID.substring(0,20):"not set - GOOD!"});});
+app.get('/test-sheet',async(req,res)=>{const ok=await appendToSheet([new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}),"919999999999","TEST_SHEET","Test V5.6 FIXED QKCp","919999999999","TEST_STAGE","EN | TEST","Manual","EN"]);res.send(ok?"✅ Test sheet OK QUEUED to "+SHEET_ID.substring(0,20):"❌ Failed");});
+app.get('/test-sheet-lead',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});await appendToSheet([dateStr,"919999999998","Franchisee_Lead","District Franchisee (10L-15L) - TEST QKCp FIX","Test User QKCp","9999999998","Kochi","Running business","EN"]);await appendToSheet([dateStr,"919999999997","WPBS_Lead","WPBS L2 - Advance 2500 - TEST QKCp","919999999997","919999999997","","PAID_L2","EN"]);res.send(`✅ Queued 2 leads to ${SHEET_ID.substring(0,25)} - Check sheet in 10 sec!`);});
 
 app.post('/webhook',async(req,res)=>{
 try{
@@ -154,7 +156,6 @@ await sendContactButtons(from,`📞 Questions? Call Now! ${CONTACT_NUMBER}`);
 return res.sendStatus(200);
 }
 
-// WPBS - OPTION 1
 if(input==="wpbs"||input.includes("whatsapp automation")){s.stage="WPBS_Q1";s.form={};s.form.wpbs={levels:[]};setPendingChat(from,s.lang,"WPBS_Q1_MSG");await logAllChat(from,'AD_SELECTION','WPBS_Q1_START',s.lang,'WPBS_Q1','Selected WPBS');await sendText(from,`🔍 *Let's find perfect WPBS plan - 3 quick questions (30 sec)*\n\n*Q1/3: Messages per month?*`);await sendButtons(from,"Select:",[{id:"wpbs_q1_l1",title:"Upto 1000"},{id:"wpbs_q1_l2",title:"1000-5000"},{id:"wpbs_q1_l3",title:"Above 5000"}]);return res.sendStatus(200);}
 if(s.stage==="WPBS_Q1"&&input.startsWith("wpbs_q1_")){let lvl=input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";s.form.wpbs.q1=input;s.form.wpbs.q1_lvl=lvl;s.form.wpbs.q1_text=lvl==="L1"?"Upto 1000":lvl==="L2"?"1000-5000":"Above 5000";s.form.wpbs.levels=[lvl];s.stage="WPBS_Q2";setPendingChat(from,s.lang,"WPBS_Q2_NUMBERS");await logAllChat(from,'WPBS_Q1','ANSWERED_'+lvl,s.lang,'WPBS_Q2',`Q1:${input}=>${lvl}`);await sendText(from,`*Q2/3: How many WhatsApp Numbers / Bots?*`);await sendButtons(from,"Select:",[{id:"wpbs_q2_l1",title:"1 Number"},{id:"wpbs_q2_l2",title:"2 to 5"},{id:"wpbs_q2_l3",title:"More than 5"}]);return res.sendStatus(200);}
 if(s.stage==="WPBS_Q2"&&input.startsWith("wpbs_q2_")){let lvl=input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";s.form.wpbs.q2=input;s.form.wpbs.q2_lvl=lvl;s.form.wpbs.q2_text=lvl==="L1"?"1 Number":lvl==="L2"?"2 to 5":"More than 5";s.form.wpbs.levels.push(lvl);s.stage="WPBS_Q3";setPendingChat(from,s.lang,"WPBS_Q3_ADS");await logAllChat(from,'WPBS_Q2','ANSWERED_'+lvl,s.lang,'WPBS_Q3',`Q2:${input}=>${lvl}`);await sendText(from,`*Q3/3: How many Ads with same bot?*`);await sendButtons(from,"Select:",[{id:"wpbs_q3_l1",title:"1 Ad"},{id:"wpbs_q3_l2",title:"2 to 5 Ads"},{id:"wpbs_q3_l3",title:"More than 5 Ads"}]);return res.sendStatus(200);}
@@ -238,14 +239,12 @@ if(["opportunity","opportunities_franchise","view_opp_levels","opp_search","fran
 setPendingChat(from,s.lang,"FRANCHISE_OPPORTUNITY_VIEWED");await logAllChat(from,'MENU_CLICK','FRANCHISE',s.lang,'FRANCHISE_OPPORTUNITY','Clicked Business Opportunity');
 await sendImage(from,ASSETS.posters.opportunity,`${getT(s.lang,"oppH")}\n${getT(s.lang,"oppSub")}\nContact: ${CONTACT_NUMBER} | ${EMAIL_ID}`);
 await new Promise(r=>setTimeout(r,800));await sendText(from,`🎥 Watch About Bizmapia:\n${ASSETS.videos.main_opp}`);await new Promise(r=>setTimeout(r,800));
-// FIXED 24 CHAR LIMIT
 await sendList(from,`💰 Select Franchise Level:\nDistrict 10L-15L (5Y, 12M Ads)\nMuni/Corp 4L-5L (3Y, 12M Ads)\nBusiness Center 1L (1Y, 3M Ads)`,"View Opportunities",[{title:"Franchise Levels",rows:[{id:"opp_1",title:"District Franchisee",description:"💰 10L-15L | 5Y | 12M Ads"},{id:"opp_2",title:"Corporation Franchise",description:"💰 5L | 3Y | 12M Ads"},{id:"opp_3",title:"Municipality Franchise",description:"💰 4L | 3Y | 12M Ads"},{id:"opp_4",title:"Biz Center - Taxi",description:"💰 1L | 1Y | 3M Ads"},{id:"opp_5",title:"Biz Center - Directory",description:"💰 1L | 1Y | 3M Ads"}]}]);
 await new Promise(r=>setTimeout(r,1200));await sendButtons(from,"If list not visible, click:",[{id:"opp_1",title:"District (10L-15L)"},{id:"opp_2",title:"Corporation (5L)"},{id:"opp_3",title:"Municipality (4L)"}]);await new Promise(r=>setTimeout(r,800));await sendButtons(from,"More:",[{id:"opp_4",title:"Taxi Center (1L)"},{id:"opp_5",title:"Directory (1L)"},{id:"call_now",title:"📞 Call Now"}]);return res.sendStatus(200);}
 if(["opp_1","opp_2","opp_3","opp_4","opp_5"].includes(input)){s.lastOpp=inputUpper;setPendingChat(from,s.lang,`OPP_${input}_VIEWED`);await logAllChat(from,'FRANCHISE_LEVEL','VIEWED',s.lang,`OPP_${input}_VIEWED`,getOppName(input));await sendImage(from,ASSETS.posters.opportunity,`💼 *${getOppName(input)}*`);await new Promise(r=>setTimeout(r,800));await sendText(from,getOppFeeCard(input));await new Promise(r=>setTimeout(r,800));await sendText(from,`🎥 Watch full awareness:\n${ASSETS.videos[input]}\nContact: ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendContactButtons(from,`Want to know more about ${getOppName(input)}? Call Now ${CONTACT_NUMBER}`);if(oppTimers[from])clearTimeout(oppTimers[from]);oppTimers[from]=setTimeout(async()=>{await sendButtons(from,`⏰ ${getT(s.lang,"yesNoQ")}`,[{id:"opp_yes",title:"Yes"},{id:"opp_no",title:"No"},{id:"call_now",title:"📞 Call Now"}]);},5*60*1000);await new Promise(r=>setTimeout(r,800));await sendButtons(from,getT(s.lang,"yesNoQ"),[{id:"opp_yes",title:"Yes"},{id:"opp_no",title:"No"},{id:"call_now",title:"📞 Call Now"}]);return res.sendStatus(200);}
 if(input==="opp_yes"){if(oppTimers[from])clearTimeout(oppTimers[from]);s.stage="FORM_NAME";s.form={};setPendingChat(from,s.lang,"FORM_NAME");await logAllChat(from,'FRANCHISE','YES_CLICKED',s.lang,'FORM_NAME',`Said YES to ${s.lastOpp}`);await sendText(from,getT(s.lang,"formName"));return res.sendStatus(200);}
 if(input==="opp_no"){if(oppTimers[from])clearTimeout(oppTimers[from]);clearPendingChat(from);await logAllChat(from,'FRANCHISE','NO_OPTED_OUT',s.lang,'OPTED_OUT',`Said NO to ${s.lastOpp}`);await sendContactWithCallUrl(from,`You are opted out 🙏\nType *HI* to start again or Call us!\n📞 Contact: ${CONTACT_NUMBER}`);s.stage="NEW";return res.sendStatus(200);}
 
-// FIXED MAIN MENU - GOES TO 4 OPTIONS DRIVER FIRST (NOT 2 OPTIONS)
 if(input==="menu"||input==="view_opp_levels"){
   s.stage="MENU";setPendingChat(from,s.lang,"BUSINESS_SERVICES_VIEWED");
   await logAllChat(from,'MENU','BUSINESS_SERVICES_MENU',s.lang,'BUSINESS_SERVICES_VIEWED','Main Menu -> Driver first 4 options');
@@ -260,4 +259,4 @@ if(s.stage==="MENU"){
 
 await sendContactButtons(from,getT(s.lang,"hiAgain")+`\n📞 Call: ${CONTACT_NUMBER}`);res.sendStatus(200);}catch(err){console.log("Webhook error:",err.message);res.sendStatus(200);}});
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
-app.listen(PORT,()=>console.log(`V5.6 FINAL 2 OPTION FLOW DRIVER FIRST Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`V5.6 FINAL SHEET ID FIX QKCp Running on ${PORT} - Sheet:${SHEET_ID.substring(0,25)}`));
