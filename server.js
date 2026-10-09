@@ -18,9 +18,10 @@ const WEBSITE = "www.bizmapia.com";
 const WPBS_PAYMENT_LINK = "https://rzp.io/rzp/WxKS0dZ";
 const WPBS_AMOUNT = "₹2,500";
 
-console.log("========== GOD MODE + WPBS 2-OPTION POSTER ==========");
+console.log("========== GOD MODE + WPBS 3Q PLAN SORTING ==========");
 console.log("NEW POSTER:", "https://files.catbox.moe/pw2zi4.png");
 console.log("WPBS LINK:", WPBS_PAYMENT_LINK);
+console.log("FLOW: Q1 Msgs/month, Q2 Numbers, Q3 Ads -> L1/L2/L3 Highest Wins");
 console.log("====================================");
 
 const pendingChatsMemory = {};
@@ -35,11 +36,12 @@ const ASSETS={
     driver:"https://files.catbox.moe/2trzp7.jpg",
     business:"https://files.catbox.moe/sylcqa.jpg",
     opportunity:"https://files.catbox.moe/y8m3lq.jpg",
-    selectOption:"https://files.catbox.moe/pw2zi4.png", // NEW 2-OPTION POSTER
+    selectOption:"https://files.catbox.moe/pw2zi4.png",
     freeRecharge:"https://files.catbox.moe/c03g3q.jpg",
     businessBenefit:"https://files.catbox.moe/8ayus6.jpg",
     franchiseBrochure:"https://files.catbox.moe/FRANCHISEE-NEW-BIZMAPIA.jpg",
-    businessBrochure:"https://files.catbox.moe/BUSINESS-NEW-BIZMAPIA.jpg"
+    businessBrochure:"https://files.catbox.moe/BUSINESS-NEW-BIZMAPIA.jpg",
+    wpbs:"https://files.catbox.moe/28603553272640227"
   },
   apps:{customer:"https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",driver:"https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia_driver"},
   videos:{main_opp:"https://youtu.be/8ZnDlvbgG_c?si=a5ONBZg6Oe8WuGTP",opp_1:"https://youtu.be/_y2JeFHBnqg?si=igKYEPjGheuARuZe",opp_2:"https://youtu.be/GqolfqgHiCU?si=ySBbc_qLD2mLyBmN",opp_3:"https://youtu.be/GqolfqgHiCU?si=qTxRIIeq7iP5X5Jh",opp_4:"https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW",opp_5:"https://youtu.be/r0X77XfmF94?si=XdbPE4Ml2_jkv8zW"}
@@ -72,7 +74,7 @@ const OPP_MAP={'OPP_1':'District Franchisee (10L-15L) - 5Y - Rent+Salary - 12M A
 function getMainMenuRows(lang){if(lang==="HI"){return[{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];}else if(lang==="ML"){return[{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];}else{return[{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];}}
 
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE + WPBS 2-Option Poster WxKS0dZ LIVE ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE + WPBS 3Q Sorting WxKS0dZ LIVE ✅'));
 app.get('/pending',(req,res)=>{res.json({total_pending:Object.keys(pendingChats).length,pending_chats:pendingChats,driver_reminders:loadReminders().length});});
 app.get('/wpbs',(req,res)=>{res.json({status:"LIVE", poster:"https://files.catbox.moe/pw2zi4.png", payment_link:WPBS_PAYMENT_LINK, amount:WPBS_AMOUNT, support:CONTACT_NUMBER});});
 app.get('/test-sheet', async (req,res)=>{await logAllChat("919999999999","TEST","TEST_SHEET","EN","TEST_STAGE","Manual test");res.send(`✅ Test log sent! Time: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`);});
@@ -109,49 +111,88 @@ await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opport
 return res.sendStatus(200);}
 if(s.stage==="BUSINESS_DATA"){const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const cleanBusiness=rawText.replace(/\n/g,' | ').substring(0,200);const sheetRow=[dateStr,from,'Business_Lead',cleanBusiness,cleanBusiness,'','','',s.lang];await appendToSheet(sheetRow);await logAllChat(from,'Business_Lead','COMPLETED',s.lang,'BUSINESS_COMPLETED',cleanBusiness);clearPendingChat(from);await sendImage(from,ASSETS.posters.welcome,`✅ Business Details Received! ${getT(s.lang,"team24")}`);s.stage="MENU";s.lastOpp="";await new Promise(r=>setTimeout(r,2000));await sendImage(from,ASSETS.posters.businessBrochure,`📄 Business Listing Benefits\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);await sendButtons(from,"What next?",[{id:"menu",title:"Main Menu"}]);return res.sendStatus(200);}
 
-// ===== NEW FLOW: WHICH AD YOU SEEN? =====
+// ===== WPBS 3-QUESTION PLAN SORTING - NEW FLOW =====
 if(input==="wpbs" || input.includes("whatsapp automation")){
-  setPendingChat(from,s.lang,"WPBS_VIEWED");
-  await logAllChat(from,'AD_SELECTION','WHATSAPP_AUTOMATION',s.lang,'WPBS_VIEWED','Selected WhatsApp Automation Poster');
-  await sendText(from,`🤖 *WPBS - WhatsApp Automation - LOW-COST!*
-
-*STOP PAYING MORE FOR WHATSAPP AUTOMATION!*
-✅ Your requirement smaller? Your bill smaller too!
-💰 *Limited Seats Offer - Starts from ₹4999/- Onwards*
-🚀 Deployment from DAY 8 Onwards
-
-🔒 *Lock Now @ ${WPBS_AMOUNT} Advance - All Levels L1/L2/L3*
-💳 *Pay Here:* ${WPBS_PAYMENT_LINK}
-
-✅ After Payment:
-✓ Razorpay auto-sends receipt (SMS/Email) - No upload needed
-✓ Team calls in 2 hrs on ${CONTACT_NUMBER}
-✓ Balance after demo
-
-Support: ${CONTACT_NUMBER}
-${WEBSITE}`);
-  await new Promise(r=>setTimeout(r,1000));
-  await sendButtons(from,"Lock your WPBS plan:",[
-    {id:"wpbs_payment",title:"Pay ₹2500 Now"},
-    {id:"wpbs_paid",title:"I Paid - Confirm"}
+  s.stage="WPBS_Q1";
+  s.form = s.form || {};
+  s.form.wpbs = { levels: [] };
+  setPendingChat(from,s.lang,"WPBS_Q1_MSG");
+  await logAllChat(from,'AD_SELECTION','WPBS_Q1_START',s.lang,'WPBS_Q1','Selected WPBS - Q1 Started');
+  await sendText(from,`🔍 *Let's find perfect WPBS plan for you - 3 quick questions (30 sec)*\n\n*Q1/3: Messages per month?*`);
+  await sendButtons(from,"Select:",[
+    {id:"wpbs_q1_l1", title:"Upto 1000"},
+    {id:"wpbs_q1_l2", title:"1000-5000"},
+    {id:"wpbs_q1_l3", title:"Above 5000"}
   ]);
   return res.sendStatus(200);
 }
 
-if(input==="wpbs_payment"){
+if(s.stage==="WPBS_Q1" && input.startsWith("wpbs_q1_")){
+  let lvl = input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";
+  s.form.wpbs.q1=input;
+  s.form.wpbs.q1_lvl=lvl;
+  s.form.wpbs.levels=[lvl];
+  s.stage="WPBS_Q2";
+  setPendingChat(from,s.lang,"WPBS_Q2_NUMBERS");
+  await logAllChat(from,'WPBS_Q1','ANSWERED_'+lvl,s.lang,'WPBS_Q2',`Q1: ${input} => ${lvl}`);
+  await sendText(from,`*Q2/3: How many WhatsApp Numbers / Bots?*`);
+  await sendButtons(from,"Select:",[
+    {id:"wpbs_q2_l1", title:"1 Number"},
+    {id:"wpbs_q2_l2", title:"2 to 5"},
+    {id:"wpbs_q2_l3", title:"More than 5"}
+  ]);
+  return res.sendStatus(200);
+}
+
+if(s.stage==="WPBS_Q2" && input.startsWith("wpbs_q2_")){
+  let lvl = input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";
+  s.form.wpbs.q2=input;
+  s.form.wpbs.q2_lvl=lvl;
+  s.form.wpbs.levels.push(lvl);
+  s.stage="WPBS_Q3";
+  setPendingChat(from,s.lang,"WPBS_Q3_ADS");
+  await logAllChat(from,'WPBS_Q2','ANSWERED_'+lvl,s.lang,'WPBS_Q3',`Q2: ${input} => ${lvl}`);
+  await sendText(from,`*Q3/3: How many Ads with same bot?*`);
+  await sendButtons(from,"Select:",[
+    {id:"wpbs_q3_l1", title:"1 Ad"},
+    {id:"wpbs_q3_l2", title:"2 to 5 Ads"},
+    {id:"wpbs_q3_l3", title:"More than 5 Ads"}
+  ]);
+  return res.sendStatus(200);
+}
+
+if(s.stage==="WPBS_Q3" && input.startsWith("wpbs_q3_")){
+  let lvl = input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";
+  s.form.wpbs.q3=input;
+  s.form.wpbs.q3_lvl=lvl;
+  s.form.wpbs.levels.push(lvl);
+
+  let finalLevel="L1"; let price="₹4999/-"; let details="1 Number | Upto 1000 Msgs | 1 Ad";
+  if(s.form.wpbs.levels.includes("L2")){ finalLevel="L2"; price="₹9999/-"; details="2-5 Numbers | 1000-5000 Msgs | 2-5 Ads"; }
+  if(s.form.wpbs.levels.includes("L3")){ finalLevel="L3"; price="₹14,999/- Onwards"; details="5+ Numbers | 5000+ Msgs | 5+ Ads - Full Automation+API"; }
+
+  s.form.wpbs.recommended=finalLevel;
+  s.form.wpbs.finalPrice=price;
+  s.stage="WPBS_RECOMMENDED";
+  setPendingChat(from,s.lang,"WPBS_RECOMMENDED");
+
+  const caption=`✅ *Analysis Done! Recommended: ${finalLevel}*\n\n📊 Your Answers:\n• Msgs/Month: ${s.form.wpbs.q1} => ${s.form.wpbs.q1_lvl}\n• Numbers: ${s.form.wpbs.q2} => ${s.form.wpbs.q2_lvl}\n• Ads: ${s.form.wpbs.q3} => ${s.form.wpbs.q3_lvl}\n\n💎 *Recommended Plan: ${finalLevel}*\n💰 Full Price: ${price}\n📋 Includes: ${details}\n\n🎯 *Your requirement smaller? Your bill smaller too!*\n🔒 *Lock Now @ ${WPBS_AMOUNT} Advance - All Levels L1/L2/L3*\n💳 Pay: ${WPBS_PAYMENT_LINK}\n\n✅ After Payment: Razorpay auto-sends receipt - No upload needed\n📞 Team calls in 2 hrs: ${CONTACT_NUMBER}`;
+
+  await sendImage(from, ASSETS.posters.wpbs || ASSETS.posters.selectOption, caption);
+  await new Promise(r=>setTimeout(r,1000));
+  await sendButtons(from,`Lock your ${finalLevel} plan:`,[
+    {id:"wpbs_pay_"+finalLevel.toLowerCase(), title:`Pay ₹2500 - ${finalLevel}`},
+    {id:"wpbs_paid", title:"I Paid - Confirm"}
+  ]);
+  await logAllChat(from,'WPBS_SORTED',finalLevel,s.lang,'WPBS_RECOMMENDED',`Q1:${s.form.wpbs.q1_lvl} Q2:${s.form.wpbs.q2_lvl} Q3:${s.form.wpbs.q3_lvl} => ${finalLevel}`);
+  return res.sendStatus(200);
+}
+
+if(input.startsWith("wpbs_pay_")){
+  let lvl=input.split("_").pop().toUpperCase();
   setPendingChat(from,s.lang,"WPBS_PAYMENT");
-  await logAllChat(from,'WPBS','PAYMENT_LINK_SENT',s.lang,'WPBS_PAYMENT',WPBS_PAYMENT_LINK);
-  await sendText(from,`🎉 *WPBS - Advance Payment ${WPBS_AMOUNT}*
-
-🔒 *Lock Your WPBS Plan (L1/L2/L3):*
-👉 ${WPBS_PAYMENT_LINK}
-
-✅ *After Payment:*
-✓ Razorpay auto-sends receipt to phone/email - No upload needed
-✓ Team calls you in 2 hrs on *${CONTACT_NUMBER}* for demo & setup
-✓ Balance after live demo
-
-❓ Help? Call: ${CONTACT_NUMBER}`);
+  await logAllChat(from,'WPBS','PAYMENT_LINK_SENT_'+lvl,s.lang,'WPBS_PAYMENT',WPBS_PAYMENT_LINK);
+  await sendText(from,`💳 *Pay ${WPBS_AMOUNT} Advance to Lock ${lvl}*\n\n🔒 *Lock Your WPBS Plan (${lvl}):*\n👉 ${WPBS_PAYMENT_LINK}\n\n✅ *After Payment:*\n✓ Razorpay auto-sends receipt to phone/email - No upload needed\n✓ Team calls you in 2 hrs on *${CONTACT_NUMBER}* for demo & setup\n✓ Balance after live demo\n\n❓ Help? Call: ${CONTACT_NUMBER}`);
   await sendButtons(from,"After payment click:",[
     {id:"wpbs_paid",title:"I Paid - Confirm"},
     {id:"menu",title:"Main Menu"}
@@ -160,29 +201,29 @@ if(input==="wpbs_payment"){
 }
 
 if(input==="wpbs_paid"){
-  clearPendingChat(from);
+  let lvl = s.form?.wpbs?.recommended || "L1";
+  let total = lvl==="L1"?4999:lvl==="L2"?9999:14999;
+  let balance = total-2500;
+
   const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-  const sheetRow=[dateStr,from,'WPBS_Lead','WPBS - Advance ₹2500 - All Levels Lock',from,from,'','PAID_CLICKED',s.lang];
+  const q1 = s.form?.wpbs?.q1_lvl || "L1";
+  const q2 = s.form?.wpbs?.q2_lvl || "L1";
+  const q3 = s.form?.wpbs?.q3_lvl || "L1";
+  const sheetRow=[dateStr,from,'WPBS_Lead',`WPBS ${lvl} - Advance 2500 - Q1:${q1} Q2:${q2} Q3:${q3} => ${lvl} | Total ${total}`,from,from,'',`PAID_${lvl}`,s.lang];
   await appendToSheet(sheetRow);
-  await logAllChat(from,'WPBS_Lead','PAID_CONFIRMED',s.lang,'WPBS_PAID','User clicked I Paid');
-  await sendText(from,`✅ *Thank you for locking WPBS plan with WhatsApp automation!*
+  await logAllChat(from,'WPBS_Lead','PAID_CONFIRMED_'+lvl,s.lang,'WPBS_PAID',`Advance 2500 Paid | ${lvl} | Q1:${q1} Q2:${q2} Q3:${q3} | Balance ${balance}`);
+  clearPendingChat(from);
 
-Your ${WPBS_AMOUNT} advance locked - Thank you for locking WPBS plan with WhatsApp automation!
+  await sendText(from,`🎉 *Thank you for locking WPBS ${lvl} Plan! ✅*\n\n✅ Payment of ${WPBS_AMOUNT} Advance received (Razorpay receipt auto-sent)\n\n📊 Your Final Plan: *${lvl}*\n💰 Total: ₹${total} | Paid: ₹2500 | Balance: ₹${balance} payable after demo\n\n📊 Your Requirement:\n• Msgs/Month: ${q1} (${s.form?.wpbs?.q1 || ''})\n• Numbers: ${q2} (${s.form?.wpbs?.q2 || ''})\n• Ads: ${q3} (${s.form?.wpbs?.q3 || ''})\n\n📞 *Next Step:* Our team will call you in 2 hours on *${CONTACT_NUMBER}* for demo & final confirmation.\n🚀 Deployment from *DAY 8* Onwards\n\n📞 Support: ${CONTACT_NUMBER}\n🌐 ${WEBSITE}`);
 
-🧾 *Receipt:* Razorpay auto-sent to your SMS/Email - No upload needed.
-
-📞 *Next Step:* Our Bizmapia team will contact you in 2 hours on this number for Bot Setup Demo.
-
-Support: ${CONTACT_NUMBER}
-Team WPBS - Bizmapia
-${WEBSITE}`);
+  s.stage="COMPLETED_WPBS";
   return res.sendStatus(200);
 }
 
-const VALID_IDS=['lang_en','lang_hi','lang_ml','english','hindi','malayalam','customer','driver','business','opportunity','opportunities_franchise','view_opp_levels','opp_search','franchise_opportunity','opp_1','opp_2','opp_3','opp_4','opp_5','opp_yes','opp_no','activate','driver_benefit','driver_claim','business_list','menu','view_opp_levels','occ_running','occ_planning','occ_employee','occ_partner','occ_nri','occ_retired','wpbs','wpbs_payment','wpbs_paid','wpbs_info','hi','hello','hey','hlo','start','hai'];
+const VALID_IDS=['lang_en','lang_hi','lang_ml','english','hindi','malayalam','customer','driver','business','opportunity','opportunities_franchise','view_opp_levels','opp_search','franchise_opportunity','opp_1','opp_2','opp_3','opp_4','opp_5','opp_yes','opp_no','activate','driver_benefit','driver_claim','business_list','menu','view_opp_levels','occ_running','occ_planning','occ_employee','occ_partner','occ_nri','occ_retired','wpbs','wpbs_payment','wpbs_paid','wpbs_info','wpbs_q1_l1','wpbs_q1_l2','wpbs_q1_l3','wpbs_q2_l1','wpbs_q2_l2','wpbs_q2_l3','wpbs_q3_l1','wpbs_q3_l2','wpbs_q3_l3','wpbs_pay_l1','wpbs_pay_l2','wpbs_pay_l3','hi','hello','hey','hlo','start','hai'];
 const isInteractive=msg.type==="interactive";
 const isValidButton=VALID_IDS.some(v=>input===v||input.includes(v)||inputUpper===v.toUpperCase())||isInteractive;
-if(!isValidButton &&!["FORM_NAME","FORM_CONTACT","FORM_PLACE","FORM_OCCUPATION","BUSINESS_DATA","AD_SELECTION"].includes(s.stage)){
+if(!isValidButton &&!["FORM_NAME","FORM_CONTACT","FORM_PLACE","FORM_OCCUPATION","BUSINESS_DATA","AD_SELECTION","WPBS_Q1","WPBS_Q2","WPBS_Q3","WPBS_RECOMMENDED","WPBS_PAYMENT"].includes(s.stage)){
   console.log(`[CATCH-ALL] Invalid "${rawText||rawId}" -> Welcome`);
   await logAllChat(from,'CATCH_ALL','INVALID_INPUT',s.lang,'WELCOME_SENT',`Invalid: ${rawText||rawId}`.substring(0,150));
   s.stage="LANG";setPendingChat(from,s.lang,"LANG_SELECTION");await sendWelcomeTextAndLanguage(from);return res.sendStatus(200);
@@ -197,28 +238,12 @@ if(s.stage==="NEW"||["hi","hello","hey","hlo","start","hai"].includes(input)){
   return res.sendStatus(200);
 }
 
-// ===== CORRECTED: LANG -> WHICH AD YOU SEEN POSTER =====
 if(s.stage==="LANG"||input.startsWith("lang_")){
   if(input.includes("en"))s.lang="EN";else if(input.includes("hi"))s.lang="HI";else if(input.includes("ml"))s.lang="ML";
   s.stage="AD_SELECTION";
   setPendingChat(from,s.lang,"AD_SELECTION");
   await logAllChat(from,'LANGUAGE_SELECTED','ACTIVE',s.lang,'AD_SELECTION',`Selected ${s.lang}`);
-  const caption=`🎯 *SELECT YOUR OPTION FROM POSTERS*
-
-You saw our ad! Which opportunity are you interested in?
-
-*Left - WHATSAPP AUTOMATION (WPBS):*
-✅ Low-cost Business Automation
-💰 Starts from ₹4999/- Onwards
-🚀 Deployment from Day 8
-📞 ${CONTACT_NUMBER}
-
-*Right - BUSINESS OPPORTUNITY:*
-✅ 4 Opportunities Under One Brand
-✅ 50+ Franchisees Allotted in Kerala
-💰 1L to 15L Investment
-
-👇 *Please select your option below:*`;
+  const caption=`🎯 *SELECT YOUR OPTION FROM POSTERS*\n\nYou saw our ad! Which opportunity are you interested in?\n\n*Left - WHATSAPP AUTOMATION (WPBS):*\n✅ Low-cost Business Automation\n💰 Starts from ₹4999/- Onwards\n🚀 Deployment from Day 8\n📞 ${CONTACT_NUMBER}\n\n*Right - BUSINESS OPPORTUNITY:*\n✅ 4 Opportunities Under One Brand\n✅ 50+ Franchisees Allotted in Kerala\n💰 1L to 15L Investment\n\n👇 *Please select your option below:*`;
   await sendImage(from,ASSETS.posters.selectOption,caption);
   await new Promise(r=>setTimeout(r,1000));
   await sendButtons(from,"Select your option:",[{id:"wpbs",title:"WhatsApp Automation"},{id:"opportunity",title:"Business Opportunity"}]);
@@ -241,4 +266,4 @@ if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from
 await sendText(from,getT(s.lang,"hiAgain"));res.sendStatus(200);}catch(err){console.log(err);res.sendStatus(200);}});
 
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
-app.listen(PORT,()=>console.log(`Bizmapia GOD MODE + NEW 2-OPTION POSTER + WPBS WxKS0dZ Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia GOD MODE + WPBS 3Q Sorting WxKS0dZ Running on ${PORT}`));
