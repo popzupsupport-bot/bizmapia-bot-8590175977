@@ -4,31 +4,50 @@ const TOKEN=process.env.WHATSAPP_TOKEN;const PHONE_NUMBER_ID=process.env.PHONE_N
 const SHEET_ID=process.env.GOOGLE_SHEET_ID||process.env.SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
 const CONTACT_NUMBER="8590175977";const CONTACT_FULL="+918590175977";const EMAIL_ID="bizmapia.com@gmail.com";const WEBSITE="www.bizmapia.com";
 const WPBS_PAYMENT_LINK="https://rzp.io/rzp/WxKS0dZ";const WPBS_AMOUNT="₹2,500";
-console.log("========== V5.4 FINAL - 2 OPTION FLOW + CALL BUTTON + LIST FIXED ==========");
+console.log("========== V5.6 FINAL - 2 OPTION + DRIVER FIRST + SHEET QUEUE + CALL BUTTON + LIST FIXED ==========");
+
 let pendingChatsMemory={};try{if(fs.existsSync("/tmp/pending_chats.json")){pendingChatsMemory=JSON.parse(fs.readFileSync("/tmp/pending_chats.json"));}}catch(e){pendingChatsMemory={};}
 
+// ===== V5.5 SHEET FIX WITH QUEUE + RETRY =====
+let sheetsClientCache=null;let sheetsClientTime=0;
 async function getSheetsClient(){
 try{
-let creds=process.env.GOOGLE_CREDENTIALS;if(!creds)return null;
+let creds=process.env.GOOGLE_CREDENTIALS;if(!creds){console.log("❌ GOOGLE_CREDENTIALS missing");return null;}
 let credentials=JSON.parse(creds);if(credentials.private_key)credentials.private_key=credentials.private_key.replace(/\\n/g,'\n');
+if(sheetsClientCache && (Date.now()-sheetsClientTime)<50*60*1000) return sheetsClientCache;
 const auth=new google.auth.GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/spreadsheets']});
-const client=await auth.getClient();return google.sheets({version:'v4',auth:client});
-}catch(e){return null;}
+const client=await auth.getClient();const sheets=google.sheets({version:'v4',auth:client});
+sheetsClientCache=sheets;sheetsClientTime=Date.now();
+console.log("✅ Sheets client:",credentials.client_email);return sheets;
+}catch(e){console.log("❌ getSheetsClient",e.message);return null;}
 }
-async function appendToSheet(row){
-try{
-const sheets=await getSheetsClient();if(!sheets||!SHEET_ID)return false;
-const finalRow=row.slice(0,9);while(finalRow.length<9)finalRow.push("");
-await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[finalRow]}});
-console.log("✅ Sheet OK:",finalRow[2]);return true;
-}catch(e){console.log("❌ Sheet FAIL:",e.response?.data||e.message);return false;}
+let sheetQueue=[];let isProcessingQueue=false;
+async function processSheetQueue(){
+if(isProcessingQueue||sheetQueue.length===0)return;isProcessingQueue=true;
+while(sheetQueue.length>0){
+  const row=sheetQueue.shift();let retries=3;
+  while(retries>0){
+    try{
+      const sheets=await getSheetsClient();if(!sheets||!SHEET_ID)break;
+      const finalRow=row.slice(0,9);while(finalRow.length<9)finalRow.push("");
+      await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[finalRow]}});
+      console.log("✅ SHEET OK:",finalRow[2],finalRow[3]?.substring(0,50));break;
+    }catch(e){
+      retries--;console.log(`⚠️ Sheet fail retries ${retries}:`,e.response?.data?.error?.message||e.message);
+      if(e.response?.status===429)await new Promise(r=>setTimeout(r,2000)); else if(retries>0)await new Promise(r=>setTimeout(r,1000));
+    }
+  }
+  await new Promise(r=>setTimeout(r,600));
 }
+isProcessingQueue=false;
+}
+async function appendToSheet(row){sheetQueue.push(row);processSheetQueue();return true;}
 async function logAllChat(phone,type,status,lang,stage,extra=''){
 try{
 const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 const details=`${stage} | ${type} | ${status} | ${extra}`.substring(0,490);
 const row=[dateStr,phone,type,details,phone,stage,`${lang} | ${status}`,extra.substring(0,200),lang];
-await appendToSheet(row);
+sheetQueue.push(row);processSheetQueue();
 }catch(e){}
 }
 
@@ -53,26 +72,45 @@ async function sendWelcomeTextAndLanguage(to){await sendButtons(to,"👋 *Welcom
 function loadReminders(){try{if(fs.existsSync("/tmp/reminders.json"))return JSON.parse(fs.readFileSync("/tmp/reminders.json"));}catch(e){}return [];}
 function saveReminders(list){try{fs.writeFileSync("/tmp/reminders.json",JSON.stringify(list));}catch(e){}}
 function addReminder(phone,type){const list=loadReminders();list.push({phone,type,claimedAt:Date.now(),sent1h:false,sent24h:false,sent48h:false,sent72h:false});saveReminders(list);}
-async function checkReminders(){let list=loadReminders();let changed=false;const now=Date.now();for(let r of list){const diffH=(now-r.claimedAt)/(1000*60*60);if(!r.sent1h&&diffH>=1){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *Your free recharge going to expire - 1 Hour Reminder*\n📲 Get Now: ${ASSETS.apps.driver}\n📞 Call: ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendContactButtons(r.phone,`⏰ Claim your FREE recharge now or Call us!`);r.sent1h=true;changed=true;}else if(!r.sent24h&&diffH>=24){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *24 Hour Reminder*\n📲 ${ASSETS.apps.driver}`);await sendContactButtons(r.phone,`⏰ 24h Reminder - Call ${CONTACT_NUMBER}`);r.sent24h=true;changed=true;}else if(!r.sent48h&&diffH>=48){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *48 Hour Reminder*\n📲 ${ASSETS.apps.driver}`);await sendContactButtons(r.phone,`⏰ 48h Reminder - Last chance!`);r.sent48h=true;changed=true;}else if(!r.sent72h&&diffH>=72){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *72 Hour - Final Reminder*\n📞 ${CONTACT_NUMBER}`);await sendContactButtons(r.phone,`⏰ Final Reminder - Call ${CONTACT_NUMBER}`);r.sent72h=true;changed=true;}}if(changed)saveReminders(list.filter(r=>!r.sent72h));}
+async function checkReminders(){let list=loadReminders();let changed=false;const now=Date.now();for(let r of list){const diffH=(now-r.claimedAt)/(1000*60*60);if(!r.sent1h&&diffH>=1){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *1 Hour Reminder - Free recharge expiring*\n📲 ${ASSETS.apps.driver}\n📞 ${CONTACT_NUMBER}`);await sendContactButtons(r.phone,`⏰ Claim FREE recharge or Call!`);r.sent1h=true;changed=true;}else if(!r.sent24h&&diffH>=24){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *24 Hour Reminder*\n📲 ${ASSETS.apps.driver}`);await sendContactButtons(r.phone,`⏰ 24h Reminder - Call ${CONTACT_NUMBER}`);r.sent24h=true;changed=true;}else if(!r.sent48h&&diffH>=48){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *48 Hour Reminder*\n📲 ${ASSETS.apps.driver}`);await sendContactButtons(r.phone,`⏰ 48h Reminder`);r.sent48h=true;changed=true;}else if(!r.sent72h&&diffH>=72){await sendImage(r.phone,ASSETS.posters.freeRecharge,`⏰ *72 Hour Final*\n📞 ${CONTACT_NUMBER}`);await sendContactButtons(r.phone,`⏰ Final Reminder - Call ${CONTACT_NUMBER}`);r.sent72h=true;changed=true;}}if(changed)saveReminders(list.filter(r=>!r.sent72h));}
 setInterval(checkReminders,5*60*1000);
 
 let pendingChats=pendingChatsMemory;
 function setPendingChat(phone,lang,stageName){if(!pendingChats[phone])pendingChats[phone]={lang:lang||"EN",stage:stageName,lastActivity:Date.now(),reminders:{r1:false,r2:false,r3:false,r4:false}};else{pendingChats[phone].lang=lang||pendingChats[phone].lang;pendingChats[phone].stage=stageName;pendingChats[phone].lastActivity=Date.now();pendingChats[phone].reminders={r1:false,r2:false,r3:false,r4:false};}try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}
 function clearPendingChat(phone){if(pendingChats[phone]){delete pendingChats[phone];try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}}
-function getStageDisplayName(stage){const map={"LANG_SELECTION":"Language Selection","AD_SELECTION":"Ad Selection - 2 Options","BUSINESS_SERVICES_VIEWED":"Business Services - 4 Options","WPBS_Q1_MSG":"WPBS Q1 - Messages per month","WPBS_Q2_NUMBERS":"WPBS Q2 - Number of WhatsApp Numbers","WPBS_Q3_ADS":"WPBS Q3 - Number of Ads","WPBS_RECOMMENDED":"WPBS Recommended Plan","WPBS_PAYMENT":"WPBS Payment","FORM_NAME":"Franchise Form - Name","FORM_CONTACT":"Franchise Form - Contact","FORM_PLACE":"Franchise Form - Place","FORM_OCCUPATION":"Franchise Form - Occupation","BUSINESS_FORM_PENDING":"Business Form - Pending","MAIN_MENU":"Main Menu"};if(stage.startsWith("OPP_"))return stage.replace("OPP_","").replace("_VIEWED","");return map[stage]||stage;}
-async function sendResumeForStage(phone,stage,lang){const name=getStageDisplayName(stage);if(stage==="WPBS_Q1_MSG"){await sendContactWithCallUrl(phone,`👋 *Hi! You left WPBS enquiry at ${name} - 10min Reminder*\n⚠️ Complete now! Reply HI or Call ${CONTACT_NUMBER}`);await sendButtons(phone,"Q1/3: Messages per month?",[{id:"wpbs_q1_l1",title:"Upto 1000"},{id:"wpbs_q1_l2",title:"1000-5000"},{id:"wpbs_q1_l3",title:"Above 5000"}]);}else if(stage==="WPBS_Q2_NUMBERS"){await sendContactWithCallUrl(phone,`👋 *Hi! You left at ${name} - 10min Reminder*\n📞 Call ${CONTACT_NUMBER}`);await sendButtons(phone,"Q2/3: How many WhatsApp Numbers?",[{id:"wpbs_q2_l1",title:"1 Number"},{id:"wpbs_q2_l2",title:"2 to 5"},{id:"wpbs_q2_l3",title:"More than 5"}]);}else if(stage==="WPBS_Q3_ADS"){await sendContactWithCallUrl(phone,`👋 *Hi! You left at ${name} - 10min Reminder*\n📞 ${CONTACT_NUMBER}`);await sendButtons(phone,"Q3/3: How many Ads?",[{id:"wpbs_q3_l1",title:"1 Ad"},{id:"wpbs_q3_l2",title:"2 to 5 Ads"},{id:"wpbs_q3_l3",title:"More than 5 Ads"}]);}else if(stage==="WPBS_RECOMMENDED"||stage==="WPBS_PAYMENT"){await sendPayNowUrlButton(phone,`👋 *Hi! You left WPBS payment incomplete at ${name}*\n⚠️ Payment ₹2500 pending\n📞 Call ${CONTACT_NUMBER}`,WPBS_PAYMENT_LINK);await new Promise(r=>setTimeout(r,800));await sendContactButtons(phone,`Resume payment or Call ${CONTACT_NUMBER}`);}else{await sendContactWithCallUrl(phone,`👋 *Hi! You left at ${name} - Resume now!*\n👉 Reply HI or Call Now!\n📞 ${CONTACT_NUMBER}`);}}
-async function checkPendingChats(){const now=Date.now();let changed=false;for(let phone in pendingChats){const p=pendingChats[phone];const diffMin=(now-p.lastActivity)/(1000*60);const disp=getStageDisplayName(p.stage);if(!p.reminders.r1&&diffMin>=10){await sendContactWithCallUrl(phone,`🔔 *Reminder 1 (10min) - Incomplete: ${disp}*\n👋 You left at *${disp}* - Reply HI or Call Now!\n📞 ${CONTACT_NUMBER}`);await logAllChat(phone,'AUTO_REMINDER','REMINDER_10MIN',p.lang,p.stage,`10min - ${disp}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},3000);p.reminders.r1=true;changed=true;}else if(!p.reminders.r2&&diffMin>=30){await sendContactWithCallUrl(phone,`⏰ *Reminder 2 (30min) - Still Pending: ${disp}*\n⚠️ Complete *${disp}* now!\n📞 ${CONTACT_NUMBER}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r2=true;changed=true;}else if(!p.reminders.r3&&diffMin>=1440){await sendImage(phone,ASSETS.posters.opportunity,`🔔 *Reminder 3 (24 Hour) - Last Chance: ${disp}*\n📞 ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendContactWithCallUrl(phone,`🔔 24 Hour Reminder - ${disp} - Call Now! ${CONTACT_NUMBER}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r3=true;changed=true;}else if(!p.reminders.r4&&diffMin>=4320){await sendImage(phone,ASSETS.posters.opportunity,`⏰ *Final Reminder (72 Hour) - ${disp}*\n📞 ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendContactWithCallUrl(phone,`⏰ Final Reminder - ${disp} - Last chance! Call Now ${CONTACT_NUMBER}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r4=true;changed=true;}}for(let phone in pendingChats){if((now-pendingChats[phone].lastActivity)>80*60*60*1000&&pendingChats[phone].reminders.r4){delete pendingChats[phone];changed=true;}}if(changed)try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}
+function getStageDisplayName(stage){const map={"LANG_SELECTION":"Language","AD_SELECTION":"2 Options","BUSINESS_SERVICES_VIEWED":"Business Services 4 Options","WPBS_Q1_MSG":"WPBS Q1 Msgs","WPBS_Q2_NUMBERS":"WPBS Q2 Numbers","WPBS_Q3_ADS":"WPBS Q3 Ads","WPBS_RECOMMENDED":"WPBS Recommended","WPBS_PAYMENT":"WPBS Payment","FORM_NAME":"Franchise Name","FORM_CONTACT":"Franchise Contact","FORM_PLACE":"Franchise Place","FORM_OCCUPATION":"Franchise Occupation","BUSINESS_FORM_PENDING":"Business Form"};if(stage.startsWith("OPP_"))return stage.replace("OPP_","").replace("_VIEWED","");return map[stage]||stage;}
+async function sendResumeForStage(phone,stage,lang){const name=getStageDisplayName(stage);if(stage==="WPBS_Q1_MSG"){await sendContactWithCallUrl(phone,`👋 Hi! Left at ${name} - 10min Reminder\n⚠️ Complete! Reply HI or Call ${CONTACT_NUMBER}`);await sendButtons(phone,"Q1/3: Messages per month?",[{id:"wpbs_q1_l1",title:"Upto 1000"},{id:"wpbs_q1_l2",title:"1000-5000"},{id:"wpbs_q1_l3",title:"Above 5000"}]);}else if(stage==="WPBS_Q2_NUMBERS"){await sendContactWithCallUrl(phone,`👋 Left at ${name} - 10min Reminder\n📞 ${CONTACT_NUMBER}`);await sendButtons(phone,"Q2/3: WhatsApp Numbers?",[{id:"wpbs_q2_l1",title:"1 Number"},{id:"wpbs_q2_l2",title:"2 to 5"},{id:"wpbs_q2_l3",title:"More than 5"}]);}else if(stage==="WPBS_Q3_ADS"){await sendContactWithCallUrl(phone,`👋 Left at ${name}\n📞 ${CONTACT_NUMBER}`);await sendButtons(phone,"Q3/3: How many Ads?",[{id:"wpbs_q3_l1",title:"1 Ad"},{id:"wpbs_q3_l2",title:"2 to 5 Ads"},{id:"wpbs_q3_l3",title:"More than 5 Ads"}]);}else if(stage==="WPBS_RECOMMENDED"||stage==="WPBS_PAYMENT"){await sendPayNowUrlButton(phone,`👋 Left payment at ${name}\n⚠️ Pay ₹2500 pending\n📞 ${CONTACT_NUMBER}`,WPBS_PAYMENT_LINK);await sendContactButtons(phone,`Resume payment or Call ${CONTACT_NUMBER}`);}else{await sendContactWithCallUrl(phone,`👋 Left at ${name} - Resume!\n👉 Reply HI or Call!\n📞 ${CONTACT_NUMBER}`);}}
+async function checkPendingChats(){const now=Date.now();let changed=false;for(let phone in pendingChats){const p=pendingChats[phone];const diffMin=(now-p.lastActivity)/(1000*60);const disp=getStageDisplayName(p.stage);if(!p.reminders.r1&&diffMin>=10){await sendContactWithCallUrl(phone,`🔔 *Reminder 1 (10min) - ${disp}*\n👋 Left at *${disp}* - Reply HI or Call!\n📞 ${CONTACT_NUMBER}`);await logAllChat(phone,'AUTO_REMINDER','REMINDER_10MIN',p.lang,p.stage,`10min - ${disp}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},3000);p.reminders.r1=true;changed=true;}else if(!p.reminders.r2&&diffMin>=30){await sendContactWithCallUrl(phone,`⏰ *Reminder 2 (30min) - ${disp}*\n⚠️ Complete *${disp}* now!\n📞 ${CONTACT_NUMBER}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r2=true;changed=true;}else if(!p.reminders.r3&&diffMin>=1440){await sendImage(phone,ASSETS.posters.opportunity,`🔔 *24 Hour Reminder - ${disp}*\n📞 ${CONTACT_NUMBER}`);await sendContactWithCallUrl(phone,`🔔 24h Reminder - ${disp} - Call ${CONTACT_NUMBER}`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r3=true;changed=true;}else if(!p.reminders.r4&&diffMin>=4320){await sendImage(phone,ASSETS.posters.opportunity,`⏰ *72 Hour Final - ${disp}*\n📞 ${CONTACT_NUMBER}`);await sendContactWithCallUrl(phone,`⏰ Final - ${disp} - Last chance!`);setTimeout(async()=>{await sendResumeForStage(phone,p.stage,p.lang);},2000);p.reminders.r4=true;changed=true;}}for(let phone in pendingChats){if((now-pendingChats[phone].lastActivity)>80*60*60*1000&&pendingChats[phone].reminders.r4){delete pendingChats[phone];changed=true;}}if(changed)try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}
 setInterval(checkPendingChats,2*60*1000);
 
 function getOppName(id){const map={opp_1:"District Franchisee (10L-15L)",opp_2:"Corporation Franchisee (5L)",opp_3:"Municipality Franchisee (4L)",opp_4:"Business Center - Taxi (1L)",opp_5:"Business Center - Directory (1L)"};return map[id]||id;}
 function getOppFeeCard(id){const cards={opp_1:`💼 *DISTRICT FRANCHISEE*\n💰 ₹10L-15L\n📍 Full District | 5Y MOU\n🏠 Rent+Salary\n📢 12M Ads\nContact: ${CONTACT_NUMBER}`,opp_2:`🏢 *CORPORATION FRANCHISEE*\n💰 ₹5L\n📍 Corporation | 3Y MOU\n🏠 Rent+Salary\n📢 12M Ads`,opp_3:`🏘️ *MUNICIPALITY FRANCHISEE*\n💰 ₹4L\n📍 Municipality | 3Y MOU\n🏠 Rent+Salary\n📢 12M Ads`,opp_4:`🚕 *BUSINESS CENTER - TAXI*\n💰 ₹1L\n📍 Area | 1Y MOU\n📢 3M Ads`,opp_5:`📖 *BUSINESS CENTER - DIRECTORY*\n💰 ₹1L\n📍 Area | 1Y MOU\n📢 3M Ads`};return cards[id]||"";}
 const OPP_MAP={'OPP_1':'District Franchisee (10L-15L)','OPP_2':'Corporation Franchisee (5L)','OPP_3':'Municipality Franchisee (4L)','OPP_4':'Business Center Taxi (1L)','OPP_5':'Business Center Directory (1L)'};
 
+async function sendBusinessServicesMenu(to,lang){
+  await sendList(to,getT(lang,"whatToKnow"),"View Services",[{title:"All Services",rows:[
+    {id:"driver",title:"Driver Partner",description:"Attach Vehicle & Earn"},
+    {id:"customer",title:"Customer",description:"Book a Taxi & Services"},
+    {id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},
+    {id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise 1L-15L"}
+  ]}]);
+  await new Promise(r=>setTimeout(r,800));
+  await sendButtons(to,"Quick select:",[{id:"driver",title:"Driver"},{id:"customer",title:"Customer"},{id:"business",title:"Business"},{id:"opportunity",title:"Franchise"}]);
+}
+async function sendTop2OptionMenu(to,lang){
+  await sendList(to,"👇 Please select your need:", "Select Option", [{title:"Choose Service",rows:[
+    {id:"wpbs",title:"WhatsApp Automation",description:"Starts from ₹4999 - WPBS Q&A"},
+    {id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}
+  ]}]);
+  await new Promise(r=>setTimeout(r,800));
+  await sendButtons(to,"If list not visible, click:",[{id:"wpbs",title:"WhatsApp Automation"},{id:"biz_services",title:"Business Services"},{id:"call_now",title:"📞 Call Now"}]);
+}
+
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('V5.4 FINAL - 2 OPTION FLOW - CALL BUTTON + LIST FIXED LIVE ✅'));
+app.get('/',(req,res)=>res.send('V5.6 FINAL - 2 OPTION + DRIVER FIRST + SHEET QUEUE LIVE ✅'));
 app.get('/pending',(req,res)=>{res.json({total:Object.keys(pendingChats).length,pendingChats});});
-app.get('/test-sheet',async(req,res)=>{const ok=await appendToSheet([new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}),"919999999999","TEST_SHEET","Test V5.4","919999999999","TEST_STAGE","EN | TEST","Manual test","EN"]);res.send(ok?"✅ Test sheet OK":"❌ Failed");});
-app.get('/test-sheet-lead',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const ok1=await appendToSheet([dateStr,"919999999998","Franchisee_Lead","District Franchisee (10L-15L)","Test User","9999999998","Kochi","Running business","EN"]);const ok2=await appendToSheet([dateStr,"919999999997","WPBS_Lead","WPBS L2 - Advance 2500","919999999997","919999999997","","PAID_L2","EN"]);res.send(`Franchise: ${ok1}, WPBS: ${ok2}`);});
+app.get('/test-sheet',async(req,res)=>{const ok=await appendToSheet([new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}),"919999999999","TEST_SHEET","Test V5.6","919999999999","TEST_STAGE","EN | TEST","Manual","EN"]);res.send(ok?"✅ Test sheet OK QUEUED":"❌ Failed");});
+app.get('/test-sheet-lead',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});await appendToSheet([dateStr,"919999999998","Franchisee_Lead","District Franchisee (10L-15L)","Test User","9999999998","Kochi","Running business","EN"]);await appendToSheet([dateStr,"919999999997","WPBS_Lead","WPBS L2 - Advance 2500","919999999997","919999999997","","PAID_L2","EN"]);res.send(`✅ Queued 2 leads - Check sheet in 5 sec!`);});
 
 app.post('/webhook',async(req,res)=>{
 try{
@@ -81,7 +119,7 @@ if(processedIds.has(msg.id))return res.sendStatus(200);processedIds.add(msg.id);
 const from=msg.from;let rawId=msg.type==="interactive"?(msg.interactive.button_reply?.id||msg.interactive.list_reply?.id||""):(msg.text?.body?.trim()||"");let input=rawId.toLowerCase();let inputUpper=rawId.toUpperCase();const rawText=msg.text?.body||"";const s=getSession(from);
 await logAllChat(from,(rawText||rawId||"HI").substring(0,30),"INBOUND",s.lang,"CHAT_RECEIVED",`Raw:${rawText||rawId} stage:${s.stage}`);
 
-if(input==="call_now"){await sendContactWithCallUrl(from,`📞 *Call Now - ${CONTACT_NUMBER}*\n\nTap the button below to call us directly!\n\nOur team: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\nWebsite: ${WEBSITE}`);await new Promise(r=>setTimeout(r,800));await sendList(from,getT(s.lang,"whatToKnow"),"Main Menu",[{title:"Choose Service",rows:[{id:"wpbs",title:"WhatsApp Automation",description:"Starts from ₹4999 - WPBS"},{id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}]}]);return res.sendStatus(200);}
+if(input==="call_now"){await sendContactWithCallUrl(from,`📞 *Call Now - ${CONTACT_NUMBER}*\n\nTap button to call directly!\n\nTeam: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);await new Promise(r=>setTimeout(r,800));await sendTop2OptionMenu(from,s.lang);return res.sendStatus(200);}
 
 if(s.stage==="FORM_NAME"){s.form.name=rawText.trim();s.stage="FORM_CONTACT";setPendingChat(from,s.lang,"FORM_CONTACT");await sendText(from,getT(s.lang,"formContact"));return res.sendStatus(200);}
 if(s.stage==="FORM_CONTACT"){s.form.contact=rawText.trim();s.stage="FORM_PLACE";setPendingChat(from,s.lang,"FORM_PLACE");await sendText(from,getT(s.lang,"formPlace"));return res.sendStatus(200);}
@@ -91,35 +129,33 @@ if(input.startsWith("occ_")){const m={occ_running:"Running business",occ_plannin
 const oppFullName=OPP_MAP[s.lastOpp]||getOppName(s.lastOpp.toLowerCase())||s.lastOpp;
 const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 const leadRow=[dateStr,from,'Franchisee_Lead',oppFullName,s.form.name,s.form.contact,s.form.place,s.form.occupation,s.lang];
-const ok=await appendToSheet(leadRow);
-await logAllChat(from,'Franchisee_Lead','COMPLETED',s.lang,'LEAD_COMPLETED',`${oppFullName} | ${s.form.name} | Sheet:${ok}`);
+await appendToSheet(leadRow);await logAllChat(from,'Franchisee_Lead','COMPLETED',s.lang,'LEAD_COMPLETED',`${oppFullName} | ${s.form.name}`);
 clearPendingChat(from);
 await sendImage(from,ASSETS.posters.welcome,`${getT(s.lang,"thanksEnq")} ${s.form.name}!\n${getT(s.lang,"team24")}\nContact: ${CONTACT_NUMBER} / ${EMAIL_ID}`);
 s.stage="MENU";s.form={};s.lastOpp="";
 await new Promise(r=>setTimeout(r,2000));
 await sendImage(from,ASSETS.posters.franchiseBrochure,`📄 Franchise Brochure\nContact: ${CONTACT_NUMBER}\n${WEBSITE}`);
 await new Promise(r=>setTimeout(r,800));
-await sendContactButtons(from,`📞 Need more details? Call Now or explore more?\nContact: ${CONTACT_NUMBER}`);
+await sendContactButtons(from,`📞 Need more details? Call Now?\nContact: ${CONTACT_NUMBER}`);
 return res.sendStatus(200);
 }
 if(s.stage==="BUSINESS_DATA"){
 const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 const clean=rawText.replace(/\n/g,' | ').substring(0,400);
 const leadRow=[dateStr,from,'Business_Lead',clean,s.form.name||from,clean,from,'BUSINESS_COMPLETED',s.lang];
-const ok=await appendToSheet(leadRow);
-await logAllChat(from,'Business_Lead','COMPLETED',s.lang,'BUSINESS_COMPLETED',`${clean} | Sheet:${ok}`);
+await appendToSheet(leadRow);await logAllChat(from,'Business_Lead','COMPLETED',s.lang,'BUSINESS_COMPLETED',`${clean}`);
 clearPendingChat(from);
 await sendImage(from,ASSETS.posters.welcome,`✅ Business Details Received! ${getT(s.lang,"team24")}`);
 s.stage="MENU";s.lastOpp="";
 await new Promise(r=>setTimeout(r,2000));
 await sendImage(from,ASSETS.posters.businessBrochure,`📄 Business Listing Benefits\nContact: ${CONTACT_NUMBER}\n${WEBSITE}`);
 await new Promise(r=>setTimeout(r,800));
-await sendContactButtons(from,`📞 Questions? Call Now!\nContact: ${CONTACT_NUMBER}`);
+await sendContactButtons(from,`📞 Questions? Call Now! ${CONTACT_NUMBER}`);
 return res.sendStatus(200);
 }
 
 // WPBS - OPTION 1
-if(input==="wpbs"||input.includes("whatsapp automation")){s.stage="WPBS_Q1";s.form={};s.form.wpbs={levels:[]};setPendingChat(from,s.lang,"WPBS_Q1_MSG");await logAllChat(from,'AD_SELECTION','WPBS_Q1_START',s.lang,'WPBS_Q1','Selected WPBS');await sendText(from,`🔍 *Let's find perfect WPBS plan for you - 3 quick questions (30 sec)*\n\n*Q1/3: Messages per month?*`);await sendButtons(from,"Select:",[{id:"wpbs_q1_l1",title:"Upto 1000"},{id:"wpbs_q1_l2",title:"1000-5000"},{id:"wpbs_q1_l3",title:"Above 5000"}]);return res.sendStatus(200);}
+if(input==="wpbs"||input.includes("whatsapp automation")){s.stage="WPBS_Q1";s.form={};s.form.wpbs={levels:[]};setPendingChat(from,s.lang,"WPBS_Q1_MSG");await logAllChat(from,'AD_SELECTION','WPBS_Q1_START',s.lang,'WPBS_Q1','Selected WPBS');await sendText(from,`🔍 *Let's find perfect WPBS plan - 3 quick questions (30 sec)*\n\n*Q1/3: Messages per month?*`);await sendButtons(from,"Select:",[{id:"wpbs_q1_l1",title:"Upto 1000"},{id:"wpbs_q1_l2",title:"1000-5000"},{id:"wpbs_q1_l3",title:"Above 5000"}]);return res.sendStatus(200);}
 if(s.stage==="WPBS_Q1"&&input.startsWith("wpbs_q1_")){let lvl=input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";s.form.wpbs.q1=input;s.form.wpbs.q1_lvl=lvl;s.form.wpbs.q1_text=lvl==="L1"?"Upto 1000":lvl==="L2"?"1000-5000":"Above 5000";s.form.wpbs.levels=[lvl];s.stage="WPBS_Q2";setPendingChat(from,s.lang,"WPBS_Q2_NUMBERS");await logAllChat(from,'WPBS_Q1','ANSWERED_'+lvl,s.lang,'WPBS_Q2',`Q1:${input}=>${lvl}`);await sendText(from,`*Q2/3: How many WhatsApp Numbers / Bots?*`);await sendButtons(from,"Select:",[{id:"wpbs_q2_l1",title:"1 Number"},{id:"wpbs_q2_l2",title:"2 to 5"},{id:"wpbs_q2_l3",title:"More than 5"}]);return res.sendStatus(200);}
 if(s.stage==="WPBS_Q2"&&input.startsWith("wpbs_q2_")){let lvl=input.includes("_l3")?"L3":input.includes("_l2")?"L2":"L1";s.form.wpbs.q2=input;s.form.wpbs.q2_lvl=lvl;s.form.wpbs.q2_text=lvl==="L1"?"1 Number":lvl==="L2"?"2 to 5":"More than 5";s.form.wpbs.levels.push(lvl);s.stage="WPBS_Q3";setPendingChat(from,s.lang,"WPBS_Q3_ADS");await logAllChat(from,'WPBS_Q2','ANSWERED_'+lvl,s.lang,'WPBS_Q3',`Q2:${input}=>${lvl}`);await sendText(from,`*Q3/3: How many Ads with same bot?*`);await sendButtons(from,"Select:",[{id:"wpbs_q3_l1",title:"1 Ad"},{id:"wpbs_q3_l2",title:"2 to 5 Ads"},{id:"wpbs_q3_l3",title:"More than 5 Ads"}]);return res.sendStatus(200);}
 if(s.stage==="WPBS_Q3"&&input.startsWith("wpbs_q3_")){
@@ -130,15 +166,15 @@ if(s.form.wpbs.levels.includes("L2")){finalLevel="L2";price="₹9999/-";details=
 if(s.form.wpbs.levels.includes("L3")){finalLevel="L3";price="₹14,999/- Onwards";details="5+ Numbers | 5000+ Msgs | 5+ Ads - Full Automation+API";}
 s.form.wpbs.recommended=finalLevel;s.form.wpbs.finalPrice=price;s.stage="WPBS_RECOMMENDED";setPendingChat(from,s.lang,"WPBS_RECOMMENDED");
 if(finalLevel==="L1"){
-await sendText(from,`✅ *Analysis Done! You BELONG to ₹4999 Plan! 🎉*\n\n📊 *Your Requirement:*\n• Msgs/Month: ${q1T} => ${s.form.wpbs.q1_lvl} ✅\n• Numbers: ${q2T} => ${s.form.wpbs.q2_lvl} ✅\n• Ads: ${q3T} => ${s.form.wpbs.q3_lvl} ✅\n\nAll 3 match L1 base plan!`);
+await sendText(from,`✅ *Analysis Done! You BELONG to ₹4999 Plan! 🎉*\n\n📊 *Your Requirement:*\n• Msgs/Month: ${q1T} => ${s.form.wpbs.q1_lvl} ✅\n• Numbers: ${q2T} => ${s.form.wpbs.q2_lvl} ✅\n• Ads: ${q3T} => ${s.form.wpbs.q3_lvl} ✅\n\nAll 3 match L1 base!`);
 await new Promise(r=>setTimeout(r,800));
 await sendImage(from,ASSETS.posters.wpbs_l1,`💎 *APPROVED - You BELONG to ₹4999 Plan!*\n📋 Includes: ${details}\n🔒 Lock Now @ ${WPBS_AMOUNT} Advance\n💳 Pay: ${WPBS_PAYMENT_LINK}\n📞 Call ${CONTACT_NUMBER}`);
 }else{
 await sendText(from,`⚠️ *You are NOT belongs to our ₹4999 Base Plan (L1)*\n\n📊 *BASE PLAN L1 (₹4999) Criteria:*\n• Msgs/Month: Upto 1000 => L1\n• Numbers: 1 Number => L1\n• Ads: 1 Ad => L1`);
 await new Promise(r=>setTimeout(r,800));
-await sendText(from,`📋 *Your Requirement vs Base:*\n• Msgs: ${q1T} => ${s.form.wpbs.q1_lvl} ${s.form.wpbs.q1_lvl!="L1"?"❌ NOT L1":"✅"}\n• Numbers: ${q2T} => ${s.form.wpbs.q2_lvl} ${s.form.wpbs.q2_lvl!="L1"?"❌ NOT L1":"✅"}\n• Ads: ${q3T} => ${s.form.wpbs.q3_lvl} ${s.form.wpbs.q3_lvl!="L1"?"❌ NOT L1":"✅"}\n*Result:* HIGHER than base, need ${finalLevel}`);
+await sendText(from,`📋 *Your vs Base:*\n• Msgs: ${q1T} => ${s.form.wpbs.q1_lvl} ${s.form.wpbs.q1_lvl!="L1"?"❌ NOT L1":"✅"}\n• Numbers: ${q2T} => ${s.form.wpbs.q2_lvl} ${s.form.wpbs.q2_lvl!="L1"?"❌ NOT L1":"✅"}\n• Ads: ${q3T} => ${s.form.wpbs.q3_lvl} ${s.form.wpbs.q3_lvl!="L1"?"❌ NOT L1":"✅"}\n*Result:* HIGHER, need ${finalLevel}`);
 await new Promise(r=>setTimeout(r,800));
-await sendImage(from,ASSETS.posters.wpbs_higher,`⚠️ *ATTENTION - HIGHER than base plan*\n\n💎 *FINAL: ${finalLevel} = ${price}*\n📋 ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n📞 Call ${CONTACT_NUMBER}`);
+await sendImage(from,ASSETS.posters.wpbs_higher,`⚠️ *HIGHER than base plan*\n\n💎 *FINAL: ${finalLevel} = ${price}*\n📋 ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n📞 Call ${CONTACT_NUMBER}`);
 }
 await new Promise(r=>setTimeout(r,1000));
 await sendPayNowUrlButton(from,`🔒 *Lock your ${finalLevel} plan (${price}):*\n\n💎 FINAL: ${finalLevel} = ${price}\n📋 ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n📞 Call ${CONTACT_NUMBER}\n\n👇 Click Pay Now:`,WPBS_PAYMENT_LINK);
@@ -154,12 +190,10 @@ const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 const q1=s.form?.wpbs?.q1_lvl||"L1";const q2=s.form?.wpbs?.q2_lvl||"L1";const q3=s.form?.wpbs?.q3_lvl||"L1";
 const q1T=s.form?.wpbs?.q1_text||"";const q2T=s.form?.wpbs?.q2_text||"";const q3T=s.form?.wpbs?.q3_text||"";
 const leadRow=[dateStr,from,'WPBS_Lead',`WPBS ${lvl} - Advance 2500 - Q1:${q1}(${q1T}) Q2:${q2}(${q2T}) Q3:${q3}(${q3T}) => ${lvl} | Total ${total}`,from,from,from,`PAID_${lvl} | Balance ${balance}`,s.lang];
-const ok=await appendToSheet(leadRow);
-await logAllChat(from,'WPBS_Lead','PAID_CONFIRMED_'+lvl,s.lang,'WPBS_PAID',`Advance 2500 Paid | ${lvl} | Sheet:${ok}`);
+await appendToSheet(leadRow);await logAllChat(from,'WPBS_Lead','PAID_CONFIRMED_'+lvl,s.lang,'WPBS_PAID',`Advance 2500 Paid | ${lvl} | Balance ${balance}`);
 clearPendingChat(from);
 await sendText(from,`🎉 *Thank you for locking WPBS ${lvl} Plan! ✅*\n\n✅ Payment of ${WPBS_AMOUNT} Advance received\n📊 Final Plan: *${lvl}*\n💰 Total: ₹${total} | Paid: ₹2500 | Balance: ₹${balance}\n\n📞 *Next:* Team calls you in 2 hrs on *${CONTACT_NUMBER}*\n🚀 Deployment from *DAY 8*`);
-await new Promise(r=>setTimeout(r,800));
-await sendContactButtons(from,`📞 Any questions? Call Now ${CONTACT_NUMBER}!`);
+await new Promise(r=>setTimeout(r,800));await sendContactButtons(from,`📞 Any questions? Call Now ${CONTACT_NUMBER}!`);
 s.stage="COMPLETED_WPBS";return res.sendStatus(200);
 }
 
@@ -167,7 +201,6 @@ const VALID_IDS=['lang_en','lang_hi','lang_ml','english','hindi','malayalam','cu
 const isInteractive=msg.type==="interactive";const isValid=VALID_IDS.some(v=>input===v||input.includes(v)||inputUpper===v.toUpperCase())||isInteractive;
 if(!isValid&&!["FORM_NAME","FORM_CONTACT","FORM_PLACE","FORM_OCCUPATION","BUSINESS_DATA","AD_SELECTION","WPBS_Q1","WPBS_Q2","WPBS_Q3","WPBS_RECOMMENDED","WPBS_PAYMENT"].includes(s.stage)){await logAllChat(from,'CATCH_ALL','INVALID_INPUT',s.lang,'WELCOME_SENT',`Invalid: ${rawText||rawId}`);s.stage="LANG";setPendingChat(from,s.lang,"LANG_SELECTION");await sendWelcomeTextAndLanguage(from);return res.sendStatus(200);}
 
-// NEW FLOW - HI -> LANGUAGE
 if(s.stage==="NEW"||["hi","hello","hey","hlo","start","hai"].includes(input)){
 s.stage="LANG";s.form={};s.lastOpp="";setPendingChat(from,s.lang,"LANG_SELECTION");
 await logAllChat(from,'CHAT_STARTED','NEW_USER_HI',s.lang,'LANG_SELECTION','User said HI');
@@ -176,36 +209,21 @@ await new Promise(r=>setTimeout(r,800));
 await sendButtons(from,"Select language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക",[{id:"lang_en",title:"English"},{id:"lang_hi",title:"Hindi"},{id:"lang_ml",title:"Malayalam"}]);
 return res.sendStatus(200);}
 
-// AFTER LANGUAGE - ONLY 2 OPTIONS (YOUR REQUIREMENT)
 if(s.stage==="LANG"||input.startsWith("lang_")){
 if(input.includes("en"))s.lang="EN";else if(input.includes("hi"))s.lang="HI";else if(input.includes("ml"))s.lang="ML";
 s.stage="AD_SELECTION";setPendingChat(from,s.lang,"AD_SELECTION");
 await logAllChat(from,'LANGUAGE_SELECTED','ACTIVE',s.lang,'AD_SELECTION',`Selected ${s.lang}`);
 await sendImage(from,ASSETS.posters.selectOption,`🎯 *SELECT YOUR OPTION FROM POSTERS*\n\n*Left - WHATSAPP AUTOMATION (WPBS):*\n✅ Low-cost Business Automation\n💰 Starts from ₹4999/- Onwards\n🚀 Deployment from Day 8\n📞 ${CONTACT_NUMBER}\n\n*Right - BUSINESS SERVICES:*\n✅ 4 Opportunities Under One Brand\n✅ 50+ Franchisees Allotted in Kerala\n💰 1L to 15L Investment\n\n👇 *Please select your option below:*`);
 await new Promise(r=>setTimeout(r,1000));
-// 2 OPTIONS ONLY
-await sendList(from,"👇 Please select your need:", "Select Option", [{title:"Choose Service",rows:[
-{id:"wpbs",title:"WhatsApp Automation",description:"Starts from ₹4999 - WPBS Q&A"},
-{id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}
-]}]);
-await new Promise(r=>setTimeout(r,1200));
-await sendButtons(from,"If list not visible, click:",[{id:"wpbs",title:"WhatsApp Automation"},{id:"biz_services",title:"Business Services"},{id:"call_now",title:"📞 Call Now"}]);
+await sendTop2OptionMenu(from,s.lang);
 return res.sendStatus(200);}
 
-// OPTION 2 - BUSINESS SERVICES -> 4 OPTIONS
 if(input==="biz_services" || input==="business_services"){
 setPendingChat(from,s.lang,"BUSINESS_SERVICES_VIEWED");
 await logAllChat(from,'MENU_CLICK','BUSINESS_SERVICES',s.lang,'BUSINESS_SERVICES_VIEWED','Clicked Business Services');
-await sendText(from,`🏪 *Bizmapia Business Services*\n\nSelect what you need:`);
+await sendText(from,`🏪 *Bizmapia Business Services*\n\nSelect what you need (Driver first as per code):`);
 await new Promise(r=>setTimeout(r,500));
-await sendList(from,getT(s.lang,"whatToKnow"),"View Services",[{title:"All Services",rows:[
-{id:"customer",title:"Customer",description:"Book a Taxi & Services"},
-{id:"driver",title:"Driver Partner",description:"Attach Vehicle & Earn"},
-{id:"business",title:"Business Owner",description:"List Your Business"},
-{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise 1L-15L"}
-]}]);
-await new Promise(r=>setTimeout(r,800));
-await sendButtons(from,"Quick select:",[{id:"customer",title:"Customer"},{id:"driver",title:"Driver"},{id:"business",title:"Business"},{id:"opportunity",title:"Franchise"}]);
+await sendBusinessServicesMenu(from,s.lang);
 return res.sendStatus(200);
 }
 
@@ -220,14 +238,26 @@ if(["opportunity","opportunities_franchise","view_opp_levels","opp_search","fran
 setPendingChat(from,s.lang,"FRANCHISE_OPPORTUNITY_VIEWED");await logAllChat(from,'MENU_CLICK','FRANCHISE',s.lang,'FRANCHISE_OPPORTUNITY','Clicked Business Opportunity');
 await sendImage(from,ASSETS.posters.opportunity,`${getT(s.lang,"oppH")}\n${getT(s.lang,"oppSub")}\nContact: ${CONTACT_NUMBER} | ${EMAIL_ID}`);
 await new Promise(r=>setTimeout(r,800));await sendText(from,`🎥 Watch About Bizmapia:\n${ASSETS.videos.main_opp}`);await new Promise(r=>setTimeout(r,800));
-// FIXED LIST TITLES - 24 CHAR LIMIT
+// FIXED 24 CHAR LIMIT
 await sendList(from,`💰 Select Franchise Level:\nDistrict 10L-15L (5Y, 12M Ads)\nMuni/Corp 4L-5L (3Y, 12M Ads)\nBusiness Center 1L (1Y, 3M Ads)`,"View Opportunities",[{title:"Franchise Levels",rows:[{id:"opp_1",title:"District Franchisee",description:"💰 10L-15L | 5Y | 12M Ads"},{id:"opp_2",title:"Corporation Franchise",description:"💰 5L | 3Y | 12M Ads"},{id:"opp_3",title:"Municipality Franchise",description:"💰 4L | 3Y | 12M Ads"},{id:"opp_4",title:"Biz Center - Taxi",description:"💰 1L | 1Y | 3M Ads"},{id:"opp_5",title:"Biz Center - Directory",description:"💰 1L | 1Y | 3M Ads"}]}]);
 await new Promise(r=>setTimeout(r,1200));await sendButtons(from,"If list not visible, click:",[{id:"opp_1",title:"District (10L-15L)"},{id:"opp_2",title:"Corporation (5L)"},{id:"opp_3",title:"Municipality (4L)"}]);await new Promise(r=>setTimeout(r,800));await sendButtons(from,"More:",[{id:"opp_4",title:"Taxi Center (1L)"},{id:"opp_5",title:"Directory (1L)"},{id:"call_now",title:"📞 Call Now"}]);return res.sendStatus(200);}
 if(["opp_1","opp_2","opp_3","opp_4","opp_5"].includes(input)){s.lastOpp=inputUpper;setPendingChat(from,s.lang,`OPP_${input}_VIEWED`);await logAllChat(from,'FRANCHISE_LEVEL','VIEWED',s.lang,`OPP_${input}_VIEWED`,getOppName(input));await sendImage(from,ASSETS.posters.opportunity,`💼 *${getOppName(input)}*`);await new Promise(r=>setTimeout(r,800));await sendText(from,getOppFeeCard(input));await new Promise(r=>setTimeout(r,800));await sendText(from,`🎥 Watch full awareness:\n${ASSETS.videos[input]}\nContact: ${CONTACT_NUMBER}`);await new Promise(r=>setTimeout(r,800));await sendContactButtons(from,`Want to know more about ${getOppName(input)}? Call Now ${CONTACT_NUMBER}`);if(oppTimers[from])clearTimeout(oppTimers[from]);oppTimers[from]=setTimeout(async()=>{await sendButtons(from,`⏰ ${getT(s.lang,"yesNoQ")}`,[{id:"opp_yes",title:"Yes"},{id:"opp_no",title:"No"},{id:"call_now",title:"📞 Call Now"}]);},5*60*1000);await new Promise(r=>setTimeout(r,800));await sendButtons(from,getT(s.lang,"yesNoQ"),[{id:"opp_yes",title:"Yes"},{id:"opp_no",title:"No"},{id:"call_now",title:"📞 Call Now"}]);return res.sendStatus(200);}
 if(input==="opp_yes"){if(oppTimers[from])clearTimeout(oppTimers[from]);s.stage="FORM_NAME";s.form={};setPendingChat(from,s.lang,"FORM_NAME");await logAllChat(from,'FRANCHISE','YES_CLICKED',s.lang,'FORM_NAME',`Said YES to ${s.lastOpp}`);await sendText(from,getT(s.lang,"formName"));return res.sendStatus(200);}
 if(input==="opp_no"){if(oppTimers[from])clearTimeout(oppTimers[from]);clearPendingChat(from);await logAllChat(from,'FRANCHISE','NO_OPTED_OUT',s.lang,'OPTED_OUT',`Said NO to ${s.lastOpp}`);await sendContactWithCallUrl(from,`You are opted out 🙏\nType *HI* to start again or Call us!\n📞 Contact: ${CONTACT_NUMBER}`);s.stage="NEW";return res.sendStatus(200);}
-if(input==="menu"||input==="view_opp_levels"){s.stage="MENU";setPendingChat(from,s.lang,"MAIN_MENU");await logAllChat(from,'MENU','MAIN_MENU',s.lang,'MAIN_MENU','Back to main menu');await sendList(from,"👇 Select your need:", "Select Option", [{title:"Choose Service",rows:[{id:"wpbs",title:"WhatsApp Automation",description:"Starts from ₹4999 - WPBS"},{id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}]}]);return res.sendStatus(200);}
-if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from,"👇 Select your need:", "Select Option", [{title:"Choose Service",rows:[{id:"wpbs",title:"WhatsApp Automation",description:"Starts from ₹4999 - WPBS"},{id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}]}]);return res.sendStatus(200);}
+
+// FIXED MAIN MENU - GOES TO 4 OPTIONS DRIVER FIRST (NOT 2 OPTIONS)
+if(input==="menu"||input==="view_opp_levels"){
+  s.stage="MENU";setPendingChat(from,s.lang,"BUSINESS_SERVICES_VIEWED");
+  await logAllChat(from,'MENU','BUSINESS_SERVICES_MENU',s.lang,'BUSINESS_SERVICES_VIEWED','Main Menu -> Driver first 4 options');
+  await sendBusinessServicesMenu(from,s.lang);
+  return res.sendStatus(200);
+}
+if(s.stage==="MENU"){
+  setPendingChat(from,s.lang,"BUSINESS_SERVICES_VIEWED");
+  await sendBusinessServicesMenu(from,s.lang);
+  return res.sendStatus(200);
+}
+
 await sendContactButtons(from,getT(s.lang,"hiAgain")+`\n📞 Call: ${CONTACT_NUMBER}`);res.sendStatus(200);}catch(err){console.log("Webhook error:",err.message);res.sendStatus(200);}});
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
-app.listen(PORT,()=>console.log(`V5.4 FINAL 2 OPTION FLOW Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`V5.6 FINAL 2 OPTION FLOW DRIVER FIRST Running on ${PORT}`));
