@@ -4,7 +4,7 @@ const TOKEN=process.env.WHATSAPP_TOKEN;const PHONE_NUMBER_ID=process.env.PHONE_N
 const SHEET_ID=process.env.GOOGLE_SHEET_ID||process.env.SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY";
 const CONTACT_NUMBER="8590175977";const EMAIL_ID="bizmapia.com@gmail.com";const WEBSITE="www.bizmapia.com";
 const WPBS_PAYMENT_LINK="https://rzp.io/rzp/WxKS0dZ";const WPBS_AMOUNT="₹2,500";
-console.log("========== V4.6 FINAL - PAY NOW URL BUTTON L1 L2 L3 + FULL LANG ==========");
+console.log("========== V4.7 FINAL - POSTER+PAYNOW+RESTART TOGETHER L1 L2 L3 + I PAID REMINDER ==========");
 let pendingChatsMemory={};try{if(fs.existsSync("/tmp/pending_chats.json")){pendingChatsMemory=JSON.parse(fs.readFileSync("/tmp/pending_chats.json"));}}catch(e){pendingChatsMemory={};}
 async function getSheetsClient(){try{let creds=process.env.GOOGLE_CREDENTIALS;if(!creds)return null;let credentials=JSON.parse(creds);if(credentials.private_key)credentials.private_key=credentials.private_key.replace(/\\n/g,'\n');const auth=new google.auth.GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/spreadsheets']});return google.sheets({version:'v4',auth});}catch(e){return null;}}
 async function appendToSheet(row){try{const sheets=await getSheetsClient();if(!sheets||!SHEET_ID)return;await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'Sheet1!A:I',valueInputOption:'USER_ENTERED',requestBody:{values:[row.slice(0,9)]}});}catch(e){}}
@@ -19,7 +19,7 @@ const getT=(l,k)=>(LANG_TEXT[l]&&LANG_TEXT[l][k])||LANG_TEXT.EN[k];const session
 async function sendText(to,body){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"text",text:{body}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){}}
 async function sendImage(to,link,caption){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"image",image:{link,caption}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,caption);}}
 async function sendButtons(to,body,buttons){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"button",body:{text:body},action:{buttons:buttons.map(b=>({type:"reply",reply:{id:b.id,title:b.title.substring(0,20)}}))}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,body);}}
-async function sendPayNowUrlButton(to,body,payUrl){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"cta_url",body:{text:body},action:{name:"cta_url",parameters:{display_text:"Pay Now ₹2500",url:payUrl}}}},{headers:{Authorization:`Bearer ${TOKEN}`}});return true;}catch(e){console.log("CTA URL failed, fallback to text:",e.response?.data||e.message);await sendText(to,body+`\n\n💳 Pay Now: ${payUrl}`);return false;}}
+async function sendPayNowUrlButton(to,body,payUrl){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"cta_url",body:{text:body},action:{name:"cta_url",parameters:{display_text:"Pay Now ₹2500",url:payUrl}}}},{headers:{Authorization:`Bearer ${TOKEN}`}});return true;}catch(e){console.log("CTA URL failed, fallback:",e.response?.data||e.message);await sendText(to,body+`\n\n💳 Pay Now: ${payUrl}`);return false;}}
 async function sendList(to,body,buttonText,sections){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"list",body:{text:body},action:{button:buttonText,sections}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,body);}}
 async function sendWelcomeTextAndLanguage(to){await sendButtons(to,"👋 *Welcome to Bizmapia! Your Success, Our Platform* 🙏\n\nThank you for reaching out!\n\nPlease select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക 👇",[{id:"lang_en",title:"English"},{id:"lang_hi",title:"Hindi"},{id:"lang_ml",title:"Malayalam"}]);}
 function loadReminders(){try{if(fs.existsSync("/tmp/reminders.json"))return JSON.parse(fs.readFileSync("/tmp/reminders.json"));}catch(e){}return [];}
@@ -39,9 +39,9 @@ function getOppFeeCard(id){const cards={opp_1:`💼 *DISTRICT FRANCHISEE*\n💰 
 const OPP_MAP={'OPP_1':'District Franchisee (10L-15L)','OPP_2':'Corporation Franchisee (5L)','OPP_3':'Municipality Franchisee (4L)','OPP_4':'Business Center Taxi (1L)','OPP_5':'Business Center Directory (1L)'};
 function getMainMenuRows(lang){if(lang==="HI"){return[{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];}else if(lang==="ML"){return[{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];}else{return[{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];}}
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('V4.6 FINAL PAY NOW URL L1 L2 L3 LIVE ✅'));
+app.get('/',(req,res)=>res.send('V4.7 FINAL L1 L2 L3 POSTER+PAYNOW+RESTART TOGETHER + I PAID REMINDER LIVE ✅'));
 app.get('/pending',(req,res)=>{res.json({total:Object.keys(pendingChats).length,pendingChats});});
-app.get('/wpbs',(req,res)=>{res.json({status:"LIVE PAY NOW URL L1:"+ASSETS.posters.wpbs_l1+" L2L3:"+ASSETS.posters.wpbs_higher,link:WPBS_PAYMENT_LINK});});
+app.get('/wpbs',(req,res)=>{res.json({status:"LIVE V4.7 L1:"+ASSETS.posters.wpbs_l1+" L2L3:"+ASSETS.posters.wpbs_higher,link:WPBS_PAYMENT_LINK});});
 app.get('/test-sheet',async(req,res)=>{await logAllChat("919999999999","TEST","TEST_SHEET","EN","TEST_STAGE","Manual");res.send("✅ Test log sent! Check Sheet");});
 app.post('/webhook',async(req,res)=>{
 try{
@@ -76,15 +76,19 @@ await new Promise(r=>setTimeout(r,800));
 await sendImage(from,ASSETS.posters.wpbs_higher,`⚠️ *ATTENTION - Your requirement is HIGHER than base plan*\n\n💎 *FINAL Recommended: ${finalLevel} = ${price}*\n📋 Includes: ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n\n⚠️ You are NOT in ₹4999 plan because requirement is ${finalLevel}. Must pay ${price} (not ₹4999).\n\n🔄 If mistakenly chosen, restart questionnaire.\n💳 Pay Advance: ${WPBS_PAYMENT_LINK}`);
 }
 await new Promise(r=>setTimeout(r,1000));
-// ===== V4.6 PAY NOW URL BUTTON FOR ALL L1 L2 L3 =====
+// ===== V4.7 FINAL - POSTER + PAY NOW + RESTART + MAIN MENU TOGETHER - I PAID AS REMINDER AFTER 5 MIN =====
 if(finalLevel==="L1"){
-await sendPayNowUrlButton(from,`🔒 *Lock your ${finalLevel} plan (₹4999):*\n\n✅ You BELONG to ₹4999 Plan! Click Pay Now below to pay ₹2500 advance and lock.\n\nAfter payment, click I Paid - Confirm.`,WPBS_PAYMENT_LINK);
+await sendPayNowUrlButton(from,`🔒 *Lock your ${finalLevel} plan (₹4999):*\n\n✅ *APPROVED - You BELONG to ₹4999 Plan!*\n📋 ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n\n🎯 Your requirement smaller? Your bill smaller too!\n📅 Deployment from DAY 8 Onwards\n\n👇 Click Pay Now to lock now:`,WPBS_PAYMENT_LINK);
 await new Promise(r=>setTimeout(r,800));
-await sendButtons(from,`After payment click:`,[{id:"wpbs_paid",title:"I Paid - Confirm"},{id:"menu",title:"Main Menu"}]);
+await sendButtons(from,`Need to change requirement or go back?`,[{id:"wpbs_restart",title:"Restart Questionnaire"},{id:"menu",title:"Main Menu"}]);
+// Schedule I Paid - Confirm as reminder after 5 minutes - FOR L1
+setTimeout(async()=>{try{await sendText(from,`⏰ *Payment Reminder - ${finalLevel} Plan*\n\nDid you complete payment of ${WPBS_AMOUNT} for ${finalLevel} plan?\nIf yes, click I Paid - Confirm below so team can call you in 2 hrs.\n\nPay link if pending: ${WPBS_PAYMENT_LINK}`);await sendButtons(from,`Confirm payment:`,[{id:"wpbs_paid",title:"I Paid - Confirm"},{id:"menu",title:"Main Menu"}]);await logAllChat(from,'WPBS_REMINDER','I_PAID_REMINDER_SENT_L1',s.lang,'WPBS_PAYMENT','5min reminder L1');}catch(e){}},5*60*1000);
 }else{
-await sendPayNowUrlButton(from,`🔒 *Lock your ${finalLevel} plan (${price}):*\n\n⚠️ Your plan is ${finalLevel} - NOT L1 (₹4999). Total ${price}. Click Pay Now below to pay ₹2500 advance (Balance after demo).\n\nAfter payment, click I Paid - Confirm.`,WPBS_PAYMENT_LINK);
+await sendPayNowUrlButton(from,`🔒 *Lock your ${finalLevel} plan (${price}):*\n\n⚠️ *ATTENTION - Your requirement is HIGHER than base plan (₹4999)*\n💎 FINAL: ${finalLevel} = ${price}\n📋 ${details}\n💰 Total: ${price} | Advance: ${WPBS_AMOUNT}\n\n⚠️ You are NOT in ₹4999 because requirement is ${finalLevel}. Must pay ${price} (not ₹4999).\n🔄 If mistakenly chosen, restart questionnaire.\n\n👇 Click Pay Now to lock now (Balance after demo):`,WPBS_PAYMENT_LINK);
 await new Promise(r=>setTimeout(r,800));
-await sendButtons(from,`After payment click:`,[{id:"wpbs_paid",title:"I Paid - Confirm"},{id:"wpbs_restart",title:"Restart Questionnaire"},{id:"menu",title:"Main Menu"}]);
+await sendButtons(from,`Need to change requirement?`,[{id:"wpbs_restart",title:"Restart Questionnaire"},{id:"menu",title:"Main Menu"}]);
+// Schedule I Paid - Confirm as reminder after 5 minutes - FOR L2 L3
+setTimeout(async()=>{try{await sendText(from,`⏰ *Payment Reminder - ${finalLevel} Plan (${price})*\n\nDid you complete payment of ${WPBS_AMOUNT} for ${finalLevel} plan?\nYour plan: ${finalLevel} = ${price} (NOT ₹4999)\nIf paid, click I Paid - Confirm so team can call you in 2 hrs.\n\nPay link if pending: ${WPBS_PAYMENT_LINK}`);await sendButtons(from,`Confirm payment:`,[{id:"wpbs_paid",title:"I Paid - Confirm"},{id:"wpbs_restart",title:"Restart Questionnaire"},{id:"menu",title:"Main Menu"}]);await logAllChat(from,'WPBS_REMINDER','I_PAID_REMINDER_SENT_'+finalLevel,s.lang,'WPBS_PAYMENT','5min reminder '+finalLevel);}catch(e){}},5*60*1000);
 }
 await logAllChat(from,'WPBS_SORTED',finalLevel,s.lang,'WPBS_RECOMMENDED',`Q1:${s.form.wpbs.q1_lvl}(${q1T}) Q2:${s.form.wpbs.q2_lvl}(${q2T}) Q3:${s.form.wpbs.q3_lvl}(${q3T}) => ${finalLevel}`);
 return res.sendStatus(200);}
@@ -111,4 +115,4 @@ if(input==="menu"||input==="view_opp_levels"){s.stage="MENU";setPendingChat(from
 if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from,getT(s.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows:getMainMenuRows(s.lang)}]);return res.sendStatus(200);}
 await sendText(from,getT(s.lang,"hiAgain"));res.sendStatus(200);}catch(err){console.log(err);res.sendStatus(200);}});
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
-app.listen(PORT,()=>console.log(`V4.6 FINAL PAY NOW L1:${ASSETS.posters.wpbs_l1} L2L3:${ASSETS.posters.wpbs_higher} Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`V4.7 FINAL POSTER+PAYNOW+RESTART L1:${ASSETS.posters.wpbs_l1} L2L3:${ASSETS.posters.wpbs_higher} Running on ${PORT}`));
