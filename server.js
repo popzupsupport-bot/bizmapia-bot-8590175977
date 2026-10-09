@@ -15,10 +15,10 @@ const EMAIL_ID = "bizmapia.com@gmail.com";
 const WEBSITE = "www.bizmapia.com";
 const WPBS_PAYMENT_LINK = "https://rzp.io/rzp/WxKS0dZ";
 const WPBS_AMOUNT = "₹2,500";
-console.log("========== GOD MODE + WPBS 3Q ENHANCED COMPARISON ==========");
+console.log("========== GOD MODE + WPBS 3Q ENHANCED + SMART RESUME ==========");
 console.log("NEW POSTER:", "https://files.catbox.moe/pw2zi4.png");
 console.log("WPBS LINK:", WPBS_PAYMENT_LINK);
-console.log("ENHANCED: NOT belongs to 4999 + Comparison + Restart");
+console.log("FEATURES: 3Q Sorting + NOT belongs 4999 Comparison + Smart Resume");
 console.log("====================================");
 const pendingChatsMemory = {};
 async function getSheetsClient(){try{let creds=process.env.GOOGLE_CREDENTIALS;if(!creds)return null;let credentials=JSON.parse(creds);if(credentials.private_key)credentials.private_key=credentials.private_key.replace(/\\n/g,'\n');const auth=new google.auth.GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/spreadsheets']});return google.sheets({version:'v4',auth});}catch(e){return null;}}
@@ -43,14 +43,91 @@ let pendingChats=pendingChatsMemory;
 function setPendingChat(phone,lang,stageName){if(!pendingChats[phone])pendingChats[phone]={lang:lang||"EN",stage:stageName,lastActivity:Date.now(),reminders:{r1:false,r2:false,r3:false}};else{pendingChats[phone].lang=lang||pendingChats[phone].lang;pendingChats[phone].stage=stageName;pendingChats[phone].lastActivity=Date.now();}try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}
 function clearPendingChat(phone){if(pendingChats[phone]){delete pendingChats[phone];try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}}
 function getPendingReminderText(lang,attempt,stage){if(lang==="HI"){if(attempt===1)return`👋 नमस्ते! आपने Bizmapia चैट अधूरा छोड़ दिया था।\n\nआप ${stage} पर थे - सिर्फ 1 मिनट में पूरा करें।\n👉 जारी रखने के लिए *HI* टाइप करें\n📞 ${CONTACT_NUMBER}`;if(attempt===2)return`⏰ *Reminder - आपका Bizmapia रजिस्ट्रेशन Pending है!*\nType *HI* to continue 🙏`;if(attempt===3)return`🔔 *Last Chance - Bizmapia*\n👉 *HI* लिखकर पूरा करें\n📞 ${CONTACT_NUMBER}`;}else if(lang==="ML"){if(attempt===1)return`👋 ഹായ്! നിങ്ങൾ Bizmapia ചാറ്റ് പൂർത്തിയാക്കിയില്ല।\n${stage} - 1 മിനിറ്റിൽ പൂർത്തിയാക്കൂ!\n👉 തുടരാൻ *HI* ടൈപ്പ് ചെയ്യുക`;if(attempt===2)return`⏰ *Reminder - Bizmapia Pending!*\nType *HI* 🙏`;if(attempt===3)return`🔔 *Last Chance - Bizmapia*\n👉 *HI* ടൈപ്പ് ചെയ്യുക`; }else{if(attempt===1)return`👋 Hi! You left your Bizmapia chat incomplete.\nYou were at ${stage} - Complete in 1 min!\n👉 Reply *HI* to continue\n📞 ${CONTACT_NUMBER} | ${EMAIL_ID}`;if(attempt===2)return`⏰ *Reminder - Your Bizmapia Registration is Pending!*\nReply *HI* 🙏`;if(attempt===3)return`🔔 *Last Chance - Bizmapia Franchise*\n👉 Reply *HI* to complete\n📞 ${CONTACT_NUMBER}`;}}
-async function checkPendingChats(){const now=Date.now();let changed=false;for(let phone in pendingChats){const p=pendingChats[phone];const diffMin=(now-p.lastActivity)/(1000*60);if(!p.reminders.r1&&diffMin>=10){const text=getPendingReminderText(p.lang,1,p.stage);await sendText(phone,text);await logAllChat(phone,'AUTO_REMINDER','REMINDER_10MIN_SENT',p.lang,p.stage,'10min reminder');setTimeout(async()=>{const rows=getMainMenuRows(p.lang);await sendList(phone,getT(p.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows}]);},3000);p.reminders.r1=true;changed=true;}else if(!p.reminders.r2&&diffMin>=30){const text=getPendingReminderText(p.lang,2,p.stage);await sendText(phone,text);await logAllChat(phone,'AUTO_REMINDER','REMINDER_30MIN_SENT',p.lang,p.stage,'30min reminder');p.reminders.r2=true;changed=true;}else if(!p.reminders.r3&&diffMin>=1440){const text=getPendingReminderText(p.lang,3,p.stage);await sendImage(phone,ASSETS.posters.opportunity,text);await logAllChat(phone,'AUTO_REMINDER','REMINDER_24H_SENT',p.lang,p.stage,'24h reminder');p.reminders.r3=true;changed=true;}}for(let phone in pendingChats){if((now-pendingChats[phone].lastActivity)>72*60*60*1000&&pendingChats[phone].reminders.r3){delete pendingChats[phone];changed=true;}}if(changed)try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}}
+function getStageDisplayName(stage){
+  const map = {
+    "LANG_SELECTION": "Language Selection",
+    "AD_SELECTION": "Ad Selection (WPBS / Business Opportunity)",
+    "WPBS_Q1_MSG": "WPBS Q1 - Messages per month",
+    "WPBS_Q2_NUMBERS": "WPBS Q2 - Number of WhatsApp Numbers",
+    "WPBS_Q3_ADS": "WPBS Q3 - Number of Ads",
+    "WPBS_RECOMMENDED": "WPBS Recommended Plan & Payment",
+    "WPBS_PAYMENT": "WPBS Payment - Pay ₹2500 Advance",
+    "FORM_NAME": "Franchise Form - Name",
+    "FORM_CONTACT": "Franchise Form - Contact Number",
+    "FORM_PLACE": "Franchise Form - Place",
+    "FORM_OCCUPATION": "Franchise Form - Occupation",
+    "CUSTOMER_VIEWED": "Customer App",
+    "DRIVER_VIEWED": "Driver App",
+    "DRIVER_BENEFIT": "Driver Free Recharge",
+    "BUSINESS_VIEWED": "Business Listing",
+    "BUSINESS_FORM_PENDING": "Business Details Form",
+    "FRANCHISE_OPPORTUNITY_VIEWED": "Franchise Opportunity Levels",
+    "MAIN_MENU": "Main Menu"
+  };
+  if(stage.startsWith("OPP_")) return stage.replace("OPP_","").replace("_VIEWED","").replace("opp_","Franchise ");
+  return map[stage] || stage;
+}
+async function sendResumeForStage(phone, stage, lang){
+  const stageName = getStageDisplayName(stage);
+  if(stage==="WPBS_Q1_MSG"){
+    await sendText(phone, `👋 *Hi! You left your WPBS enquiry incomplete.*\n\n⚠️ You have not completed *${stageName}* - Go back and complete your application now!\n\n👉 Reply *HI* to continue or select below:`);
+    await sendButtons(phone,"Q1/3: Messages per month? - Complete now:",[{id:"wpbs_q1_l1", title:"Upto 1000"},{id:"wpbs_q1_l2", title:"1000-5000"},{id:"wpbs_q1_l3", title:"Above 5000"}]);
+  } else if(stage==="WPBS_Q2_NUMBERS"){
+    await sendText(phone, `👋 *Hi! You left your WPBS enquiry incomplete.*\n\n⚠️ You have not completed *${stageName}* - Go back and complete your application now!`);
+    await sendButtons(phone,"Q2/3: How many WhatsApp Numbers? - Complete now:",[{id:"wpbs_q2_l1", title:"1 Number"},{id:"wpbs_q2_l2", title:"2 to 5"},{id:"wpbs_q2_l3", title:"More than 5"}]);
+  } else if(stage==="WPBS_Q3_ADS"){
+    await sendText(phone, `👋 *Hi! You left your WPBS enquiry incomplete.*\n\n⚠️ You have not completed *${stageName}* - Go back and complete your application now!`);
+    await sendButtons(phone,"Q3/3: How many Ads? - Complete now:",[{id:"wpbs_q3_l1", title:"1 Ad"},{id:"wpbs_q3_l2", title:"2 to 5 Ads"},{id:"wpbs_q3_l3", title:"More than 5 Ads"}]);
+  } else if(stage==="WPBS_RECOMMENDED"){
+    await sendText(phone, `👋 *Hi! You left your WPBS enquiry incomplete.*\n\n⚠️ You have not completed *${stageName}* - You have not locked your plan yet!\n\nGo back and complete your application now - Pay ₹2500 to lock!`);
+    await sendButtons(phone,"Complete your WPBS payment:",[{id:"wpbs_restart", title:"View My Plan"},{id:"menu", title:"Main Menu"}]);
+  } else if(stage==="WPBS_PAYMENT"){
+    await sendText(phone, `👋 *Hi! You left your WPBS payment incomplete.*\n\n⚠️ You have not completed *Payment - Pay ₹2500* - Go back and complete your application now!\n\nPay here: ${WPBS_PAYMENT_LINK}`);
+    await sendButtons(phone,"Complete payment:",[{id:"wpbs_paid", title:"I Paid - Confirm"},{id:"menu", title:"Main Menu"}]);
+  } else {
+    await sendText(phone, `👋 *Hi! You left your Bizmapia chat incomplete.*\n\n⚠️ You were at *${stageName}* - You have not completed it.\n\nGo back and complete your application now!\n👉 Reply *HI* to continue\n📞 ${CONTACT_NUMBER}`);
+    const rows=getMainMenuRows(lang);
+    setTimeout(async()=>{await sendList(phone,`You were at ${stageName} - Resume:`, "Resume Menu",[{title:"Menu",rows}]);},1000);
+  }
+}
+async function checkPendingChats(){
+  const now=Date.now();
+  let changed=false;
+  for(let phone in pendingChats){
+    const p=pendingChats[phone];
+    const diffMin=(now-p.lastActivity)/(1000*60);
+    const stageDisplay = getStageDisplayName(p.stage);
+    if(!p.reminders.r1 && diffMin>=10){
+      await sendText(phone, `🔔 *Reminder 1 - Incomplete Application*\n\n👋 Hi! You left your Bizmapia chat incomplete.\nYou were at *${stageDisplay}* - Complete in 1 min!\n👉 Reply *HI* to continue and complete *${stageDisplay}* now!\n📞 ${CONTACT_NUMBER}`);
+      await logAllChat(phone,'AUTO_REMINDER','REMINDER_10MIN_SENT',p.lang,p.stage,`10min - ${stageDisplay}`);
+      setTimeout(async()=>{ await sendResumeForStage(phone,p.stage,p.lang); },3000);
+      p.reminders.r1=true;changed=true;
+    }else if(!p.reminders.r2 && diffMin>=30){
+      await sendText(phone, `⏰ *Reminder 2 - Still Pending: ${stageDisplay}*\n\n⚠️ You have not completed *${stageDisplay}* - Go back and complete your application now!\n👉 Reply *HI*`);
+      await logAllChat(phone,'AUTO_REMINDER','REMINDER_30MIN_SENT',p.lang,p.stage,`30min - ${stageDisplay}`);
+      setTimeout(async()=>{ await sendResumeForStage(phone,p.stage,p.lang); },2000);
+      p.reminders.r2=true;changed=true;
+    }else if(!p.reminders.r3 && diffMin>=1440){
+      await sendImage(phone,ASSETS.posters.opportunity, `🔔 *Last Chance - Incomplete: ${stageDisplay}*\n\nYou have not completed *${stageDisplay}*\nGo back and complete your application now!\n👉 Reply *HI* to continue`);
+      await logAllChat(phone,'AUTO_REMINDER','REMINDER_24H_SENT',p.lang,p.stage,`24h - ${stageDisplay}`);
+      setTimeout(async()=>{ await sendResumeForStage(phone,p.stage,p.lang); },2000);
+      p.reminders.r3=true;changed=true;
+    }
+  }
+  for(let phone in pendingChats){
+    if((now-pendingChats[phone].lastActivity)>72*60*60*1000 && pendingChats[phone].reminders.r3){
+      delete pendingChats[phone];changed=true;
+    }
+  }
+  if(changed) try{fs.writeFileSync("/tmp/pending_chats.json",JSON.stringify(pendingChats));}catch(e){}
+}
 setInterval(checkPendingChats,2*60*1000);
 function getOppName(id){const map={opp_1:"District Franchisee (10L-15L)",opp_2:"Corporation Franchisee (5L)",opp_3:"Municipality Franchisee (4L)",opp_4:"Business Center - Taxi (1L)",opp_5:"Business Center - Directory (1L)"};return map[id]||id;}
 function getOppFeeCard(id){const cards={opp_1:`━━━━━━━━━━━━━━━━━━━━━━\n💼 *DISTRICT FRANCHISEE*\n💰 ₹10L-₹15L Investment\n📍 Full District Rights | 5 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}`,opp_2:`━━━━━━━━━━━━━━━━━━━━━━\n🏢 *CORPORATION FRANCHISEE*\n💰 ₹5L Investment\n📍 Corporation Rights | 3 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━`,opp_3:`━━━━━━━━━━━━━━━━━━━━━━\n🏘️ *MUNICIPALITY FRANCHISEE*\n💰 ₹4L Investment\n📍 Municipality Rights | 3 Year MOU\n🏠 Rent + Salary Support\n📢 Ad Support: 12 Months\n━━━━━━━━━━━━━━━━━━━━━━`,opp_4:`━━━━━━━━━━━━━━━━━━━━━━\n🚕 *BUSINESS CENTER - TAXI*\n💰 ₹1L Investment\n📍 Area Rights | 1 Year MOU\n❌ No Rent / No Salary\n📢 Ad Support: 3 Months Selected Service\n━━━━━━━━━━━━━━━━━━━━━━`,opp_5:`━━━━━━━━━━━━━━━━━━━━━━\n📖 *BUSINESS CENTER - DIRECTORY*\n💰 ₹1L Investment\n📍 Area Rights | 1 Year MOU\n❌ No Rent / No Salary\n📢 Ad Support: 3 Months Selected Service\n━━━━━━━━━━━━━━━━━━━━━━`};return cards[id]||"";}
 const OPP_MAP={'OPP_1':'District Franchisee (10L-15L) - 5Y - Rent+Salary - 12M Ads','OPP_2':'Corporation Franchisee (5L) - 3Y - Rent+Salary - 12M Ads','OPP_3':'Municipality Franchisee (4L) - 3Y - Rent+Salary - 12M Ads','OPP_4':'Business Center Taxi (1L) - 1Y - 3M Ads','OPP_5':'Business Center Directory (1L) - 1Y - 3M Ads'};
 function getMainMenuRows(lang){if(lang==="HI"){return[{id:"customer",title:"कस्टमर",description:"टैक्सी और सर्विस बुक करें"},{id:"driver",title:"ड्राइवर पार्टनर",description:"गाड़ी जोड़ें और कमाना शुरू करें"},{id:"business",title:"बिजनेस ओनर",description:"बिजनेस लिस्ट करें और ग्राहक पाएं"},{id:"opportunity",title:"फ्रेंचाइजी अवसर",description:"अपने क्षेत्र में फ्रेंचाइजी लें"}];}else if(lang==="ML"){return[{id:"customer",title:"കസ്റ്റമർ",description:"ടാക്സി & സർവീസ് ബുക്ക് ചെയ്യുക"},{id:"driver",title:"ഡ്രൈവർ പാർട്ണർ",description:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം"},{id:"business",title:"ബിസിനസ് ഓണർ",description:"ബിസിനസ് ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്സ്"},{id:"opportunity",title:"ഫ്രാഞ്ചൈസി അവസരം",description:"നിങ്ങളുടെ ഏരിയയിൽ ഫ്രാഞ്ചൈസി"}];}else{return[{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"driver",title:"Driver Partner",description:"Attach Your Vehicle & Start Earning"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise in Your Area"}];}}
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE + WPBS 3Q Enhanced Comparison LIVE ✅'));
+app.get('/',(req,res)=>res.send('Bizmapia Bot GOD MODE + WPBS 3Q Enhanced + Smart Resume LIVE ✅'));
 app.get('/pending',(req,res)=>{res.json({total_pending:Object.keys(pendingChats).length,pending_chats:pendingChats,driver_reminders:loadReminders().length});});
 app.get('/wpbs',(req,res)=>{res.json({status:"LIVE", poster:"https://files.catbox.moe/pw2zi4.png", payment_link:WPBS_PAYMENT_LINK, amount:WPBS_AMOUNT, support:CONTACT_NUMBER});});
 app.get('/test-sheet', async (req,res)=>{await logAllChat("919999999999","TEST","TEST_SHEET","EN","TEST_STAGE","Manual test");res.send(`✅ Test log sent! Time: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`);});
@@ -84,7 +161,6 @@ await sendImage(from,ASSETS.posters.franchiseBrochure,`📄 Bizmapia Franchise B
 await sendButtons(from,"Explore more?",[{id:"view_opp_levels",title:"View Opportunities"},{id:"menu",title:"Main Menu"}]);
 return res.sendStatus(200);}
 if(s.stage==="BUSINESS_DATA"){const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const cleanBusiness=rawText.replace(/\n/g,' | ').substring(0,200);const sheetRow=[dateStr,from,'Business_Lead',cleanBusiness,cleanBusiness,'','','',s.lang];await appendToSheet(sheetRow);await logAllChat(from,'Business_Lead','COMPLETED',s.lang,'BUSINESS_COMPLETED',cleanBusiness);clearPendingChat(from);await sendImage(from,ASSETS.posters.welcome,`✅ Business Details Received! ${getT(s.lang,"team24")}`);s.stage="MENU";s.lastOpp="";await new Promise(r=>setTimeout(r,2000));await sendImage(from,ASSETS.posters.businessBrochure,`📄 Business Listing Benefits\nContact: ${CONTACT_NUMBER}\nEmail: ${EMAIL_ID}\n${WEBSITE}`);await sendButtons(from,"What next?",[{id:"menu",title:"Main Menu"}]);return res.sendStatus(200);}
-// ===== WPBS 3-QUESTION PLAN SORTING =====
 if(input==="wpbs" || input.includes("whatsapp automation")){
   s.stage="WPBS_Q1";
   s.form = s.form || {};
@@ -258,4 +334,4 @@ if(input==="menu"||input==="view_opp_levels"){s.stage="MENU";setPendingChat(from
 if(s.stage==="MENU"){setPendingChat(from,s.lang,"MAIN_MENU");await sendList(from,getT(s.lang,"selectMenu"),"Main Menu",[{title:"Menu",rows:getMainMenuRows(s.lang)}]);return res.sendStatus(200);}
 await sendText(from,getT(s.lang,"hiAgain"));res.sendStatus(200);}catch(err){console.log(err);res.sendStatus(200);}});
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
-app.listen(PORT,()=>console.log(`Bizmapia GOD MODE + WPBS 3Q Enhanced Comparison Running on ${PORT}`));
+app.listen(PORT,()=>console.log(`Bizmapia GOD MODE + WPBS 3Q Enhanced + Smart Resume Running on ${PORT}`));
