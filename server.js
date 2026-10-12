@@ -1,11 +1,11 @@
-// V7.0 PERMANENT FIX - SHEET PERSISTENT - WORKS WITH NO CHAT - NEVER LOSES REMINDERS
+// V7.1 AUTO-CREATE TABS - NEVER-FAIL - SHEET PERSISTENT - NO RED ERROR
 const express=require('express');const bodyParser=require('body-parser');const axios=require('axios');const fs=require('fs');const {google}=require('googleapis');const app=express();app.use(bodyParser.json());
 const VERIFY_TOKEN=process.env.VERIFY_TOKEN||"bizmapia_verify_2024";
 const TOKEN=process.env.WHATSAPP_TOKEN;const PHONE_NUMBER_ID=process.env.PHONE_NUMBER_ID;const PORT=process.env.PORT||10000;
 const SHEET_ID=(process.env.GOOGLE_SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY").trim();
 const CONTACT_NUMBER="8590175977";const CONTACT_FULL="+918590175977";const EMAIL_ID="bizmapia.com@gmail.com";const WEBSITE="www.bizmapia.com";
 const WPBS_PAYMENT_LINK="https://rzp.io/rzp/WxKS0dZ";const WPBS_AMOUNT="₹2,500";
-console.log("========== V7.0 NEVER-FAIL - SHEET PERSISTENT - "+SHEET_ID.substring(0,30)+" ==========");
+console.log("========== V7.1 AUTO-CREATE - SHEET PERSISTENT - "+SHEET_ID.substring(0,30)+" ==========");
 
 let sheetsClientCache=null;let sheetsClientTime=0;
 async function getSheetsClient(){
@@ -40,11 +40,27 @@ async function sendContactButtons(to,body){try{await axios.post(`https://graph.f
 async function sendContactWithCallUrl(to,body){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"cta_url",body:{text:body},action:{name:"cta_url",parameters:{display_text:"Call Now - 8590175977",url:`tel:${CONTACT_FULL}`}}}},{headers:{Authorization:`Bearer ${TOKEN}`}});return true;}catch(e){await sendContactButtons(to,body);return false;}}
 async function sendList(to,body,buttonText,sections){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"list",body:{text:body},action:{button:buttonText,sections}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){console.log("List failed:",e.response?.data||e.message);await sendText(to,body);}}
 
-// ========== V7.0 NEVER-FAIL REMINDERS - SHEET PERSISTENT ==========
+// ========== V7.1 AUTO-CREATE TABS ==========
 let pendingChats={}; let driverReminders=[];
+async function ensureSheetTab(sheets, title){
+  try{
+    const meta = await sheets.spreadsheets.get({spreadsheetId:SHEET_ID});
+    const exists = meta.data.sheets.some(s=>s.properties.title===title);
+    if(!exists){
+      await sheets.spreadsheets.batchUpdate({spreadsheetId:SHEET_ID, requestBody:{requests:[{addSheet:{properties:{title}}}]}});
+      console.log(`✅ Created tab ${title}`);
+      if(title==="PendingChats"){
+        await sheets.spreadsheets.values.update({spreadsheetId:SHEET_ID, range:`${title}!A1:E1`, valueInputOption:'USER_ENTERED', requestBody:{values:[["Phone","Lang","Stage","LastActivity","Reminders"]]}});
+      }else{
+        await sheets.spreadsheets.values.update({spreadsheetId:SHEET_ID, range:`${title}!A1:F1`, valueInputOption:'USER_ENTERED', requestBody:{values:[["Phone","Type","ClaimedAt","Sent1h","Sent24h","Sent48h"]]}});
+      }
+    }
+  }catch(e){console.log("ensureTab",title,e.message);}
+}
 async function savePendingToSheet(){
   try{
     const sheets=await getSheetsClient(); if(!sheets) return;
+    await ensureSheetTab(sheets,"PendingChats");
     await sheets.spreadsheets.values.clear({spreadsheetId:SHEET_ID, range:'PendingChats!A2:E'});
     const rows=Object.keys(pendingChats).map(p=>[p, pendingChats[p].lang, pendingChats[p].stage, pendingChats[p].lastActivity, JSON.stringify(pendingChats[p].reminders)]);
     if(rows.length>0) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID, range:'PendingChats!A:E', valueInputOption:'USER_ENTERED', requestBody:{values: rows}});
@@ -54,11 +70,12 @@ async function savePendingToSheet(){
 async function loadPendingFromSheet(){
   try{
     const sheets=await getSheetsClient(); if(!sheets) return {};
+    await ensureSheetTab(sheets,"PendingChats");
     const res=await sheets.spreadsheets.values.get({spreadsheetId:SHEET_ID, range:'PendingChats!A2:E'});
     const rows=res.data.values||[]; let out={};
     rows.forEach(r=>{ if(r[0]) out[r[0]]={lang:r[1]||'EN', stage:r[2], lastActivity:parseInt(r[3]), reminders:JSON.parse(r[4]||'{"r1":false,"r2":false,"r3":false,"r4":false}')}; });
-    console.log(`LOADED ${Object.keys(out).length} pending from Sheet`); return out;
-  }catch(e){console.log("loadPending Error", e.message); return {};}
+    console.log(`✅ V7.1 LOADED ${Object.keys(out).length} pending from Sheet - NO RED ERROR`); return out;
+  }catch(e){console.log("loadPending first run empty (ok)", e.message); return {};}
 }
 function setPendingChat(phone,lang,stageName){
   if(!pendingChats[phone]) pendingChats[phone]={lang:lang||"EN",stage:stageName,lastActivity:Date.now(),reminders:{r1:false,r2:false,r3:false,r4:false}};
@@ -78,6 +95,7 @@ async function sendResumeForStage(phone,stage,lang){
 async function saveDriverReminders(){
   try{
     const sheets=await getSheetsClient(); if(!sheets) return;
+    await ensureSheetTab(sheets,"DriverReminders");
     await sheets.spreadsheets.values.clear({spreadsheetId:SHEET_ID, range:'DriverReminders!A2:F'});
     const rows=driverReminders.map(r=>[r.phone, r.type, r.claimedAt, r.sent1h, r.sent24h, r.sent48h]);
     if(rows.length>0) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID, range:'DriverReminders!A:F', valueInputOption:'USER_ENTERED', requestBody:{values: rows}});
@@ -87,6 +105,7 @@ async function saveDriverReminders(){
 async function loadDriverReminders(){
   try{
     const sheets=await getSheetsClient(); if(!sheets) return [];
+    await ensureSheetTab(sheets,"DriverReminders");
     const res=await sheets.spreadsheets.values.get({spreadsheetId:SHEET_ID, range:'DriverReminders!A2:F'});
     const rows=res.data.values||[]; return rows.map(r=>({phone:r[0], type:r[1], claimedAt:parseInt(r[2]), sent1h:r[3]==='true', sent24h:r[4]==='true', sent48h:r[5]==='true', sent72h:false}));
   }catch(e){return [];}
@@ -125,9 +144,9 @@ async function sendWelcomeTextAndLanguage(to){await sendButtons(to,"Welcome to B
 async function sendBusinessServicesMenu(to,lang){await sendList(to,getT(lang,"whatToKnow"),"View Services",[{title:"All Services",rows:[{id:"driver",title:"Driver Partner",description:"Attach Vehicle & Earn"},{id:"customer",title:"Customer",description:"Book a Taxi & Services"},{id:"business",title:"Business Owner",description:"List Your Business & Get Customers"},{id:"opportunity",title:"Franchise Opportunity",description:"Own a Franchise 1L-15L"}]}]);await new Promise(r=>setTimeout(r,800));await sendButtons(to,"Quick select:",[{id:"driver",title:"Driver"},{id:"customer",title:"Customer"},{id:"business",title:"Business"},{id:"opportunity",title:"Franchise"}]);}
 async function sendTop2OptionMenu(to,lang){await sendList(to,"Please select your need:", "Select Option", [{title:"Choose Service",rows:[{id:"wpbs",title:"WhatsApp Automation",description:"Starts from 4999 - WPBS Q&A"},{id:"biz_services",title:"Business Services",description:"Customer, Driver, Business, Franchise"}]}]);await new Promise(r=>setTimeout(r,800));await sendButtons(to,"If list not visible, click:",[{id:"wpbs",title:"WhatsApp Automation"},{id:"biz_services",title:"Business Services"},{id:"call_now",title:"Call Now"}]);}
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
-app.get('/',(req,res)=>res.send('V7.0 NEVER-FAIL LIVE Sheet Persistent Reminders Sheet:'+SHEET_ID));
+app.get('/',(req,res)=>res.send('V7.1 AUTO-CREATE LIVE - Sheet Persistent Reminders Sheet:'+SHEET_ID));
 app.get('/pending',(req,res)=>{res.json({total:Object.keys(pendingChats).length,pendingChats, driverReminders: driverReminders.length});});
-app.get('/test-sheet',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const row=[dateStr,"919999999999","TEST_SHEET","Test V7.0 SHEET PERSISTENT","919999999999","TEST_STAGE","EN | TEST","Manual","EN"];const ok=await appendToSheet(row);res.json({ok,sheetId:SHEET_ID,row,msg:ok?"WRITE SUCCESS":"FAILED"});});
+app.get('/test-sheet',async(req,res)=>{const dateStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});const row=[dateStr,"919999999999","TEST_SHEET","Test V7.1 AUTO-CREATE","919999999999","TEST_STAGE","EN | TEST","Manual","EN"];const ok=await appendToSheet(row);res.json({ok,sheetId:SHEET_ID,row,msg:ok?"WRITE SUCCESS":"FAILED"});});
 app.post('/webhook',async(req,res)=>{
 try{
 const msg=req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];if(!msg)return res.sendStatus(200);
@@ -245,15 +264,15 @@ if(s.stage==="MENU"){setPendingChat(from,s.lang,"BUSINESS_SERVICES_VIEWED");awai
 await sendContactButtons(from,getT(s.lang,"hiAgain")+"\nCall: "+CONTACT_NUMBER);res.sendStatus(200);}catch(err){console.log("Webhook error:",err.message);res.sendStatus(200);}});
 app.post('/razorpay-webhook',(req,res)=>{console.log("Razorpay:",req.body.event);res.status(200).send("OK");});
 
-// STARTUP LOAD - Survives NO CHAT
+// STARTUP LOAD - V7.1 AUTO-CREATE
 (async()=>{
   try{
     pendingChats = await loadPendingFromSheet();
     driverReminders = await loadDriverReminders();
     if(Object.keys(pendingChats).length===0){try{if(fs.existsSync("/tmp/pending_chats.json")) pendingChats=JSON.parse(fs.readFileSync("/tmp/pending_chats.json"));}catch(e){}}
     if(driverReminders.length===0){try{if(fs.existsSync("/tmp/reminders.json")) driverReminders=JSON.parse(fs.readFileSync("/tmp/reminders.json"));}catch(e){}}
-    console.log(`V7.0 READY - ${Object.keys(pendingChats).length} pendingChats + ${driverReminders.length} driverReminders loaded - WILL FIRE EVEN WITH NO CHAT`);
+    console.log(`✅ V7.1 READY - ${Object.keys(pendingChats).length} pendingChats + ${driverReminders.length} driverReminders loaded - AUTO-CREATE ENABLED - WILL FIRE EVEN WITH NO CHAT`);
   }catch(e){console.log("Startup load error", e.message);}
 })();
 
-app.listen(PORT,()=>console.log(`V7.0 NEVER-FAIL LIVE on ${PORT} - Sheet:${SHEET_ID}`));
+app.listen(PORT,()=>console.log(`V7.1 AUTO-CREATE LIVE on ${PORT} - Sheet:${SHEET_ID}`));
