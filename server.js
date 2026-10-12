@@ -1,6 +1,6 @@
 // ============================================================
-// V36.0 FINAL FULL CODE - TAP NEXT TO POSTER FOR ALL POSTERS
-// Same as before 5:45 PM working + Your 7 posters correctly placed
+// V37.0 FINAL - ANY INPUT = BRIEF + OPPORTUNITY + LANGUAGE TABS
+// Same as before 5:45 PM + Tap next to poster for all posters
 // G: 97452 26642 | B: 85901 75977
 // ============================================================
 const express = require('express');
@@ -10,18 +10,17 @@ const app = express();
 app.use(express.json());
 
 const RAZORPAY_5000 = "https://rzp.io/l/bizmapia5000";
-const GENERAL_CALL = "919745226642"; // General Call - 97452 26642
-const BUSINESS_CALL = "918590175977"; // Business Call - 85901 75977
+const GENERAL_CALL = "919745226642";
+const BUSINESS_CALL = "918590175977";
 
-// YOUR 7 POSTERS - SAME AS BEFORE 5:45 PM - Replace with REAL Direct Links i.ibb.co/...jpg
 const LINKS = {
-  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // https://ibb.co/fGVVPC3n - Welcome Girl
-  customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg", // https://ibb.co/204Ztdvh - Customer Ride
-  driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg", // https://ibb.co/67jpyTSS - Driver
-  deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg", // https://ibb.co/kgCH9jKM - Delivery
-  businessPoster1: "https://i.ibb.co/1WkT9c8/1WkT9c8.jpg", // https://ibb.co/1WkT9c8 - Business 1
-  businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg", // https://ibb.co/Jg2fVh3 - Business 2
-  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", // https://ibb.co/svWFBpYy - Extra
+  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
+  driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
+  deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
+  businessPoster1: "https://i.ibb.co/1WkT9c8/1WkT9c8.jpg",
+  businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg",
+  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   districtVideo: "https://youtu.be/bizmapia-district-video",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
   driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver",
@@ -35,22 +34,23 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 let userStates = {};
 const processedIds = new Set();
 
-app.get('/', (req,res)=>res.status(200).send(`V36.0 TAP NEXT TO POSTER - G:97452 26642 | B:85901 75977 - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V37.0 ANY INPUT BRIEF+LANG - G:97452 26642 | B:85901 75977 - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
 });
 
-const ORIGINAL_FIRST_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA Super App!
+const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA Super App!
 
-✅ Cheapest Taxi/Auto/Bike - 10% Discount
-✅ Find 1000+ Local Businesses Near You
-✅ Fast Parcel Delivery in 2 Hours
-✅ Hotel/Doctor/Cinema Booking
-✅ Earn 1-15 Lakhs Monthly with Franchiee
+✅ 🚕 Cheapest Taxi/Auto/Bike - 10% Discount
+✅ 🏢 Find 1000+ Local Businesses Near You
+✅ 📦 Fast Parcel Delivery in 2 Hours
+✅ 🏨 Hotel/Doctor/Cinema Booking
+✅ 💰 Earn 1-15 Lakhs Monthly with Franchiee
 
-One App - All Services
-👉 Tap Learn More to start in your language`;
+🚀 One App - All Services - All India Opportunity!
+
+👇 Please select your chatting language to get further information in your chosen language.`;
 
 const T = {
   en:{ selLang:"🌐 Select your Language / Tap to start in your language:", selOpt:"Please select any one from below:", ride:"🚕 Ride - Hailing", dir:"🏢 Business Directory", del:"📦 Online Delivery", book:"🏨 Online Booking", earn:"💰 Earn with Bizmapia", rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle", custPost:"🚕 Book your ride anywhere in India - Cheapest Taxi/Auto/Bike with 10% Discount", drivPost:"🚗 Earn by attaching your vehicle - Earn daily with Bizmapia", bookNow:"📲 Book Now", dlDriv:"📲 Download Driver App", delIntro:"📦 BizMapia online delivery - Fast Parcel Delivery in 2 Hours anywhere in India", bookPar:"📦 Book your parcel", regDel:"🛵 Register as Delivery Agent", bookIntro:"🏨 Online Booking Expansion - Hotel/Doctor/Cinema", bookRoom:"🏨 Book room - Anywhere in India", dlApp:"📲 Download app now", earnIntro:"You are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?", high:"💎 High earning opportunity", mod:"💼 Moderate earning opportunity", base:"🏠 Base opportunity", highIntro:"Great you have selected the right choice. Know details from video link below.\nAdditional notes: This opportunity is providing only one opportunity in a district, So be careful to learn and respond as earliest as possible.", video:"▶️ Click Now - Video", ben:"📘 Know Benefits", sup:"🤝 Know Support", req:"📋 Know Requirements", submit:"📝 Submit Application", emi:"💳 Know EMI options", benText:"Benefits 1 - You are the district top level franchisee who have the benefits of percentage on all earnings by Corporation/Municipal/Business Center from your district.\nBenefits 2 - You have only getting chance to contact Company", supText:"Support 1 - 12 months marketing advertisement support\nSupport 2 - 6 months Rent contribution from company\nSupport 3 - 6 months Staff salary contribution from company", reqText:"Requirement 1 - >= 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile with Internet", corpQ:"Please select your District belongs to which category, Did your district contains corporation?", yesCorp:"Yes, Contains Corporation", noCorp:"No Corporation", ready15:"You are going to submit your application right now, before that please click Yes I am ready confirming that you are ready to pay 15 Lakhs as District level franchise fee. If you want to know EMI options select Know EMI", readyBtn:"✅ Yes, I am Ready - 15L", payReg:"Pay your registration fee Rs.5000 to proceed further", payBtn:"💳 Pay Registration Fee - Rs.5000", emiOpt:"Select EMI: Down payment 5 Lac + remaining 10 Months / Down payment 5 Lac + remaining 20 Months", emi10:"Plan 1: 5L + 10x1L", emi20:"Plan 2: 5L + 20x50k", paidQ:"Have you paid your registration?", willPay:"⏰ I will pay now - Rs.5000", leadAsk:"Share your contact information: Name, Place, District, State, Contact number, Occupation", occQ:"Select your Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"📄 Download Tender document and book your agreement slot", date:"Select Agreement Date:", today:"📅 Today", tom:"📅 Tomorrow", week:"📅 This Week", nextW:"📅 Next Week", back:"⬅️ Previous Menu", main:"🏠 Main Menu", thanks:"✅ Thanks! Application received - Team will call within 24h", callG:"📞 97452 26642", callB:"📞 85901 75977", learn:"Learn More", yes:"✅ Yes", no:"❌ No"},
@@ -76,15 +76,12 @@ async function sendMessage(uid, txt, btns=[]){
   }catch(e){ console.error("WA:", e.response?.data||e.message); }
 }
 
-// FIXED: Poster + Content TOGETHER, then Tap buttons BELOW poster (not above)
 async function sendImage(uid, imgUrl, cap, btns=[]){
   if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
-    // Step 1: Send Poster + Content first
     await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
-    // Step 2: Send Tap buttons BELOW poster after 1.2 sec
     if(btns.length>0){
       setTimeout(async ()=>{
         try{
@@ -96,16 +93,19 @@ async function sendImage(uid, imgUrl, cap, btns=[]){
           if(urlBtn){
             await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:`${urlBtn.title}: ${urlBtn.url}` }}, {headers});
           }
-        }catch(e){ console.error("Btn error:", e.message); }
+        }catch(e){ console.error("Btn:", e.message); }
       }, 1200);
     }
-  }catch(e){
-    console.error("Image failed:", e.response?.data||e.message);
-    sendMessage(uid, cap, btns);
-  }
+  }catch(e){ console.error("Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); }
 }
 
-function sendOriginalFirst(uid){ sendImage(uid, LINKS.welcomePoster, ORIGINAL_FIRST_CAPTION, [{ title:getText('en','learn'), payload:"LEARN_MORE" }]); }
+function sendFirstBriefWithLang(uid){
+  sendImage(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [
+    { title:"English", payload:"LANG_EN" },
+    { title:"हिंदी", payload:"LANG_HI" },
+    { title:"മലയാളം", payload:"LANG_ML" }
+  ]);
+}
 function sendLanguage(uid){ sendMessage(uid, T.en.selLang, [{ title:"English", payload:"LANG_EN" }, { title:"മലയാളം", payload:"LANG_ML" }, { title:"हिंदी", payload:"LANG_HI" }]); }
 function sendMain(uid,l){ sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'del'), payload:"OPT_DEL" }]); setTimeout(()=>sendMessage(uid, "More:", [{ title:getText(l,'dir'), payload:"OPT_DIR" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]), 600); }
 function sendRide(uid,l){ sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
@@ -130,8 +130,18 @@ function handleDate(uid,d){ const s=userStates[uid]; const final={ whatsapp:uid,
 
 function onMessage(uid,txt,payload){
   let state=userStates[uid];
-  if(payload.startsWith("LANG_")){ const l=payload.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l }; sendMain(uid,l); return; }
-  if(!state){ if(payload==="LEARN_MORE"){ sendLanguage(uid); return; } userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' }; sendOriginalFirst(uid); return; }
+  if((payload||"").startsWith("LANG_")){
+    const l=payload.replace("LANG_","").toLowerCase();
+    userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l };
+    sendMain(uid,l);
+    return;
+  }
+  if(!state){
+    userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' };
+    sendFirstBriefWithLang(uid);
+    return;
+  }
+  if((payload||"").toUpperCase()==="LEARN_MORE"){ sendFirstBriefWithLang(uid); return; }
   const lang=state.lang;
   if(payload==="MAIN_MENU"||payload==="GO_BACK"){ sendMain(uid,lang); return; }
   if(payload==="OPT_RIDE"){ sendRide(uid,lang); return; }
@@ -173,4 +183,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V36.0 TAP NEXT TO POSTER - G:97452 26642 | B:85901 75977 on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V37.0 ANY INPUT BRIEF+LANG - G:97452 26642 | B:85901 75977 on ${PORT}`));
