@@ -1,11 +1,11 @@
 {
-  "name": "bizmapia-bot",
-  "version": "1.0.0",
+  "name": "bizmapia-bot-8590175977",
+  "version": "24.4.0",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "body-parser": "^1.20.2",
-    "axios": "^1.6.0",
-    "googleapis": "^128.0.0"
+    "express": "^4.18.2"
   }
 }
