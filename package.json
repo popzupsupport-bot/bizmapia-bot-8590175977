@@ -1,6 +1,6 @@
 {
-  "name": "bizmapia-v36-tap-next-to-poster",
-  "version": "36.0.0",
+  "name": "bizmapia-v37-any-input-lang",
+  "version": "37.0.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": { "express": "^4.18.2", "axios": "^1.6.0" }
