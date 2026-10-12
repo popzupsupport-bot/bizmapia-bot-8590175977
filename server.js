@@ -1,16 +1,15 @@
 // ============================================================
-// V39.0 PERMANENT - NO AUTO MESSAGE - ONLY ON USER INPUT
-// No reminder about last step, No setTimeout extra message
-// Next message ONLY when user taps button
-// G: 97452 26642 | B: 85901 75977
+// V41.0 FINAL - ALL CHANGES INCLUDED - PERMANENT
+// ANY INPUT = Brief + Opportunity + Language Tabs (Single Bubble)
+// NO AUTO MSG - Only on button tap
+// Razorpay mq0zG6mS for ALL Biz Payments with Pay Now Button
 // ============================================================
 const express = require('express');
 const axios = require('axios');
-const fs = require('fs');
 const app = express();
 app.use(express.json());
 
-const RAZORPAY_5000 = "https://rzp.io/l/bizmapia5000";
+const RAZORPAY_ALL = "https://rzp.io/rzp/mq0zG6mS"; // For District/Corp/Muni/Biz Center
 const GENERAL_CALL = "919745226642";
 const BUSINESS_CALL = "918590175977";
 
@@ -21,7 +20,6 @@ const LINKS = {
   deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
   businessPoster1: "https://i.ibb.co/1WkT9c8.jpg",
   businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg",
-  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   districtVideo: "https://youtu.be/bizmapia-district-video",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
   driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver",
@@ -35,7 +33,7 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 let userStates = {};
 const processedIds = new Set();
 
-app.get('/', (req,res)=>res.status(200).send(`V39.0 NO AUTO MSG - G:97452 26642 | B:85901 75977 - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V41.0 FINAL ALL CHANGES - RAZORPAY mq0zG6mS PAY NOW BUTTON - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -54,9 +52,9 @@ const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA Super App!
 👇 Please select your chatting language to get further information in your chosen language.`;
 
 const T = {
-  en:{ selOpt:"Please select any one from below:", ride:"🚕 Ride - Hailing", dir:"🏢 Business Directory", del:"📦 Online Delivery", book:"🏨 Online Booking", earn:"💰 Earn with Bizmapia", more:"More Options", rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle", custPost:"🚕 Book your ride anywhere in India - Cheapest Taxi/Auto/Bike with 10% Discount", drivPost:"🚗 Earn by attaching your vehicle - Earn daily with Bizmapia", bookNow:"📲 Book Now", dlDriv:"📲 Download Driver App", delIntro:"📦 BizMapia online delivery - Fast Parcel Delivery in 2 Hours anywhere in India", bookPar:"📦 Book your parcel", regDel:"🛵 Register as Delivery Agent", bookIntro:"🏨 Online Booking - Hotel/Doctor/Cinema - Book anywhere in India", bookRoom:"🏨 Book room", dlApp:"📲 Download app", earnIntro:"You are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?", high:"💎 High earning", mod:"💼 Moderate", base:"🏠 Base", highIntro:"Great you have selected the right choice. Know details from video link below.\nNote: Only one opportunity in a district, respond earliest.", video:"▶️ Video Link", ben:"📘 Know Benefits", sup:"🤝 Know Support", req:"📋 Requirements", submit:"📝 Submit Application", emi:"💳 EMI options", benText:"Benefits 1 - You are the district top level franchisee, percentage on all earnings.\nBenefits 2 - Only you can contact Company", supText:"Support 1 - 12 months marketing\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary", reqText:"Requirement 1 - >= 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile", corpQ:"Did your district contain corporation?", yesCorp:"Yes Corp", noCorp:"No Corp", ready15:"You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.", readyBtn:"✅ Yes Ready - 15L", payReg:"Pay your registration fee Rs.5000 to proceed further", payBtn:"💳 Pay Rs.5000", emiOpt:"Select EMI: Down 5 Lac + 10 Months / Down 5 Lac + 20 Months", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"Share contact: Name, Place, District, State, Contact, Occupation", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"📄 Download Tender", date:"Select Agreement Date:", today:"📅 Today", tom:"📅 Tomorrow", thanks:"✅ Thanks! Team will call within 24h", callG:"📞 97452 26642", callB:"📞 85901 75977" },
-  ml:{ selOpt:"തിരഞ്ഞെടുക്കുക:", ride:"🚕 റൈഡ്", dir:"🏢 ഡയറക്ടറി", del:"📦 ഡെലിവറി", book:"🏨 ബുക്കിംഗ്", earn:"💰 വരുമാനം", more:"കൂടുതൽ", rideOpt:"A. റൈഡ് ബുക്ക്\nB. വാഹനം അറ്റാച്ച്", bookRide:"ബുക്ക്", attach:"അറ്റാച്ച്", custPost:"റൈഡ് ബുക്ക് ചെയ്യാം", drivPost:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം", bookNow:"📲 ബുക്ക്", dlDriv:"📲 ഡ്രൈവർ ആപ്പ്", delIntro:"പാഴ്സൽ 2 മണിക്കൂറിൽ", bookPar:"📦 പാഴ്സൽ ബുക്ക്", regDel:"🛵 ഏജന്റ്", bookIntro:"ബുക്കിംഗ്", bookRoom:"🏨 റൂം ബുക്ക്", dlApp:"📲 ആപ്പ്", earnIntro:"വരുമാന അവസരം ബുക്ക് ചെയ്യുക", high:"💎 ഉയർന്ന", mod:"💼 മിതമായ", base:"🏠 ബേസ്", highIntro:"ശരിയായ തീരുമാനം! വീഡിയോ കാണുക", video:"▶️ വീഡിയോ", ben:"📘 ആനുകൂല്യം", sup:"🤝 പിന്തുണ", req:"📋 ആവശ്യം", submit:"📝 അപേക്ഷ", emi:"💳 EMI", benText:"ആനുകൂല്യം 1 - ടോപ്പ് ഫ്രാഞ്ചൈസി", supText:"പിന്തുണ 1 - 12 മാസം മാർക്കറ്റിംഗ്", reqText:"ആവശ്യം 1 - 90 Sqft", corpQ:"കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp:"അതെ", noCorp:"ഇല്ല", ready15:"15 ലക്ഷം ഫീസ് തയ്യാറാണോ?", readyBtn:"✅ തയ്യാർ - 15L", payReg:"Rs.5000 ഫീസ്", payBtn:"💳 Rs.5000", emiOpt:"5 ലക്ഷം + 10/20 മാസം", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"വിവരങ്ങൾ: പേര്, സ്ഥലം, ജില്ല", occQ:"ജോലി:", bus:"ബിസിനസ്", house:"ഹൗസ് വൈഫ്", emp:"ജീവനക്കാരൻ", busman:"ബിസിനസ്സ്മാൻ", tender:"📄 ടെൻഡർ", date:"തീയതി:", today:"📅 ഇന്ന്", tom:"📅 നാളെ", thanks:"✅ നന്ദി! 24h-ൽ വിളിക്കും", callG:"📞 97452 26642", callB:"📞 85901 75977" },
-  hi:{ selOpt:"चुनें:", ride:"🚕 राइड", dir:"🏢 डायरेक्टरी", del:"📦 डिलीवरी", book:"🏨 बुकिंग", earn:"💰 कमाएं", more:"और विकल्प", rideOpt:"A. राइड बुक\nB. वाहन अटैच", bookRide:"बुक", attach:"अटैच", custPost:"राइड बुक करें", drivPost:"वाहन अटैच कमाएं", bookNow:"📲 बुक", dlDriv:"📲 ड्राइवर ऐप", delIntro:"डिलीवरी 2 घंटे में", bookPar:"📦 पार्सल बुक", regDel:"🛵 एजेंट", bookIntro:"बुकिंग", bookRoom:"🏨 रूम बुक", dlApp:"📲 ऐप", earnIntro:"कमाने का अवसर", high:"💎 उच्च", mod:"💼 मध्यम", base:"🏠 बेस", highIntro:"सही चुनाव! वीडियो देखें", video:"▶️ वीडियो", ben:"📘 लाभ", sup:"🤝 सपोर्ट", req:"📋 आवश्यकता", submit:"📝 आवेदन", emi:"💳 EMI", benText:"लाभ 1 - टॉप फ्रैंचाइज़ी", supText:"सपोर्ट 1 - 12 महीने", reqText:"आवश्यकता 1 - 90 Sqft", corpQ:"कॉर्पोरेशन है?", yesCorp:"हाँ", noCorp:"नहीं", ready15:"15 लाख फीस तैयार?", readyBtn:"✅ तैयार - 15L", payReg:"Rs.5000 फीस", payBtn:"💳 Rs.5000", emiOpt:"5 लाख + 10/20 महीना", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"जानकारी: नाम, स्थान", occQ:"व्यवसाय:", bus:"बिजनेस", house:"गृहिणी", emp:"कर्मचारी", busman:"व्यवसायी", tender:"📄 टेंडर", date:"तिथि:", today:"📅 आज", tom:"📅 कल", thanks:"✅ धन्यवाद!", callG:"📞 97452 26642", callB:"📞 85901 75977" }
+  en:{ selOpt:"Please select any one from below:", ride:"🚕 Ride - Hailing", dir:"🏢 Business Directory", del:"📦 Online Delivery", book:"🏨 Online Booking", earn:"💰 Earn with Bizmapia", more:"More Options", rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle", custPost:"🚕 Book your ride anywhere in India - Cheapest Taxi/Auto/Bike with 10% Discount", drivPost:"🚗 Earn by attaching your vehicle - Earn daily with Bizmapia", bookNow:"📲 Book Now", dlDriv:"📲 Download Driver App", delIntro:"📦 BizMapia online delivery - Fast Parcel Delivery in 2 Hours anywhere in India", bookPar:"📦 Book your parcel", regDel:"🛵 Register as Delivery Agent", bookIntro:"🏨 Online Booking - Hotel/Doctor/Cinema - Book anywhere in India", bookRoom:"🏨 Book room", dlApp:"📲 Download app", earnIntro:"You are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?", high:"💎 High earning", mod:"💼 Moderate", base:"🏠 Base", highIntro:"Great you have selected the right choice. Know details from video link below.\nNote: Only one opportunity in a district, respond earliest.", video:"▶️ Video Link", ben:"📘 Know Benefits", sup:"🤝 Know Support", req:"📋 Requirements", submit:"📝 Submit Application", emi:"💳 EMI options", benText:"Benefits 1 - You are the district top level franchisee, percentage on all earnings.\nBenefits 2 - Only you can contact Company", supText:"Support 1 - 12 months marketing\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary", reqText:"Requirement 1 - >= 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile", corpQ:"Did your district contain corporation?", yesCorp:"Yes Corp", noCorp:"No Corp", ready15:"You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.", readyBtn:"✅ Yes Ready - 15L", payReg:"Pay your registration fee Rs.5000 to proceed further.", payBtn:"💳 Pay Rs.5000", emiOpt:"Select EMI: Down 5 Lac + 10 Months / Down 5 Lac + 20 Months", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"Share contact: Name, Place, District, State, Contact, Occupation", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"📄 Download Tender", date:"Select Agreement Date:", today:"📅 Today", tom:"📅 Tomorrow", thanks:"✅ Thanks! Team will call within 24h", callG:"📞 97452 26642", callB:"📞 85901 75977" },
+  ml:{ selOpt:"തിരഞ്ഞെടുക്കുക:", ride:"🚕 റൈഡ്", dir:"🏢 ഡയറക്ടറി", del:"📦 ഡെലിവറി", book:"🏨 ബുക്കിംഗ്", earn:"💰 വരുമാനം", more:"കൂടുതൽ", rideOpt:"A. റൈഡ് ബുക്ക്\nB. വാഹനം അറ്റാച്ച്", bookRide:"ബുക്ക്", attach:"അറ്റാച്ച്", custPost:"റൈഡ് ബുക്ക് ചെയ്യാം", drivPost:"വാഹനം അറ്റാച്ച് ചെയ്ത് വരുമാനം", bookNow:"📲 ബുക്ക്", dlDriv:"📲 ഡ്രൈവർ ആപ്പ്", delIntro:"പാഴ്സൽ 2 മണിക്കൂറിൽ", bookPar:"📦 പാഴ്സൽ ബുക്ക്", regDel:"🛵 ഏജന്റ്", bookIntro:"ബുക്കിംഗ്", bookRoom:"🏨 റൂം ബുക്ക്", dlApp:"📲 ആപ്പ്", earnIntro:"വരുമാന അവസരം ബുക്ക് ചെയ്യുക", high:"💎 ഉയർന്ന", mod:"💼 മിതമായ", base:"🏠 ബേസ്", highIntro:"ശരിയായ തീരുമാനം! വീഡിയോ കാണുക", video:"▶️ വീഡിയോ", ben:"📘 ആനുകൂല്യം", sup:"🤝 പിന്തുണ", req:"📋 ആവശ്യം", submit:"📝 അപേക്ഷ", emi:"💳 EMI", benText:"ആനുകൂല്യം 1 - ടോപ്പ് ഫ്രാഞ്ചൈസി", supText:"പിന്തുണ 1 - 12 മാസം മാർക്കറ്റിംഗ്", reqText:"ആവശ്യം 1 - 90 Sqft", corpQ:"കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp:"അതെ", noCorp:"ഇല്ല", ready15:"15 ലക്ഷം ഫീസ് തയ്യാറാണോ?", readyBtn:"✅ തയ്യാർ - 15L", payReg:"Rs.5000 ഫീസ് അടയ്ക്കുക - District/Corp/Muni/Biz Center", payBtn:"💳 Rs.5000", emiOpt:"5 ലക്ഷം + 10/20 മാസം", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"വിവരങ്ങൾ: പേര്, സ്ഥലം, ജില്ല", occQ:"ജോലി:", bus:"ബിസിനസ്", house:"ഹൗസ് വൈഫ്", emp:"ജീവനക്കാരൻ", busman:"ബിസിനസ്സ്മാൻ", tender:"📄 ടെൻഡർ", date:"തീയതി:", today:"📅 ഇന്ന്", tom:"📅 നാളെ", thanks:"✅ നന്ദി! 24h-ൽ വിളിക്കും", callG:"📞 97452 26642", callB:"📞 85901 75977" },
+  hi:{ selOpt:"चुनें:", ride:"🚕 राइड", dir:"🏢 डायरेक्टरी", del:"📦 डिलीवरी", book:"🏨 बुकिंग", earn:"💰 कमाएं", more:"और विकल्प", rideOpt:"A. राइड बुक\nB. वाहन अटैच", bookRide:"बुक", attach:"अटैच", custPost:"राइड बुक करें", drivPost:"वाहन अटैच कमाएं", bookNow:"📲 बुक", dlDriv:"📲 ड्राइवर ऐप", delIntro:"डिलीवरी 2 घंटे में", bookPar:"📦 पार्सल बुक", regDel:"🛵 एजेंट", bookIntro:"बुकिंग", bookRoom:"🏨 रूम बुक", dlApp:"📲 ऐप", earnIntro:"कमाने का अवसर", high:"💎 उच्च", mod:"💼 मध्यम", base:"🏠 बेस", highIntro:"सही चुनाव! वीडियो देखें", video:"▶️ वीडियो", ben:"📘 लाभ", sup:"🤝 सपोर्ट", req:"📋 आवश्यकता", submit:"📝 आवेदन", emi:"💳 EMI", benText:"लाभ 1 - टॉप फ्रैंचाइज़ी", supText:"सपोर्ट 1 - 12 महीने", reqText:"आवश्यकता 1 - 90 Sqft", corpQ:"कॉर्पोरेशन है?", yesCorp:"हाँ", noCorp:"नहीं", ready15:"15 लाख फीस तैयार?", readyBtn:"✅ तैयार - 15L", payReg:"Rs.5000 फीस - District/Corp/Muni/Biz", payBtn:"💳 Rs.5000", emiOpt:"5 लाख + 10/20 महीना", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"जानकारी: नाम, स्थान", occQ:"व्यवसाय:", bus:"बिजनेस", house:"गृहिणी", emp:"कर्मचारी", busman:"व्यवसायी", tender:"📄 टेंडर", date:"तिथि:", today:"📅 आज", tom:"📅 कल", thanks:"✅ धन्यवाद!", callG:"📞 97452 26642", callB:"📞 85901 75977" }
 };
 function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]; }
 
@@ -75,7 +73,7 @@ async function sendMessage(uid, txt, btns=[]){
   }catch(e){ console.error("WA:", e.response?.data||e.message); }
 }
 
-// PERMANENT FIX: Single bubble - Image Header + Caption + Buttons - NO auto second message
+// Single bubble - Poster + Caption + Buttons together - NO auto extra message
 async function sendImage(uid, imgUrl, cap, btns=[]){
   if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
   try{
@@ -107,21 +105,8 @@ function sendFirstBriefWithLang(uid){
     { title:"മലയാളം", payload:"LANG_ML" }
   ]);
 }
-function sendMain(uid,l){
-  // NO auto second message - Only 3 buttons, user must tap More for more
-  sendMessage(uid, getText(l,'selOpt'), [
-    { title:getText(l,'ride'), payload:"OPT_RIDE" },
-    { title:getText(l,'earn'), payload:"OPT_EARN" },
-    { title:getText(l,'more'), payload:"OPT_MORE" }
-  ]);
-}
-function sendMore(uid,l){
-  sendMessage(uid, "More:", [
-    { title:getText(l,'del'), payload:"OPT_DEL" },
-    { title:getText(l,'book'), payload:"OPT_BOOK" },
-    { title:getText(l,'dir'), payload:"OPT_DIR" }
-  ]);
-}
+function sendMain(uid,l){ sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); }
+function sendMore(uid,l){ sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); }
 function sendRide(uid,l){ sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); }
 function sendCust(uid,l){ sendImage(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
 function sendDriv(uid,l){ sendImage(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
@@ -134,7 +119,58 @@ function sendSup(uid,l){ sendMessage(uid, getText(l,'supText'), [{ title:getText
 function sendReq(uid,l){ sendMessage(uid, getText(l,'reqText'), [{ title:getText(l,'submit'), payload:"SUBMIT_APP" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); }
 function askCorp(uid,l){ sendMessage(uid, getText(l,'corpQ'), [{ title:getText(l,'yesCorp'), payload:"CORP_YES" }, { title:getText(l,'noCorp'), payload:"CORP_NO" }]); }
 function sendReady(uid,l){ sendMessage(uid, getText(l,'ready15'), [{ title:getText(l,'readyBtn'), payload:"READY_15L" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); }
-function sendPay(uid,l){ sendMessage(uid, `${getText(l,'payReg')}\n${RAZORPAY_5000}`, [{ title:getText(l,'payBtn'), payload:"PAY_DONE" }]); }
+
+// PAY NOW BUTTON with your Razorpay link for ALL Business Payments
+async function sendPay(uid,l){
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, `${getText(l,'payReg')}\n${RAZORPAY_ALL}`, [{ title:getText(l,'payBtn'), payload:"PAY_DONE" }]);
+  try{
+    const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
+    const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
+    let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
+
+    await axios.post(url, {
+      messaging_product:"whatsapp",
+      to,
+      type:"interactive",
+      interactive:{
+        type:"cta_url",
+        header:{ type:"text", text:"💳 Secure Payment" },
+        body:{ text:`${getText(l,'payReg')}\n\nFor District / Corporation / Municipal / Business Center\n\n👇 Tap below button to pay Rs.5000:` },
+        footer:{ text:"BizMapia Secure Payment via Razorpay" },
+        action:{
+          name:"cta_url",
+          parameters:{
+            display_text:"💳 Pay Now - Rs.5000",
+            url: RAZORPAY_ALL
+          }
+        }
+      }
+    }, {headers});
+
+    setTimeout(async ()=>{
+      await axios.post(url, {
+        messaging_product:"whatsapp",
+        to,
+        type:"interactive",
+        interactive:{
+          type:"button",
+          body:{ text:"After payment, tap below:" },
+          action:{
+            buttons:[
+              { type:"reply", reply:{ id:"PAY_DONE", title:"✅ I Paid - Rs.5000" } },
+              { type:"reply", reply:{ id:"CALL_B", title:getText(l,'callB').substring(0,20) } }
+            ]
+          }
+        }
+      }, {headers});
+    }, 1500);
+
+  }catch(e){
+    console.error("Pay Btn:", e.response?.data||e.message);
+    sendMessage(uid, `${getText(l,'payReg')}\n${RAZORPAY_ALL}\n\n💳 Pay Now: ${RAZORPAY_ALL}`, [{ title:"✅ I Paid", payload:"PAY_DONE" }]);
+  }
+}
+
 function sendEMI(uid,l){ sendMessage(uid, getText(l,'emiOpt'), [{ title:getText(l,'emi10'), payload:"EMI_10" }, { title:getText(l,'emi20'), payload:"EMI_20" }]); }
 function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:{}, lang:l }; sendMessage(uid, getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); }
 function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; sendMessage(uid, "Place / District / State?"); } else if(s.step===2){ s.data.place=txt; s.step=3; sendMessage(uid, getText(s.lang,'occQ'), [{ title:getText(s.lang,'bus'), payload:"OCC_BUS" }, { title:getText(s.lang,'emp'), payload:"OCC_EMP" }, { title:getText(s.lang,'house'), payload:"OCC_HOUSE" }]); } }
@@ -142,34 +178,15 @@ function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; 
 function handleDate(uid,d){ const s=userStates[uid]; sendMessage(uid, `${getText(s.lang,'thanks')} - ${s.data.name} - ${d}`); delete userStates[uid]; }
 
 function onMessage(uid,txt,payload){
-  let state=userStates[uid];
-  const p=(payload||"").trim();
-
+  let state=userStates[uid]; const p=(payload||"").trim();
   if(p.startsWith("LANG_")){
     const l=p.replace("LANG_","").toLowerCase();
     userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l };
-    sendMain(uid,l);
-    return;
+    sendMain(uid,l); return;
   }
-
-  // FIRST MESSAGE - ANY INPUT -> Brief + Language (ONLY ONE MESSAGE, NO AUTO NEXT)
-  if(!state){
-    userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' };
-    sendFirstBriefWithLang(uid);
-    return;
-  }
-
-  // If user is in WELCOME but hasn't selected language, ignore random text - keep same
-  if(state.flow==='WELCOME'){
-    // Only language selection allowed, no auto reminder
-    if(!p.startsWith("LANG_")){
-      // Do NOT send reminder, wait for language tap
-      return;
-    }
-  }
-
+  if(!state){ userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' }; sendFirstBriefWithLang(uid); return; }
+  if(state.flow==='WELCOME'){ if(!p.startsWith("LANG_")) return; } // No reminder, wait for tap
   const lang=state.lang;
-  // ONLY on button tap - No auto messages
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
   if(p==="OPT_RIDE"){ sendRide(uid,lang); return; }
   if(p==="RIDE_BOOK"){ sendCust(uid,lang); return; }
@@ -190,7 +207,6 @@ function onMessage(uid,txt,payload){
   if(p.startsWith("OCC_")){ handleOcc(uid,p); return; }
   if(p.startsWith("DATE_")){ handleDate(uid,p.replace("DATE_","")); return; }
   if(state.flow==='LEAD'){ handleLead(uid,txt); return; }
-  // For any other random text, DO NOT send reminder - stay silent until button tap
 }
 
 app.post('/webhook', async (req,res)=>{
@@ -210,4 +226,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V39.0 NO AUTO - ONLY ON INPUT - G:97452 26642 | B:85901 75977 on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V41.0 FINAL ALL CHANGES on ${PORT} - PayNow ${RAZORPAY_ALL}`));
