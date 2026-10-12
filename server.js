@@ -1,23 +1,16 @@
-// V10 FIXED - ALL LIST LIMITS CHECKED - PROPER MALAYALAM/HINDI - BIZMAPIA ONLY
+// V11 BENEFIT CAPTIONS - Proper Malayalam/Hindi + Short Buttons
 const express=require('express');const bodyParser=require('body-parser');const axios=require('axios');const fs=require('fs');const {google}=require('googleapis');const app=express();app.use(bodyParser.json());
 const VERIFY_TOKEN=process.env.VERIFY_TOKEN||"bizmapia_verify_2024";
 const TOKEN=process.env.WHATSAPP_TOKEN;const PHONE_NUMBER_ID=process.env.PHONE_NUMBER_ID;const PORT=process.env.PORT||10000;
 const SHEET_ID=(process.env.GOOGLE_SHEET_ID||"1MnPTAMafVTuSX2uQKCpP6GKKadQBLXfrgnySigY8cHY").trim();
 const CONTACT_NUMBER="8590175977";
-console.log("========== V10 FIXED ALL LIMITS - "+SHEET_ID.substring(0,20)+" ==========");
 
 const ASSETS={
  posters:{
-  welcome:"https://files.catbox.moe/zmj6te.jpg",
-  customer:"https://files.catbox.moe/nbjslu.jpg",
-  driver:"https://files.catbox.moe/2trzp7.jpg",
-  business:"https://files.catbox.moe/sylcqa.jpg",
-  opportunity:"https://files.catbox.moe/y8m3lq.jpg",
-  freeRecharge:"https://files.catbox.moe/c03g3q.jpg",
-  franchiseBrochure:"https://files.catbox.moe/FRANCHISEE-NEW-BIZMAPIA.jpg",
-  businessBrochure:"https://files.catbox.moe/BUSINESS-NEW-BIZMAPIA.jpg",
-  onlineDelivery:"https://bizmapia.com/posters/online-delivery.jpg",
-  onlineBooking:"https://bizmapia.com/posters/online-booking.jpg"
+  welcome:"https://files.catbox.moe/zmj6te.jpg",customer:"https://files.catbox.moe/nbjslu.jpg",driver:"https://files.catbox.moe/2trzp7.jpg",
+  business:"https://files.catbox.moe/sylcqa.jpg",opportunity:"https://files.catbox.moe/y8m3lq.jpg",freeRecharge:"https://files.catbox.moe/c03g3q.jpg",
+  franchiseBrochure:"https://files.catbox.moe/FRANCHISEE-NEW-BIZMAPIA.jpg",businessBrochure:"https://files.catbox.moe/BUSINESS-NEW-BIZMAPIA.jpg",
+  onlineDelivery:"https://bizmapia.com/posters/online-delivery.jpg",onlineBooking:"https://bizmapia.com/posters/online-booking.jpg"
  },
  apps:{
   customer:"https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia",
@@ -28,68 +21,74 @@ const ASSETS={
   booking:"https://play.google.com/store/apps/details?id=com.bizmapia.booking"
  },
  tenders:{district:"https://bizmapia.com/tenders/district.pdf",corp:"https://bizmapia.com/tenders/corporation.pdf",bc:"https://bizmapia.com/tenders/business_center.pdf"},
- payments:{registration:"https://rzp.io/l/bizmapia5000"},
- calendar:"https://calendly.com/bizmapia/agreement"
+ payments:{registration:"https://rzp.io/l/bizmapia5000"},calendar:"https://calendly.com/bizmapia/agreement"
 };
 
-// FIXED: All button titles <20 chars, row titles <24, descriptions <72
 const LANG_TEXT={
  EN:{
-  welcome:"Welcome to Bizmapia! Explore services, book rides, or partner with us.",
-  tapExplore:"Tap to explore:", selectLang:"Please select your preferred language:", mainMenuTitle:"Select an option to continue:", mainMenuBtn:"Menu",
-  ride:"Ride Service", rideDesc:"Book ride or attach vehicle", bizDir:"Biz Directory", bizDirDesc:"Search or list business", delivery:"Delivery", deliveryDesc:"Parcel & agent", booking:"Booking", bookingDesc:"Room, Appt, Cinema", earn:"Franchise", earnDesc:"Earn 1L-15L",
-  rideMenu:"Ride-Hailing! What to do?", bookRide:"Book Ride", attachVehicle:"Attach Vehicle",
-  customerH:"CUSTOMER - Book Taxi", driverH:"DRIVER - Attach Vehicle!",
-  bizDirCaption:"Find local businesses or list yours!", bizDirChoose:"Choose:", searchBiz:"Search Biz", listBiz:"List Biz",
-  deliveryCaption:"Fast local deliveries.", deliveryChoose:"Select:", bookParcel:"Book Parcel", registerAgent:"Join as Agent",
-  bookingCaption:"What to book today?", bookingChoose:"Select booking:", bookRoom:"Room", bookAppt:"Appointment", bookCinema:"Cinema",
-  earnCaption:"Business Opportunities! Choose level:", earnList:"Select level:", highEarn:"High Earning", highDesc:"District Franchisee", modEarn:"Moderate", modDesc:"Corp/Muni Franchisee", baseEarn:"Base", baseDesc:"Business Center",
-  watchedQ:"Watched video?", yes:"Yes", no:"No", watchFirst:"Please watch full video first:",
-  benefitsDistrict:"Benefits: 1: Earn % on all Corp/Muni & BC revenue 2: Exclusive contact 3: 5-Year MOU", benefitsCorp:"Benefits: 1: Earn % on BC 2: Direct to District 3: 3-Year MOU", benefitsBC:"Benefits: 1: 1-Year MOU",
-  knowSupport:"Support", supportDistrict:"Support: 1: 12M marketing 2: 6M rent 3: 6M salary", supportCorp:"Support: 1: 12M marketing 2: 6M rent", supportBC:"Support: 1: 3M marketing",
-  knowReq:"Requirements", reqDistrict:"Req: 1: >=100 sq.ft 2: 1 staff 3: PC/Phone/Net", reqCorp:"Req: 1: >=50 sq.ft 2: 1 staff", reqBC:"Req: 1: >=50 sq.ft",
-  submitApp:"Apply Now", categoryQ:"Does your district have Corp?", corpLocQ:"Inside Corp location?", bcLocQ:"Corp or Muni area?",
-  corpYes:"Yes", corpNo:"No", feeCorpDistrict:"Corp District Fee Rs 15 Lakhs.", feeNonCorpDistrict:"Non-Corp Fee Rs 10 Lakhs.", feeCorp:"Fee Rs 5 Lakhs.", feeMuni:"Fee Rs 4 Lakhs.", feeBC:"Fee Rs 1 Lakh.",
-  readyYes:"Yes Ready", emi:"EMI Options", payFee:"Pay registration fee:", payCheck:"Payment done?", payYes:"Yes Paid", payNo:"Pay Now",
-  formName:"*Name:* Enter full name:", formContact:"*Contact:* Enter mobile:", formPlace:"*Place:* Enter city:", formOcc:"*Occupation:* Select:", thanksEnq:"Thank you", team24:"Team will contact in 24h", tenderMsg:"Download Tender & Book Slot:", yesNoQ:"Grab this opportunity?",
-  remLang:"Reminder: Select language. Call 8590175977", remDriver5:"How to attach vehicle - Watch!", remDriver15:"Get 1-Year Free Recharge!", remDriver1h:"Free Recharge expiring!", remDriver12h:"Need help registering?", remDriver24h:"Free Recharge expiring soon!", remDriver48h:"Last Chance Free Recharge!", remDriver72h:"Free Recharge expired.", grabNow:"Grab Now", contactSupport:"Support", registerAgain:"Register"
+  welcome:"🎉 Welcome to Bizmapia - ALL INDIA Super App!\n\n✅ Cheapest Taxi/Auto/Bike - 10% Discount\n✅ Find 1000+ Local Businesses Near You\n✅ Fast Parcel Delivery in 2 Hours\n✅ Hotel/Doctor/Cinema Booking\n✅ Earn 1-15 Lakhs Monthly with Franchise\n\nOne App = All Services\n👇 Tap Learn More to start",
+  tapExplore:"👇 Tap to see all services:", selectLang:"Select your language:",
+  mainMenuTitle:"👋 Hello! What do you need today?\n\n🚕 RIDE - Need taxi? Or Have vehicle to earn?\n📍 DIRECTORY - Search business OR List your shop & get customers\n📦 DELIVERY - Send parcel OR Become agent & earn\n🏨 BOOKING - Rooms, Doctor, Cinema\n💰 FRANCHISE - Start your own business, earn monthly\n\n👉 Choose one below:", mainMenuBtn:"Menu",
+  ride:"Ride Service", rideDesc:"Book ride OR Earn with vehicle", bizDir:"Biz Directory", bizDirDesc:"Search OR List business & get calls", delivery:"Delivery", deliveryDesc:"Send parcel OR Earn as agent", booking:"Booking", bookingDesc:"Rooms, Doctor, Cinema booking", earn:"Franchise", earnDesc:"Start business, earn 1L-15L",
+  rideMenu:"🚕 BIZMAPIA RIDE - ALL INDIA!\n\n👉 CUSTOMER: Need ride? Auto, Bike, Taxi, Car, Ambulance at LOWEST fare + 10% WhatsApp Discount + 24/7 Service\n\n👉 DRIVER: Have vehicle? Attach Bike/Auto/Car & Earn ₹1000-2000 Daily + 1-Year FREE Recharge (No Commission) + Be Your Own Boss\n\n👇 What do you want?", bookRide:"Book Ride", attachVehicle:"Attach Vehicle",
+  customerH:"✅ CUSTOMER - CHEAPEST RIDE IN INDIA!\n\nBenefits:\n🔹 Lowest Fare - Auto/Bike/Taxi/Car/Ambulance\n🔹 Extra 10% Discount for WhatsApp Users\n🔹 24/7 All India Service\n🔹 Safe, Fast, Trusted\n\nHOW TO BOOK:\n1. Click App Link 👇\n2. Install Customer App\n3. Register with mobile\n4. Book instantly - Driver reaches in 5 mins\n\n👇 Download Now:",
+  driverH:"💰 DRIVER - EARN ₹1000-2000 DAILY!\n\nBenefits:\n🔹 1-Year FREE Recharge - Zero Commission!\n🔹 Daily Payment - Earn & Withdraw\n🔹 Work Anytime - Own Boss\n🔹 All Vehicles - Bike, Auto, Taxi\n\n🎁 LIMITED OFFER: Free Recharge for 1 Year!\n\nHOW TO START:\n1. Click App Link 👇\n2. Install Driver App\n3. Upload RC, License\n4. Start Earning TODAY!\n\n👇 Register Now:",
+  bizDirCaption:"📍 BIZ DIRECTORY - FOR CUSTOMER & BUSINESS OWNER!\n\n👉 CUSTOMER Benefits:\nSearch ANY business near you - Hotels, Doctors, Salons, Shops - Get phone, location, offers instantly\n\n👉 BUSINESS OWNER Benefits:\nList your shop FREE, get 100s of customer calls daily, grow business 3X, no commission!\n\n👇 Choose what you need:", bizDirChoose:"👇 Select one:", searchBiz:"Search Biz", listBiz:"List My Biz",
+  deliveryCaption:"📦 FAST DELIVERY - 2 HOUR DELIVERY!\n\n👉 SEND PARCEL? We pickup from home & deliver in 2 hours - Cheapest rate, Safe handling\n👉 WANT TO EARN? Become Delivery Agent, earn ₹30-50 per delivery + tips, flexible time\n\n👇 Select:", deliveryChoose:"👇 Choose:", bookParcel:"Send Parcel", registerAgent:"Earn as Agent",
+  bookingCaption:"🏨 ONE APP FOR ALL BOOKINGS!\n\n✅ Hotel Rooms - Lowest Price Guarantee\n✅ Doctor, Salon, Spa - Instant Appointment\n✅ Cinema - Book tickets in 10 secs\n\nNo extra charges, instant confirmation!\n\n👇 What to book?", bookingChoose:"👇 Select booking:", bookRoom:"Room", bookAppt:"Appointment", bookCinema:"Cinema",
+  earnCaption:"💰 BIZMAPIA FRANCHISE - YOUR OWN BUSINESS, NOT A JOB!\n\nBe The Boss in Your Area!\n\n🔹 DISTRICT (10-15L) - You control FULL district, earn from ALL Corporations & Centers, 5-Year Legal MOU, Marketing+Rent+Salary Support\n🔹 CORP/MUNI (4-5L) - Control your city, earn from all Business Centers, 3-Year MOU\n🔹 BUSINESS CENTER (1L) - Low investment, earn from Taxi + Directory, 1-Year MOU\n\n👉 Earn Monthly Recurring Income!\n\nWhich level you want?", earnList:"👇 Select earning level:", highEarn:"District - 10L", highDesc:"Full district control, 5Y MOU", modEarn:"Corp/Muni - 4L", modDesc:"City control, 3Y MOU", baseEarn:"Business Center - 1L", baseDesc:"Low investment, 1Y MOU",
+  watchedQ:"Did you watch benefits video?", yes:"Yes Watched", no:"Not Yet", watchFirst:"👉 Please watch full 2-min video to understand earning:",
+  benefitsDistrict:"💰 DISTRICT FRANCHISEE BENEFITS:\n\n1. TOP LEVEL - You are exclusive contact for whole district\n2. EARN % from EVERY Corporation, Municipality & Business Center in your district\n3. 5-Year Legal Earning MOU directly from company\n4. Passive Income - Earn even when you sleep!\n\nThis is for leaders who want big income!",
+  benefitsCorp:"💰 CORP/MUNI BENEFITS:\n\n1. Control your Corporation/Municipality area\n2. Earn % from all Business Centers under you\n3. 3-Year Legal MOU\n4. Direct link to District Franchisee & Company",
+  benefitsBC:"💰 BUSINESS CENTER BENEFITS:\n\n1. Low Investment - Start with 1 Lakh only\n2. 1-Year Earning MOU approved by company\n3. Earn from Taxi bookings + Directory listing\n4. Best for small business owners",
+  knowSupport:"See Support", supportDistrict:"🎁 DISTRICT SUPPORT (Worth Lakhs):\n\n1. 12 Months Marketing & Ads Support - We promote you!\n2. 6 Months Office Rent Contribution\n3. 6 Months Staff Salary Contribution\n4. Full Training + Manager Support\n\nWe help you succeed!", supportCorp:"🎁 CORP SUPPORT:\n1. 12 Months Marketing Support\n2. 6 Months Rent\n3. 6 Months Salary\n4. Training", supportBC:"🎁 BC SUPPORT:\n1. 3 Months Local Marketing\n2. Training + App",
+  knowReq:"See Requirements", reqDistrict:"📋 DISTRICT REQUIREMENTS:\n\n1. Space: >=100 sq.ft commercial\n2. Staff: Min 1 full-time\n3. Equipment: Laptop, Android Phone, Internet\n4. Attitude: Business mindset\n\nIf you have this, you can start!", reqCorp:"📋 CORP REQUIREMENTS:\n1. Space: >=50 sq.ft\n2. Staff: 1 full-time", reqBC:"📋 BC REQUIREMENTS:\n1. Space: >=50 sq.ft shop",
+  submitApp:"Apply Now", categoryQ:"📍 Is your district a Corporation district? (Has Municipal Corporation)", corpLocQ:"📍 Is your location INSIDE Corporation?", bcLocQ:"📍 Your Business Center in Corp or Muni area?",
+  corpYes:"Yes Corp", corpNo:"No Muni", feeCorpDistrict:"💰 Corp District Fee is Rs 15 Lakhs - You get full district control, 5Y MOU, all support. High earning!", feeNonCorpDistrict:"💰 Non-Corp Fee Rs 10 Lakhs - Full district control, lower investment, same 5Y MOU!", feeCorp:"💰 Corp Fee Rs 5 Lakhs - City control, 3Y MOU, big earning!", feeMuni:"💰 Muni Fee Rs 4 Lakhs - Low investment, 3Y MOU!", feeBC:"💰 Fee Rs 1 Lakh only - Start small, earn from day 1!",
+  readyYes:"Yes I Am Ready", emi:"EMI Options", payFee:"👉 Pay initial registration fee to lock your area (Refundable). Click link:", payCheck:"Did you complete payment?", payYes:"Yes Paid", payNo:"Pay Now",
+  formName:"*Name:* Enter full name:", formContact:"*Contact:* Mobile number:", formPlace:"*Place:* City/Place:", formOcc:"*Job:* Select:", thanksEnq:"Thank you", team24:"Our team will call within 24h with full details", tenderMsg:"✅ Download Tender Document & Book Agreement Slot:", yesNoQ:"Want to grab this opportunity?",
+  remLang:"Reminder: Select language to continue 8590175977", remDriver5:"How to attach vehicle - Watch tutorial!", remDriver15:"Get 1-Year Free Recharge! Register now.", remDriver1h:"Free Recharge expiring! Grab now!", remDriver12h:"Need help registering vehicle?", remDriver24h:"Free Recharge expiring soon!", remDriver48h:"Last Chance! Free recharge ending!", remDriver72h:"Free Recharge expired.", grabNow:"Grab Now", contactSupport:"Call Support", registerAgain:"Register"
  },
  HI:{
-  welcome:"Bizmapia में स्वागत है! सेवाओं का अन्वेषण करें, राइड बुक करें।",
-  tapExplore:"एक्सप्लोर करें:", selectLang:"भाषा चुनें:", mainMenuTitle:"जारी रखने के लिए विकल्प चुनें:", mainMenuBtn:"मेनू",
-  ride:"राइड सेवा", rideDesc:"राइड बुक करें", bizDir:"बिजनेस लिस्ट", bizDirDesc:"बिजनेस खोजें", delivery:"डिलीवरी", deliveryDesc:"पार्सल सेवा", booking:"बुकिंग", bookingDesc:"रूम, अपॉइंटमेंट", earn:"फ्रेंचाइजी", earnDesc:"1L-15L कमाएं",
-  rideMenu:"राइड सेवा! क्या करना है?", bookRide:"राइड बुक करें", attachVehicle:"वाहन जोड़ें",
-  customerH:"कस्टमर - टैक्सी बुक करें", driverH:"ड्राइवर - वाहन जोड़ें!", bizDirCaption:"स्थानीय व्यवसाय खोजें या लिस्ट करें!", bizDirChoose:"चुनें:", searchBiz:"खोजें", listBiz:"लिस्ट करें",
-  deliveryCaption:"तेज़ डिलीवरी सेवा।", deliveryChoose:"चुनें:", bookParcel:"पार्सल बुक", registerAgent:"एजेंट बनें",
-  bookingCaption:"आज क्या बुक करना है?", bookingChoose:"बुकिंग चुनें:", bookRoom:"रूम", bookAppt:"अपॉइंटमेंट", bookCinema:"सिनेमा",
-  earnCaption:"बिजनेस अवसर! स्तर चुनें:", earnList:"स्तर चुनें:", highEarn:"हाई अर्निंग", highDesc:"जिला फ्रेंचाइजी", modEarn:"मध्यम", modDesc:"कॉर्प फ्रेंचाइजी", baseEarn:"बेस", baseDesc:"बिजनेस सेंटर",
-  watchedQ:"वीडियो देखा?", yes:"हाँ", no:"नहीं", watchFirst:"पहले वीडियो देखें:",
-  benefitsDistrict:"लाभ: 1: सभी राजस्व पर % 2: विशेष संपर्क 3: 5-वर्ष MOU", benefitsCorp:"लाभ: 1: BC पर % 2: जिला से संबंध 3: 3-वर्ष MOU", benefitsBC:"लाभ: 1: 1-वर्ष MOU",
-  knowSupport:"सपोर्ट", supportDistrict:"सपोर्ट: 1: 12M मार्केटिंग 2: 6M किराया 3: 6M वेतन", supportCorp:"सपोर्ट: 1: 12M मार्केटिंग 2: 6M किराया", supportBC:"सपोर्ट: 1: 3M मार्केटिंग",
-  knowReq:"जरूरतें", reqDistrict:"जरूरत: 1: 100 sq.ft 2: 1 स्टाफ 3: PC/फोन", reqCorp:"जरूरत: 1: 50 sq.ft 2: 1 स्टाफ", reqBC:"जरूरत: 1: 50 sq.ft",
-  submitApp:"आवेदन करें", categoryQ:"जिले में कॉर्पोरेशन है?", corpLocQ:"कॉर्प में लोकेशन?", bcLocQ:"कॉर्प या मुनि एरिया?",
-  corpYes:"हाँ", corpNo:"नहीं", feeCorpDistrict:"कॉर्प जिला फीस ₹15 लाख।", feeNonCorpDistrict:"नॉन-कॉर्प फीस ₹10 लाख।", feeCorp:"फीस ₹5 लाख।", feeMuni:"फीस ₹4 लाख।", feeBC:"फीस ₹1 लाख।",
-  readyYes:"हाँ तैयार", emi:"EMI देखें", payFee:"रजिस्ट्रेशन फीस भरें:", payCheck:"पेमेंट हुआ?", payYes:"हाँ हुआ", payNo:"अभी भरें",
-  formName:"*नाम:* पूरा नाम लिखें:", formContact:"*नंबर:* मोबाइल लिखें:", formPlace:"*जगह:* शहर लिखें:", formOcc:"*काम:* चुनें:", thanksEnq:"धन्यवाद", team24:"24 घंटे में संपर्क करेंगे", tenderMsg:"टेंडर डाउनलोड करें:", yesNoQ:"अवसर लेना है?",
-  remLang:"रिमाइंडर: भाषा चुनें 8590175977", remDriver5:"वाहन कैसे जोड़ें - देखें!", remDriver15:"1 साल फ्री रिचार्ज पाएं!", remDriver1h:"फ्री रिचार्ज खत्म हो रहा!", remDriver12h:"मदद चाहिए?", remDriver24h:"फ्री रिचार्ज जल्द खत्म!", remDriver48h:"आखिरी मौका!", remDriver72h:"फ्री रिचार्ज खत्म।", grabNow:"अभी लें", contactSupport:"सपोर्ट", registerAgain:"फिर रजिस्टर"
+  welcome:"🎉 Bizmapia में स्वागत है - ALL INDIA सुपर ऐप!\n\n✅ सबसे सस्ती Taxi/Auto/Bike - 10% छूट\n✅ 1000+ लोकल बिजनेस खोजें\n✅ 2 घंटे में तेज़ डिलीवरी\n✅ होटल/डॉक्टर/सिनेमा बुकिंग\n✅ फ्रेंचाइजी से 1-15 लाख महीना कमाएं\n\n👇 शुरू करने के लिए Learn More दबाएं",
+  tapExplore:"👇 सभी सेवाएं देखें:", selectLang:"भाषा चुनें:", mainMenuTitle:"👋 आपको क्या चाहिए?\n\n🚕 राइड - टैक्सी चाहिए? या गाड़ी लगाकर कमाना है?\n📍 डायरेक्टरी - बिजनेस खोजें या अपनी दुकान लिस्ट कर ग्राहक पाएं\n📦 डिलीवरी - पार्सल भेजें या एजेंट बनकर कमाएं\n🏨 बुकिंग - रूम, डॉक्टर, सिनेमा\n💰 फ्रेंचाइजी - अपना बिजनेस शुरू करें\n\n👇 एक चुनें:", mainMenuBtn:"मेनू",
+  ride:"राइड सेवा", rideDesc:"राइड बुक करें या गाड़ी लगाकर कमाएं", bizDir:"बिजनेस लिस्ट", bizDirDesc:"बिजनेस खोजें या लिस्ट कर ग्राहक पाएं", delivery:"डिलीवरी", deliveryDesc:"पार्सल भेजें या एजेंट बनें", booking:"बुकिंग", bookingDesc:"रूम, डॉक्टर, सिनेमा", earn:"फ्रेंचाइजी", earnDesc:"बिजनेस शुरू करें 1L-15L",
+  rideMenu:"🚕 BIZMAPIA राइड - पूरे भारत में!\n\n👉 कस्टमर: राइड चाहिए? सबसे सस्ती Auto/Bike/Taxi + 10% छूट + 24/7 सेवा\n\n👉 ड्राइवर: गाड़ी है? Bike/Auto/Car लगाएं, रोज़ ₹1000-2000 कमाएं + 1 साल फ्री रिचार्ज!\n\n👇 क्या करना है?", bookRide:"राइड बुक", attachVehicle:"गाड़ी लगाएं",
+  customerH:"✅ कस्टमर - भारत में सबसे सस्ती राइड!\n\nफायदे:\n🔹 सबसे कम किराया - Auto/Bike/Taxi/Car\n🔹 WhatsApp यूजर्स को 10% Extra छूट\n🔹 24/7 पूरे भारत में\n🔹 सुरक्षित और तेज़\n\nबुक कैसे करें:\n1. नीचे App लिंक पर क्लिक करें 👇\n2. Customer App इंस्टॉल करें\n3. मोबाइल से रजिस्टर करें\n4. तुरंत बुक करें - 5 मिनट में ड्राइवर\n\n👇 अभी डाउनलोड करें:",
+  driverH:"💰 ड्राइवर - रोज़ ₹1000-2000 कमाएं!\n\nफायदे:\n🔹 1 साल फ्री रिचार्ज - Zero कमीशन!\n🔹 रोज़ पेमेंट\n🔹 कभी भी काम करें - खुद के बॉस\n🔹 सभी गाड़ियां - Bike, Auto, Taxi\n\n🎁 लिमिटेड ऑफर: 1 साल फ्री रिचार्ज!\n\nशुरू कैसे करें:\n1. नीचे App लिंक 👇\n2. Driver App इंस्टॉल करें\n3. RC, लाइसेंस डालें\n4. आज से कमाना शुरू!\n\n👇 अभी रजिस्टर करें:",
+  bizDirCaption:"📍 बिजनेस डायरेक्टरी - ग्राहक और दुकानदार दोनों के लिए!\n\n👉 ग्राहक फायदे:\nआपके पास कोई भी बिजनेस खोजें - होटल, डॉक्टर, दुकान - फोन, लोकेशन तुरंत\n\n👉 दुकानदार फायदे:\nअपनी दुकान FREE लिस्ट करें, रोज़ 100s ग्राहकों के कॉल पाएं, बिजनेस 3X बढ़ाएं!\n\n👇 चुनें:", bizDirChoose:"👇 चुनें:", searchBiz:"खोजें", listBiz:"लिस्ट करें",
+  deliveryCaption:"📦 तेज़ डिलीवरी - 2 घंटे में!\n\n👉 पार्सल भेजना है? घर से पिकअप, 2 घंटे में डिलीवरी - सबसे सस्ता\n👉 कमाना है? डिलीवरी एजेंट बनें, हर डिलीवरी पर ₹30-50 + टिप\n\n👇 चुनें:", deliveryChoose:"👇 चुनें:", bookParcel:"पार्सल भेजें", registerAgent:"एजेंट बनें",
+  bookingCaption:"🏨 सभी बुकिंग एक ऐप में!\n\n✅ होटल रूम - सबसे सस्ता\n✅ डॉक्टर, सैलून - तुरंत अपॉइंटमेंट\n✅ सिनेमा - 10 सेकंड में टिकट\n\nकोई extra चार्ज नहीं!\n\n👇 क्या बुक करना है?", bookingChoose:"👇 बुकिंग चुनें:", bookRoom:"रूम", bookAppt:"अपॉइंटमेंट", bookCinema:"सिनेमा",
+  earnCaption:"💰 फ्रेंचाइजी - अपना बॉस बनें, नौकरी नहीं बिजनेस!\n\n🔹 जिला (10-15L) - पूरा जिला आपका, सभी से % कमाएं, 5 साल MOU, मार्केटिंग+किराया+सैलरी सपोर्ट\n🔹 कॉर्प/नगरपालिका (4-5L) - अपना शहर कंट्रोल करें, सभी बिजनेस सेंटर से कमाएं\n🔹 बिजनेस सेंटर (1L) - कम निवेश, Taxi + Directory से कमाएं\n\nहर महीने कमाएं!\n\nकौन सा लेना है?", earnList:"👇 लेवल चुनें:", highEarn:"जिला - 10L", highDesc:"पूरा जिला, 5Y MOU", modEarn:"कॉर्प - 4L", modDesc:"शहर कंट्रोल, 3Y", baseEarn:"सेंटर - 1L", baseDesc:"कम निवेश, 1Y",
+  watchedQ:"वीडियो देखा?", yes:"हाँ देखा", no:"नहीं देखा", watchFirst:"👉 पूरा 2-मिनट वीडियो देखें कमाई समझने के लिए:",
+  benefitsDistrict:"💰 जिला फायदे:\n1. टॉप लेवल - पूरे जिले के एकमात्र संपर्क\n2. हर कॉर्प, नगरपालिका, सेंटर से % कमाएं\n3. कंपनी से सीधे 5 साल का MOU\n4. सोते हुए भी कमाएं!", benefitsCorp:"💰 कॉर्प फायदे:\n1. अपना एरिया कंट्रोल करें\n2. सभी सेंटर से % कमाएं\n3. 3 साल MOU", benefitsBC:"💰 सेंटर फायदे:\n1. सिर्फ 1 लाख निवेश\n2. 1 साल MOU\n3. Taxi + Directory से कमाएं",
+  knowSupport:"सपोर्ट देखें", supportDistrict:"🎁 जिला सपोर्ट:\n1. 12 महीने मार्केटिंग सपोर्ट\n2. 6 महीने किराया\n3. 6 महीने सैलरी\n4. पूरी ट्रेनिंग", supportCorp:"🎁 कॉर्प सपोर्ट:\n1. 12 महीने मार्केटिंग\n2. 6 महीने किराया", supportBC:"🎁 सेंटर सपोर्ट:\n1. 3 महीने मार्केटिंग",
+  knowReq:"जरूरतें देखें", reqDistrict:"📋 जिला जरूरतें:\n1. जगह: 100 sq.ft\n2. स्टाफ: 1 फुल-टाइम\n3. Laptop, Phone, Net", reqCorp:"📋 कॉर्प जरूरतें:\n1. 50 sq.ft\n2. 1 स्टाफ", reqBC:"📋 सेंटर जरूरतें:\n1. 50 sq.ft दुकान",
+  submitApp:"आवेदन करें", categoryQ:"📍 क्या आपके जिले में Corporation है?", corpLocQ:"📍 क्या लोकेशन Corporation में है?", bcLocQ:"📍 सेंटर Corp या Muni में है?",
+  corpYes:"हाँ Corp", corpNo:"नहीं Muni", feeCorpDistrict:"💰 Corp जिला फीस ₹15 लाख - पूरा जिला, 5Y MOU, पूरा सपोर्ट!", feeNonCorpDistrict:"💰 Non-Corp ₹10 लाख - पूरा जिला, कम निवेश!", feeCorp:"💰 Corp फीस ₹5 लाख - शहर कंट्रोल!", feeMuni:"💰 Muni ₹4 लाख - कम निवेश!", feeBC:"💰 फीस सिर्फ ₹1 लाख - आज से कमाएं!",
+  readyYes:"हाँ तैयार हूं", emi:"EMI देखें", payFee:"👉 अपना एरिया लॉक करने के लिए रजिस्ट्रेशन फीस भरें:", payCheck:"पेमेंट किया?", payYes:"हाँ किया", payNo:"अभी भरें",
+  formName:"*नाम:* पूरा नाम:", formContact:"*नंबर:* मोबाइल:", formPlace:"*जगह:* शहर:", formOcc:"*काम:* चुनें:", thanksEnq:"धन्यवाद", team24:"24 घंटे में टीम कॉल करेगी", tenderMsg:"✅ टेंडर डाउनलोड करें और स्लॉट बुक करें:", yesNoQ:"अवसर लेना है?",
+  remLang:"रिमाइंडर: भाषा चुनें 8590175977", remDriver5:"गाड़ी कैसे जोड़ें - देखें!", remDriver15:"1 साल फ्री रिचार्ज पाएं!", remDriver1h:"फ्री रिचार्ज खत्म हो रहा!", remDriver12h:"मदद चाहिए?", remDriver24h:"फ्री रिचार्ज जल्द खत्म!", remDriver48h:"आखिरी मौका!", remDriver72h:"फ्री रिचार्ज खत्म।", grabNow:"अभी लें", contactSupport:"सपोर्ट", registerAgain:"फिर से"
  },
  ML:{
-  welcome:"Bizmapia-ലേക്ക് സ്വാഗതം! സേവനങ്ങൾ കാണുക, റൈഡ് ബുക്ക് ചെയ്യുക.",
-  tapExplore:"കാണുക:", selectLang:"ഭാഷ തിരഞ്ഞെടുക്കുക:", mainMenuTitle:"തുടരാൻ ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:", mainMenuBtn:"മെനു",
-  ride:"റൈഡ് സേവനം", rideDesc:"റൈഡ് ബുക്ക് ചെയ്യുക", bizDir:"ബിസിനസ് ലിസ്റ്റ്", bizDirDesc:"ബിസിനസ് തിരയുക", delivery:"ഡെലിവറി", deliveryDesc:"പാർസൽ സേവനം", booking:"ബുക്കിംഗ്", bookingDesc:"റൂം, അപ്പോയിന്റ്മെന്റ്", earn:"ഫ്രാഞ്ചൈസി", earnDesc:"1L-15L നേടൂ",
-  rideMenu:"റൈഡ് സേവനം! എന്ത് ചെയ്യണം?", bookRide:"റൈഡ് ബുക്ക്", attachVehicle:"വാഹനം ചേർക്കുക",
-  customerH:"കസ്റ്റമർ - ടാക്സി ബുക്ക്", driverH:"ഡ്രൈവർ - വാഹനം ചേർക്കൂ!", bizDirCaption:"ബിസിനസുകൾ കണ്ടെത്തുക അല്ലെങ്കിൽ ലിസ്റ്റ് ചെയ്യുക!", bizDirChoose:"തിരഞ്ഞെടുക്കുക:", searchBiz:"തിരയുക", listBiz:"ലിസ്റ്റ് ചെയ്യുക",
-  deliveryCaption:"വേഗത്തിലുള്ള ഡെലിവറി।", deliveryChoose:"തിരഞ്ഞെടുക്കുക:", bookParcel:"പാർസൽ ബുക്ക്", registerAgent:"ഏജന്റ് ആകുക",
-  bookingCaption:"ഇന്ന് എന്ത് ബുക്ക് ചെയ്യണം?", bookingChoose:"ബുക്കിംഗ് തിരഞ്ഞെടുക്കുക:", bookRoom:"റൂം", bookAppt:"അപ്പോയിന്റ്മെന്റ്", bookCinema:"സിനിമ",
-  earnCaption:"ബിസിനസ് അവസരം! ലെവൽ തിരഞ്ഞെടുക്കുക:", earnList:"ലെവൽ തിരഞ്ഞെടുക്കുക:", highEarn:"ഉയർന്ന വരുമാനം", highDesc:"ജില്ലാ ഫ്രാഞ്ചൈസി", modEarn:"മിതമായ", modDesc:"കോർപ്പ് ഫ്രാഞ്ചൈസി", baseEarn:"ബേസ്", baseDesc:"ബിസിനസ് സെന്റർ",
-  watchedQ:"വീഡിയോ കണ്ടോ?", yes:"അതെ", no:"അല്ല", watchFirst:"ദയവായി വീഡിയോ കാണുക:",
-  benefitsDistrict:"ആനുകൂല്യം: 1: എല്ലാ വരുമാനത്തിൽ % 2: പ്രത്യേക ബന്ധം 3: 5 വർഷ MOU", benefitsCorp:"ആനുകൂല്യം: 1: BC വരുമാനത്തിൽ % 2: ജില്ലയുമായി ബന്ധം 3: 3 വർഷ MOU", benefitsBC:"ആനുകൂല്യം: 1: 1 വർഷ MOU",
-  knowSupport:"സപ്പോർട്ട്", supportDistrict:"സപ്പോർട്ട്: 1: 12M മാർക്കറ്റിംഗ് 2: 6M വാടക 3: 6M ശമ്പളം", supportCorp:"സപ്പോർട്ട്: 1: 12M മാർക്കറ്റിംഗ് 2: 6M വാടക", supportBC:"സപ്പോർട്ട്: 1: 3M മാർക്കറ്റിംഗ്",
-  knowReq:"ആവശ്യകത", reqDistrict:"ആവശ്യം: 1: 100 sq.ft 2: 1 സ്റ്റാഫ് 3: PC/ഫോൺ", reqCorp:"ആവശ്യം: 1: 50 sq.ft 2: 1 സ്റ്റാഫ്", reqBC:"ആവശ്യം: 1: 50 sq.ft",
-  submitApp:"അപേക്ഷിക്കൂ", categoryQ:"ജില്ലയിൽ കോർപ്പറേഷൻ ഉണ്ടോ?", corpLocQ:"കോർപ്പറേഷനിൽ ആണോ?", bcLocQ:"കോർപ്പോ/മുനിയോ?",
-  corpYes:"അതെ", corpNo:"അല്ല", feeCorpDistrict:"കോർപ്പ് ജില്ലാ ഫീസ് ₹15 ലക്ഷം।", feeNonCorpDistrict:"നോൺ-കോർപ്പ് ഫീസ് ₹10 ലക്ഷം।", feeCorp:"ഫീസ് ₹5 ലക്ഷം।", feeMuni:"ഫീസ് ₹4 ലക്ഷം।", feeBC:"ഫീസ് ₹1 ലക്ഷം।",
-  readyYes:"അതെ റെഡി", emi:"EMI കാണുക", payFee:"ഫീസ് അടയ്ക്കുക:", payCheck:"പേയ്മെന്റ് ചെയ്തോ?", payYes:"അതെ ചെയ്തു", payNo:"ഇപ്പോൾ അടയ്ക്കൂ",
-  formName:"*പേര്:* പേര് നൽകുക:", formContact:"*ഫോൺ:* നമ്പർ നൽകുക:", formPlace:"*സ്ഥലം:* സ്ഥലം നൽകുക:", formOcc:"*ജോലി:* തിരഞ്ഞെടുക്കുക:", thanksEnq:"നന്ദി", team24:"24 മണിക്കൂറിൽ ബന്ധപ്പെടും", tenderMsg:"ടെൻഡർ ഡൗൺലോഡ് ചെയ്യുക:", yesNoQ:"അവസരം എടുക്കണോ?",
+  welcome:"🎉 Bizmapia-ലേക്ക് സ്വാഗതം - ALL INDIA സൂപ്പർ ആപ്പ്!\n\n✅ ഏറ്റവും കുറഞ്ഞ നിരക്കിൽ Taxi/Auto/Bike - 10% കിഴിവ്\n✅ 1000+ ലോക്കൽ ബിസിനസുകൾ കണ്ടെത്തൂ\n✅ 2 മണിക്കൂറിൽ ഫാസ്റ്റ് ഡെലിവറി\n✅ ഹോട്ടൽ/ഡോക്ടർ/സിനിമ ബുക്കിംഗ്\n✅ ഫ്രാഞ്ചൈസി വഴി 1-15 ലക്ഷം പ്രതിമാസം നേടൂ\n\nഒരു ആപ്പ് = എല്ലാ സേവനങ്ങളും\n👇 Learn More ടാപ്പ് ചെയ്ത് തുടങ്ങൂ",
+  tapExplore:"👇 എല്ലാ സേവനങ്ങളും കാണുക:", selectLang:"ഭാഷ തിരഞ്ഞെടുക്കുക:", mainMenuTitle:"👋 നിങ്ങൾക്ക് എന്ത് വേണം?\n\n🚕 റൈഡ് - ടാക്സി വേണോ? അതോ വാഹനം വെച്ച് സമ്പാദിക്കണോ?\n📍 ഡയറക്ടറി - ബിസിനസ് തിരയണോ? അതോ കട ലിസ്റ്റ് ചെയ്ത് കസ്റ്റമേഴ്‌സ് നേടണോ?\n📦 ഡെലിവറി - പാർസൽ അയക്കണോ? അതോ ഏജന്റ് ആയി സമ്പാദിക്കണോ?\n🏨 ബുക്കിംഗ് - റൂം, ഡോക്ടർ, സിനിമ\n💰 ഫ്രാഞ്ചൈസി - സ്വന്തം ബിസിനസ് തുടങ്ങൂ\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കുക:", mainMenuBtn:"മെനു",
+  ride:"റൈഡ് സേവനം", rideDesc:"റൈഡ് ബുക്ക് ചെയ്യുക അല്ലെങ്കിൽ വാഹനം വെച്ച് നേടുക", bizDir:"ബിസിനസ് ലിസ്റ്റ്", bizDirDesc:"ബിസിനസ് തിരയുക അല്ലെങ്കിൽ ലിസ്റ്റ് ചെയ്ത് കോൾ നേടുക", delivery:"ഡെലിവറി", deliveryDesc:"പാർസൽ അയക്കുക അല്ലെങ്കിൽ ഏജന്റ് ആകുക", booking:"ബുക്കിംഗ്", bookingDesc:"റൂം, ഡോക്ടർ, സിനിമ ബുക്കിംഗ്", earn:"ഫ്രാഞ്ചൈസി", earnDesc:"ബിസിനസ് തുടങ്ങൂ 1L-15L നേടൂ",
+  rideMenu:"🚕 BIZMAPIA റൈഡ് - ALL INDIA!\n\n👉 കസ്റ്റമർ: റൈഡ് വേണോ? ഏറ്റവും കുറഞ്ഞ നിരക്കിൽ Auto/Bike/Taxi + 10% കിഴിവ് + 24/7 സേവനം\n\n👉 ഡ്രൈവർ: വാഹനം ഉണ്ടോ? Bike/Auto/Car ചേർത്ത് ദിവസം ₹1000-2000 നേടൂ + 1 വർഷം ഫ്രീ റീചാർജ്!\n\n👇 എന്ത് ചെയ്യണം?", bookRide:"റൈഡ് ബുക്ക്", attachVehicle:"വാഹനം ചേർക്കുക",
+  customerH:"✅ കസ്റ്റമർ - ഇന്ത്യയിലെ ഏറ്റവും കുറഞ്ഞ നിരക്ക്!\n\nനേട്ടങ്ങൾ:\n🔹 കുറഞ്ഞ നിരക്ക് - Auto/Bike/Taxi/Car/Ambulance\n🔹 WhatsApp യൂസർമാർക്ക് 10% Extra കിഴിവ്\n🔹 24/7 All India സേവനം\n🔹 സുരക്ഷിതം, വേഗം\n\nബുക്ക് ചെയ്യുന്ന വിധം:\n1. താഴെ App ലിങ്കിൽ ക്ലിക്ക് ചെയ്യൂ 👇\n2. Customer App ഇൻസ്റ്റാൾ ചെയ്യൂ\n3. മൊബൈൽ വെച്ച് രജിസ്റ്റർ ചെയ്യൂ\n4. ഉടൻ ബുക്ക് ചെയ്യൂ - 5 മിനിറ്റിൽ ഡ്രൈവർ\n\n👇 ഇപ്പോൾ ഡൗൺലോഡ് ചെയ്യൂ:",
+  driverH:"💰 ഡ്രൈവർ - ദിവസം ₹1000-2000 നേടൂ!\n\nനേട്ടങ്ങൾ:\n🔹 1 വർഷം ഫ്രീ റീചാർജ് - Zero കമ്മീഷൻ!\n🔹 ദിവസേന പേയ്മെന്റ്\n🔹 എപ്പോൾ വേണമെങ്കിലും ജോലി - സ്വന്തം ബോസ്\n🔹 എല്ലാ വാഹനങ്ങളും - Bike, Auto, Taxi\n\n🎁 ലിമിറ്റഡ് ഓഫർ: 1 വർഷം ഫ്രീ റീചാർജ്!\n\nതുടങ്ങുന്ന വിധം:\n1. താഴെ App ലിങ്ക് 👇\n2. Driver App ഇൻസ്റ്റാൾ ചെയ്യൂ\n3. RC, ലൈസൻസ് അപ്‌ലോഡ് ചെയ്യൂ\n4. ഇന്ന് മുതൽ സമ്പാദിച്ചു തുടങ്ങൂ!\n\n👇 ഇപ്പോൾ രജിസ്റ്റർ ചെയ്യൂ:",
+  bizDirCaption:"📍 ബിസിനസ് ഡയറക്ടറി - കസ്റ്റമർക്കും കടക്കാരനും!\n\n👉 കസ്റ്റമർ നേട്ടം:\nനിങ്ങൾക്ക് സമീപം ഏത് ബിസിനസും തിരയൂ - ഹോട്ടൽ, ഡോക്ടർ, കടകൾ - ഫോൺ, ലൊക്കേഷൻ ഉടൻ\n\n👉 കടക്കാരൻ നേട്ടം:\nനിങ്ങളുടെ കട FREE ലിസ്റ്റ് ചെയ്യൂ, ദിവസം 100 കസ്റ്റമർ കോളുകൾ നേടൂ, ബിസിനസ് 3X വളർത്തൂ!\n\n👇 എന്ത് വേണം?", bizDirChoose:"👇 തിരഞ്ഞെടുക്കുക:", searchBiz:"തിരയുക", listBiz:"ലിസ്റ്റ് ചെയ്യുക",
+  deliveryCaption:"📦 ഫാസ്റ്റ് ഡെലിവറി - 2 മണിക്കൂറിൽ!\n\n👉 പാർസൽ അയക്കണോ? വീട്ടിൽ നിന്ന് പിക്കപ്പ്, 2 മണിക്കൂറിൽ ഡെലിവറി - കുറഞ്ഞ നിരക്ക്\n👉 സമ്പാദിക്കണോ? ഡെലിവറി ഏജന്റ് ആകൂ, ഓരോ ഡെലിവറിക്കും ₹30-50 + ടിപ്പ്\n\n👇 തിരഞ്ഞെടുക്കുക:", deliveryChoose:"👇 തിരഞ്ഞെടുക്കുക:", bookParcel:"പാർസൽ അയക്കുക", registerAgent:"ഏജന്റ് ആകുക",
+  bookingCaption:"🏨 എല്ലാ ബുക്കിംഗും ഒരു ആപ്പിൽ!\n\n✅ ഹോട്ടൽ റൂം - കുറഞ്ഞ വില ഉറപ്പ്\n✅ ഡോക്ടർ, സലൂൺ - ഉടൻ അപ്പോയിന്റ്മെന്റ്\n✅ സിനിമ - 10 സെക്കൻഡിൽ ടിക്കറ്റ്\n\nExtra ചാർജ് ഇല്ല!\n\n👇 എന്ത് ബുക്ക് ചെയ്യണം?", bookingChoose:"👇 ബുക്കിംഗ് തിരഞ്ഞെടുക്കുക:", bookRoom:"റൂം", bookAppt:"അപ്പോയിന്റ്മെന്റ്", bookCinema:"സിനിമ",
+  earnCaption:"💰 ഫ്രാഞ്ചൈസി - സ്വന്തം ബോസ് ആകൂ, ജോലി അല്ല ബിസിനസ്!\n\n🔹 ജില്ല (10-15L) - മുഴുവൻ ജില്ലയും നിങ്ങളുടേത്, എല്ലാവരിൽ നിന്നും % നേടൂ, 5 വർഷ MOU, മാർക്കറ്റിംഗ്+വാടക+ശമ്പള സപ്പോർട്ട്\n🔹 കോർപ്പ്/മുനി (4-5L) - നിങ്ങളുടെ നഗരം കൺട്രോൾ ചെയ്യൂ, എല്ലാ ബിസിനസ് സെന്ററിൽ നിന്നും നേടൂ\n🔹 ബിസിനസ് സെന്റർ (1L) - കുറഞ്ഞ നിക്ഷേപം, Taxi + Directory വഴി നേടൂ\n\nമാസം തോറും വരുമാനം!\n\nഏത് വേണം?", earnList:"👇 ലെവൽ തിരഞ്ഞെടുക്കുക:", highEarn:"ജില്ല - 10L", highDesc:"മുഴുവൻ ജില്ല, 5Y MOU", modEarn:"കോർപ്പ് - 4L", modDesc:"നഗരം കൺട്രോൾ, 3Y", baseEarn:"സെന്റർ - 1L", baseDesc:"കുറഞ്ഞ നിക്ഷേപം, 1Y",
+  watchedQ:"വീഡിയോ കണ്ടോ?", yes:"അതെ കണ്ടു", no:"ഇല്ല", watchFirst:"👉 വരുമാനം മനസ്സിലാക്കാൻ മുഴുവൻ 2-മിനിറ്റ് വീഡിയോ കാണൂ:",
+  benefitsDistrict:"💰 ജില്ലാ നേട്ടങ്ങൾ:\n1. ടോപ്പ് ലെവൽ - മുഴുവൻ ജില്ലയുടെയും ഏക കോൺടാക്റ്റ്\n2. എല്ലാ കോർപ്പ്, മുനി, സെന്ററിൽ നിന്നും % നേടൂ\n3. കമ്പനിയിൽ നിന്ന് നേരിട്ട് 5 വർഷത്തെ MOU\n4. ഉറങ്ങുമ്പോഴും വരുമാനം!", benefitsCorp:"💰 കോർപ്പ് നേട്ടങ്ങൾ:\n1. നിങ്ങളുടെ ഏരിയ കൺട്രോൾ ചെയ്യൂ\n2. എല്ലാ സെന്ററിൽ നിന്നും % നേടൂ\n3. 3 വർഷത്തെ MOU", benefitsBC:"💰 സെന്റർ നേട്ടങ്ങൾ:\n1. 1 ലക്ഷം മാത്രം നിക്ഷേപം\n2. 1 വർഷത്തെ MOU\n3. Taxi + Directory വഴി നേടൂ",
+  knowSupport:"സപ്പോർട്ട് കാണുക", supportDistrict:"🎁 ജില്ലാ സപ്പോർട്ട്:\n1. 12 മാസം മാർക്കറ്റിംഗ് സപ്പോർട്ട്\n2. 6 മാസം വാടക\n3. 6 മാസം ശമ്പളം\n4. പൂർണ്ണ ട്രെയിനിംഗ്", supportCorp:"🎁 കോർപ്പ് സപ്പോർട്ട്:\n1. 12 മാസം മാർക്കറ്റിംഗ്\n2. 6 മാസം വാടക", supportBC:"🎁 സെന്റർ സപ്പോർട്ട്:\n1. 3 മാസം മാർക്കറ്റിംഗ്",
+  knowReq:"ആവശ്യകത കാണുക", reqDistrict:"📋 ജില്ലാ ആവശ്യങ്ങൾ:\n1. സ്ഥലം: 100 sq.ft\n2. സ്റ്റാഫ്: 1 ഫുൾ-ടൈം\n3. Laptop, Phone, Net", reqCorp:"📋 കോർപ്പ് ആവശ്യങ്ങൾ:\n1. 50 sq.ft\n2. 1 സ്റ്റാഫ്", reqBC:"📋 സെന്റർ ആവശ്യങ്ങൾ:\n1. 50 sq.ft കട",
+  submitApp:"അപേക്ഷിക്കൂ", categoryQ:"📍 നിങ്ങളുടെ ജില്ലയിൽ Corporation ഉണ്ടോ?", corpLocQ:"📍 ലൊക്കേഷൻ Corporation-ൽ ആണോ?", bcLocQ:"📍 സെന്റർ Corp/Muni ആണോ?",
+  corpYes:"അതെ Corp", corpNo:"അല്ല Muni", feeCorpDistrict:"💰 Corp ജില്ലാ ഫീസ് ₹15 ലക്ഷം - മുഴുവൻ ജില്ല, 5Y MOU, ഫുൾ സപ്പോർട്ട്!", feeNonCorpDistrict:"💰 Non-Corp ₹10 ലക്ഷം - മുഴുവൻ ജില്ല, കുറഞ്ഞ നിക്ഷേപം!", feeCorp:"💰 Corp ഫീസ് ₹5 ലക്ഷം - നഗരം കൺട്രോൾ!", feeMuni:"💰 Muni ₹4 ലക്ഷം - കുറഞ്ഞ നിക്ഷേപം!", feeBC:"💰 ഫീസ് ₹1 ലക്ഷം മാത്രം - ഇന്ന് മുതൽ നേടൂ!",
+  readyYes:"അതെ റെഡി", emi:"EMI കാണുക", payFee:"👉 ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസ് അടയ്ക്കൂ:", payCheck:"പേയ്മെന്റ് ചെയ്തോ?", payYes:"അതെ ചെയ്തു", payNo:"ഇപ്പോൾ അടയ്ക്കൂ",
+  formName:"*പേര്:* പേര് നൽകുക:", formContact:"*ഫോൺ:* നമ്പർ നൽകുക:", formPlace:"*സ്ഥലം:* സ്ഥലം നൽകുക:", formOcc:"*ജോലി:* തിരഞ്ഞെടുക്കുക:", thanksEnq:"നന്ദി", team24:"24 മണിക്കൂറിൽ ടീം വിളിക്കും", tenderMsg:"✅ ടെൻഡർ ഡൗൺലോഡ് ചെയ്ത് സ്ലോട്ട് ബുക്ക് ചെയ്യൂ:", yesNoQ:"അവസരം എടുക്കണോ?",
   remLang:"റിമൈൻഡർ: ഭാഷ തിരഞ്ഞെടുക്കുക 8590175977", remDriver5:"വാഹനം എങ്ങനെ ചേർക്കാം - കാണുക!", remDriver15:"1 വർഷത്തെ ഫ്രീ റീചാർജ് നേടൂ!", remDriver1h:"ഫ്രീ റീചാർജ് അവസാനിക്കുന്നു!", remDriver12h:"സഹായം വേണോ?", remDriver24h:"ഫ്രീ റീചാർജ് ഉടൻ തീരും!", remDriver48h:"അവസാന അവസരം!", remDriver72h:"ഫ്രീ റീചാർജ് തീർന്നു।", grabNow:"ഇപ്പോൾ നേടുക", contactSupport:"സപ്പോർട്ട്", registerAgain:"വീണ്ടും"
  }
 };
@@ -106,7 +105,7 @@ function setPendingChat(phone,lang,stageName){if(!pendingChats[phone])pendingCha
 function clearPendingChat(phone){if(pendingChats[phone]){delete pendingChats[phone];savePendingToSheet();}}
 function getSession(p){if(!sessions[p])sessions[p]={lang:"EN",stage:"NEW",lastOpp:"",form:{},data:{}};return sessions[p];}
 async function sendText(to,body){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"text",text:{body}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){}}
-async function sendImage(to,link,caption){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"image",image:{link,caption}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,caption);}}
+async function sendImage(to,link,caption){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"image",image:{link,caption:caption.substring(0,1024)}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,caption);}}
 async function sendDocument(to,link,filename){try{await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"document",document:{link,filename}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,filename+": "+link);}}
 async function sendButtons(to,body,buttons){try{const safeButtons=buttons.map(b=>({type:"reply",reply:{id:b.id,title:b.title.substring(0,20)}}));await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"button",body:{text:body.substring(0,1024)},action:{buttons:safeButtons}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){await sendText(to,body);}}
 async function sendList(to,body,buttonText,sections){try{const safeSections=sections.map(sec=>({title:sec.title.substring(0,24),rows:sec.rows.map(r=>({id:r.id,title:r.title.substring(0,24),description:(r.description||"").substring(0,72)}))}));await axios.post(`https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,{messaging_product:"whatsapp",to,type:"interactive",interactive:{type:"list",body:{text:body.substring(0,1024)},action:{button:buttonText.substring(0,20),sections:safeSections}}},{headers:{Authorization:`Bearer ${TOKEN}`}});}catch(e){console.log("List failed:",e.response?.data||e.message);await sendText(to,body);}}
@@ -117,8 +116,8 @@ async function sendWelcome(to){const s=getSession(to);await sendImage(to,ASSETS.
 async function sendLanguage(to){await sendButtons(to,"Please select your preferred language:",[{id:"lang_en",title:"English"},{id:"lang_hi",title:"Hindi (हिंदी)"},{id:"lang_ml",title:"Malayalam (മലയാളം)"}]);}
 async function sendMainMenu(to){const s=getSession(to);const l=s.lang;await sendList(to,getT(l,"mainMenuTitle"),getT(l,"mainMenuBtn"),[{title:"Services",rows:[{id:"MENU_RIDE",title:getT(l,"ride"),description:getT(l,"rideDesc")},{id:"MENU_BIZDIR",title:getT(l,"bizDir"),description:getT(l,"bizDirDesc")},{id:"MENU_DELIVERY",title:getT(l,"delivery"),description:getT(l,"deliveryDesc")},{id:"MENU_BOOKING",title:getT(l,"booking"),description:getT(l,"bookingDesc")},{id:"MENU_EARN",title:getT(l,"earn"),description:getT(l,"earnDesc")}]}]);}
 async function handleRideMenu(to){const l=getSession(to).lang;await sendButtons(to,getT(l,"rideMenu"),[{id:"RIDE_BOOK",title:getT(l,"bookRide")},{id:"RIDE_ATTACH",title:getT(l,"attachVehicle")}]);}
-async function handleBookRide(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.customer,getT(l,"customerH")+"\nApp: "+ASSETS.apps.customer);clearPendingChat(to);}
-async function handleAttachVehicle(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.driver,getT(l,"driverH")+"\nApp: "+ASSETS.apps.driver);getSession(to).stage="DRIVER_ONBOARD";addReminder(to,"Driver_FreeRecharge");}
+async function handleBookRide(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.customer,getT(l,"customerH")+"\n"+ASSETS.apps.customer);clearPendingChat(to);}
+async function handleAttachVehicle(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.driver,getT(l,"driverH")+"\n"+ASSETS.apps.driver);getSession(to).stage="DRIVER_ONBOARD";addReminder(to,"Driver_FreeRecharge");}
 async function handleBizDir(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.business,getT(l,"bizDirCaption"));await new Promise(r=>setTimeout(r,800));await sendButtons(to,getT(l,"bizDirChoose"),[{id:"BIZDIR_SEARCH",title:getT(l,"searchBiz")},{id:"BIZDIR_LIST",title:getT(l,"listBiz")}]);}
 async function handleDelivery(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.onlineDelivery,getT(l,"deliveryCaption"));await new Promise(r=>setTimeout(r,800));await sendButtons(to,getT(l,"deliveryChoose"),[{id:"DEL_BOOK",title:getT(l,"bookParcel")},{id:"DEL_AGENT",title:getT(l,"registerAgent")}]);}
 async function handleBooking(to){const l=getSession(to).lang;await sendImage(to,ASSETS.posters.onlineBooking,getT(l,"bookingCaption"));await new Promise(r=>setTimeout(r,800));await sendList(to,getT(l,"bookingChoose"),getT(l,"mainMenuBtn"),[{title:"Booking",rows:[{id:"BOOK_ROOM",title:getT(l,"bookRoom")},{id:"BOOK_APPT",title:getT(l,"bookAppt")},{id:"BOOK_CINEMA",title:getT(l,"bookCinema")}]}]);}
@@ -137,7 +136,7 @@ function addReminder(phone,type){driverReminders.push({phone,type,claimedAt:Date
 async function checkReminders(){const now=Date.now();let changed=false;for(let r of driverReminders){const diffH=(now-r.claimedAt)/(1000*60*60);const sessLang=r.lang||"EN";const tt=LANG_TEXT[sessLang]||LANG_TEXT.EN;if(!r.sent1h&&diffH>=1){await sendImage(r.phone,ASSETS.posters.freeRecharge,tt.remDriver1h+"\n"+ASSETS.apps.driver);await sendContactWithCallUrl(r.phone,tt.grabNow+" - Call "+CONTACT_NUMBER);r.sent1h=true;changed=true;}else if(!r.sent24h&&diffH>=24){await sendImage(r.phone,ASSETS.posters.freeRecharge,tt.remDriver24h);r.sent24h=true;changed=true;}else if(!r.sent48h&&diffH>=48){await sendImage(r.phone,ASSETS.posters.freeRecharge,tt.remDriver48h);r.sent48h=true;changed=true;}else if(!r.sent72h&&diffH>=72){await sendImage(r.phone,ASSETS.posters.freeRecharge,tt.remDriver72h);r.sent72h=true;changed=true;}}if(changed){driverReminders=driverReminders.filter(r=>!r.sent72h);await saveDriverReminders();}}
 async function checkPendingChats(){const now=Date.now();for(let phone in pendingChats){const p=pendingChats[phone];const diffMin=(now-p.lastActivity)/(1000*60);const l=p.lang||"EN";const t=LANG_TEXT[l]||LANG_TEXT.EN;try{if(!p.reminders.r1&&diffMin>=10){await sendContactWithCallUrl(phone,t.remLang+" - Left at "+p.stage);p.reminders.r1=true;await savePendingToSheet();}else if(!p.reminders.r2&&diffMin>=30){await sendContactWithCallUrl(phone,"Reminder 30min - "+p.stage+" - "+CONTACT_NUMBER);p.reminders.r2=true;await savePendingToSheet();}else if(!p.reminders.r3&&diffMin>=1440){await sendImage(phone,ASSETS.posters.opportunity,"24h Reminder - "+p.stage);p.reminders.r3=true;await savePendingToSheet();}else if(!p.reminders.r4&&diffMin>=4320){await sendImage(phone,ASSETS.posters.opportunity,"72h Final - "+p.stage);p.reminders.r4=true;await savePendingToSheet();}}catch(e){}}}
 setInterval(checkPendingChats,2*60*1000); setInterval(checkReminders,5*60*1000);
-app.get('/',(req,res)=>res.send('V10 FIXED ALL LIMITS - 5 Services - EN/HI/ML - '+SHEET_ID));
+app.get('/',(req,res)=>res.send('V11 BENEFIT CAPTIONS LIVE - EN/HI/ML - '+SHEET_ID));
 app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
 app.post('/webhook',async(req,res)=>{
  try{
@@ -171,10 +170,10 @@ app.post('/webhook',async(req,res)=>{
   if(rawId==="MENU_EARN"){await handleEarnMenu(from);return res.sendStatus(200);}
   if(rawId==="RIDE_BOOK"){await handleBookRide(from);return res.sendStatus(200);}
   if(rawId==="RIDE_ATTACH"){await handleAttachVehicle(from);return res.sendStatus(200);}
-  if(rawId==="BIZDIR_SEARCH"){await sendText(from,"Search: "+ASSETS.apps.bizDirCustomer);return res.sendStatus(200);}
-  if(rawId==="BIZDIR_LIST"){await sendText(from,"List: "+ASSETS.apps.bizDirMerchant);return res.sendStatus(200);}
+  if(rawId==="BIZDIR_SEARCH"){await sendText(from,"Search Biz: "+ASSETS.apps.bizDirCustomer);return res.sendStatus(200);}
+  if(rawId==="BIZDIR_LIST"){await sendText(from,"List Biz: "+ASSETS.apps.bizDirMerchant);return res.sendStatus(200);}
   if(rawId==="DEL_BOOK"){await sendText(from,"Book Parcel: "+ASSETS.apps.customer);return res.sendStatus(200);}
-  if(rawId==="DEL_AGENT"){await sendText(from,"Agent: "+ASSETS.apps.deliveryAgent);return res.sendStatus(200);}
+  if(rawId==="DEL_AGENT"){await sendText(from,"Agent App: "+ASSETS.apps.deliveryAgent);return res.sendStatus(200);}
   if(rawId==="BOOK_ROOM"||rawId==="BOOK_APPT"||rawId==="BOOK_CINEMA"){await sendText(from,"Booking App: "+ASSETS.apps.booking);return res.sendStatus(200);}
   if(["opp_1","opp_2","opp_3","opp_4","opp_5"].includes(input)){await handleOppLevel(from,input);return res.sendStatus(200);}
   if(input==="vid_yes"){await handleVideoYes(from);return res.sendStatus(200);}
@@ -187,9 +186,9 @@ app.post('/webhook',async(req,res)=>{
   if(input==="ready_emi"){await handleReady(from,true);return res.sendStatus(200);}
   if(input==="pay_yes"){await handlePayYes(from);return res.sendStatus(200);}
   if(input==="pay_no"){await handlePayNo(from);return res.sendStatus(200);}
-  if(input==="call_now"){await sendContactWithCallUrl(from,`Call Now - ${CONTACT_NUMBER} Team: ${CONTACT_NUMBER}`);return res.sendStatus(200);}
+  if(input==="call_now"){await sendContactWithCallUrl(from,`Call Now - ${CONTACT_NUMBER}`);return res.sendStatus(200);}
   if(input==="menu"){await sendMainMenu(from);return res.sendStatus(200);}
   await sendMainMenu(from);res.sendStatus(200);
  }catch(err){console.log("Webhook error:",err.message);res.sendStatus(200);}});
-(async()=>{try{pendingChats=await loadPendingFromSheet();driverReminders=await loadDriverReminders();console.log(`V10 READY - ${Object.keys(pendingChats).length} pending + ${driverReminders.length} reminders`);}catch(e){}})();
-app.listen(PORT,()=>console.log(`V10 FIXED LIVE on ${PORT}`));
+(async()=>{try{pendingChats=await loadPendingFromSheet();driverReminders=await loadDriverReminders();console.log(`V11 READY - ${Object.keys(pendingChats).length} pending + ${driverReminders.length} reminders`);}catch(e){}})();
+app.listen(PORT,()=>console.log(`V11 BENEFIT CAPTIONS LIVE on ${PORT}`));
