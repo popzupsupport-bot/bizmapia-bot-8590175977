@@ -1,6 +1,6 @@
 {
-  "name": "bizmapia-bot-final",
-  "version": "29.0.0",
+  "name": "bizmapia-bot-5-45pm-perfect",
+  "version": "31.0.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": { "express": "^4.18.2", "axios": "^1.6.0" }
