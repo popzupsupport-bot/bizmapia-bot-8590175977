@@ -1,6 +1,7 @@
 // ============================================================
-// V35.0 FINAL - SAME AS BEFORE 5:45 PM WORKING + YOUR 7 POSTERS CORRECTLY PLACED
-// G: 97452 26642 | B: 85901 75977 | All posters same as before 5:45 PM
+// V36.0 FINAL FULL CODE - TAP NEXT TO POSTER FOR ALL POSTERS
+// Same as before 5:45 PM working + Your 7 posters correctly placed
+// G: 97452 26642 | B: 85901 75977
 // ============================================================
 const express = require('express');
 const axios = require('axios');
@@ -9,18 +10,19 @@ const app = express();
 app.use(express.json());
 
 const RAZORPAY_5000 = "https://rzp.io/l/bizmapia5000";
-const GENERAL_CALL = "919745226642";
-const BUSINESS_CALL = "918590175977";
+const GENERAL_CALL = "919745226642"; // General Call - 97452 26642
+const BUSINESS_CALL = "918590175977"; // Business Call - 85901 75977
 
+// YOUR 7 POSTERS - SAME AS BEFORE 5:45 PM - Replace with REAL Direct Links i.ibb.co/...jpg
 const LINKS = {
-  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // Your link 1 - Welcome Girl - https://ibb.co/fGVVPC3n
-  customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg", // Your link 2 - Customer Ride - https://ibb.co/204Ztdvh
-  driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg", // Your link 3 - Driver - https://ibb.co/67jpyTSS
-  deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg", // Your link 4 - Delivery - https://ibb.co/kgCH9jKM
-  businessPoster1: "https://i.ibb.co/1WkT9c8/1WkT9c8.jpg", // Your link 5 - Business 1 - https://ibb.co/1WkT9c8
-  businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg", // Your link 6 - Business 2 - https://ibb.co/Jg2fVh3
-  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", // Your link 7 - Extra - https://ibb.co/svWFBpYy
-  districtVideo: "https://youtu.be/bizmapia-district-video", // Same as before 5:45 PM
+  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // https://ibb.co/fGVVPC3n - Welcome Girl
+  customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg", // https://ibb.co/204Ztdvh - Customer Ride
+  driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg", // https://ibb.co/67jpyTSS - Driver
+  deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg", // https://ibb.co/kgCH9jKM - Delivery
+  businessPoster1: "https://i.ibb.co/1WkT9c8/1WkT9c8.jpg", // https://ibb.co/1WkT9c8 - Business 1
+  businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg", // https://ibb.co/Jg2fVh3 - Business 2
+  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", // https://ibb.co/svWFBpYy - Extra
+  districtVideo: "https://youtu.be/bizmapia-district-video",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
   driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver",
   tenderDistrict: "https://bizmapia.com/tender/district.pdf"
@@ -33,7 +35,7 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 let userStates = {};
 const processedIds = new Set();
 
-app.get('/', (req,res)=>res.status(200).send(`V35.0 FINAL - SAME AS 5:45PM - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V36.0 TAP NEXT TO POSTER - G:97452 26642 | B:85901 75977 - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -73,14 +75,34 @@ async function sendMessage(uid, txt, btns=[]){
     } else { await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:txt }}, {headers}); }
   }catch(e){ console.error("WA:", e.response?.data||e.message); }
 }
+
+// FIXED: Poster + Content TOGETHER, then Tap buttons BELOW poster (not above)
 async function sendImage(uid, imgUrl, cap, btns=[]){
   if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
+    // Step 1: Send Poster + Content first
     await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
-    if(btns.length>0) setTimeout(()=>sendMessage(uid, "👇 Tap:", btns), 800);
-  }catch(e){ sendMessage(uid, cap, btns); }
+    // Step 2: Send Tap buttons BELOW poster after 1.2 sec
+    if(btns.length>0){
+      setTimeout(async ()=>{
+        try{
+          const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
+          const urlBtn = btns.find(b=>b.url);
+          if(quick.length>0){
+            await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:"👇 Tap to continue:" }, action:{ buttons:quick }}}, {headers});
+          }
+          if(urlBtn){
+            await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:`${urlBtn.title}: ${urlBtn.url}` }}, {headers});
+          }
+        }catch(e){ console.error("Btn error:", e.message); }
+      }, 1200);
+    }
+  }catch(e){
+    console.error("Image failed:", e.response?.data||e.message);
+    sendMessage(uid, cap, btns);
+  }
 }
 
 function sendOriginalFirst(uid){ sendImage(uid, LINKS.welcomePoster, ORIGINAL_FIRST_CAPTION, [{ title:getText('en','learn'), payload:"LEARN_MORE" }]); }
@@ -91,7 +113,7 @@ function sendCust(uid,l){ sendImage(uid, LINKS.customerRidePoster, getText(l,'cu
 function sendDriv(uid,l){ sendImage(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV", url:LINKS.driverApp }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
 function sendDel(uid,l){ sendImage(uid, LINKS.deliveryPoster, getText(l,'delIntro'), [{ title:getText(l,'bookPar'), payload:"DEL_BOOK", url:LINKS.customerApp }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
 function sendBook(uid,l){ sendMessage(uid, getText(l,'bookIntro'), [{ title:getText(l,'bookRoom'), payload:"BOOK_ROOM" }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
-function sendRoom(uid,l){ sendMessage(uid, "Book anywhere", [{ title:getText(l,'dlApp'), payload:"DL_APP", url:LINKS.customerApp }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
+function sendRoom(uid,l){ sendMessage(uid, "Book anywhere in India", [{ title:getText(l,'dlApp'), payload:"DL_APP", url:LINKS.customerApp }, { title:getText(l,'callG'), payload:"CALL_G", url:`tel:+${GENERAL_CALL}` }]); }
 function sendEarn(uid,l){ sendImage(uid, LINKS.businessPoster1, getText(l,'earnIntro'), [{ title:getText(l,'high'), payload:"EARN_HIGH" }, { title:getText(l,'mod'), payload:"EARN_MOD" }, { title:getText(l,'base'), payload:"EARN_BASE" }]); }
 function sendHigh(uid,l){ sendImage(uid, LINKS.businessPoster2, `${getText(l,'highIntro')}\n${LINKS.districtVideo}`, [{ title:getText(l,'video'), payload:"WATCH_VIDEO", url:LINKS.districtVideo }, { title:getText(l,'ben'), payload:"KNOW_BEN" }, { title:getText(l,'callB'), payload:"CALL_B", url:`tel:+${BUSINESS_CALL}` }]); }
 function sendBen(uid,l){ sendMessage(uid, getText(l,'benText'), [{ title:getText(l,'sup'), payload:"KNOW_SUP" }, { title:getText(l,'callB'), payload:"CALL_B", url:`tel:+${BUSINESS_CALL}` }]); }
@@ -151,4 +173,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V35.0 FINAL SAME AS 5:45PM - G:97452 26642 | B:85901 75977 on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V36.0 TAP NEXT TO POSTER - G:97452 26642 | B:85901 75977 on ${PORT}`));
