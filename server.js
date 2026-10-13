@@ -1,4 +1,4 @@
-// V48.3 FIXED - BIZMAPIA API 7025630644 - NO SYNTAX ERROR
+// V48.4 FIXED - BIZMAPIA API 7025630644 - FULL ERROR LOGGING
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -31,7 +31,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V48.3 WORKING - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V48.4 WORKING - '+MAIN_API+' - '+new Date().toISOString()+' - PID:'+PHONE_NUMBER_ID));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -61,33 +61,55 @@ function formatTo(to){ let c=String(to).replace(/\D/g,""); if(c.length===10) c="
 
 async function sendMessage(uid, txt, btns){
   if(!btns) btns=[];
-  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return;
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID){
+    console.log("MISSING ENV! TOKEN:",!!WHATSAPP_TOKEN, "PID:", PHONE_NUMBER_ID);
+    return;
+  }
   const to=formatTo(uid);
   try{
     const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
     const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
+    console.log(`TRY SEND to ${to} - ${txt.substring(0,30)}...`);
+    let resp;
     if(btns.length>0){
       const quick=btns.slice(0,3).map(function(b){ return { type:"reply", reply:{ id:b.payload, title:b.title.substring(0,20) } }; });
-      await axios.post(url, { messaging_product:"whatsapp", to:to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick } } }, {headers:headers});
+      resp = await axios.post(url, { messaging_product:"whatsapp", to:to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick } } }, {headers:headers});
     } else {
-      await axios.post(url, { messaging_product:"whatsapp", to:to, type:"text", text:{ body:txt } }, {headers:headers});
+      resp = await axios.post(url, { messaging_product:"whatsapp", to:to, type:"text", text:{ body:txt } }, {headers:headers});
     }
-  }catch(e){ console.log("WA error", e.response?.data||e.message); }
+    console.log(`OUT OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
+  }catch(e){
+    console.log("===== SEND FAIL FULL ERROR =====");
+    console.log("TO:", to);
+    console.log("PID:", PHONE_NUMBER_ID);
+    console.log("TOKEN_PREFIX:", WHATSAPP_TOKEN?.substring(0,15));
+    console.log("STATUS:", e.response?.status);
+    console.log("DATA:", JSON.stringify(e.response?.data, null, 2));
+    console.log("MSG:", e.message);
+    console.log("===== END ERROR =====");
+  }
 }
 
 async function sendImageHD(uid, imgUrl, cap, btns){
   if(!btns) btns=[];
   const to=formatTo(uid);
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return;
   try{
     const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
     const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
-    await axios.post(url, { messaging_product:"whatsapp", to:to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) } }, {headers:headers});
+    console.log(`TRY SEND IMAGE to ${to} - ${imgUrl}`);
+    const resp = await axios.post(url, { messaging_product:"whatsapp", to:to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) } }, {headers:headers});
+    console.log(`OUT IMAGE OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
     if(btns.length>0){
       setTimeout(function(){
         sendMessage(uid, "Please tap to continue:", btns);
       }, 1500);
     }
   }catch(e){
+    console.log("===== SEND IMAGE FAIL =====");
+    console.log("DATA:", JSON.stringify(e.response?.data, null, 2));
+    console.log("MSG:", e.message);
+    console.log("FALLBACK TO TEXT");
     await sendMessage(uid, cap, btns);
   }
 }
@@ -95,6 +117,7 @@ async function sendImageHD(uid, imgUrl, cap, btns){
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(function(t){ clearTimeout(t); }); delete reminderTimers[uid]; } }
 
 function sendFirst(uid){
+  console.log(`sendFirst to ${uid}`);
   sendImageHD(uid, LINKS.welcomePoster, FIRST_BRIEF, [
     { title:"English", payload:"LANG_EN" },
     { title:"Hindi", payload:"LANG_HI" },
@@ -124,7 +147,8 @@ async function sendPay(uid,l){
     const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
     const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
     const to=formatTo(uid);
-    await axios.post(url, {
+    console.log(`TRY SEND PAY CTA to ${to}`);
+    const resp = await axios.post(url, {
       messaging_product:"whatsapp", to:to, type:"interactive",
       interactive:{
         type:"cta_url",
@@ -132,10 +156,13 @@ async function sendPay(uid,l){
         action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } }
       }
     }, {headers:headers});
+    console.log(`OUT PAY OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
     setTimeout(function(){
       sendMessage(uid, "After payment, tap below:", [{ title:"I Paid - Rs.5000", payload:"PAY_DONE" }, { title:getText(l,'callB'), payload:"CALL_B" }]);
     }, 2000);
   }catch(e){
+    console.log("===== PAY CTA FAIL =====");
+    console.log(JSON.stringify(e.response?.data, null, 2));
     sendMessage(uid, getText(l,'payReg')+"\n"+RAZORPAY_ALL, [{ title:"I Paid", payload:"PAY_DONE" }]);
   }
 }
@@ -188,9 +215,12 @@ app.post('/webhook', async (req,res)=>{
       console.log("IN "+uid+" "+txt+" "+payload);
       onMessage(uid,txt,payload||txt);
     }
-  }catch(e){ console.log("webhook error", e.message); }
+  }catch(e){ console.log("webhook error", e.message, e.stack); }
   res.sendStatus(200);
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',function(){ console.log("V48.3 WORKING - MAIN API "+MAIN_API+" on "+PORT); });
+app.listen(PORT,'0.0.0.0',function(){
+  console.log("V48.4 WORKING - MAIN API "+MAIN_API+" on "+PORT);
+  console.log("ENV CHECK - PID:", PHONE_NUMBER_ID, "TOKEN_EXISTS:",!!WHATSAPP_TOKEN, "VERIFY:", VERIFY_TOKEN);
+});
