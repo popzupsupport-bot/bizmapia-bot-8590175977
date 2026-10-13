@@ -1,20 +1,25 @@
 // ============================================================
-// V39.1 PERMANENT - NO AUTO MESSAGE + SHEET LOGGING FIXED
-// Same V39.0 flow + Sheet recording
+// V39.2 SAFE - V39.0 PERMANENT + SAFE SHEET LOGGING
+// NO AUTO MESSAGE - ONLY ON USER INPUT - NEVER BLOCKS REPLY
 // G: 97452 26642 | B: 85901 75977
 // ============================================================
 const express = require('express');
 const axios = require('axios');
-const fs = require('fs');
 const { google } = require('googleapis');
 const app = express();
 app.use(express.json());
 
 const RAZORPAY_5000 = "https://rzp.io/l/bizmapia5000";
-const GENERAL_CALL = "919745226642";
-const BUSINESS_CALL = "918590175977";
-
-const LINKS = { welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg", driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg", deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg", businessPoster1: "https://i.ibb.co/1WkT9c8.jpg", businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg", extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", districtVideo: "https://youtu.be/bizmapia-district-video", customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer", driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver", tenderDistrict: "https://bizmapia.com/tender/district.pdf" };
+const LINKS = {
+  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
+  driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
+  deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
+  businessPoster1: "https://i.ibb.co/1WkT9c8.jpg",
+  businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg",
+  extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
+  tenderDistrict: "https://bizmapia.com/tender/district.pdf"
+};
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
@@ -23,22 +28,38 @@ const SHEET_ID = process.env.SHEET_ID || "1RBPVy_prpB_niVDDa1PixFBy60X7Su11NUYj9
 
 let userStates = {};
 const processedIds = new Set();
+let sheetsClient = null;
 
-// ===== SHEET LOGGING - NEW ONLY THIS =====
+// ===== SAFE SHEET - NEVER BLOCKS REPLY =====
 async function appendSheet(row){
   try{
-    if(!process.env.GOOGLE_CREDENTIALS) return;
-    const creds = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-    const auth = new google.auth.GoogleAuth({ credentials: creds, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
-    const sheets = google.sheets({ version: 'v4', auth });
-    await sheets.spreadsheets.values.append({ spreadsheetId: SHEET_ID, range: "Sheet1!A:E", valueInputOption: "USER_ENTERED", resource: { values: [row] } });
-    console.log(`[SHEET] ${row[1]} ${row[2]}`);
-  }catch(e){ console.error("[SHEET FAIL]", e.message); }
+    if(!process.env.GOOGLE_CREDENTIALS ||!SHEET_ID) return;
+    if(!sheetsClient){
+      let parsed;
+      try { parsed = JSON.parse(process.env.GOOGLE_CREDENTIALS); }
+      catch {
+        // Fix multiline env
+        const cleaned = process.env.GOOGLE_CREDENTIALS.replace(/\n/g, '\\n');
+        try { parsed = JSON.parse(cleaned); } catch { return; }
+      }
+      const auth = new google.auth.GoogleAuth({ credentials: parsed, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+      sheetsClient = google.sheets({ version: 'v4', auth });
+    }
+    await sheetsClient.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: "Sheet1!A:E",
+      valueInputOption: "USER_ENTERED",
+      resource: { values: [row] }
+    });
+    console.log(`[SHEET OK] ${row[1]}`);
+  }catch(e){ console.error("[SHEET FAIL - REPLY CONTINUES]", e.message); }
 }
-// ===========================================
 
-app.get('/', (req,res)=>res.status(200).send(`V39.1 WITH SHEET - G:97452 26642 | B:85901 75977 - ${new Date().toISOString()}`));
-app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
+app.get('/', (req,res)=>res.status(200).send(`V39.2 SAFE - ${new Date().toISOString()}`));
+app.get('/webhook',(req,res)=>{
+  if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
+  res.sendStatus(403);
+});
 
 const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA Super App!
 
@@ -58,12 +79,67 @@ const T = {
   hi:{ selOpt:"चुनें:", ride:"🚕 राइड", dir:"🏢 डायरेक्टरी", del:"📦 डिलीवरी", book:"🏨 बुकिंग", earn:"💰 कमाएं", more:"और विकल्प", rideOpt:"A. राइड बुक\nB. वाहन अटैच", bookRide:"बुक", attach:"अटैच", custPost:"राइड बुक करें", drivPost:"वाहन अटैच कमाएं", bookNow:"📲 बुक", dlDriv:"📲 ड्राइवर ऐप", delIntro:"डिलीवरी 2 घंटे में", bookPar:"📦 पार्सल बुक", regDel:"🛵 एजेंट", bookIntro:"बुकिंग", bookRoom:"🏨 रूम बुक", dlApp:"📲 ऐप", earnIntro:"कमाने का अवसर", high:"💎 उच्च", mod:"💼 मध्यम", base:"🏠 बेस", highIntro:"सही चुनाव! वीडियो देखें", video:"▶️ वीडियो", ben:"📘 लाभ", sup:"🤝 सपोर्ट", req:"📋 आवश्यकता", submit:"📝 आवेदन", emi:"💳 EMI", benText:"लाभ 1 - टॉप फ्रैंचाइज़ी", supText:"सपोर्ट 1 - 12 महीने", reqText:"आवश्यकता 1 - 90 Sqft", corpQ:"कॉर्पोरेशन है?", yesCorp:"हाँ", noCorp:"नहीं", ready15:"15 लाख फीस तैयार?", readyBtn:"✅ तैयार - 15L", payReg:"Rs.5000 फीस", payBtn:"💳 Rs.5000", emiOpt:"5 लाख + 10/20 महीना", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"जानकारी: नाम, स्थान", occQ:"व्यवसाय:", bus:"बिजनेस", house:"गृहिणी", emp:"कर्मचारी", busman:"व्यवसायी", tender:"📄 टेंडर", date:"तिथि:", today:"📅 आज", tom:"📅 कल", thanks:"✅ धन्यवाद!", callG:"📞 97452 26642", callB:"📞 85901 75977" }
 };
 function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]; }
-async function sendMessage(uid, txt, btns=[]){ if(!uid) return; const clean=String(uid).replace(/\D/g,""); if(!/^\d{10,15}$/.test(clean)) return; if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return; try{ const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; let to=clean; if(to.length===10) to="91"+to; if(btns.length>0){ const quick=btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }})); await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick }}}, {headers}); } else { await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:txt }}, {headers}); } }catch(e){ console.error("WA:", e.response?.data||e.message); } }
-async function sendImage(uid, imgUrl, cap, btns=[]){ if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns); try{ const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to; if(btns && btns.length>0){ const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }})); await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{ type:"image", image:{ link:imgUrl } }, body:{ text:cap.substring(0,1024) }, action:{ buttons:quick } }}, {headers}); } else { await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers}); } }catch(e){ console.error("Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); } }
 
-function sendFirstBriefWithLang(uid){ sendImage(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [ { title:"English", payload:"LANG_EN" }, { title:"हिंदी", payload:"LANG_HI" }, { title:"മലയാളം", payload:"LANG_ML" } ]); }
-function sendMain(uid,l){ sendMessage(uid, getText(l,'selOpt'), [ { title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" } ]); }
-function sendMore(uid,l){ sendMessage(uid, "More:", [ { title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" } ]); }
+async function sendMessage(uid, txt, btns=[]){
+  if(!uid) return; const clean=String(uid).replace(/\D/g,""); if(!/^\d{10,15}$/.test(clean)) return;
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return;
+  try{
+    const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
+    let to=clean; if(to.length===10) to="91"+to;
+    if(btns.length>0){
+      const quick=btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
+      await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick }}}, {headers});
+    } else {
+      await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:txt }}, {headers});
+    }
+  }catch(e){ console.error("WA:", e.response?.data||e.message); }
+}
+
+async function sendImage(uid, imgUrl, cap, btns=[]){
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
+  try{
+    const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
+    let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
+    if(btns && btns.length>0){
+      const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
+      await axios.post(url, {
+        messaging_product:"whatsapp",
+        to,
+        type:"interactive",
+        interactive:{
+          type:"button",
+          header:{ type:"image", image:{ link:imgUrl } },
+          body:{ text:cap.substring(0,1024) },
+          action:{ buttons:quick }
+        }
+      }, {headers});
+    } else {
+      await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
+    }
+  }catch(e){ console.error("Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); }
+}
+
+function sendFirstBriefWithLang(uid){
+  sendImage(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [
+    { title:"English", payload:"LANG_EN" },
+    { title:"हिंदी", payload:"LANG_HI" },
+    { title:"മലയാളം", payload:"LANG_ML" }
+  ]);
+}
+function sendMain(uid,l){
+  sendMessage(uid, getText(l,'selOpt'), [
+    { title:getText(l,'ride'), payload:"OPT_RIDE" },
+    { title:getText(l,'earn'), payload:"OPT_EARN" },
+    { title:getText(l,'more'), payload:"OPT_MORE" }
+  ]);
+}
+function sendMore(uid,l){
+  sendMessage(uid, "More:", [
+    { title:getText(l,'del'), payload:"OPT_DEL" },
+    { title:getText(l,'book'), payload:"OPT_BOOK" },
+    { title:getText(l,'dir'), payload:"OPT_DIR" }
+  ]);
+}
 function sendRide(uid,l){ sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); }
 function sendCust(uid,l){ sendImage(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
 function sendDriv(uid,l){ sendImage(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
@@ -84,20 +160,26 @@ function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; 
 function handleDate(uid,d){ const s=userStates[uid]; sendMessage(uid, `${getText(s.lang,'thanks')} - ${s.data.name} - ${d}`); delete userStates[uid]; }
 
 function onMessage(uid,txt,payload){
-  let state=userStates[uid]; const p=(payload||"").trim(); const lower=(txt||"").toLowerCase().trim();
+  let state=userStates[uid];
+  const p=(payload||"").trim();
+  const fullTime = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  // SAFE ASYNC - never await
+  appendSheet([fullTime, uid, p||txt, `CHAT_RECEIVED | ${p||txt} | INBOUND | Raw:${p||txt} stage:${state?.flow||'NEW'}`, `${uid} CHAT_`]).catch(()=>{});
 
-  // ===== SHEET LOGGING FOR EVERY INBOUND =====
-  const time = new Date().toLocaleString('en-GB', {hour12:true});
-  const date = new Date().toLocaleDateString('en-GB');
-  const fullTime = `${date}, ${time}`;
-  const stage = state?.flow || 'WELCOME';
-  const logPayload = p || txt;
-  appendSheet([fullTime, uid, logPayload, `CHAT_RECEIVED | ${logPayload} | INBOUND | Raw:${logPayload} stage:${stage}`, `${uid} CHAT_`]);
-  // =============================================
-
-  if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l }; sendMain(uid,l); return; }
-  if(!state){ userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' }; sendFirstBriefWithLang(uid); return; }
-  if(state.flow==='WELCOME'){ if(!p.startsWith("LANG_")){ return; } }
+  if(p.startsWith("LANG_")){
+    const l=p.replace("LANG_","").toLowerCase();
+    userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l };
+    sendMain(uid,l);
+    return;
+  }
+  if(!state){
+    userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' };
+    sendFirstBriefWithLang(uid);
+    return;
+  }
+  if(state.flow==='WELCOME'){
+    if(!p.startsWith("LANG_")){ return; }
+  }
   const lang=state.lang;
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
   if(p==="OPT_RIDE"){ sendRide(uid,lang); return; }
@@ -124,9 +206,18 @@ function onMessage(uid,txt,payload){
 app.post('/webhook', async (req,res)=>{
   try{
     const entry=req.body.entry?.[0]?.changes?.[0]?.value; const msg=entry?.messages?.[0];
-    if(msg){ if(processedIds.has(msg.id)) return res.sendStatus(200); processedIds.add(msg.id); setTimeout(()=>processedIds.delete(msg.id),60000); const uid=msg.from; if(!uid||String(uid).includes("test")) return res.sendStatus(200); const txt=msg.text?.body||""; const pl=msg.interactive?.button_reply?.id||""; onMessage(uid,txt,pl||txt); } else { const uid=req.body.userId||req.body.from; if(!uid||String(uid).includes("test")) return res.sendStatus(200); const txt=req.body.text||""; const pl=req.body.payload||""; onMessage(uid,txt,pl); }
+    if(msg){
+      if(processedIds.has(msg.id)) return res.sendStatus(200); processedIds.add(msg.id); setTimeout(()=>processedIds.delete(msg.id),60000);
+      const uid=msg.from; if(!uid||String(uid).includes("test")) return res.sendStatus(200);
+      const txt=msg.text?.body||""; const pl=msg.interactive?.button_reply?.id||"";
+      onMessage(uid,txt,pl||txt);
+    } else {
+      const uid=req.body.userId||req.body.from; if(!uid||String(uid).includes("test")) return res.sendStatus(200);
+      const txt=req.body.text||""; const pl=req.body.payload||""; onMessage(uid,txt,pl);
+    }
   }catch(e){ console.error(e.message); }
   res.sendStatus(200);
 });
+
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V39.1 WITH SHEET on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V39.2 SAFE on ${PORT}`));
