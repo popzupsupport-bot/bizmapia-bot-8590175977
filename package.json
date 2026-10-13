@@ -1,6 +1,6 @@
 {
-  "name": "bizmapia-v54-hi-reply-fixed",
-  "version": "54.0.0",
+  "name": "bizmapia-v55-hi-guaranteed",
+  "version": "55.0.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": { "express": "^4.18.2", "axios": "^1.6.0" }
