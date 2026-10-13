@@ -1,6 +1,4 @@
-// ============================================================
-// V39.3 SAFE - V39.0 + SHEET SAFE + HI REPLAY FIX
-// G: 97452 26642 | B: 85901 75977
+// V39.4 LOGGED - SAME LOGIC AS V39.3, ONLY MORE LOGS
 // ============================================================
 const express = require('express');
 const axios = require('axios');
@@ -34,22 +32,19 @@ async function appendSheet(row){
     if(!process.env.GOOGLE_CREDENTIALS ||!SHEET_ID) return;
     if(!sheetsClient){
       let parsed;
-      try { parsed = JSON.parse(process.env.GOOGLE_CREDENTIALS); }
-      catch { return; }
+      try { parsed = JSON.parse(process.env.GOOGLE_CREDENTIALS); } catch { return; }
       const auth = new google.auth.GoogleAuth({ credentials: parsed, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
       sheetsClient = google.sheets({ version: 'v4', auth });
     }
     await sheetsClient.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: "Sheet1!A:E",
-      valueInputOption: "USER_ENTERED",
+      spreadsheetId: SHEET_ID, range: "Sheet1!A:E", valueInputOption: "USER_ENTERED",
       resource: { values: [row] }
     });
     console.log(`[SHEET OK] ${row[1]}`);
   }catch(e){ console.error("[SHEET FAIL]", e.message); }
 }
 
-app.get('/', (req,res)=>res.status(200).send(`V39.3 SAFE FINAL - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V39.4 LOGGED - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -76,64 +71,49 @@ function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]; }
 
 async function sendMessage(uid, txt, btns=[]){
   if(!uid) return; const clean=String(uid).replace(/\D/g,""); if(!/^\d{10,15}$/.test(clean)) return;
-  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return;
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID){ console.error("MISSING TOKEN OR PHONE_ID"); return; }
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=clean; if(to.length===10) to="91"+to;
+    let payload;
     if(btns.length>0){
       const quick=btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
-      await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick }}}, {headers});
+      payload={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick }}};
     } else {
-      await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:txt }}, {headers});
+      payload={ messaging_product:"whatsapp", to, type:"text", text:{ body:txt }};
     }
-  }catch(e){ console.error("WA:", e.response?.data||e.message); }
+    const r = await axios.post(url, payload, {headers});
+    console.log(`[SENT OK] to ${to} wamid ${r.data.messages?.[0]?.id||'OK'}`);
+  }catch(e){ console.error("WA SEND FAIL:", e.response?.data||e.message); }
 }
 
 async function sendImage(uid, imgUrl, cap, btns=[]){
-  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
+  if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID){ console.error("MISSING TOKEN OR PHONE_ID FOR IMAGE"); return sendMessage(uid, cap, btns); }
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
+    let payload;
     if(btns && btns.length>0){
       const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
-      await axios.post(url, {
-        messaging_product:"whatsapp",
-        to,
-        type:"interactive",
-        interactive:{
-          type:"button",
-          header:{ type:"image", image:{ link:imgUrl } },
-          body:{ text:cap.substring(0,1024) },
-          action:{ buttons:quick }
-        }
-      }, {headers});
+      payload={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{ type:"image", image:{ link:imgUrl } }, body:{ text:cap.substring(0,1024) }, action:{ buttons:quick }}};
     } else {
-      await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
+      payload={ messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }};
     }
-  }catch(e){ console.error("Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); }
+    const r = await axios.post(url, payload, {headers});
+    console.log(`[IMG SENT OK] to ${to} wamid ${r.data.messages?.[0]?.id||'OK'}`);
+  }catch(e){ console.error("IMG SEND FAIL:", JSON.stringify(e.response?.data||e.message)); sendMessage(uid, cap, btns); }
 }
 
 function sendFirstBriefWithLang(uid){
+  console.log(`[ACTION] sendFirstBrief to ${uid}`);
   sendImage(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [
     { title:"English", payload:"LANG_EN" },
     { title:"हिंदी", payload:"LANG_HI" },
     { title:"മലയാളം", payload:"LANG_ML" }
   ]);
 }
-function sendMain(uid,l){
-  sendMessage(uid, getText(l,'selOpt'), [
-    { title:getText(l,'ride'), payload:"OPT_RIDE" },
-    { title:getText(l,'earn'), payload:"OPT_EARN" },
-    { title:getText(l,'more'), payload:"OPT_MORE" }
-  ]);
-}
-function sendMore(uid,l){
-  sendMessage(uid, "More:", [
-    { title:getText(l,'del'), payload:"OPT_DEL" },
-    { title:getText(l,'book'), payload:"OPT_BOOK" },
-    { title:getText(l,'dir'), payload:"OPT_DIR" }
-  ]);
-}
+function sendMain(uid,l){ sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); }
+function sendMore(uid,l){ sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); }
 function sendRide(uid,l){ sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); }
 function sendCust(uid,l){ sendImage(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
 function sendDriv(uid,l){ sendImage(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); }
@@ -157,31 +137,27 @@ function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const fullTime = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  console.log(`[INCOMING] ${uid} txt:${txt} payload:${p} state:${state?.flow||'NEW'}`);
   appendSheet([fullTime, uid, p||txt, `CHAT_RECEIVED | ${p||txt} | INBOUND | Raw:${p||txt} stage:${state?.flow||'NEW'}`, `${uid} CHAT_`]).catch(()=>{});
 
   if(p.startsWith("LANG_")){
     const l=p.replace("LANG_","").toLowerCase();
     userStates[uid]={ lang:l, flow:'MAIN', data:{}, lang:l };
-    sendMain(uid,l);
-    return;
+    sendMain(uid,l); return;
   }
   if(!state){
     userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lang:'en' };
-    sendFirstBriefWithLang(uid);
-    return;
+    sendFirstBriefWithLang(uid); return;
   }
-
-  // ===== FIXED: Hi replays even if in WELCOME =====
   if(state.flow==='WELCOME'){
     if(!p.startsWith("LANG_")){
       const low=(txt||p||"").toLowerCase();
       if(["hi","hello","hey","hai","hii","start","menu","*hi*"].includes(low)){
-        sendFirstBriefWithLang(uid); // Resend welcome on Hi
+        sendFirstBriefWithLang(uid);
       }
       return;
     }
   }
-
   const lang=state.lang;
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
   if(p==="OPT_RIDE"){ sendRide(uid,lang); return; }
@@ -222,4 +198,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V39.3 SAFE FINAL on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V39.4 LOGGED on ${PORT}`));
