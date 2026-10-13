@@ -1,6 +1,5 @@
 // ============================================================
-// V39.2 SAFE - V39.0 PERMANENT + SAFE SHEET LOGGING
-// NO AUTO MESSAGE - ONLY ON USER INPUT - NEVER BLOCKS REPLY
+// V39.3 SAFE - V39.0 + SHEET SAFE + HI REPLAY FIX
 // G: 97452 26642 | B: 85901 75977
 // ============================================================
 const express = require('express');
@@ -30,18 +29,13 @@ let userStates = {};
 const processedIds = new Set();
 let sheetsClient = null;
 
-// ===== SAFE SHEET - NEVER BLOCKS REPLY =====
 async function appendSheet(row){
   try{
     if(!process.env.GOOGLE_CREDENTIALS ||!SHEET_ID) return;
     if(!sheetsClient){
       let parsed;
       try { parsed = JSON.parse(process.env.GOOGLE_CREDENTIALS); }
-      catch {
-        // Fix multiline env
-        const cleaned = process.env.GOOGLE_CREDENTIALS.replace(/\n/g, '\\n');
-        try { parsed = JSON.parse(cleaned); } catch { return; }
-      }
+      catch { return; }
       const auth = new google.auth.GoogleAuth({ credentials: parsed, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
       sheetsClient = google.sheets({ version: 'v4', auth });
     }
@@ -52,10 +46,10 @@ async function appendSheet(row){
       resource: { values: [row] }
     });
     console.log(`[SHEET OK] ${row[1]}`);
-  }catch(e){ console.error("[SHEET FAIL - REPLY CONTINUES]", e.message); }
+  }catch(e){ console.error("[SHEET FAIL]", e.message); }
 }
 
-app.get('/', (req,res)=>res.status(200).send(`V39.2 SAFE - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V39.3 SAFE FINAL - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -163,7 +157,6 @@ function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const fullTime = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-  // SAFE ASYNC - never await
   appendSheet([fullTime, uid, p||txt, `CHAT_RECEIVED | ${p||txt} | INBOUND | Raw:${p||txt} stage:${state?.flow||'NEW'}`, `${uid} CHAT_`]).catch(()=>{});
 
   if(p.startsWith("LANG_")){
@@ -177,9 +170,18 @@ function onMessage(uid,txt,payload){
     sendFirstBriefWithLang(uid);
     return;
   }
+
+  // ===== FIXED: Hi replays even if in WELCOME =====
   if(state.flow==='WELCOME'){
-    if(!p.startsWith("LANG_")){ return; }
+    if(!p.startsWith("LANG_")){
+      const low=(txt||p||"").toLowerCase();
+      if(["hi","hello","hey","hai","hii","start","menu","*hi*"].includes(low)){
+        sendFirstBriefWithLang(uid); // Resend welcome on Hi
+      }
+      return;
+    }
   }
+
   const lang=state.lang;
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
   if(p==="OPT_RIDE"){ sendRide(uid,lang); return; }
@@ -220,4 +222,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V39.2 SAFE on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V39.3 SAFE FINAL on ${PORT}`));
