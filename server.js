@@ -1,4 +1,4 @@
-// V61.0 HD FULL - Fixes blurry poster + incomplete - YOUR SCRIPT
+// V61.0 HD FULL - Fixes blurry poster + incomplete - YOUR SCRIPT - FIXED WELCOME
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -132,21 +132,24 @@ function scheduleRem(uid, lang, flowType, lastStepName){
   });
 }
 
-// V61.0 HD FULL - Fixes blurry poster + incomplete
+// FIXED - ONLY THIS FUNCTION CHANGED - Uses YOUR functions only
 async function sendWelcomeRealtime(uid){
-  console.log(`[WELCOME V61 HD] To ${uid}`);
-  // 1. FULL RESPONSE INSTANT - Text + Buttons (so user never sees empty)
-  await sendWA(uid, FIRST_BRIEF + "\n\n👇 Select language:", [
-    { title:"English", payload:"LANG_EN" },
-    { title:"हिंदी", payload:"LANG_HI" },
-    { title:"മലയാളം", payload:"LANG_ML" }
-  ]);
-  // 2. HD POSTER 500ms later with HD caption - not blurry
+  console.log(`[WELCOME V61 FIXED] To ${uid}`);
+  // 1. YOUR sendWA with no buttons = plain text = guaranteed delivery on WhatsApp
+  await sendWA(uid, FIRST_BRIEF, []);
+  // 2. Language buttons 1.2 sec later using YOUR sendWA
   setTimeout(async ()=>{
-    // Send HD poster with full caption to avoid blurry empty
-    await sendImageWA(uid, "https://i.ibb.co/fGVVPC3n/fGVVPC3n.png", "🌟 Bizmapia – All India 4-in-1 Services\n\nOne App. Four Services. Pan-India Opportunities!\n\n👉 Tap English / हिंदी / മലയാളം above to continue", []);
+    await sendWA(uid, "👇 Select language:", [
+      { title:"English", payload:"LANG_EN" },
+      { title:"हिंदी", payload:"LANG_HI" },
+      { title:"മലയാളം", payload:"LANG_ML" }
+    ]);
+  }, 1200);
+  // 3. HD poster using YOUR sendImageWA
+  setTimeout(async ()=>{
+    await sendImageWA(uid, LINKS.welcomePoster, "🌟 Bizmapia – All India 4-in-1 Services\n\nOne App. Four Services. Pan-India Opportunities!\n\n👉 Tap English / हिंदी / മലയാളം above to continue", []);
     console.log(`[HD POSTER SENT] To ${uid}`);
-  }, 500);
+  }, 2500);
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', lang:'en' };
   scheduleRem(uid,'en','GENERAL','Language Selection');
 }
