@@ -1,4 +1,4 @@
-// V61.0 HD FULL FINAL - Fixes blurry poster + incomplete response + Token log
+// V61.0 HD FULL - Fixes blurry poster + incomplete - YOUR SCRIPT
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -27,7 +27,7 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 app.get('/', (req,res)=>{
   const hasToken =!!process.env.WHATSAPP_TOKEN;
   const hasPhone =!!process.env.PHONE_NUMBER_ID;
-  res.status(200).send(`V61.0 HD FULL - Token:${hasToken} Phone:${hasPhone} - ${RAZORPAY_ALL} - ${new Date().toISOString()}`);
+  res.status(200).send(`V61.0 - Token:${hasToken} Phone:${hasPhone} - ${RAZORPAY_ALL} - ${new Date().toISOString()}`);
 });
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
@@ -60,7 +60,7 @@ async function sendWA(uid, txt, btns=[]){
   const PHONE_ID = process.env.PHONE_NUMBER_ID;
   console.log(`[SEND CHECK] Token exists:${!!TOKEN} Phone exists:${!!PHONE_ID} To:${uid} Text:${txt.substring(0,50)} Buttons:${btns.map(b=>b.title).join(',')}`);
   if(!TOKEN||!PHONE_ID){
-    console.error(`[TOKEN MISSING] Cannot send WhatsApp! TOKEN=${!!TOKEN} PHONE_ID=${!!PHONE_ID}`);
+    console.error(`[TOKEN MISSING] Cannot send WhatsApp! TOKEN=${!!TOKEN} PHONE_ID=${!!PHONE_ID} - Go to Render Environment and add WHATSAPP_TOKEN and PHONE_NUMBER_ID`);
     return null;
   }
   try{
