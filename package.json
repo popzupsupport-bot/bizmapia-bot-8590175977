@@ -1,6 +1,6 @@
 {
   "name": "bizmapia-bot",
-  "version": "39.2.0",
+  "version": "39.3.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": {
