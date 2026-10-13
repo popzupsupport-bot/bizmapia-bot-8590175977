@@ -1,19 +1,18 @@
 // ============================================================
-// V42.1 FINAL - FULL 3 LANGUAGE PROFESSIONAL - ALL MERGED
-// EN + ML + HI full sentences for ALL steps
-// HD Poster + Reminder + Pay Now mq0zG6mS + All Flows
+// V43.0 FINAL - NEW SCRIPT - FULL CODE
+// New Welcome: ALL INDIA 4 services in 1 App!
 // ============================================================
 const express = require('express');
 const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const RAZORPAY_ALL = "https://rzp.io/rzp/mq0zG6mS"; // District/Corp/Muni/Biz - ALL
+const RAZORPAY_ALL = "https://rzp.io/rzp/mq0zG6mS";
 const GENERAL_CALL = "919745226642";
 const BUSINESS_CALL = "918590175977";
 
 const LINKS = {
-  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // Replace with your new HD poster link for 4K quality
   customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
   driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
   deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
@@ -33,23 +32,24 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 let userStates = {};
 const processedIds = new Set();
 
-app.get('/', (req,res)=>res.status(200).send(`V42.1 FULL 3 LANG HD FINAL - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V43.0 NEW SCRIPT FINAL HD - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
 });
 
-const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA Super App!
+// NEW SCRIPT AS YOU GAVE
+const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia - ALL INDIA 4 services in 1 App!
 
-✅ 🚕 Cheapest Taxi/Auto/Bike - 10% Discount
-✅ 🏢 Find 1000+ Local Businesses Near You
-✅ 📦 Fast Parcel Delivery in 2 Hours
-✅ 🏨 Hotel/Doctor/Cinema Booking
-✅ 💰 Earn 1-15 Lakhs Monthly with Franchiee
+✅ 🚕 Cheapest Taxi/Auto/Bike – Attractive rates
+✅ 🏢 Find 1000000+ Local Businesses Near You
+✅ 📦 Fast Parcel Delivery in anywhere within Hours
+✅ 🏨 Room/Appointment/Movie Booking
+✅ 💰 Earn attractive income Daily/Monthly with Business opportunities
 
 🚀 One App - All Services - All India Opportunity!
 
-👇 Please select your chatting language to get further information in your chosen language.`;
+👇 Want to know more about Bizmapia and its opportunities, Please select your chatting language to get further information in your chosen language.`;
 
 const T = {
   en:{
@@ -265,4 +265,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V42.1 FINAL FULL 3 LANG HD on ${PORT} - ${RAZORPAY_ALL}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V43.0 NEW SCRIPT FINAL HD on ${PORT} - ${RAZORPAY_ALL}`));
