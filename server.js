@@ -1,8 +1,8 @@
 // ============================================================
-// V46.0 FINAL ULTIMATE - MERGED
-// V43 Base (All Posters+Contents) + V44 Professional Script + V45 Auto-Reminder 5/10/1h/8h/18h/24h
-// Driver Different: 5m/30m/1h/4h/12h/24h Earning Push
-// Pay Now: https://rzp.io/rzp/mq0zG6mS | HD Posters | 3 Languages
+// V47.0 ORDER FIXED PERMANENT - Poster FIRST, Buttons SECOND
+// Fixes screenshot bug - Language was on top, poster bottom
+// Now: POSTER + CONTENT FIRST -> LANGUAGE BUTTONS SECOND (for ALL posters)
+// Base: V46.0 FINAL ULTIMATE - No content avoided
 // ============================================================
 const express = require('express');
 const axios = require('axios');
@@ -21,7 +21,7 @@ const LINKS = {
   businessPoster1: "https://i.ibb.co/1WkT9c8.jpg",
   businessPoster2: "https://i.ibb.co/Jg2fVh3/Jg2fVh3.jpg",
   extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  supportPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", // Supporting poster - Rent + Staff + Marketing
+  supportPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   districtVideo: "https://youtu.be/bizmapia-district-video",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
   driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver",
@@ -36,13 +36,12 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send(`V46.0 FINAL ULTIMATE - ALL POSTERS + PROFESSIONAL + AUTO-REMINDER - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V47.0 ORDER FIXED - POSTER FIRST - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
 });
 
-// PROFESSIONAL SCRIPT V44
 const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia – All India, 4-in-1 Services!
 
 🚖 Affordable Taxi & Auto Rides
@@ -77,32 +76,8 @@ const T = {
     payReg:"Pay your registration fee Rs.5000 to proceed further. For District/Corporation/Municipal/Business Center\n\nThis Rs.5000 is part of 15L, not extra. Balance after verification.", payBtn:"💳 Pay Rs.5000", emiOpt:"Select EMI: Down 5 Lac + 10 Months / Down 5 Lac + 20 Months\n\nDown 5L to lock your district today, rest in EMI.", emi10:"5L + 10x1L", emi20:"5L + 20x50k",
     leadAsk:"Share contact: Name, Place, District, State, Contact, Occupation\n\nPlease send details line by line", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"📄 Download Tender", date:"Select Agreement Date:", today:"📅 Today", tom:"📅 Tomorrow", thanks:"✅ Thanks! Team will call within 24h. Your district slot is now under verification.", callG:"📞 97452 26642", callB:"📞 85901 75977"
   },
-  ml:{
-    selOpt:"താഴെ നിന്ന് ഒരെണ്ണം തിരഞ്ഞെടുക്കുക:", ride:"🚕 റൈഡ് - ടാക്സി/ഓട്ടോ", dir:"🏢 ബിസിനസ് ഡയറക്ടറി", del:"📦 ഓൺലൈൻ ഡെലിവറി", book:"🏨 ഓൺലൈൻ ബുക്കിംഗ്", earn:"💰 ബിസ്മാപിയയിൽ നിന്ന് വരുമാനം", more:"കൂടുതൽ ഓപ്ഷനുകൾ",
-    rideOpt:"A. റൈഡ് ബുക്ക് ചെയ്യുക\nB. നിങ്ങളുടെ വാഹനം അറ്റാച്ച് ചെയ്യുക", bookRide:"റൈഡ് ബുക്ക്", attach:"വാഹനം അറ്റാച്ച്",
-    custPost:"🚕 ഇന്ത്യയിൽ എവിടെയും റൈഡ് ബുക്ക് ചെയ്യൂ - ഏറ്റവും വിലകുറഞ്ഞ ടാക്സി/ഓട്ടോ/ബൈക്ക് 10% കിഴിവോടെ", drivPost:"🚗 നിങ്ങളുടെ വാഹനം അറ്റാച്ച് ചെയ്ത് ദിവസവും Rs.1500-2500 വരുമാനം നേടൂ - ബിസ്മാപിയയോടൊപ്പം", bookNow:"📲 ഇപ്പോൾ ബുക്ക് ചെയ്യുക", dlDriv:"📲 ഡ്രൈവർ ആപ്പ് ഡൗൺലോഡ്",
-    delIntro:"📦 ബിസ്മാപിയ ഓൺലൈൻ ഡെലിവറി - ഇന്ത്യയിൽ എവിടെയും 2 മണിക്കൂറിൽ പാഴ്സൽ ഡെലിവറി", bookPar:"📦 പാഴ്സൽ ബുക്ക് ചെയ്യുക", regDel:"🛵 ഡെലിവറി ഏജന്റായി രജിസ്റ്റർ ചെയ്യുക",
-    bookIntro:"🏨 ഓൺലൈൻ ബുക്കിംഗ് - ഹോട്ടൽ/ഡോക്ടർ/സിനിമ - ഇന്ത്യയിൽ എവിടെയും ബുക്ക് ചെയ്യൂ", bookRoom:"🏨 റൂം ബുക്ക് ചെയ്യുക", dlApp:"📲 ആപ്പ് ഡൗൺലോഡ്",
-    earnIntro:"ഇന്ത്യയിൽ എവിടെ നിന്നും ബിസ്മാപിയയിൽ നിന്ന് വരുമാന അവസരം ബുക്ക് ചെയ്യാൻ പോകുകയാണ്. ഏത് തരം അവസരമാണ് നിങ്ങൾ തിരയുന്നത്?", high:"💎 ഉയർന്ന വരുമാനം", mod:"💼 മിതമായ വരുമാനം", base:"🏠 അടിസ്ഥാന വരുമാനം",
-    highIntro:"നിങ്ങൾ ശരിയായ തിരഞ്ഞെടുപ്പ് നടത്തി. താഴെയുള്ള വീഡിയോ ലിങ്കിൽ നിന്ന് വിശദാംശങ്ങൾ അറിയുക.\nകുറിപ്പ്: ഒരു ജില്ലയിൽ ഒരു അവസരം മാത്രം, എത്രയും പെട്ടെന്ന് പ്രതികരിക്കുക.", video:"▶️ വീഡിയോ ലിങ്ക്", ben:"📘 ആനുകൂല്യങ്ങൾ അറിയുക", sup:"🤝 പിന്തുണ അറിയുക", req:"📋 ആവശ്യകതകൾ", submit:"📝 അപേക്ഷ സമർപ്പിക്കുക", emi:"💳 EMI ഓപ്ഷനുകൾ",
-    benText:"🌟 ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\n✅ നിങ്ങൾ ജില്ലാ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസിയാണ്, എല്ലാ വരുമാനത്തിലും ശതമാനം\n✅ നിങ്ങൾക്ക് മാത്രമേ കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ കഴിയൂ\n✅ ജീവിതകാല റോയൽറ്റി വരുമാനം\n✅ സബ്-ഫ്രാഞ്ചൈസി വരുമാനം", supText:"🤝 പിന്തുണ - കമ്പനി നൽകും\n\n🎯 12 മാസം മാർക്കറ്റിംഗ് പിന്തുണ\n🏠 6 മാസം വാടക സഹായം\n👨‍💼 6 മാസം സ്റ്റാഫ് ശമ്പള പിന്തുണ", reqText:"📋 ആവശ്യകതകൾ\n\n🏢 90 Sqft മുറി\n👨‍💼 1 മുഴുവൻ സമയ ജീവനക്കാരൻ\n💻 PC/Laptop ഉം Android മൊബൈലും",
-    corpQ:"നിങ്ങളുടെ ജില്ലയിൽ കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp:"അതെ കോർപ്പറേഷൻ", noCorp:"ഇല്ല കോർപ്പറേഷൻ", ready15:"നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുകയാണ്, 15 ലക്ഷം ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസ് അടയ്ക്കാൻ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുക.", readyBtn:"✅ തയ്യാറാണ് - 15L",
-    payReg:"രജിസ്ട്രേഷൻ ഫീസ് Rs.5000 അടയ്ക്കുക. ജില്ല/കോർപ്പറേഷൻ/മുനിസിപ്പൽ/ബിസിനസ് സെന്ററിന്", payBtn:"💳 Rs.5000 അടയ്ക്കുക", emiOpt:"EMI തിരഞ്ഞെടുക്കുക: 5 ലക്ഷം + 10 മാസം / 5 ലക്ഷം + 20 മാസം", emi10:"5L + 10x1L", emi20:"5L + 20x50k",
-    leadAsk:"ബന്ധപ്പെടാനുള്ള വിവരങ്ങൾ പങ്കിടുക: പേര്, സ്ഥലം, ജില്ല, സംസ്ഥാനം, കോൺടാക്ട്, തൊഴിൽ", occQ:"തൊഴിൽ തിരഞ്ഞെടുക്കുക:", bus:"ബിസിനസ്", house:"ഹൗസ് വൈഫ്", emp:"ജീവനക്കാരൻ", busman:"ബിസിനസ്സ്മാൻ", tender:"📄 ടെൻഡർ ഡൗൺലോഡ്", date:"കരാർ തീയതി തിരഞ്ഞെടുക്കുക:", today:"📅 ഇന്ന്", tom:"📅 നാളെ", thanks:"✅ നന്ദി! ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും", callG:"📞 97452 26642", callB:"📞 85901 75977"
-  },
-  hi:{
-    selOpt:"नीचे से कोई एक चुनें:", ride:"🚕 राइड - टैक्सी/ऑटो", dir:"🏢 बिजनेस डायरेक्टरी", del:"📦 ऑनलाइन डिलीवरी", book:"🏨 ऑनलाइन बुकिंग", earn:"💰 बिज़मापिया से कमाएं", more:"और विकल्प",
-    rideOpt:"A. राइड बुक करें\nB. अपना वाहन अटैच करें", bookRide:"राइड बुक करें", attach:"वाहन अटैच करें",
-    custPost:"🚕 भारत में कहीं भी राइड बुक करें - सबसे सस्ती टैक्सी/ऑटो/बाइक 10% छूट के साथ", drivPost:"🚗 अपना वाहन अटैच करके रोज Rs.1500-2500 कमाएं - बिज़मापिया के साथ", bookNow:"📲 अभी बुक करें", dlDriv:"📲 ड्राइवर ऐप डाउनलोड",
-    delIntro:"📦 बिज़मापिया ऑनलाइन डिलीवरी - भारत में कहीं भी 2 घंटे में तेज़ पार्सल डिलीवरी", bookPar:"📦 पार्सल बुक करें", regDel:"🛵 डिलीवरी एजेंट के रूप में रजिस्टर करें",
-    bookIntro:"🏨 ऑनलाइन बुकिंग - होटल/डॉक्टर/सिनेमा - भारत में कहीं भी बुक करें", bookRoom:"🏨 रूम बुक करें", dlApp:"📲 ऐप डाउनलोड",
-    earnIntro:"आप भारत में कहीं से भी बिज़मापिया से कमाने के अवसर के लिए अपना स्लॉट बुक करने जा रहे हैं। आप किस तरह का अवसर देख रहे हैं?", high:"💎 उच्च कमाई", mod:"💼 मध्यम कमाई", base:"🏠 बेस कमाई",
-    highIntro:"बहुत बढ़िया आपने सही चुनाव किया है। नीचे दिए गए वीडियो लिंक से विवरण जानें।\nनोट: एक जिले में केवल एक अवसर, सबसे पहले जवाब दें।", video:"▶️ वीडियो लिंक", ben:"📘 लाभ जानें", sup:"🤝 सपोर्ट जानें", req:"📋 आवश्यकताएं", submit:"📝 आवेदन जमा करें", emi:"💳 EMI विकल्प",
-    benText:"🌟 लाभ - जिला फ्रैंचाइजी\n\n✅ आप जिले के टॉप लेवल फ्रैंचाइजी हैं, सभी कमाई पर प्रतिशत\n✅ केवल आप ही कंपनी से सीधे संपर्क कर सकते हैं\n✅ लाइफटाइम रॉयल्टी आय\n✅ सब-फ्रैंचाइजी आय", supText:"🤝 सपोर्ट - कंपनी देगी\n\n🎯 12 महीने मार्केटिंग सपोर्ट\n🏠 6 महीने किराया योगदान\n👨‍💼 6 महीने स्टाफ सैलरी सपोर्ट", reqText:"📋 आवश्यकताएं\n\n🏢 90 Sqft कमरा\n👨‍💼 1 फुल टाइम स्टाफ\n💻 PC/Laptop और Android मोबाइल",
-    corpQ:"क्या आपके जिले में कॉर्पोरेशन है?", yesCorp:"हाँ कॉर्प", noCorp:"नहीं कॉर्प", ready15:"आप आवेदन जमा करने जा रहे हैं, पुष्टि करें कि आप 15 लाख जिला फ्रैंचाइजी फीस देने के लिए तैयार हैं।", readyBtn:"✅ हाँ तैयार - 15L",
-    payReg:"अपनी रजिस्ट्रेशन फीस Rs.5000 का भुगतान करें। जिला/कॉर्पोरेशन/नगरपालिका/बिजनेस सेंटर के लिए", payBtn:"💳 Rs.5000 भुगतान", emiOpt:"EMI चुनें: 5 लाख + 10 महीने / 5 लाख + 20 महीने", emi10:"5L + 10x1L", emi20:"5L + 20x50k",
-    leadAsk:"संपर्क साझा करें: नाम, स्थान, जिला, राज्य, संपर्क, व्यवसाय", occQ:"व्यवसाय चुनें:", bus:"बिजनेस", house:"गृहिणी", emp:"कर्मचारी", busman:"व्यवसायी", tender:"📄 टेंडर डाउनलोड", date:"समझौता तिथि चुनें:", today:"📅 आज", tom:"📅 कल", thanks:"✅ धन्यवाद! टीम 24 घंटे में कॉल करेगी", callG:"📞 97452 26642", callB:"📞 85901 75977"
-  }
+  ml:{ selOpt:"താഴെ നിന്ന് ഒരെണ്ണം തിരഞ്ഞെടുക്കുക:", ride:"🚕 റൈഡ് - ടാക്സി/ഓട്ടോ", dir:"🏢 ബിസിനസ് ഡയറക്ടറി", del:"📦 ഓൺലൈൻ ഡെലിവറി", book:"🏨 ഓൺലൈൻ ബുക്കിംഗ്", earn:"💰 ബിസ്മാപിയയിൽ നിന്ന് വരുമാനം", more:"കൂടുതൽ ഓപ്ഷനുകൾ", rideOpt:"A. റൈഡ് ബുക്ക് ചെയ്യുക\nB. നിങ്ങളുടെ വാഹനം അറ്റാച്ച് ചെയ്യുക", bookRide:"റൈഡ് ബുക്ക്", attach:"വാഹനം അറ്റാച്ച്", custPost:"🚕 ഇന്ത്യയിൽ എവിടെയും റൈഡ് ബുക്ക് ചെയ്യൂ - ഏറ്റവും വിലകുറഞ്ഞ ടാക്സി/ഓട്ടോ/ബൈക്ക് 10% കിഴിവോടെ", drivPost:"🚗 നിങ്ങളുടെ വാഹനം അറ്റാച്ച് ചെയ്ത് ദിവസവും Rs.1500-2500 വരുമാനം നേടൂ - ബിസ്മാപിയയോടൊപ്പം", bookNow:"📲 ഇപ്പോൾ ബുക്ക് ചെയ്യുക", dlDriv:"📲 ഡ്രൈവർ ആപ്പ് ഡൗൺലോഡ്", delIntro:"📦 ബിസ്മാപിയ ഓൺലൈൻ ഡെലിവറി - ഇന്ത്യയിൽ എവിടെയും 2 മണിക്കൂറിൽ പാഴ്സൽ ഡെലിവറി", bookPar:"📦 പാഴ്സൽ ബുക്ക് ചെയ്യുക", regDel:"🛵 ഡെലിവറി ഏജന്റായി രജിസ്റ്റർ ചെയ്യുക", bookIntro:"🏨 ഓൺലൈൻ ബുക്കിംഗ് - ഹോട്ടൽ/ഡോക്ടർ/സിനിമ - ഇന്ത്യയിൽ എവിടെയും ബുക്ക് ചെയ്യൂ", bookRoom:"🏨 റൂം ബുക്ക് ചെയ്യുക", dlApp:"📲 ആപ്പ് ഡൗൺലോഡ്", earnIntro:"ഇന്ത്യയിൽ എവിടെ നിന്നും ബിസ്മാപിയയിൽ നിന്ന് വരുമാന അവസരം ബുക്ക് ചെയ്യാൻ പോകുകയാണ്. ഏത് തരം അവസരമാണ് നിങ്ങൾ തിരയുന്നത്?", high:"💎 ഉയർന്ന വരുമാനം", mod:"💼 മിതമായ വരുമാനം", base:"🏠 അടിസ്ഥാന വരുമാനം", highIntro:"നിങ്ങൾ ശരിയായ തിരഞ്ഞെടുപ്പ് നടത്തി. താഴെയുള്ള വീഡിയോ ലിങ്കിൽ നിന്ന് വിശദാംശങ്ങൾ അറിയുക.\nകുറിപ്പ്: ഒരു ജില്ലയിൽ ഒരു അവസരം മാത്രം, എത്രയും പെട്ടെന്ന് പ്രതികരിക്കുക.", video:"▶️ വീഡിയോ ലിങ്ക്", ben:"📘 ആനുകൂല്യങ്ങൾ അറിയുക", sup:"🤝 പിന്തുണ അറിയുക", req:"📋 ആവശ്യകതകൾ", submit:"📝 അപേക്ഷ സമർപ്പിക്കുക", emi:"💳 EMI ഓപ്ഷനുകൾ", benText:"🌟 ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\n✅ നിങ്ങൾ ജില്ലാ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസിയാണ്, എല്ലാ വരുമാനത്തിലും ശതമാനം\n✅ നിങ്ങൾക്ക് മാത്രമേ കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ കഴിയൂ\n✅ ജീവിതകാല റോയൽറ്റി വരുമാനം\n✅ സബ്-ഫ്രാഞ്ചൈസി വരുമാനം", supText:"🤝 പിന്തുണ - കമ്പനി നൽകും\n\n🎯 12 മാസം മാർക്കറ്റിംഗ് പിന്തുണ\n🏠 6 മാസം വാടക സഹായം\n👨‍💼 6 മാസം സ്റ്റാഫ് ശമ്പള പിന്തുണ", reqText:"📋 ആവശ്യകതകൾ\n\n🏢 90 Sqft മുറി\n👨‍💼 1 മുഴുവൻ സമയ ജീവനക്കാരൻ\n💻 PC/Laptop ഉം Android മൊബൈലും", corpQ:"നിങ്ങളുടെ ജില്ലയിൽ കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp:"അതെ കോർപ്പറേഷൻ", noCorp:"ഇല്ല കോർപ്പറേഷൻ", ready15:"നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുകയാണ്, 15 ലക്ഷം ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസ് അടയ്ക്കാൻ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുക.", readyBtn:"✅ തയ്യാറാണ് - 15L", payReg:"രജിസ്ട്രേഷൻ ഫീസ് Rs.5000 അടയ്ക്കുക. ജില്ല/കോർപ്പറേഷൻ/മുനിസിപ്പൽ/ബിസിനസ് സെന്ററിന്", payBtn:"💳 Rs.5000 അടയ്ക്കുക", emiOpt:"EMI തിരഞ്ഞെടുക്കുക: 5 ലക്ഷം + 10 മാസം / 5 ലക്ഷം + 20 മാസം", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"ബന്ധപ്പെടാനുള്ള വിവരങ്ങൾ പങ്കിടുക: പേര്, സ്ഥലം, ജില്ല, സംസ്ഥാനം, കോൺടാക്ട്, തൊഴിൽ", occQ:"തൊഴിൽ തിരഞ്ഞെടുക്കുക:", bus:"ബിസിനസ്", house:"ഹൗസ് വൈഫ്", emp:"ജീവനക്കാരൻ", busman:"ബിസിനസ്സ്മാൻ", tender:"📄 ടെൻഡർ ഡൗൺലോഡ്", date:"കരാർ തീയതി തിരഞ്ഞെടുക്കുക:", today:"📅 ഇന്ന്", tom:"📅 നാളെ", thanks:"✅ നന്ദി! ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും", callG:"📞 97452 26642", callB:"📞 85901 75977" },
+  hi:{ selOpt:"नीचे से कोई एक चुनें:", ride:"🚕 राइड - टैक्सी/ऑटो", dir:"🏢 बिजनेस डायरेक्टरी", del:"📦 ऑनलाइन डिलीवरी", book:"🏨 ऑनलाइन बुकिंग", earn:"💰 बिज़मापिया से कमाएं", more:"और विकल्प", rideOpt:"A. राइड बुक करें\nB. अपना वाहन अटैच करें", bookRide:"राइड बुक करें", attach:"वाहन अटैच करें", custPost:"🚕 भारत में कहीं भी राइड बुक करें - सबसे सस्ती टैक्सी/ऑटो/बाइक 10% छूट के साथ", drivPost:"🚗 अपना वाहन अटैच करके रोज Rs.1500-2500 कमाएं - बिज़मापिया के साथ", bookNow:"📲 अभी बुक करें", dlDriv:"📲 ड्राइवर ऐप डाउनलोड", delIntro:"📦 बिज़मापिया ऑनलाइन डिलीवरी - भारत में कहीं भी 2 घंटे में तेज़ पार्सल डिलीवरी", bookPar:"📦 पार्सल बुक करें", regDel:"🛵 डिलीवरी एजेंट के रूप में रजिस्टर करें", bookIntro:"🏨 ऑनलाइन बुकिंग - होटल/डॉक्टर/सिनेमा - भारत में कहीं भी बुक करें", bookRoom:"🏨 रूम बुक करें", dlApp:"📲 ऐप डाउनलोड", earnIntro:"आप भारत में कहीं से भी बिज़मापिया से कमाने के अवसर के लिए अपना स्लॉट बुक करने जा रहे हैं। आप किस तरह का अवसर देख रहे हैं?", high:"💎 उच्च कमाई", mod:"💼 मध्यम कमाई", base:"🏠 बेस कमाई", highIntro:"बहुत बढ़िया आपने सही चुनाव किया है। नीचे दिए गए वीडियो लिंक से विवरण जानें।\nनोट: एक जिले में केवल एक अवसर, सबसे पहले जवाब दें।", video:"▶️ वीडियो लिंक", ben:"📘 लाभ जानें", sup:"🤝 सपोर्ट जानें", req:"📋 आवश्यकताएं", submit:"📝 आवेदन जमा करें", emi:"💳 EMI विकल्प", benText:"🌟 लाभ - जिला फ्रैंचाइजी\n\n✅ आप जिले के टॉप लेवल फ्रैंचाइजी हैं, सभी कमाई पर प्रतिशत\n✅ केवल आप ही कंपनी से सीधे संपर्क कर सकते हैं\n✅ लाइफटाइम रॉयल्टी आय\n✅ सब-फ्रैंचाइजी आय", supText:"🤝 सपोर्ट - कंपनी देगी\n\n🎯 12 महीने मार्केटिंग सपोर्ट\n🏠 6 महीने किराया योगदान\n👨‍💼 6 महीने स्टाफ सैलरी सपोर्ट", reqText:"📋 आवश्यकताएं\n\n🏢 90 Sqft कमरा\n👨‍💼 1 फुल टाइम स्टाफ\n💻 PC/Laptop और Android मोबाइल", corpQ:"क्या आपके जिले में कॉर्पोरेशन है?", yesCorp:"हाँ कॉर्प", noCorp:"नहीं कॉर्प", ready15:"आप आवेदन जमा करने जा रहे हैं, पुष्टि करें कि आप 15 लाख जिला फ्रैंचाइजी फीस देने के लिए तैयार हैं।", readyBtn:"✅ हाँ तैयार - 15L", payReg:"अपनी रजिस्ट्रेशन फीस Rs.5000 का भुगतान करें। जिला/कॉर्पोरेशन/नगरपालिका/बिजनेस सेंटर के लिए", payBtn:"💳 Rs.5000 भुगतान", emiOpt:"EMI चुनें: 5 लाख + 10 महीने / 5 लाख + 20 महीने", emi10:"5L + 10x1L", emi20:"5L + 20x50k", leadAsk:"संपर्क साझा करें: नाम, स्थान, जिला, राज्य, संपर्क, व्यवसाय", occQ:"व्यवसाय चुनें:", bus:"बिजनेस", house:"गृहिणी", emp:"कर्मचारी", busman:"व्यवसायी", tender:"📄 टेंडर डाउनलोड", date:"समझौता तिथि चुनें:", today:"📅 आज", tom:"📅 कल", thanks:"✅ धन्यवाद! टीम 24 घंटे में कॉल करेगी", callG:"📞 97452 26642", callB:"📞 85901 75977" }
 };
 function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]; }
 
@@ -121,25 +96,29 @@ async function sendMessage(uid, txt, btns=[]){
   }catch(e){ console.error("WA:", e.response?.data||e.message); }
 }
 
+// ===== FIXED: POSTER FIRST, BUTTONS SECOND - PERMANENT =====
 async function sendImageHD(uid, imgUrl, cap, btns=[]){
   if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
     const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
+    // STEP 1: POSTER + CONTENT FIRST - Always top
     await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
+    // STEP 2: BUTTONS SECOND - Always below poster after 1.2 sec
     if(btns.length>0){
       setTimeout(async ()=>{
-        const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
-        if(quick.length>0){
-          await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:"👇 Please tap to continue:" }, action:{ buttons:quick }}}, {headers});
-        }
-      }, 800);
+        try{
+          const quick = btns.filter(b=>!b.url).slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload||b.title, title:b.title.substring(0,20) }}));
+          if(quick.length>0){
+            await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:"👇 Please tap to continue:" }, action:{ buttons:quick }}}, {headers});
+          }
+        }catch(e){ console.error("Btn second:", e.response?.data||e.message); }
+      }, 1200);
     }
   }catch(e){ console.error("HD Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); }
 }
 
-// ================= AUTO REMINDER ENGINE - YOUR GAPS =================
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(t=>clearTimeout(t)); delete reminderTimers[uid]; } }
 function scheduleReminders(uid, lang, flowType, lastStepName){
   clearReminders(uid);
@@ -152,17 +131,17 @@ function scheduleReminders(uid, lang, flowType, lastStepName){
       const state=userStates[uid]; if(!state) return;
       if(isDriver){
         const msgs=[
-          `🔔 Reminder (5 min): You left without attaching your vehicle.\n\n${getText(lang,'drivPost')}\n\nTap to continue:`,
-          `💰 Driver Reminder (30 min): Earn Rs.1500-2500 daily with Bizmapia. Limited driver slots in your district.\n\nDriver App: ${LINKS.driverApp}`,
-          `📲 Reminder (1 hour): Download Driver App to start earning today:\n${LINKS.driverApp}\n\nCall: ${getText(lang,'callG')}`,
-          `⏰ Reminder (4 hour): Only few driver slots left in your area. Attach your Auto/Taxi/Bike now to secure income.\n\nEarn daily!`,
-          `📞 Reminder (12 hour): Need help attaching? Call ${getText(lang,'callG')} - Bizmapia Team will help you attach within 10 min.`,
-          `🚨 Last Chance (24 hour): Your driver application is pending. Reply YES to continue or call ${getText(lang,'callG')} - Last slot warning.`
+          `🔔 Reminder (5 min): You left without attaching your vehicle.\n\n${getText(lang,'drivPost')}`,
+          `💰 Driver Reminder (30 min): Earn Rs.1500-2500 daily. Limited slots.\n${LINKS.driverApp}`,
+          `📲 Reminder (1 hour): Download Driver App: ${LINKS.driverApp}`,
+          `⏰ Reminder (4 hour): Only few driver slots left. Attach now.`,
+          `📞 Reminder (12 hour): Call ${getText(lang,'callG')} for attaching help.`,
+          `🚨 Last Chance (24 hour): Driver pending. Reply YES or call ${getText(lang,'callG')}`
         ];
         sendMessage(uid, msgs[idx], [{ title:getText(lang,'dlDriv'), payload:"DL_DRIV" }, { title:getText(lang,'callG'), payload:"CALL_G" }]);
       }else{
-        const base=`🔔 Reminder (${labels[idx]}): You left at ${lastStepName}. Continue to complete your ${flowType} application.\n\n`;
-        if(lastStepName.toLowerCase().includes("pay") || lastStepName.toLowerCase().includes("5000") || lastStepName.includes("15L")){
+        const base=`🔔 Reminder (${labels[idx]}): You left at ${lastStepName}.\n\n`;
+        if(lastStepName.toLowerCase().includes("pay") || lastStepName.includes("15L")){
           sendMessage(uid, base+getText(lang,'payReg')+`\n${RAZORPAY_ALL}`, [{ title:"💳 Pay Now", payload:"READY_15L" }, { title:getText(lang,'callB'), payload:"CALL_B" }]);
         }else{
           sendMessage(uid, base+`Tap below to resume:`, [{ title:"▶️ Continue", payload:"RESUME" }, { title:getText(lang,'callB'), payload:"CALL_B" }]);
@@ -173,8 +152,9 @@ function scheduleReminders(uid, lang, flowType, lastStepName){
   });
 }
 
-// ================= FULL FLOWS WITH ALL POSTERS =================
+// ===== ALL FLOWS - POSTER FIRST LOCKED =====
 function sendFirstBriefWithLang(uid){
+  // FIXED: Send poster first with full content, then language buttons second
   sendImageHD(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [
     { title:"English", payload:"LANG_EN" },
     { title:"हिंदी", payload:"LANG_HI" },
@@ -183,42 +163,18 @@ function sendFirstBriefWithLang(uid){
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{}, lang:'en' };
   scheduleReminders(uid,'en','GENERAL','Language Selection');
 }
-function sendMain(uid,l){
-  if(!userStates[uid]) userStates[uid]={}; userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu';
-  sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]);
-  scheduleReminders(uid,l,'GENERAL','Main Menu');
-}
+function sendMain(uid,l){ if(!userStates[uid]) userStates[uid]={}; userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); scheduleReminders(uid,l,'GENERAL','Main Menu'); }
 function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); scheduleReminders(uid,l,'GENERAL','More Options'); }
 function sendRide(uid,l){ userStates[uid].lastStep='Ride Options'; sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); scheduleReminders(uid,l,'GENERAL','Ride Selection'); }
 function sendCust(uid,l){ userStates[uid].lastStep='Customer Ride'; sendImageHD(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Book a Ride'); }
-function sendDriv(uid,l){
-  userStates[uid].lastStep='Driver Attach'; userStates[uid].flow='DRIVER';
-  sendImageHD(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]);
-  scheduleReminders(uid,l,'DRIVER','Driver Attach - Earn Daily');
-}
+function sendDriv(uid,l){ userStates[uid].lastStep='Driver Attach'; userStates[uid].flow='DRIVER'; sendImageHD(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'DRIVER','Driver Attach - Earn Daily'); }
 function sendDel(uid,l){ userStates[uid].lastStep='Delivery'; sendImageHD(uid, LINKS.deliveryPoster, getText(l,'delIntro'), [{ title:getText(l,'bookPar'), payload:"DEL_BOOK" }, { title:getText(l,'regDel'), payload:"DEL_REG" }]); scheduleReminders(uid,l,'GENERAL','Delivery'); }
 function sendRoom(uid,l){ userStates[uid].lastStep='Booking'; sendMessage(uid, getText(l,'bookIntro'), [{ title:getText(l,'bookRoom'), payload:"BOOK_ROOM" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Room Booking'); }
 function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageHD(uid, LINKS.businessPoster1, getText(l,'earnIntro'), [{ title:getText(l,'high'), payload:"EARN_HIGH" }, { title:getText(l,'mod'), payload:"EARN_MOD" }, { title:getText(l,'base'), payload:"EARN_BASE" }]); scheduleReminders(uid,l,'GENERAL','Earn Opportunity'); }
 function sendHigh(uid,l){ userStates[uid].lastStep='High Earning Details'; sendImageHD(uid, LINKS.businessPoster2, getText(l,'highIntro'), [{ title:getText(l,'video'), payload:"KNOW_BEN" }, { title:getText(l,'ben'), payload:"KNOW_BEN" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','High Earning Video'); }
-
-// === RESTORED SUPPORTING POSTER + CONTENTS (was missing in V44/V45) ===
-function sendBen(uid,l){
-  userStates[uid].lastStep='Benefits';
-  // Send supporting poster for benefits + extraPoster
-  sendImageHD(uid, LINKS.businessPoster1, getText(l,'benText'), [{ title:getText(l,'sup'), payload:"KNOW_SUP" }, { title:getText(l,'callB'), payload:"CALL_B" }]);
-  scheduleReminders(uid,l,'GENERAL','Benefits');
-}
-function sendSup(uid,l){
-  userStates[uid].lastStep='Support';
-  // This is the supporting poster you said was avoided - Now restored with HD
-  sendImageHD(uid, LINKS.supportPoster, getText(l,'supText'), [{ title:getText(l,'req'), payload:"KNOW_REQ" }, { title:getText(l,'callB'), payload:"CALL_B" }]);
-  scheduleReminders(uid,l,'GENERAL','Support - Rent + Staff + Marketing');
-}
-function sendReq(uid,l){
-  userStates[uid].lastStep='Requirements';
-  sendImageHD(uid, LINKS.extraPoster, getText(l,'reqText'), [{ title:getText(l,'submit'), payload:"SUBMIT_APP" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]);
-  scheduleReminders(uid,l,'GENERAL','Requirements');
-}
+function sendBen(uid,l){ userStates[uid].lastStep='Benefits'; sendImageHD(uid, LINKS.businessPoster1, getText(l,'benText'), [{ title:getText(l,'sup'), payload:"KNOW_SUP" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','Benefits'); }
+function sendSup(uid,l){ userStates[uid].lastStep='Support'; sendImageHD(uid, LINKS.supportPoster, getText(l,'supText'), [{ title:getText(l,'req'), payload:"KNOW_REQ" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','Support - Rent + Staff + Marketing'); }
+function sendReq(uid,l){ userStates[uid].lastStep='Requirements'; sendImageHD(uid, LINKS.extraPoster, getText(l,'reqText'), [{ title:getText(l,'submit'), payload:"SUBMIT_APP" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); scheduleReminders(uid,l,'GENERAL','Requirements'); }
 function askCorp(uid,l){ userStates[uid].lastStep='Corp Question'; sendMessage(uid, getText(l,'corpQ'), [{ title:getText(l,'yesCorp'), payload:"CORP_YES" }, { title:getText(l,'noCorp'), payload:"CORP_NO" }]); scheduleReminders(uid,l,'GENERAL','Corporation Check'); }
 function sendReady(uid,l){ userStates[uid].lastStep='Ready 15L'; sendMessage(uid, getText(l,'ready15'), [{ title:getText(l,'readyBtn'), payload:"READY_15L" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); scheduleReminders(uid,l,'GENERAL','Ready to Pay 15L'); }
 
@@ -333,4 +289,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V46.0 FINAL ULTIMATE on ${PORT} - ${RAZORPAY_ALL}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V47.0 ORDER FIXED on ${PORT} - ${RAZORPAY_ALL}`));
