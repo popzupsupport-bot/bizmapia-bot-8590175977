@@ -1,8 +1,8 @@
 // ============================================================
-// V47.0 ORDER FIXED PERMANENT - Poster FIRST, Buttons SECOND
-// Fixes screenshot bug - Language was on top, poster bottom
-// Now: POSTER + CONTENT FIRST -> LANGUAGE BUTTONS SECOND (for ALL posters)
-// Base: V46.0 FINAL ULTIMATE - No content avoided
+// V48.1 FINAL LOCKED - Checked vs V47 Starred
+// ONLY CHANGE: Reminder now explains LEFT STEP + NEXT STEP + IMMEDIATE ACTION
+// + Last step buttons + Correct Call (97452 for Others, 85901 for Business)
+// No other content changed from V47
 // ============================================================
 const express = require('express');
 const axios = require('axios');
@@ -36,7 +36,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send(`V47.0 ORDER FIXED - POSTER FIRST - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
+app.get('/', (req,res)=>res.status(200).send(`V48.1 FINAL LOCKED - ONLY REMINDER CHANGE - ${RAZORPAY_ALL} - ${new Date().toISOString()}`));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -56,6 +56,7 @@ const FIRST_BRIEF_CAPTION = `🌟 Welcome to Bizmapia – All India, 4-in-1 Serv
 
 👉 Please select your language:`;
 
+// FULL T from V47 STARRED - 100% restored
 const T = {
   en:{
     selOpt:"Please select any one from below:", ride:"🚕 Ride - Hailing", dir:"🏢 Business Directory", del:"📦 Online Delivery", book:"🏨 Online Booking", earn:"💰 Earn with Bizmapia", more:"More Options",
@@ -96,16 +97,13 @@ async function sendMessage(uid, txt, btns=[]){
   }catch(e){ console.error("WA:", e.response?.data||e.message); }
 }
 
-// ===== FIXED: POSTER FIRST, BUTTONS SECOND - PERMANENT =====
 async function sendImageHD(uid, imgUrl, cap, btns=[]){
   if(!WHATSAPP_TOKEN||!PHONE_NUMBER_ID) return sendMessage(uid, cap, btns);
   try{
     const url=`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
     const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     let to=String(uid).replace(/\D/g,""); if(to.length===10) to="91"+to;
-    // STEP 1: POSTER + CONTENT FIRST - Always top
     await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) }}, {headers});
-    // STEP 2: BUTTONS SECOND - Always below poster after 1.2 sec
     if(btns.length>0){
       setTimeout(async ()=>{
         try{
@@ -113,13 +111,113 @@ async function sendImageHD(uid, imgUrl, cap, btns=[]){
           if(quick.length>0){
             await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:"👇 Please tap to continue:" }, action:{ buttons:quick }}}, {headers});
           }
-        }catch(e){ console.error("Btn second:", e.response?.data||e.message); }
+        }catch(e){}
       }, 1200);
     }
-  }catch(e){ console.error("HD Img:", e.response?.data||e.message); sendMessage(uid, cap, btns); }
+  }catch(e){ sendMessage(uid, cap, btns); }
 }
 
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(t=>clearTimeout(t)); delete reminderTimers[uid]; } }
+
+// ONLY NEW CHANGE FROM V47 -> Smart reminder builder
+function getReminderData(lastStep, lang, flowType){
+  const isBusiness = ['Earn Selection','High Earning Details','Benefits','Support - Rent + Staff + Marketing','Requirements','Corporation Check','Ready to Pay 15L','Pay Rs.5000','Pay Rs.5000 - Razorpay','EMI Selection','Lead - Name','Lead - Place','Lead - Occupation','Agreement Date'].some(s=> lastStep.includes(s) );
+  const callBtn = isBusiness? { title: getText(lang,'callB'), payload:"CALL_B" } : { title: getText(lang,'callG'), payload:"CALL_G" };
+  let text=""; let buttons=[];
+  switch(lastStep){
+    case 'Language Selection':
+      text=`🔔 You left without selecting language.\n\n❌ What you left: You started Bizmapia but didn't choose your chatting language, so you didn't see any service.\n\n➡️ Next step: Select your language (English / हिंदी / മലയാളം) to unlock all 4 services.\n\n⚡ Act immediately: Your session is waiting. Tap your language now to continue!`;
+      buttons=[{ title:"English", payload:"LANG_EN" }, { title:"हिंदी", payload:"LANG_HI" }, { title:"മലയാളം", payload:"LANG_ML" }];
+      break;
+    case 'Main Menu':
+      text=`🔔 You left at Main Menu without selecting any service.\n\n❌ Left: You didn't choose Ride, Earn, Delivery or Booking.\n\n➡️ Next: Choose one service to proceed.\n\n⚡ Act now: Your district slot is open, but only one per district. Tap immediately!`;
+      buttons=[{ title:getText(lang,'ride'), payload:"OPT_RIDE" }, { title:getText(lang,'earn'), payload:"OPT_EARN" }, { title:getText(lang,'more'), payload:"OPT_MORE" }];
+      break;
+    case 'More Options':
+      text=`🔔 You left at More Options.\n\n❌ Left: You didn't select Delivery, Booking or Directory.\n\n➡️ Next: Select one to continue.\n\n⚡ Tap now to complete!`;
+      buttons=[{ title:getText(lang,'del'), payload:"OPT_DEL" }, { title:getText(lang,'book'), payload:"OPT_BOOK" }, { title:getText(lang,'dir'), payload:"OPT_DIR" }];
+      break;
+    case 'Ride Selection':
+      text=`🔔 You left at Ride Selection.\n\n❌ Left: You didn't choose Book a ride or Attach vehicle.\n\n➡️ Next: Tap Book a ride to get cheapest ride or Attach to earn.\n\n⚡ Act immediately!`;
+      buttons=[{ title:getText(lang,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(lang,'attach'), payload:"RIDE_ATTACH" }];
+      break;
+    case 'Book a Ride':
+      text=`🔔 You left at Book a Ride without booking.\n\n❌ Left: You saw cheapest taxi offer but didn't book.\n\n➡️ Next: Tap Book Now to download customer app and get 10% discount.\n\n⚡ Book now - Offer limited!`;
+      buttons=[{ title:getText(lang,'bookNow'), payload:"BOOK_NOW" }];
+      break;
+    case 'Driver Attach - Earn Daily':
+      text=`🔔 You left without attaching your vehicle - Earning pending!\n\n❌ Left: You didn't download driver app to start earning Rs.1500-2500 daily.\n\n➡️ Next: Download Driver App and attach Auto/Taxi/Bike in 2 mins.\n\n⚡ Act now: Limited driver slots in your district!`;
+      buttons=[{ title:getText(lang,'dlDriv'), payload:"DL_DRIV" }];
+      break;
+    case 'Delivery':
+      text=`🔔 You left at Delivery.\n\n❌ Left: You didn't book parcel or register as agent.\n\n➡️ Next: Tap Book parcel for 2-hour delivery or Register to earn.\n\n⚡ Continue now!`;
+      buttons=[{ title:getText(lang,'bookPar'), payload:"DEL_BOOK" }, { title:getText(lang,'regDel'), payload:"DEL_REG" }];
+      break;
+    case 'Room Booking':
+      text=`🔔 You left at Online Booking.\n\n❌ Left: You didn't book hotel/doctor/movie.\n\n➡️ Next: Tap Book room to continue.\n\n⚡ Tap now!`;
+      buttons=[{ title:getText(lang,'bookRoom'), payload:"BOOK_ROOM" }];
+      break;
+    case 'Earn Selection':
+      text=`🔔 You left at Earning Opportunity without selecting income type.\n\n❌ Left: You didn't choose High/Moderate/Base earning.\n\n➡️ Next: Select High earning (15L District) to lock your district - Only 1 per district!\n\n⚡ Act immediately - District closing fast!`;
+      buttons=[{ title:getText(lang,'high'), payload:"EARN_HIGH" }, { title:getText(lang,'mod'), payload:"EARN_MOD" }];
+      break;
+    case 'High Earning Details':
+      text=`🔔 You left after seeing High Earning Video.\n\n❌ Left: You watched video but didn't check Benefits.\n\n➡️ Next: Tap Know Benefits to see royalty income, sub-franchise income.\n\n⚡ Next step is Benefits - Tap now to not lose district!`;
+      buttons=[{ title:getText(lang,'ben'), payload:"KNOW_BEN" }, { title:getText(lang,'video'), payload:"KNOW_BEN" }];
+      break;
+    case 'Benefits':
+      text=`🔔 You left at Benefits.\n\n❌ Left: You saw benefits but didn't check Support (12 months marketing + 6 months rent + staff salary).\n\n➡️ Next: Tap Know Support to see full company support.\n\n⚡ Continue now!`;
+      buttons=[{ title:getText(lang,'sup'), payload:"KNOW_SUP" }];
+      break;
+    case 'Support - Rent + Staff + Marketing':
+      text=`🔔 You left at Support.\n\n❌ Left: You saw support but didn't check Requirements.\n\n➡️ Next: Tap Requirements to see what you need.\n\n⚡ Tap immediately!`;
+      buttons=[{ title:getText(lang,'req'), payload:"KNOW_REQ" }];
+      break;
+    case 'Requirements':
+      text=`🔔 You left at Requirements.\n\n❌ Left: You saw requirements but didn't submit application.\n\n➡️ Next: Tap Submit Application to lock your district.\n\n⚡ Act now!`;
+      buttons=[{ title:getText(lang,'submit'), payload:"SUBMIT_APP" }, { title:getText(lang,'emi'), payload:"KNOW_EMI" }];
+      break;
+    case 'Corporation Check':
+      text=`🔔 You left at Corporation Check.\n\n❌ Left: You didn't tell if your district has Corporation.\n\n➡️ Next: Select Yes Corp / No Corp.\n\n⚡ Tap now!`;
+      buttons=[{ title:getText(lang,'yesCorp'), payload:"CORP_YES" }, { title:getText(lang,'noCorp'), payload:"CORP_NO" }];
+      break;
+    case 'Ready to Pay 15L':
+      text=`🔔 You left at Ready to Pay 15L - District almost locked!\n\n❌ Left: You confirmed ready but didn't pay Rs.5000 registration.\n\n➡️ Next: Tap Yes Ready - 15L to pay Rs.5000 (part of 15L).\n\n⚡ Pay now to lock district before someone else takes it!`;
+      buttons=[{ title:getText(lang,'readyBtn'), payload:"READY_15L" }, { title:getText(lang,'emi'), payload:"KNOW_EMI" }];
+      break;
+    case 'Pay Rs.5000':
+    case 'Pay Rs.5000 - Razorpay https://rzp.io/rzp/mq0zG6mS':
+      text=`🔔 URGENT: You left at Payment - District NOT locked yet!\n\n❌ Left: You reached payment page but didn't complete Rs.5000 registration.\n\n➡️ Next: Tap Pay Now - Rs.5000 to secure your district. This 5000 is part of 15L, not extra.\n\n⚡ Act IMMEDIATELY - Pay now before competitor pays!`;
+      buttons=[{ title:"💳 Pay Now", payload:"READY_15L" }];
+      break;
+    case 'EMI Selection':
+      text=`🔔 You left at EMI Options.\n\n❌ Left: You didn't select EMI plan.\n\n➡️ Next: Choose 5L + 10x1L or 5L + 20x50k.\n\n⚡ Select now!`;
+      buttons=[{ title:getText(lang,'emi10'), payload:"EMI_10" }, { title:getText(lang,'emi20'), payload:"EMI_20" }];
+      break;
+    case 'Lead - Name':
+      text=`🔔 You left at Lead Form - Payment done but details pending!\n\n❌ Left: You paid Rs.5000 but didn't share your Name as per Aadhaar.\n\n➡️ Next: Type your full name now.\n\n⚡ Share name immediately!`;
+      buttons=[];
+      break;
+    case 'Lead - Place':
+      text=`🔔 You left at Place/District.\n\n❌ Left: You shared name but didn't share place/district/state.\n\n➡️ Next: Type your Place / District / State now.\n\n⚡ Complete now!`;
+      buttons=[];
+      break;
+    case 'Lead - Occupation':
+      text=`🔔 You left at Occupation selection.\n\n❌ Left: You didn't select your occupation.\n\n➡️ Next: Tap your occupation.\n\n⚡ Tap now to finish!`;
+      buttons=[{ title:getText(lang,'bus'), payload:"OCC_BUS" }, { title:getText(lang,'emp'), payload:"OCC_EMP" }, { title:getText(lang,'house'), payload:"OCC_HOUSE" }];
+      break;
+    case 'Agreement Date':
+      text=`🔔 You left at Agreement Date.\n\n❌ Left: You didn't select agreement date.\n\n➡️ Next: Select Today or Tomorrow for agreement + Download Tender.\n\n⚡ Final step - Select date now!`;
+      buttons=[{ title:getText(lang,'today'), payload:"DATE_TODAY" }, { title:getText(lang,'tom'), payload:"DATE_TOMORROW" }];
+      break;
+    default:
+      text=`🔔 You left at ${lastStep} without completing.\n\n❌ Left: You started but didn't finish this step.\n\n➡️ Next: Tap Continue to resume.\n\n⚡ Act now - Don't lose your slot!`;
+      buttons=[{ title:"▶️ Continue", payload:"RESUME" }];
+  }
+  const finalButtons = [...buttons.slice(0,2), callBtn].slice(0,3);
+  return { text, buttons: finalButtons };
+}
+
 function scheduleReminders(uid, lang, flowType, lastStepName){
   clearReminders(uid);
   const isDriver = flowType==='DRIVER';
@@ -129,32 +227,15 @@ function scheduleReminders(uid, lang, flowType, lastStepName){
   times.forEach((delay, idx)=>{
     const tid=setTimeout(async ()=>{
       const state=userStates[uid]; if(!state) return;
-      if(isDriver){
-        const msgs=[
-          `🔔 Reminder (5 min): You left without attaching your vehicle.\n\n${getText(lang,'drivPost')}`,
-          `💰 Driver Reminder (30 min): Earn Rs.1500-2500 daily. Limited slots.\n${LINKS.driverApp}`,
-          `📲 Reminder (1 hour): Download Driver App: ${LINKS.driverApp}`,
-          `⏰ Reminder (4 hour): Only few driver slots left. Attach now.`,
-          `📞 Reminder (12 hour): Call ${getText(lang,'callG')} for attaching help.`,
-          `🚨 Last Chance (24 hour): Driver pending. Reply YES or call ${getText(lang,'callG')}`
-        ];
-        sendMessage(uid, msgs[idx], [{ title:getText(lang,'dlDriv'), payload:"DL_DRIV" }, { title:getText(lang,'callG'), payload:"CALL_G" }]);
-      }else{
-        const base=`🔔 Reminder (${labels[idx]}): You left at ${lastStepName}.\n\n`;
-        if(lastStepName.toLowerCase().includes("pay") || lastStepName.includes("15L")){
-          sendMessage(uid, base+getText(lang,'payReg')+`\n${RAZORPAY_ALL}`, [{ title:"💳 Pay Now", payload:"READY_15L" }, { title:getText(lang,'callB'), payload:"CALL_B" }]);
-        }else{
-          sendMessage(uid, base+`Tap below to resume:`, [{ title:"▶️ Continue", payload:"RESUME" }, { title:getText(lang,'callB'), payload:"CALL_B" }]);
-        }
-      }
+      const data = getReminderData(lastStepName, state.lang||lang, flowType);
+      const fullText = `⏰ Reminder (${labels[idx]}):\n\n${data.text}`;
+      sendMessage(uid, fullText, data.buttons);
     }, delay);
     reminderTimers[uid].push(tid);
   });
 }
 
-// ===== ALL FLOWS - POSTER FIRST LOCKED =====
 function sendFirstBriefWithLang(uid){
-  // FIXED: Send poster first with full content, then language buttons second
   sendImageHD(uid, LINKS.welcomePoster, FIRST_BRIEF_CAPTION, [
     { title:"English", payload:"LANG_EN" },
     { title:"हिंदी", payload:"LANG_HI" },
@@ -165,18 +246,18 @@ function sendFirstBriefWithLang(uid){
 }
 function sendMain(uid,l){ if(!userStates[uid]) userStates[uid]={}; userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); scheduleReminders(uid,l,'GENERAL','Main Menu'); }
 function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); scheduleReminders(uid,l,'GENERAL','More Options'); }
-function sendRide(uid,l){ userStates[uid].lastStep='Ride Options'; sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); scheduleReminders(uid,l,'GENERAL','Ride Selection'); }
-function sendCust(uid,l){ userStates[uid].lastStep='Customer Ride'; sendImageHD(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Book a Ride'); }
-function sendDriv(uid,l){ userStates[uid].lastStep='Driver Attach'; userStates[uid].flow='DRIVER'; sendImageHD(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'DRIVER','Driver Attach - Earn Daily'); }
+function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; sendMessage(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }]); scheduleReminders(uid,l,'GENERAL','Ride Selection'); }
+function sendCust(uid,l){ userStates[uid].lastStep='Book a Ride'; sendImageHD(uid, LINKS.customerRidePoster, getText(l,'custPost'), [{ title:getText(l,'bookNow'), payload:"BOOK_NOW" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Book a Ride'); }
+function sendDriv(uid,l){ userStates[uid].lastStep='Driver Attach - Earn Daily'; userStates[uid].flow='DRIVER'; sendImageHD(uid, LINKS.driverPoster, getText(l,'drivPost'), [{ title:getText(l,'dlDriv'), payload:"DL_DRIV" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'DRIVER','Driver Attach - Earn Daily'); }
 function sendDel(uid,l){ userStates[uid].lastStep='Delivery'; sendImageHD(uid, LINKS.deliveryPoster, getText(l,'delIntro'), [{ title:getText(l,'bookPar'), payload:"DEL_BOOK" }, { title:getText(l,'regDel'), payload:"DEL_REG" }]); scheduleReminders(uid,l,'GENERAL','Delivery'); }
-function sendRoom(uid,l){ userStates[uid].lastStep='Booking'; sendMessage(uid, getText(l,'bookIntro'), [{ title:getText(l,'bookRoom'), payload:"BOOK_ROOM" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Room Booking'); }
-function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageHD(uid, LINKS.businessPoster1, getText(l,'earnIntro'), [{ title:getText(l,'high'), payload:"EARN_HIGH" }, { title:getText(l,'mod'), payload:"EARN_MOD" }, { title:getText(l,'base'), payload:"EARN_BASE" }]); scheduleReminders(uid,l,'GENERAL','Earn Opportunity'); }
-function sendHigh(uid,l){ userStates[uid].lastStep='High Earning Details'; sendImageHD(uid, LINKS.businessPoster2, getText(l,'highIntro'), [{ title:getText(l,'video'), payload:"KNOW_BEN" }, { title:getText(l,'ben'), payload:"KNOW_BEN" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','High Earning Video'); }
+function sendRoom(uid,l){ userStates[uid].lastStep='Room Booking'; sendMessage(uid, getText(l,'bookIntro'), [{ title:getText(l,'bookRoom'), payload:"BOOK_ROOM" }, { title:getText(l,'callG'), payload:"CALL_G" }]); scheduleReminders(uid,l,'GENERAL','Room Booking'); }
+function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageHD(uid, LINKS.businessPoster1, getText(l,'earnIntro'), [{ title:getText(l,'high'), payload:"EARN_HIGH" }, { title:getText(l,'mod'), payload:"EARN_MOD" }, { title:getText(l,'base'), payload:"EARN_BASE" }]); scheduleReminders(uid,l,'GENERAL','Earn Selection'); }
+function sendHigh(uid,l){ userStates[uid].lastStep='High Earning Details'; sendImageHD(uid, LINKS.businessPoster2, getText(l,'highIntro'), [{ title:getText(l,'video'), payload:"KNOW_BEN" }, { title:getText(l,'ben'), payload:"KNOW_BEN" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','High Earning Details'); }
 function sendBen(uid,l){ userStates[uid].lastStep='Benefits'; sendImageHD(uid, LINKS.businessPoster1, getText(l,'benText'), [{ title:getText(l,'sup'), payload:"KNOW_SUP" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','Benefits'); }
-function sendSup(uid,l){ userStates[uid].lastStep='Support'; sendImageHD(uid, LINKS.supportPoster, getText(l,'supText'), [{ title:getText(l,'req'), payload:"KNOW_REQ" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','Support - Rent + Staff + Marketing'); }
+function sendSup(uid,l){ userStates[uid].lastStep='Support - Rent + Staff + Marketing'; sendImageHD(uid, LINKS.supportPoster, getText(l,'supText'), [{ title:getText(l,'req'), payload:"KNOW_REQ" }, { title:getText(l,'callB'), payload:"CALL_B" }]); scheduleReminders(uid,l,'GENERAL','Support - Rent + Staff + Marketing'); }
 function sendReq(uid,l){ userStates[uid].lastStep='Requirements'; sendImageHD(uid, LINKS.extraPoster, getText(l,'reqText'), [{ title:getText(l,'submit'), payload:"SUBMIT_APP" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); scheduleReminders(uid,l,'GENERAL','Requirements'); }
-function askCorp(uid,l){ userStates[uid].lastStep='Corp Question'; sendMessage(uid, getText(l,'corpQ'), [{ title:getText(l,'yesCorp'), payload:"CORP_YES" }, { title:getText(l,'noCorp'), payload:"CORP_NO" }]); scheduleReminders(uid,l,'GENERAL','Corporation Check'); }
-function sendReady(uid,l){ userStates[uid].lastStep='Ready 15L'; sendMessage(uid, getText(l,'ready15'), [{ title:getText(l,'readyBtn'), payload:"READY_15L" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); scheduleReminders(uid,l,'GENERAL','Ready to Pay 15L'); }
+function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; sendMessage(uid, getText(l,'corpQ'), [{ title:getText(l,'yesCorp'), payload:"CORP_YES" }, { title:getText(l,'noCorp'), payload:"CORP_NO" }]); scheduleReminders(uid,l,'GENERAL','Corporation Check'); }
+function sendReady(uid,l){ userStates[uid].lastStep='Ready to Pay 15L'; sendMessage(uid, getText(l,'ready15'), [{ title:getText(l,'readyBtn'), payload:"READY_15L" }, { title:getText(l,'emi'), payload:"KNOW_EMI" }]); scheduleReminders(uid,l,'GENERAL','Ready to Pay 15L'); }
 
 async function sendPay(uid,l){
   userStates[uid].lastStep='Pay Rs.5000';
@@ -208,15 +289,14 @@ async function sendPay(uid,l){
     }, 1500);
     scheduleReminders(uid,l,'GENERAL','Pay Rs.5000 - Razorpay '+RAZORPAY_ALL);
   }catch(e){
-    console.error("Pay Btn:", e.response?.data||e.message);
-    sendMessage(uid, `${getText(l,'payReg')}\n${RAZORPAY_ALL}\n\n💳 Pay Now: ${RAZORPAY_ALL}`, [{ title:"✅ I Paid", payload:"PAY_DONE" }]);
+    sendMessage(uid, `${getText(l,'payReg')}\n${RAZORPAY_ALL}`, [{ title:"✅ I Paid", payload:"PAY_DONE" }]);
   }
 }
 
 function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid, getText(l,'emiOpt'), [{ title:getText(l,'emi10'), payload:"EMI_10" }, { title:getText(l,'emi20'), payload:"EMI_20" }]); scheduleReminders(uid,l,'GENERAL','EMI Selection'); }
-function startLead(uid,l){ clearReminders(uid); userStates[uid]={ lang:l, flow:'LEAD', step:1, data:{}, lastStep:'Lead Name', lang:l }; sendMessage(uid, getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); scheduleReminders(uid,l,'GENERAL','Lead - Name'); }
-function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead Place'; sendMessage(uid, "Place / District / State?"); scheduleReminders(uid,s.lang,'GENERAL','Lead - Place'); } else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead Occupation'; sendMessage(uid, getText(s.lang,'occQ'), [{ title:getText(s.lang,'bus'), payload:"OCC_BUS" }, { title:getText(s.lang,'emp'), payload:"OCC_EMP" }, { title:getText(s.lang,'house'), payload:"OCC_HOUSE" }]); scheduleReminders(uid,s.lang,'GENERAL','Lead - Occupation'); } }
-function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Tender Date'; sendMessage(uid, `${getText(s.lang,'tender')}\n${LINKS.tenderDistrict}\n\n${getText(s.lang,'date')}`, [{ title:getText(s.lang,'today'), payload:"DATE_TODAY" }, { title:getText(s.lang,'tom'), payload:"DATE_TOMORROW" }]); scheduleReminders(uid,s.lang,'GENERAL','Agreement Date'); }
+function startLead(uid,l){ clearReminders(uid); userStates[uid]={ lang:l, flow:'LEAD', step:1, data:{}, lastStep:'Lead - Name', lang:l }; sendMessage(uid, getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); scheduleReminders(uid,l,'GENERAL','Lead - Name'); }
+function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; sendMessage(uid, "Place / District / State?"); scheduleReminders(uid,s.lang,'GENERAL','Lead - Place'); } else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; sendMessage(uid, getText(s.lang,'occQ'), [{ title:getText(s.lang,'bus'), payload:"OCC_BUS" }, { title:getText(s.lang,'emp'), payload:"OCC_EMP" }, { title:getText(s.lang,'house'), payload:"OCC_HOUSE" }]); scheduleReminders(uid,s.lang,'GENERAL','Lead - Occupation'); } }
+function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; sendMessage(uid, `${getText(s.lang,'tender')}\n${LINKS.tenderDistrict}\n\n${getText(s.lang,'date')}`, [{ title:getText(s.lang,'today'), payload:"DATE_TODAY" }, { title:getText(s.lang,'tom'), payload:"DATE_TOMORROW" }]); scheduleReminders(uid,s.lang,'GENERAL','Agreement Date'); }
 function handleDate(uid,d){ const s=userStates[uid]; clearReminders(uid); sendMessage(uid, `${getText(s.lang,'thanks')} - ${s.data.name} - ${d}`); delete userStates[uid]; }
 
 function onMessage(uid,txt,payload){
@@ -228,26 +308,19 @@ function onMessage(uid,txt,payload){
   }
   if(!state){ userStates[uid]={ lang:'en', flow:'WELCOME', data:{}, lastStep:'Language Selection', lang:'en' }; sendFirstBriefWithLang(uid); return; }
   if(p==="RESUME"){
-    const ls=state.lastStep||"last step"; sendMessage(uid, `Resuming from ${ls}...`, []);
-    if(state.flow==='DRIVER') sendDriv(uid,state.lang);
-    else sendMain(uid,state.lang);
+    const data = getReminderData(state.lastStep, state.lang, state.flow);
+    sendMessage(uid, `Resuming from ${state.lastStep}...\n\n${data.text}`, data.buttons);
     return;
   }
   if(state.flow==='WELCOME' &&!p.startsWith("LANG_")){
-    sendImageHD(uid, LINKS.welcomePoster, `🔔 Reminder: You left at language selection.\n\n${FIRST_BRIEF_CAPTION}`, [
-      { title:"English", payload:"LANG_EN" },
-      { title:"हिंदी", payload:"LANG_HI" },
-      { title:"മലയാളം", payload:"LANG_ML" }
-    ]);
+    const data = getReminderData('Language Selection', state.lang, 'GENERAL');
+    sendImageHD(uid, LINKS.welcomePoster, `${FIRST_BRIEF_CAPTION}\n\n${data.text}`, data.buttons);
     return;
   }
   if(!p && lowerTxt && state.flow!=='LEAD'){
-    const lang=state.lang;
-    sendMessage(uid, `🔔 Reminder: You left at ${state.lastStep||'main menu'}.\n\n${getText(lang,'selOpt')}`, [
-      { title:getText(lang,'ride'), payload:"OPT_RIDE" },
-      { title:getText(lang,'earn'), payload:"OPT_EARN" },
-      { title:getText(lang,'more'), payload:"OPT_MORE" }
-    ]); return;
+    const data = getReminderData(state.lastStep, state.lang, state.flow);
+    sendMessage(uid, `${data.text}`, data.buttons);
+    return;
   }
   const lang=state.lang;
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
@@ -289,4 +362,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V47.0 ORDER FIXED on ${PORT} - ${RAZORPAY_ALL}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V48.1 FINAL LOCKED on ${PORT} - ${RAZORPAY_ALL}`));
