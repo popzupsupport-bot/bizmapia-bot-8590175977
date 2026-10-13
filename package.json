@@ -1,16 +1,11 @@
 {
   "name": "bizmapia-bot",
-  "version": "1.0.0",
-  "description": "Bizmapia WhatsApp Bot - All India 4-in-1 Services",
+  "version": "39.1.0",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
-    "axios": "^1.6.0"
-  },
-  "engines": {
-    "node": "18.x"
+    "axios": "^1.6.0",
+    "googleapis": "^126.0.1"
   }
 }
