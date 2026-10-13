@@ -1,4 +1,4 @@
-// V60.0 - LOGS TOKEN ISSUE - Realtime Final
+// V61.0 HD FULL FINAL - Fixes blurry poster + incomplete response + Token log
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -9,7 +9,7 @@ const GENERAL_TEL = "+919745226642";
 const BUSINESS_TEL = "+918590175977";
 
 const LINKS = {
-  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  welcomePoster: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.png",
   customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
   driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
   deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
@@ -27,7 +27,7 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 app.get('/', (req,res)=>{
   const hasToken =!!process.env.WHATSAPP_TOKEN;
   const hasPhone =!!process.env.PHONE_NUMBER_ID;
-  res.status(200).send(`V60.0 - Token:${hasToken} Phone:${hasPhone} - ${RAZORPAY_ALL} - ${new Date().toISOString()}`);
+  res.status(200).send(`V61.0 HD FULL - Token:${hasToken} Phone:${hasPhone} - ${RAZORPAY_ALL} - ${new Date().toISOString()}`);
 });
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
@@ -60,7 +60,7 @@ async function sendWA(uid, txt, btns=[]){
   const PHONE_ID = process.env.PHONE_NUMBER_ID;
   console.log(`[SEND CHECK] Token exists:${!!TOKEN} Phone exists:${!!PHONE_ID} To:${uid} Text:${txt.substring(0,50)} Buttons:${btns.map(b=>b.title).join(',')}`);
   if(!TOKEN||!PHONE_ID){
-    console.error(`[TOKEN MISSING] Cannot send WhatsApp! TOKEN=${!!TOKEN} PHONE_ID=${!!PHONE_ID} - Go to Render Environment and add WHATSAPP_TOKEN and PHONE_NUMBER_ID`);
+    console.error(`[TOKEN MISSING] Cannot send WhatsApp! TOKEN=${!!TOKEN} PHONE_ID=${!!PHONE_ID}`);
     return null;
   }
   try{
@@ -131,13 +131,26 @@ function scheduleRem(uid, lang, flowType, lastStepName){
     reminderTimers[uid].push(tid);
   });
 }
+
+// V61.0 HD FULL - Fixes blurry poster + incomplete
 async function sendWelcomeRealtime(uid){
-  console.log(`[WELCOME REALTIME] To ${uid}`);
-  await sendWA(uid, FIRST_BRIEF, [ { title:"English", payload:"LANG_EN" }, { title:"हिंदी", payload:"LANG_HI" }, { title:"മലയാളം", payload:"LANG_ML" } ]);
-  setTimeout(()=> sendImageWA(uid, LINKS.welcomePoster, "🌟 Bizmapia – All India 4-in-1 Services", []), 1000);
+  console.log(`[WELCOME V61 HD] To ${uid}`);
+  // 1. FULL RESPONSE INSTANT - Text + Buttons (so user never sees empty)
+  await sendWA(uid, FIRST_BRIEF + "\n\n👇 Select language:", [
+    { title:"English", payload:"LANG_EN" },
+    { title:"हिंदी", payload:"LANG_HI" },
+    { title:"മലയാളം", payload:"LANG_ML" }
+  ]);
+  // 2. HD POSTER 500ms later with HD caption - not blurry
+  setTimeout(async ()=>{
+    // Send HD poster with full caption to avoid blurry empty
+    await sendImageWA(uid, "https://i.ibb.co/fGVVPC3n/fGVVPC3n.png", "🌟 Bizmapia – All India 4-in-1 Services\n\nOne App. Four Services. Pan-India Opportunities!\n\n👉 Tap English / हिंदी / മലയാളം above to continue", []);
+    console.log(`[HD POSTER SENT] To ${uid}`);
+  }, 500);
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', lang:'en' };
   scheduleRem(uid,'en','GENERAL','Language Selection');
 }
+
 function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendWA(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); scheduleRem(uid,l,'GENERAL','Main Menu'); }
 function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendWA(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); scheduleRem(uid,l,'GENERAL','More Options'); }
 function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; sendWA(uid, getText(l,'rideOpt'), [{ title:getText(l,'bookRide'), payload:"RIDE_BOOK" }, { title:getText(l,'attach'), payload:"RIDE_ATTACH" }, { title:"📞 Call", payload:"CALL_G", url: "+919745226642" }]); scheduleRem(uid,l,'GENERAL','Ride Selection'); }
@@ -241,4 +254,4 @@ app.post('/webhook', async (req,res)=>{
   }catch(e){ console.error(e.message); }
 });
 
-app.listen(process.env.PORT||10000,'0.0.0.0',()=>console.log(`V60.0 - https://rzp.io/rzp/mq0zG6mS - Token:${!!process.env.WHATSAPP_TOKEN} Phone:${!!process.env.PHONE_NUMBER_ID}`));
+app.listen(process.env.PORT||10000,'0.0.0.0',()=>console.log(`V61.0 HD FULL - https://rzp.io/rzp/mq0zG6mS - Token:${!!process.env.WHATSAPP_TOKEN} Phone:${!!process.env.PHONE_NUMBER_ID}`));
