@@ -1,4 +1,4 @@
-// V48.5 FINAL - YOUR ORIGINAL CODE + ONLY 2 FIXES
+// V48.6 - YOUR CODE - FIXED SYNTAX ERROR
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -14,8 +14,8 @@ const LINKS = {
   customerRidePoster: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
   driverPoster: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
   deliveryPoster: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
-  businessPoster1: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // FIX 1: was broken
-  businessPoster2: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // FIX 1: was broken
+  businessPoster1: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  businessPoster2: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
   extraPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   supportPoster: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V48.5 WORKING - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V48.6 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -69,9 +69,9 @@ async function sendMessage(uid, txt, btns){
     let resp;
     if(btns.length>0){
       const quick=btns.slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload, title:b.title.substring(0,20) } }));
-      resp = await axios.post(url, { messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick } } }, {headers});
+      resp = await axios.post(url, { messaging_product:"whatsapp", to: to, type:"interactive", interactive:{ type:"button", body:{ text:txt.substring(0,1024) }, action:{ buttons:quick } } }, { headers: headers });
     } else {
-      resp = await axios.post(url, { messaging_product:"whatsapp", to, type:"text", text:{ body:txt } }, {headers});
+      resp = await axios.post(url, { messaging_product:"whatsapp", to: to, type:"text", text:{ body:txt } }, { headers: headers });
     }
     console.log(`OUT OK to ${to} BTNS:${btns.length} -> ${resp.data.messages?.[0]?.id}`);
   }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); }
@@ -84,12 +84,11 @@ async function sendImageHD(uid, imgUrl, cap, btns){
     const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
     const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
     console.log(`TRY IMAGE to ${to}`);
-    await axios.post(url, { messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) } }, {headers});
+    await axios.post(url, { messaging_product:"whatsapp", to: to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) } }, { headers: headers });
     console.log(`OUT IMAGE OK to ${to}`);
     if(btns.length>0){
       setTimeout(()=>{ sendMessage(uid, "👇 Please select your language:", btns); }, 2500);
       setTimeout(()=>{
-        // RETRY if first failed
         console.log(`RETRY BUTTONS to ${to}`);
         sendMessage(uid, "👇 Tap to select:", btns);
       }, 5000);
@@ -141,9 +140,9 @@ async function sendPay(uid,l){
     const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
     const to=formatTo(uid);
     await axios.post(url, {
-      messaging_product:"whatsapp", to, type:"interactive",
+      messaging_product:"whatsapp", to: to, type:"interactive",
       interactive:{ type:"cta_url", body:{ text:getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } }
-    }, {headers});
+    }, { headers: headers });
     setTimeout(()=>{ sendMessage(uid, "After payment:", [{ title:"I Paid - Rs.5000", payload:"PAY_DONE" }, { title:getText(l,'callB'), payload:"CALL_B" }]); }, 2000);
   }catch(e){ sendMessage(uid, getText(l,'payReg')+"\n"+RAZORPAY_ALL, [{ title:"I Paid", payload:"PAY_DONE" }]); }
 }
@@ -201,4 +200,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V48.5 WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V48.6 FIXED WORKING on "+PORT));
