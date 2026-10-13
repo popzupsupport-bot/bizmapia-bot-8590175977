@@ -1,6 +1,6 @@
 {
-  "name": "bizmapia-v41-1-hd-final",
-  "version": "41.1.0",
+  "name": "bizmapia-v42-1-full-3-lang-hd-final",
+  "version": "42.1.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": { "express": "^4.18.2", "axios": "^1.6.0" }
