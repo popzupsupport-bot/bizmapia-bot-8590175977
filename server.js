@@ -1,5 +1,4 @@
-// V61 FINAL WITH CRM - Records every chat activity as CRM - BOT 7025630644
-// Includes: HD Posters + Short Welcome + Moderate/Base + Good Choice + Auto-dial Call + CRM Logging
+// V62 FINAL FIX - Rate Limit + Double Welcome Fix + CRM Working - BOT 7025630644
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -49,56 +48,30 @@ const PHONES = {
 
 let userStates = {};
 const processedIds = new Set();
+const recentWelcomes = new Map(); // Prevent double welcome within 10 sec
 
-// CRM STORAGE
-let crmLogs = []; // In-memory CRM
+// CRM
+let crmLogs = [];
 const CRM_FILE = path.join(__dirname, 'crm_logs.json');
-
-// Load existing CRM if exists
-try{
-  if(fs.existsSync(CRM_FILE)){
-    const data = fs.readFileSync(CRM_FILE, 'utf8');
-    crmLogs = JSON.parse(data);
-    console.log(`CRM Loaded: ${crmLogs.length} records`);
-  }
-}catch(e){ console.log("CRM load error", e.message); crmLogs = []; }
-
-function saveCRM(){
-  try{
-    fs.writeFileSync(CRM_FILE, JSON.stringify(crmLogs.slice(-5000), null, 2)); // Keep last 5000
-  }catch(e){ console.log("CRM save error", e.message); }
-}
-
+try{ if(fs.existsSync(CRM_FILE)){ crmLogs = JSON.parse(fs.readFileSync(CRM_FILE,'utf8')); console.log(`CRM Loaded: ${crmLogs.length}`); } }catch(e){ crmLogs=[]; }
+function saveCRM(){ try{ fs.writeFileSync(CRM_FILE, JSON.stringify(crmLogs.slice(-5000), null, 2)); }catch(e){} }
 function logCRM(uid, direction, message, payload, flow, lastStep, extra={}){
   const entry = {
-    id: Date.now() + "_" + Math.random().toString(36).substring(2,7),
+    id: Date.now()+"_"+Math.random().toString(36).substring(2,7),
     timestamp: new Date().toISOString(),
-    date: new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}),
-    phone: uid,
-    direction: direction, // IN = user to bot, OUT = bot to user
-    message: (message||"").substring(0,500),
-    payload: payload||"",
-    flow: flow||"",
-    lastStep: lastStep||"",
-    currentFee: extra.currentFee||"",
-    currentType: extra.currentType||"",
-    name: extra.name||userStates[uid]?.data?.name||"",
-    place: extra.place||userStates[uid]?.data?.place||"",
-    occ: extra.occ||userStates[uid]?.data?.occ||"",
+    date: new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}),
+    phone: uid, direction, message:(message||"").substring(0,500), payload:payload||"", flow:flow||"", lastStep:lastStep||"",
+    currentFee:extra.currentFee||"", currentType:extra.currentType||"",
+    name:extra.name||userStates[uid]?.data?.name||"", place:extra.place||userStates[uid]?.data?.place||"", occ:extra.occ||userStates[uid]?.data?.occ||"",
   };
   crmLogs.push(entry);
   console.log(`CRM ${direction} | ${uid} | ${flow} | ${lastStep} | ${message.substring(0,80)}`);
-  // Save every 10 logs to avoid too much IO
-  if(crmLogs.length % 5 === 0) saveCRM();
-  
-  // Optional: Send to Google Sheets webhook if configured
-  if(process.env.GOOGLE_SHEETS_WEBHOOK){
-    axios.post(process.env.GOOGLE_SHEETS_WEBHOOK, entry).catch(e=>{});
-  }
+  if(crmLogs.length%5===0) saveCRM();
 }
 
+// RATE LIMIT FIX: 5 sec gap + retry logic
 let lastSendTime = 0;
-const MIN_GAP_MS = 2000;
+const MIN_GAP_MS = 5000; // Increased to 5 sec to fully avoid 130429
 const sendQueue = [];
 let isProcessingQueue = false;
 async function processQueue(){
@@ -107,80 +80,36 @@ async function processQueue(){
   while(sendQueue.length > 0){
     const now = Date.now();
     const wait = Math.max(0, (lastSendTime + MIN_GAP_MS) - now);
-    if(wait > 0) await new Promise(r=>setTimeout(r, wait));
+    if(wait>0){ console.log(`Queue waiting ${wait}ms`); await new Promise(r=>setTimeout(r,wait)); }
     const job = sendQueue.shift();
-    try{ await job(); }catch(e){ console.log("Queue error", e.message); }
+    try{ await job(); }
+    catch(e){
+      const errData = e.response?.data ? JSON.stringify(e.response.data) : e.message;
+      if(errData.includes('130429')){
+        console.log("RATE LIMIT 130429 - waiting 12 sec and retrying once");
+        await new Promise(r=>setTimeout(r,12000));
+        try{ await job(); console.log("Retry OK after rate limit"); }
+        catch(e2){ console.log("Retry failed", JSON.stringify(e2.response?.data||e2.message)); }
+      }else{ console.log("Queue job error", errData); }
+    }
     lastSendTime = Date.now();
   }
   isProcessingQueue = false;
 }
 function enqueueSend(fn){ sendQueue.push(fn); processQueue(); }
 
-app.get('/', (req,res)=>res.status(200).send(`V61 FINAL WITH CRM - ${crmLogs.length} chats recorded - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a> | <a href="/crm/download">Download JSON</a>`));
-
-// CRM VIEW ENDPOINT - Shows all chats as table
+app.get('/', (req,res)=>res.status(200).send(`V62 RATE LIMIT FIX + CRM ${crmLogs.length} - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a>`));
 app.get('/crm', (req,res)=>{
-  const html = `
-  <html><head><title>Bizmapia CRM - ${crmLogs.length} records</title>
-  <style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f2f2f2}tr:nth-child(even){background:#f9f9f9}.in{background:#e3f2fd}.out{background:#fff3e0}h2{color:#333}</style>
-  </head><body>
-  <h2>📊 Bizmapia CRM - ${crmLogs.length} Records (Last 200 shown)</h2>
-  <p>Bot: ${BOT_OWN_NUMBER} | Auto-refresh every 10 sec | <a href="/crm/download">Download Full JSON</a> | <a href="/crm/clear?key=${VERIFY_TOKEN}">Clear CRM</a></p>
-  <table><tr><th>Date (IST)</th><th>Phone</th><th>Direction</th><th>Flow</th><th>Last Step</th><th>Fee/Type</th><th>Message/Payload</th><th>Name/Place</th></tr>
-  ${crmLogs.slice(-200).reverse().map(log=>`
-    <tr class="${log.direction==='IN'?'in':'out'}">
-      <td>${log.date}</td>
-      <td>${log.phone}</td>
-      <td><b>${log.direction}</b></td>
-      <td>${log.flow}</td>
-      <td>${log.lastStep}</td>
-      <td>${log.currentFee}/${log.currentType}</td>
-      <td><b>${log.payload}</b><br/>${log.message}</td>
-      <td>${log.name}<br/>${log.place}<br/>${log.occ}</td>
-    </tr>
-  `).join('')}
-  </table>
-  <script>setTimeout(()=>location.reload(),10000);</script>
-  </body></html>`;
+  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:12px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}</style></head><body><h2>📊 Bizmapia CRM - ${crmLogs.length} Records (Last 200)</h2><p><a href="/crm/download">Download JSON</a> | <a href="/crm/stats">Stats JSON</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee/Type</th><th>Message/Payload</th><th>Name/Place</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}/${l.currentType}</td><td><b>${l.payload}</b><br/>${l.message}</td><td>${l.name}<br/>${l.place}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
   res.send(html);
 });
-
-app.get('/crm/download', (req,res)=>{
-  res.setHeader('Content-disposition', 'attachment; filename=crm_logs.json');
-  res.setHeader('Content-type', 'application/json');
-  res.send(JSON.stringify(crmLogs, null, 2));
-});
-
-app.get('/crm/clear', (req,res)=>{
-  if(req.query.key !== VERIFY_TOKEN) return res.status(403).send("Invalid key");
-  crmLogs = [];
-  saveCRM();
-  res.send("CRM Cleared");
-});
-
+app.get('/crm/download', (req,res)=>{ res.setHeader('Content-disposition','attachment; filename=crm_logs.json'); res.setHeader('Content-type','application/json'); res.send(JSON.stringify(crmLogs,null,2)); });
 app.get('/crm/stats', (req,res)=>{
-  const stats = {
-    total: crmLogs.length,
-    uniqueUsers: [...new Set(crmLogs.map(l=>l.phone))].length,
-    incoming: crmLogs.filter(l=>l.direction==='IN').length,
-    outgoing: crmLogs.filter(l=>l.direction==='OUT').length,
-    byFlow: {},
-    byStep: {},
-    byFee: {},
-    today: crmLogs.filter(l=>l.date.includes(new Date().toLocaleDateString('en-IN'))).length,
-  };
-  crmLogs.forEach(l=>{
-    stats.byFlow[l.flow] = (stats.byFlow[l.flow]||0)+1;
-    stats.byStep[l.lastStep] = (stats.byStep[l.lastStep]||0)+1;
-    if(l.currentFee) stats.byFee[l.currentFee] = (stats.byFee[l.currentFee]||0)+1;
-  });
+  const stats={total:crmLogs.length, uniqueUsers:[...new Set(crmLogs.map(l=>l.phone))].length, incoming:crmLogs.filter(l=>l.direction==='IN').length, outgoing:crmLogs.filter(l=>l.direction==='OUT').length, today:crmLogs.filter(l=>l.date.includes(new Date().toLocaleDateString('en-IN'))).length, byFlow:{}, byFee:{}};
+  crmLogs.forEach(l=>{ stats.byFlow[l.flow]=(stats.byFlow[l.flow]||0)+1; if(l.currentFee) stats.byFee[l.currentFee]=(stats.byFee[l.currentFee]||0)+1; });
   res.json(stats);
 });
-
-app.get('/webhook',(req,res)=>{
-  if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
-  res.sendStatus(403);
-});
+app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
 
 const FIRST_BRIEF = `🌟 Welcome to Bizmapia - All India 4-in-1 Services!
 
@@ -196,69 +125,42 @@ One App. Four Services. Pan-India!
 
 const T = {
   en:{
-    selOpt:"Please select any one from below:",
-    ride:"Ride - Hailing", dir:"Business Directory", del:"Online Delivery", book:"Online Booking", earn:"Earn with Bizmapia", more:"More Options",
-    rideGoodChoice:"✅ Good choice! *Ride - Hailing*\n\nNow book/attach Cab/Auto/Bike/Ambulance anywhere India.",
-    rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle",
-    custGoodChoice:"✅ Good choice! *Book a Ride*\n\nNow see cheapest Taxi/Auto/Bike with 10% Discount.",
-    custPost:"🚖 Book ride anywhere India\nCheapest Taxi/Auto/Bike - 10% Discount\nCab/Auto/Bike/Ambulance\n\n📱 "+LINKS.customerApp,
-    drivGoodChoice:"✅ Good choice! *Attach Vehicle*\n\nNow see how to earn Rs.1500-2500 daily.",
-    drivPost:"💰 Attach vehicle\nDaily Rs.1500-2500\nTaxi/Auto/Bike/Ambulance\nDaily payout\n\n📱 "+LINKS.driverApp,
-    businessDirGoodChoice:"✅ Good choice! *Business Directory*\n\nNow list your business FREE or search 10,00,000+ businesses.",
-    businessDirIntro:"🏪 Business Directory\n10,00,000+ Businesses\n✅ Free Listing\n✅ More Customers",
+    selOpt:"Please select any one from below:", ride:"Ride - Hailing", dir:"Business Directory", del:"Online Delivery", book:"Online Booking", earn:"Earn with Bizmapia", more:"More Options",
+    rideGoodChoice:"✅ Good choice! *Ride - Hailing*\n\nNow book/attach Cab/Auto/Bike/Ambulance anywhere India.", rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle",
+    custGoodChoice:"✅ Good choice! *Book a Ride*\n\nNow see cheapest Taxi/Auto/Bike with 10% Discount.", custPost:"🚖 Book ride anywhere India\nCheapest Taxi/Auto/Bike - 10% Discount\nCab/Auto/Bike/Ambulance\n\n📱 "+LINKS.customerApp,
+    drivGoodChoice:"✅ Good choice! *Attach Vehicle*\n\nNow see how to earn Rs.1500-2500 daily.", drivPost:"💰 Attach vehicle\nDaily Rs.1500-2500\nTaxi/Auto/Bike/Ambulance\nDaily payout\n\n📱 "+LINKS.driverApp,
+    businessDirGoodChoice:"✅ Good choice! *Business Directory*\n\nNow list your business FREE or search 10,00,000+ businesses.", businessDirIntro:"🏪 Business Directory\n10,00,000+ Businesses\n✅ Free Listing\n✅ More Customers",
     businessDirBtn1:"List My Business", businessDirBtn2:"Search Business", businessDirBtn3:"How to List?",
-    businessListGoodChoice:"✅ Good choice! *List Business*\n\nNow learn benefits & procedure to list FREE.",
-    businessListIntro:"📝 LIST YOUR BUSINESS\nList FREE on Bizmapia!\n✅ Photo, Contact, Location\n✅ Direct customer calls",
-    businessListBenefits:"🌟 BENEFITS\n✅ 100% Free basic\n✅ Get nearby calls\n✅ Google + Bizmapia\n✅ Rating & Review",
-    businessListProcedure:"📋 PROCEDURE\n1. Download Business App\n2. Add Business\n3. Enter Name, Category, Address\n4. Add Photos, Contact\n5. Submit\n6. Live in 24h",
-    businessListApp:"Download:\n"+LINKS.businessApp,
-    businessSearchGoodChoice:"✅ Good choice! *Search Business*\n\nNow search any business anywhere India.",
-    businessSearchIntro:"🔍 SEARCH BUSINESS\nFind any business India\n✅ Name, category, place\n✅ 10 lakh+ listed",
+    businessListGoodChoice:"✅ Good choice! *List Business*\n\nNow learn benefits & procedure to list FREE.", businessListIntro:"📝 LIST YOUR BUSINESS\nList FREE on Bizmapia!\n✅ Photo, Contact, Location\n✅ Direct customer calls",
+    businessListBenefits:"🌟 BENEFITS\n✅ 100% Free basic\n✅ Get nearby calls\n✅ Google + Bizmapia\n✅ Rating & Review", businessListProcedure:"📋 PROCEDURE\n1. Download Business App\n2. Add Business\n3. Enter Name, Category, Address\n4. Add Photos, Contact\n5. Submit\n6. Live in 24h",
+    businessListApp:"Download:\n"+LINKS.businessApp, businessSearchGoodChoice:"✅ Good choice! *Search Business*\n\nNow search any business anywhere India.", businessSearchIntro:"🔍 SEARCH BUSINESS\nFind any business India\n✅ Name, category, place\n✅ 10 lakh+ listed",
     businessSearchHow:"How to Search?\n1. Download App\n2. Search name/category\n3. Select place\n4. Get contact\n5. Call directly",
-    deliveryGoodChoice:"✅ Good choice! *Online Delivery*\n\nNow send parcel in 2 Hours anywhere India, or join as agent.",
-    deliveryIntro:"📦 Online Delivery\n⚡ 2 Hours Delivery\n📍 Anywhere India\n💰 Cheapest Rates",
-    deliveryBtn1:"Book Parcel", deliveryBtn2:"Join as Agent", deliveryBtn3:"How it Works?",
-    deliveryBookGoodChoice:"✅ Good choice! *Book Parcel*\n\nNow see parcel types & booking procedure.",
-    deliveryBookIntro:"📦 BOOK PARCEL\nSend anything in 2 Hours!\n✅ Documents, Food, Gifts, Medicine",
-    deliveryBookProcedure:"📋 PROCEDURE - Book Parcel\n1. Download App\n2. Select Delivery\n3. Enter Pickup/Delivery Address\n4. Enter parcel details\n5. Get price\n6. Confirm & Pay\n7. Pickup 30 mins\n8. Delivered 2 Hours!",
-    deliveryBookCharges:"💰 CHARGES\n• City: Rs.50+\n• District: Rs.100+\n• Inter-District: KM based",
-    deliveryAgentGoodChoice:"✅ Good choice! *Join as Agent*\n\nNow see benefits, requirements, procedure to earn daily.",
-    deliveryAgentIntro:"🏍️ JOIN AS AGENT\n💰 Rs.800-1500/day\n✅ Part/full time\n✅ Own bike\n✅ Daily payout",
-    deliveryAgentBenefits:"🌟 BENEFITS\n✅ Rs.800-1500/day\n✅ Bonus\n✅ No office\n✅ Work near area",
-    deliveryAgentRequirements:"📋 REQUIREMENTS\n✅ Bike + License + RC\n✅ Android Mobile\n✅ Aadhaar + PAN\n✅ 18+ Age",
+    deliveryGoodChoice:"✅ Good choice! *Online Delivery*\n\nNow send parcel in 2 Hours anywhere India, or join as agent.", deliveryIntro:"📦 Online Delivery\n⚡ 2 Hours Delivery\n📍 Anywhere India\n💰 Cheapest Rates", deliveryBtn1:"Book Parcel", deliveryBtn2:"Join as Agent", deliveryBtn3:"How it Works?",
+    deliveryBookGoodChoice:"✅ Good choice! *Book Parcel*\n\nNow see parcel types & booking procedure.", deliveryBookIntro:"📦 BOOK PARCEL\nSend anything in 2 Hours!\n✅ Documents, Food, Gifts, Medicine",
+    deliveryBookProcedure:"📋 PROCEDURE - Book Parcel\n1. Download App\n2. Select Delivery\n3. Enter Pickup/Delivery Address\n4. Enter parcel details\n5. Get price\n6. Confirm & Pay\n7. Pickup 30 mins\n8. Delivered 2 Hours!", deliveryBookCharges:"💰 CHARGES\n• City: Rs.50+\n• District: Rs.100+\n• Inter-District: KM based",
+    deliveryAgentGoodChoice:"✅ Good choice! *Join as Agent*\n\nNow see benefits, requirements, procedure to earn daily.", deliveryAgentIntro:"🏍️ JOIN AS AGENT\n💰 Rs.800-1500/day\n✅ Part/full time\n✅ Own bike\n✅ Daily payout",
+    deliveryAgentBenefits:"🌟 BENEFITS\n✅ Rs.800-1500/day\n✅ Bonus\n✅ No office\n✅ Work near area", deliveryAgentRequirements:"📋 REQUIREMENTS\n✅ Bike + License + RC\n✅ Android Mobile\n✅ Aadhaar + PAN\n✅ 18+ Age",
     deliveryAgentProcedure:"📋 PROCEDURE - Join\n1. Download Driver App\n2. Register as Agent\n3. Upload Bike, License, Aadhaar\n4. Verify 24h\n5. Training\n6. Start!\n"+LINKS.driverApp,
-    bookingGoodChoice:"✅ Good choice! *Online Booking*\n\nNow book Rooms, Appointments, Movie Tickets in 1 click.",
-    bookIntro:"🏨 Online Booking\nBook Rooms, Appointments & Movie Tickets in 1 Click!\n✅ Rooms - Hotels, Resorts\n✅ Appointments - Doctors, Salons\n✅ Movies - All Theatres\nAffordable, Instant, Safe!",
+    bookingGoodChoice:"✅ Good choice! *Online Booking*\n\nNow book Rooms, Appointments, Movie Tickets in 1 click.", bookIntro:"🏨 Online Booking\nBook Rooms, Appointments & Movie Tickets in 1 Click!\n✅ Rooms - Hotels, Resorts\n✅ Appointments - Doctors, Salons\n✅ Movies - All Theatres\nAffordable, Instant, Safe!",
     bookRoom:"Book Room", bookAppointment:"Book Appointment", bookMovie:"Book Movie",
-    bookRoomGoodChoice:"✅ Good choice! *Book Rooms*\n\nNow see how to book hotels/resorts/homestays.",
-    bookRoomDetail:"🏨 BOOK ROOMS\nHotels | Resorts | Homestays\n✅ Affordable Rates\n✅ Instant Confirmation\n✅ Safe Payments",
-    bookAppointmentGoodChoice:"✅ Good choice! *Book Appointments*",
-    bookAppointmentDetail:"🩺 BOOK APPOINTMENTS\nDoctors | Salons | Services\n✅ Instant Confirmation\n✅ Trusted",
-    bookMovieGoodChoice:"✅ Good choice! *Book Movie Tickets*",
-    bookMovieDetail:"🎬 BOOK MOVIE TICKETS\nLatest Movies | All Theatres\n✅ Easy, Fast, Affordable",
-    earnGoodChoice:"✅ Good choice! *Earn with Bizmapia*\n\nNow choose High, Moderate, Base opportunity.",
-    earnIntro:"💰 Earn with Bizmapia\nChoose your opportunity\nWhat type you looking?",
+    bookRoomGoodChoice:"✅ Good choice! *Book Rooms*\n\nNow see how to book hotels/resorts/homestays.", bookRoomDetail:"🏨 BOOK ROOMS\nHotels | Resorts | Homestays\n✅ Affordable Rates\n✅ Instant Confirmation\n✅ Safe Payments",
+    bookAppointmentGoodChoice:"✅ Good choice! *Book Appointments*", bookAppointmentDetail:"🩺 BOOK APPOINTMENTS\nDoctors | Salons | Services\n✅ Instant Confirmation\n✅ Trusted",
+    bookMovieGoodChoice:"✅ Good choice! *Book Movie Tickets*", bookMovieDetail:"🎬 BOOK MOVIE TICKETS\nLatest Movies | All Theatres\n✅ Easy, Fast, Affordable",
+    earnGoodChoice:"✅ Good choice! *Earn with Bizmapia*\n\nNow choose High, Moderate, Base opportunity.", earnIntro:"💰 Earn with Bizmapia\nChoose your opportunity\nWhat type you looking?",
     high:"High Earning (15L)", mod:"Moderate (3-7L)", base:"Base (Business Center)", franchisee:"Franchisee", businessCenter:"Business Center",
-    highGoodChoice:"✅ Good choice! *High Earning*\n\nNow see District/Corp/Municipal details. ONE per district.",
-    highIntro:"🔥 HIGH EARNING\nOnly ONE per district!\n💰 District - 15L\nCorp - 7L\nMunicipal - 3L", highOptDistrict:"District - 15L", highOptCorp:"Corporation - 7L", highOptMuni:"Municipal - 3L",
-    moderateGoodChoice:"✅ Good choice! *Moderate Earning*\n\nNow see Corporation 7L & Municipal 3L details.",
-    moderateIntro:"💼 MODERATE EARNING - 3-7L CONFIRMED\n\nGreat for City/Town level entrepreneurs\nChoose your level:\n\n• Corporation - 7L - Full corporation control\n• Municipal - 3L - Municipality control\n• Business Center - 50K-1L", 
-    corpGoodChoice:"✅ Good choice! *Corporation 7L*\n\nNow see benefits, support, requirements.",
-    corpIntro:"🏙️ CORPORATION - 7 Lakhs\n• Corporation area\n• Control Business Centers\n• High income city area\n• Company support", 
-    municipalGoodChoice:"✅ Good choice! *Municipal 3L*", 
-    municipalIntro:"🏘️ MUNICIPAL - 3 Lakhs\n• Municipality area\n• Control BCs in municipality\n• Good income, low invest\n• Company support",
-    baseGoodChoice:"✅ Good choice! *Base - Business Center*\n\nNow see low investment 50K-1L opportunity.", 
-    baseIntro:"🏪 BASE - BUSINESS CENTER - 50K-1L CONFIRMED\n\nLow Investment, High Return\nPerfect for small towns, villages, entrepreneurs starting low budget\n• Panchayat/Small Town\n• Earn from 4 services\n• Company leads\n• Training", 
-    businessCenterIntro:"🏪 BUSINESS CENTER - 50K-1L\n• Panchayat/Small Town\n• You are local Bizmapia center\n• Earn from:\n  - Business listings\n  - Ride bookings\n  - Delivery\n  - Online bookings\n• Company leads\n• Training\n• Can upgrade to Municipal later", 
-    businessCenterBenefits:"🌟 BENEFITS - BC\n✅ 50K-1L low invest\n✅ Earn 4 services\n✅ No big office - 90sqft enough\n✅ Marketing support\n✅ Lifetime income\n✅ Upgrade to Municipal",
-    franchiseeGoodChoice:"✅ Good choice! *All Franchisee Types*", 
-    franchiseeIntro:"📋 ALL TYPES CONFIRMED\n1️⃣ District - 15L - Full district\n2️⃣ Corporation - 7L - Corp area\n3️⃣ Municipal - 3L - Municipality\n4️⃣ BC - 50K-1L - Panchayat/Town\n\nAll 4 types available - Select to know details:",
-    procedureGoodChoice:"✅ Good choice! *Procedure*", procedureTitle:"📝 PROCEDURE", procedureDistrict:"PROCEDURE - District 15L\n1. Know benefits\n2. Corp check Yes/No\n3. Confirm ready 15L\n4. Pay Rs.5000 (part of 15L)\n5. Share Name, Place, District\n6. Agreement Date\n7. Tender\n8. Team call 24h\n9. Balance + Training", procedureBusinessCenter:"PROCEDURE - BC 50K-1L\n1. Know benefits\n2. Requirements 90sqft\n3. Pay Rs.5000\n4. Share details\n5. Agreement Date\n6. Tender\n7. Verification\n8. Balance + Start", procedureCommon:"GENERAL PROCEDURE - All 4 types\n1. Select type (District/Corp/Municipal/BC)\n2. Benefits, Support, Requirements\n3. Corp check\n4. Ready to pay\n5. Pay Rs.5000 (part of total)\n6. EMI options\n7. Share details\n8. Occupation\n9. Agreement date\n10. Tender\n11. Verification\n12. Launch",
-    benGoodChoice:"✅ Good choice! *Benefits*", benTitle:"🌟 BENEFITS", benDistrict:"BENEFITS - District 15L\n✅ Top level franchisee\n✅ % on ALL earnings (Ride+Business+Delivery+Booking)\n✅ Direct Company contact\n✅ Lifetime royalty\n✅ You appoint Corp/Municipal/BC\n✅ Company gives Corp fee to you", benCorp:"BENEFITS - Corp 7L\n✅ Control corp area\n✅ % from BCs under you\n✅ Marketing support\n✅ High income city", benBusinessCenter:"BENEFITS - BC 50K-1L\n✅ Low invest 50K-1L\n✅ Earn from 4 services\n✅ Local monopoly\n✅ Company leads\n✅ Upgrade to Municipal",
-    supGoodChoice:"✅ Good choice! *Support*", supTitle:"🤝 SUPPORT", supText:"SUPPORT - Company provides\n✅ 12 months marketing support\n✅ 6 months Rent (District)\n✅ 6 months Staff salary (District)\n✅ Software + Training\n✅ Technical + Lead support",
-    reqGoodChoice:"✅ Good choice! *Requirements*", reqTitle:"📋 REQUIREMENTS", reqDistrict:"REQUIREMENTS - District 15L\n✅ 90 Sqft room main road\n✅ 1 full time staff\n✅ PC/Laptop + Android Mobile\n✅ Ready 15L\n✅ Aadhaar + PAN\n✅ Good local contact", reqBusinessCenter:"REQUIREMENTS - BC 50K-1L\n✅ 90 Sqft room (home office OK)\n✅ 1 staff (you can be)\n✅ PC/Mobile\n✅ Ready 50K-1L\n✅ Aadhaar + PAN",
-    corpQGoodChoice:"✅ Good choice! Ready to submit.\n\nNow: Did district contain corporation? If HQ has Corp (e.g. Kochi), select Yes.", corpQ:"Did district contain corporation? If HQ has Corporation (e.g. Kochi), select Yes Corp.", yesCorp:"Yes Corp", noCorp:"No Corp",
-    readyGoodChoice:"✅ Good choice! Corp status confirmed.\n\nNow confirm ready to pay fee.", ready15:"Confirm ready to pay 15 Lakhs as District fee.\n👉 Next: Pay Rs.5000 registration.", ready7:"Confirm ready to pay 7 Lakhs as Corporation fee.\n👉 Next: Pay Rs.5000 registration.", ready3:"Confirm ready to pay 3 Lakhs as Municipal fee.\n👉 Next: Pay Rs.5000 registration.", readyBC:"Confirm ready to pay 50K-1L as Business Center fee.\n👉 Next: Pay Rs.5000 registration.", readyBtn15:"Yes Ready - 15L", readyBtn7:"Yes Ready - 7L", readyBtn3:"Yes Ready - 3L", readyBtnBC:"Yes Ready - BC",
+    highGoodChoice:"✅ Good choice! *High Earning*\n\nNow see District/Corp/Municipal details. ONE per district.", highIntro:"🔥 HIGH EARNING\nOnly ONE per district!\n💰 District - 15L\nCorp - 7L\nMunicipal - 3L", highOptDistrict:"District - 15L", highOptCorp:"Corporation - 7L", highOptMuni:"Municipal - 3L",
+    moderateGoodChoice:"✅ Good choice! *Moderate Earning*\n\nNow see Corporation 7L & Municipal 3L details.", moderateIntro:"💼 MODERATE EARNING - 3-7L CONFIRMED\n\nCity/Town level entrepreneurs\nChoose:\n• Corp - 7L - Full corp control\n• Municipal - 3L - Municipality\n• BC - 50K-1L", 
+    corpGoodChoice:"✅ Good choice! *Corporation 7L*\n\nNow see benefits, support, requirements.", corpIntro:"🏙️ CORPORATION - 7 Lakhs\n• Corporation area\n• Control Business Centers", 
+    municipalGoodChoice:"✅ Good choice! *Municipal 3L*", municipalIntro:"🏘️ MUNICIPAL - 3 Lakhs\n• Municipality area\n• Good income, low invest",
+    baseGoodChoice:"✅ Good choice! *Base - Business Center*\n\nNow see low investment 50K-1L opportunity.", baseIntro:"🏪 BASE - BUSINESS CENTER - 50K-1L CONFIRMED\n\nLow Investment, High Return\nPerfect for small towns, villages\n• Panchayat/Small Town\n• Earn from 4 services", 
+    businessCenterIntro:"🏪 BUSINESS CENTER - 50K-1L\n• Panchayat/Small Town\n• You are local center\n• Earn from 4 services\n• Company leads\n• Training", businessCenterBenefits:"🌟 BENEFITS - BC\n✅ 50K-1L low invest\n✅ Earn 4 services\n✅ 90sqft enough\n✅ Marketing support",
+    franchiseeGoodChoice:"✅ Good choice! *All Franchisee Types*", franchiseeIntro:"📋 ALL TYPES CONFIRMED\n1️⃣ District - 15L\n2️⃣ Corp - 7L\n3️⃣ Municipal - 3L\n4️⃣ BC - 50K-1L",
+    procedureGoodChoice:"✅ Good choice! *Procedure*", procedureTitle:"📝 PROCEDURE", procedureDistrict:"PROCEDURE - District 15L\n1. Know benefits\n2. Corp check Yes/No\n3. Confirm ready 15L\n4. Pay Rs.5000 (part of 15L)\n5. Share Name, Place, District\n6. Agreement Date\n7. Tender\n8. Team call 24h\n9. Balance + Training", procedureBusinessCenter:"PROCEDURE - BC 50K-1L\n1. Know benefits\n2. Requirements 90sqft\n3. Pay Rs.5000\n4. Share details\n5. Agreement Date\n6. Tender\n7. Verification\n8. Balance + Start", procedureCommon:"GENERAL PROCEDURE - All 4 types\n1. Select type\n2. Benefits, Support, Requirements\n3. Corp check\n4. Ready to pay\n5. Pay Rs.5000\n6. EMI\n7. Share details\n8. Occupation\n9. Agreement date\n10. Tender\n11. Verification\n12. Launch",
+    benGoodChoice:"✅ Good choice! *Benefits*", benTitle:"🌟 BENEFITS", benDistrict:"BENEFITS - District 15L\n✅ Top level franchisee\n✅ % on ALL earnings\n✅ Direct Company contact\n✅ Lifetime royalty", benCorp:"BENEFITS - Corp 7L\n✅ Control corp area\n✅ % from BCs", benBusinessCenter:"BENEFITS - BC 50K-1L\n✅ Low invest\n✅ Earn 4 services",
+    supGoodChoice:"✅ Good choice! *Support*", supTitle:"🤝 SUPPORT", supText:"SUPPORT\n✅ 12 months marketing\n✅ 6 months Rent (District)\n✅ 6 months Staff salary\n✅ Software + Training",
+    reqGoodChoice:"✅ Good choice! *Requirements*", reqTitle:"📋 REQUIREMENTS", reqDistrict:"REQUIREMENTS - District 15L\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 15L\n✅ Aadhaar + PAN", reqBusinessCenter:"REQUIREMENTS - BC\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 50K-1L\n✅ Aadhaar + PAN",
+    corpQGoodChoice:"✅ Good choice! Ready to submit.\n\nNow: Did district contain corporation?", corpQ:"Did district contain corporation? If HQ has Corporation (e.g. Kochi), select Yes Corp.", yesCorp:"Yes Corp", noCorp:"No Corp",
+    readyGoodChoice:"✅ Good choice! Corp status confirmed.\n\nNow confirm ready to pay fee.", ready15:"Confirm ready to pay 15 Lakhs as District fee.\n👉 Next: Pay Rs.5000 registration.", ready7:"Confirm ready to pay 7 Lakhs as Corporation fee.", ready3:"Confirm ready to pay 3 Lakhs as Municipal fee.", readyBC:"Confirm ready to pay 50K-1L as Business Center fee.", readyBtn15:"Yes Ready - 15L", readyBtn7:"Yes Ready - 7L", readyBtn3:"Yes Ready - 3L", readyBtnBC:"Yes Ready - BC",
     payGoodChoice:"✅ Good choice! Ready confirmed.\n\nNow pay Rs.5000 registration. Part of total fee, not extra.", payReg:"Pay Rs.5000 to proceed.\nPart of total fee, not extra.\nTap Pay Now below.", emiGoodChoice:"✅ Good choice! EMI options.", emiOpt:"Select EMI:\nDown 5 Lac + 10 Months / Down 5 Lac + 20 Months", emi10:"5L + 10x1L", emi20:"5L + 20x50k", emiBusiness:"BC EMI",
     leadGoodChoice:"✅ Good choice! Payment done.\n\nNow share contact details. Final step.", leadAsk:"Share contact:\nName, Place, District, State, Contact, Occupation\n\nName as per Aadhaar:", occQGoodChoice:"✅ Good choice! Place shared.\n\nNow select occupation.", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"Download Tender", dateGoodChoice:"✅ Good choice! Occupation selected.\n\nNow select agreement date.", date:"Select Agreement Date:", today:"Today", tom:"Tomorrow", thanksGoodChoice:"✅ Great! All details received.\n\n", thanks:"Thanks! Team will call within 24h. Application submitted!",
     callG:"97452 26642", callB:"85901 75977", bookNow:"Book Now", dlDriv:"Driver App",
@@ -273,79 +175,66 @@ function formatTo(to){ let c=String(to).replace(/\D/g,""); if(c.startsWith("91")
 function doSendMessage(uid, txt, btnsRaw){
   return new Promise(async (resolve)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
-    const st = userStates[uid];
+    const st=userStates[uid];
     try{
       const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
       const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
       let data;
       if(btnsRaw && btnsRaw.length>0){
-        const hasCall = btnsRaw.some(b=>b.phone);
+        const hasCall=btnsRaw.some(b=>b.phone);
         if(hasCall){
-          const buttons = [];
-          for(let b of btnsRaw.slice(0,3)){
-            if(b.phone){
-              buttons.push({ type:"phone_number", phone_number: b.phone, title: b.title.substring(0,20) });
-            }else{
-              buttons.push({ type:"reply", reply: { id: b.payload, title: b.title.substring(0,20) } });
-            }
-          }
-          data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:String(txt).substring(0,1024) }, action:{ buttons } } };
+          const buttons=[]; for(let b of btnsRaw.slice(0,3)){ if(b.phone){ buttons.push({type:"phone_number",phone_number:b.phone,title:b.title.substring(0,20)}); }else{ buttons.push({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}); } }
+          data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{text:String(txt).substring(0,1024)}, action:{buttons} } };
         }else{
-          const quick=btnsRaw.slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload, title:String(b.title).substring(0,20) } }));
-          data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:String(txt).substring(0,1024) }, action:{ buttons:quick } } };
+          const quick=btnsRaw.slice(0,3).map(b=>({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}));
+          data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{text:String(txt).substring(0,1024)}, action:{buttons:quick} } };
         }
-      }else{
-        data={ messaging_product:"whatsapp", to, type:"text", text:{ body:String(txt).substring(0,4096) } };
-      }
+      }else{ data={ messaging_product:"whatsapp", to, type:"text", text:{body:String(txt).substring(0,4096)} }; }
       const resp=await axios.post(url,data,{headers});
       console.log(`OUT OK to ${to} BTNS:${btnsRaw?.length||0} CALL:${btnsRaw?.some(b=>b.phone)?'YES':''} -> ${resp.data.messages?.[0]?.id}`);
-      // CRM log OUT
-      logCRM(uid, "OUT", txt, btnsRaw?.map(b=>b.payload||b.title).join("|"), st?.flow||"", st?.lastStep||"", {currentFee: st?.data?.currentFee, currentType: st?.data?.currentType});
-    }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); }
+      logCRM(uid,"OUT",txt,btnsRaw?.map(b=>b.payload||b.title).join("|"),st?.flow||"",st?.lastStep||"",{currentFee:st?.data?.currentFee,currentType:st?.data?.currentType});
+    }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); throw e; }
     resolve();
   });
 }
-
 function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
   return new Promise(async (resolve)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
-    const st = userStates[uid];
+    const st=userStates[uid];
     try{
       const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
       const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
-      let buttons = [];
-      for(let b of btnsRaw.slice(0,3)){
-        if(b.phone){
-          buttons.push({ type:"phone_number", phone_number: b.phone, title: b.title.substring(0,20) });
-        }else{
-          buttons.push({ type:"reply", reply: { id: b.payload, title: b.title.substring(0,20) } });
-        }
-      }
-      const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{ type:"image", image:{ link:imgUrl } }, body:{ text:String(caption).substring(0,1024) }, action:{ buttons } } };
+      let buttons=[]; for(let b of btnsRaw.slice(0,3)){ if(b.phone){ buttons.push({type:"phone_number",phone_number:b.phone,title:b.title.substring(0,20)}); }else{ buttons.push({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}); } }
+      const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{type:"image",image:{link:imgUrl}}, body:{text:String(caption).substring(0,1024)}, action:{buttons} } };
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT IMAGE+BTNS OK to ${to} CALL:${btnsRaw.some(b=>b.phone)?'YES':''} -> ${resp.data.messages?.[0]?.id}`);
-      // CRM log OUT
-      logCRM(uid, "OUT", caption, btnsRaw?.map(b=>b.payload||b.title).join("|"), st?.flow||"", st?.lastStep||"", {currentFee: st?.data?.currentFee, currentType: st?.data?.currentType});
-    }catch(e){
-      console.log("IMAGE+BTNS FAIL fallback", JSON.stringify(e.response?.data,null,2));
-      await doSendMessage(uid, caption, btnsRaw);
-    }
+      console.log(`OUT IMAGE+BTNS OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
+      logCRM(uid,"OUT",caption,btnsRaw?.map(b=>b.payload||b.title).join("|"),st?.flow||"",st?.lastStep||"",{currentFee:st?.data?.currentFee,currentType:st?.data?.currentType});
+    }catch(e){ console.log("IMAGE+BTNS FAIL fallback", JSON.stringify(e.response?.data,null,2)); await doSendMessage(uid,caption,btnsRaw); }
     resolve();
   });
 }
-
 function sendMessage(uid, txt, btns){ enqueueSend(()=>doSendMessage(uid, txt, btns)); }
 function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(()=>doSendImageWithButtons(uid, imgUrl, caption, btns)); }
+function callButton(display, phone){ return {title:display, phone:phone}; }
+function replyButton(title, payload){ return {title, payload}; }
 
-function callButton(display, phone){ return { title: display, phone: phone }; }
-function replyButton(title, payload){ return { title, payload }; }
-
-async function sendFirst(uid){ 
-  console.log(`sendFirst V61 CRM to ${uid}`); 
-  if(formatTo(uid)===BOT_OWN_NUMBER) return; 
-  sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]); 
-  userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } }; 
-  logCRM(uid, "OUT", FIRST_BRIEF, "LANG_EN|LANG_HI|LANG_ML", "WELCOME", "Language Selection");
+// FIXED: Set state BEFORE sending to prevent double welcome
+async function sendFirst(uid){
+  if(recentWelcomes.has(uid)){
+    const last = recentWelcomes.get(uid);
+    if(Date.now() - last < 10000){
+      console.log(`Skipping double welcome for ${uid} - sent ${Date.now()-last}ms ago`);
+      return;
+    }
+  }
+  console.log(`sendFirst V62 FIXED to ${uid}`);
+  if(formatTo(uid)===BOT_OWN_NUMBER) return;
+  // SET STATE FIRST - Fix for race condition
+  userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } };
+  recentWelcomes.set(uid, Date.now());
+  setTimeout(()=>recentWelcomes.delete(uid),15000);
+  // THEN send
+  sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]);
 }
 async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid,getText(l,'selOpt'),[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]); }
 async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid,"More:",[replyButton(getText(l,'del'),"OPT_DEL"),replyButton(getText(l,'book'),"OPT_BOOK"),replyButton(getText(l,'dir'),"OPT_DIR")]); }
@@ -370,7 +259,7 @@ async function sendRoom(uid,l){ userStates[uid].lastStep='Room Booking'; sendIma
 async function sendRoomDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookRoomGoodChoice')+"\n\n"+getText(l,'bookRoomDetail'),[replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]); }
 async function sendAppointmentDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookAppointmentGoodChoice')+"\n\n"+getText(l,'bookAppointmentDetail'),[replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]); }
 async function sendMovieDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookMovieGoodChoice')+"\n\n"+getText(l,'bookMovieDetail'),[replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'earnGoodChoice')+"\n\n"+getText(l,'earnIntro'),[replyButton(getText(l,'high'),"EARN_HIGH"),replyButton(getText(l,'mod'),"EARN_MOD"),replyButton(getText(l,'base'),"EARN_BASE")]); setTimeout(()=>{ sendMessage(uid,getText(l,'franchiseeIntro'),[replyButton(getText(l,'knowFranchiseeTypes'),"KNOW_TYPES"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE")]); },2500); }
+async function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'earnGoodChoice')+"\n\n"+getText(l,'earnIntro'),[replyButton(getText(l,'high'),"EARN_HIGH"),replyButton(getText(l,'mod'),"EARN_MOD"),replyButton(getText(l,'base'),"EARN_BASE")]); }
 async function sendHigh(uid,l){ userStates[uid].lastStep='High Earning'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'highGoodChoice')+"\n\n"+getText(l,'highIntro'),[replyButton(getText(l,'highOptDistrict'),"FRAN_DISTRICT"),replyButton(getText(l,'highOptCorp'),"FRAN_CORP"),replyButton(getText(l,'highOptMuni'),"FRAN_MUNICIPAL")]); }
 async function sendModerate(uid,l){ userStates[uid].lastStep='Moderate Earning CONFIRMED'; sendImageWithButtons(uid,POSTERS.corporation,getText(l,'moderateGoodChoice')+"\n\n"+getText(l,'moderateIntro'),[replyButton("Corporation - 7L","FRAN_CORP"),replyButton("Municipal - 3L","FRAN_MUNICIPAL"),replyButton(getText(l,'businessCenter'),"FRAN_BC")]); }
 async function sendBase(uid,l){ userStates[uid].lastStep='Base Earning CONFIRMED'; sendImageWithButtons(uid,POSTERS.businessCenter,getText(l,'baseGoodChoice')+"\n\n"+getText(l,'baseIntro'),[replyButton("Business Center","FRAN_BC"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE_BC"),replyButton(getText(l,'benefits'),"BEN_BC")]); }
@@ -386,7 +275,7 @@ async function sendSup(uid,l){ sendImageWithButtons(uid,POSTERS.support,getText(
 async function sendReq(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=(type==="Business Center")?getText(l,'reqBusinessCenter'):getText(l,'reqDistrict'); sendImageWithButtons(uid,POSTERS.requirements,getText(l,'reqGoodChoice')+"\n\n"+text,[replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
 async function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; sendMessage(uid,getText(l,'corpQGoodChoice')+"\n\n"+getText(l,'corpQ'),[replyButton(getText(l,'yesCorp'),"CORP_YES"),replyButton(getText(l,'noCorp'),"CORP_NO")]); }
 async function sendReady(uid,l){ const fee=userStates[uid].data.currentFee||"15L"; let text="",btn=""; if(fee==="15L"){text=getText(l,'ready15');btn=getText(l,'readyBtn15');}else if(fee==="7L"){text=getText(l,'ready7');btn=getText(l,'readyBtn7');}else if(fee==="3L"){text=getText(l,'ready3');btn=getText(l,'readyBtn3');}else{text=getText(l,'readyBC');btn=getText(l,'readyBtnBC');} userStates[uid].lastStep='Ready to Pay '+fee; sendMessage(uid,getText(l,'readyGoodChoice')+"\n\n"+text,[replyButton(btn,"READY_"+fee),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
-async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },1500); }catch(e){ console.log("PAY CTA FAIL", e.response?.data); sendMessage(uid,getText(l,'payReg')+"\n"+RAZORPAY_ALL,[replyButton("I Paid","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); } }); }
+async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },5000); }catch(e){ console.log("PAY CTA FAIL", e.response?.data); sendMessage(uid,getText(l,'payReg')+"\n"+RAZORPAY_ALL,[replyButton("I Paid","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); } }); }
 async function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid,getText(l,'emiGoodChoice')+"\n\n"+getText(l,'emiOpt'),[replyButton(getText(l,'emi10'),"EMI_10"),replyButton(getText(l,'emi20'),"EMI_20"),replyButton(getText(l,'emiBusiness'),"EMI_BC")]); }
 async function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:userStates[uid].data, lastStep:'Lead - Name' }; sendMessage(uid,getText(l,'leadGoodChoice')+"\n\n"+getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); }
 async function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; sendMessage(uid,"Place / District / State?"); }else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; sendMessage(uid,getText(s.lang,'occQGoodChoice')+"\n\n"+getText(s.lang,'occQ'),[replyButton(getText(s.lang,'bus'),"OCC_BUS"),replyButton(getText(s.lang,'emp'),"OCC_EMP"),replyButton(getText(s.lang,'house'),"OCC_HOUSE")]); } }
@@ -397,14 +286,15 @@ async function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const t=(txt||"").toLowerCase().trim();
-  
-  // CRM Log IN - Every user message
-  logCRM(uid, "IN", txt, p, state?.flow||"NEW", state?.lastStep||"First Message", {currentFee: state?.data?.currentFee, currentType: state?.data?.currentType});
-  
+  logCRM(uid,"IN",txt,p,state?.flow||"NEW",state?.lastStep||"First Message",{currentFee:state?.data?.currentFee,currentType:state?.data?.currentType});
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu' }; await sendMain(uid,l); return; }
   if(!state){ console.log(`FIRST MESSAGE from ${uid}`); await sendFirst(uid); return; }
-  if(isHi){ console.log(`HI RESET -> ${uid}`); delete userStates[uid]; await sendFirst(uid); return; }
+  if(isHi){ console.log(`HI RESET -> ${uid}`); // Don't reset immediately if welcome sent recently
+    const lastWelcome = recentWelcomes.get(uid);
+    if(lastWelcome && Date.now()-lastWelcome < 10000){ console.log(`Ignoring HI reset - welcome sent recently for ${uid}`); return; }
+    delete userStates[uid]; await sendFirst(uid); return;
+  }
   const lang=state.lang||'en';
   if(p==="MAIN_MENU") return await sendMain(uid,lang);
   if(p==="OPT_MORE") return await sendMore(uid,lang);
@@ -465,9 +355,8 @@ app.post('/webhook', async (req,res)=>{
     if(value?.statuses?.[0]){ const st=value.statuses[0]; console.log(`STATUS ${st.status} to ${st.recipient_id} - ${JSON.stringify(st.errors||'OK')} - id:${st.id}`); return; }
     const msg=value?.messages?.[0];
     if(msg){
-      if(processedIds.has(msg.id)) return;
-      processedIds.add(msg.id);
-      setTimeout(()=>processedIds.delete(msg.id),60000);
+      if(processedIds.has(msg.id)){ console.log(`Duplicate msg ${msg.id} ignored`); return; }
+      processedIds.add(msg.id); setTimeout(()=>processedIds.delete(msg.id),60000);
       const uid=msg.from; const txt=msg.text?.body||""; const payload=msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || "";
       console.log("IN "+uid+" "+txt+" "+payload);
       await onMessage(uid,txt,payload||txt);
@@ -476,4 +365,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V61 FINAL WITH CRM - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} WITH CALL BUTTONS + CRM on ${PORT} - View CRM at /crm`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V62 FINAL FIX - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} - Rate limit FIXED + Double welcome FIXED + CRM on ${PORT} - View /crm`));
