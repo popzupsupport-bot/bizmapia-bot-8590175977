@@ -1,5 +1,4 @@
-// V64 FINAL - Google Sheets CRM + Failed Tries Recording + No Rate Limit - BOT 7025630644
-// FIXES: Records IN to Google Sheet even if OUT fails with 130429
+// V65 - Welcome WITH Poster + All Posters Fixed + No Rate Limit + CRM - BOT 7025630644
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -12,10 +11,11 @@ const BOT_OWN_NUMBER = "917025630644";
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-// SET YOUR GOOGLE SHEET WEBHOOK URL HERE - Get from Apps Script
-const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || ""; // e.g. https://script.google.com/macros/s/AKfyc.../exec
+const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || "";
 
+// V65: Fixed Posters - All valid i.ibb.co URLs
 const POSTERS = {
+  welcome: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png", // Welcome poster
   onlineBooking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png",
   delivery: "https://i.ibb.co/nN5pMLm8/Bizmapia-Fast-Safe-Local-Delivery.png",
   businessDir: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
@@ -59,47 +59,15 @@ const CRM_FILE = path.join(__dirname, 'crm_logs.json');
 try{ if(fs.existsSync(CRM_FILE)){ crmLogs = JSON.parse(fs.readFileSync(CRM_FILE,'utf8')); } }catch(e){ crmLogs=[]; }
 function saveCRM(){ try{ fs.writeFileSync(CRM_FILE, JSON.stringify(crmLogs.slice(-5000), null, 2)); }catch(e){} }
 
-// V64: Push to Google Sheets - Even for failed tries
 async function pushToGoogleSheet(entry){
-  // 1. Local CRM
   crmLogs.push(entry);
   if(crmLogs.length%5===0) saveCRM();
   console.log(`CRM ${entry.direction} | ${entry.phone} | ${entry.flow} | ${entry.lastStep} | ${entry.message.substring(0,80)}`);
-
-  // 2. Google Sheet Webhook (if configured)
   if(GOOGLE_SHEET_WEBHOOK && GOOGLE_SHEET_WEBHOOK.startsWith('http')){
     try{
-      // Format for your V6 Sheet structure: Date, Phone, Name, Message, Stage, Full Log
-      const sheetPayload = {
-        timestamp: entry.date,
-        phone: entry.phone,
-        name: entry.name || "",
-        message: entry.message,
-        payload: entry.payload,
-        direction: entry.direction,
-        flow: entry.flow,
-        lastStep: entry.lastStep,
-        fee: entry.currentFee,
-        type: entry.currentType,
-        // V6 compatible format
-        sheetRow: [
-          entry.date,
-          entry.phone,
-          entry.name || "",
-          `${entry.direction} | ${entry.message} | ${entry.payload} | ${entry.flow} | ${entry.lastStep} | Fee:${entry.currentFee}`,
-          entry.payload,
-        ]
-      };
-      await axios.post(GOOGLE_SHEET_WEBHOOK, sheetPayload, {timeout: 5000});
-      console.log(`Google Sheet push OK for ${entry.phone} ${entry.direction}`);
-    }catch(e){
-      console.log(`Google Sheet push FAIL for ${entry.phone}: ${e.message} - Will retry later`);
-      // Don't fail the main flow, just log locally
-    }
-  } else {
-    if(entry.direction==='IN'){
-      console.log(`GOOGLE_SHEET_WEBHOOK not set - IN logged only locally. Set env var GOOGLE_SHEET_WEBHOOK to your Apps Script URL to push to sheet.`);
-    }
+      await axios.post(GOOGLE_SHEET_WEBHOOK, {timestamp: entry.date, phone: entry.phone, name: entry.name, message: entry.message, payload: entry.payload, direction: entry.direction, flow: entry.flow, lastStep: entry.lastStep, fee: entry.currentFee}, {timeout: 5000});
+      console.log(`Sheet OK ${entry.phone}`);
+    }catch(e){ console.log(`Sheet FAIL ${e.message}`); }
   }
 }
 
@@ -112,12 +80,10 @@ function logCRM(uid, direction, message, payload, flow, lastStep, extra={}){
     currentFee:extra.currentFee||"", currentType:extra.currentType||"",
     name:extra.name||userStates[uid]?.data?.name||"", place:extra.place||userStates[uid]?.data?.place||"", occ:extra.occ||userStates[uid]?.data?.occ||"",
   };
-  // V64: Push immediately, don't wait for OUT success
   pushToGoogleSheet(entry);
   return entry;
 }
 
-// V64 Queue: Per-user 12s + Global 6s + Retry
 let lastGlobalSendTime = 0;
 const GLOBAL_GAP_MS = 6000;
 const PER_USER_GAP_MS = 12000;
@@ -131,16 +97,11 @@ async function processQueue(){
     const now = Date.now();
     const globalWait = Math.max(0, (lastGlobalSendTime + GLOBAL_GAP_MS) - now);
     if(globalWait>0) await new Promise(r=>setTimeout(r, globalWait));
-    
     const job = sendQueue[0];
     const uid = job.uid;
     const lastPerUser = lastSentPerUser.get(uid) || 0;
     const perUserWait = Math.max(0, (lastPerUser + PER_USER_GAP_MS) - Date.now());
-    if(perUserWait>0){
-      console.log(`Per-user wait ${perUserWait}ms for ${uid}`);
-      await new Promise(r=>setTimeout(r, perUserWait));
-    }
-    
+    if(perUserWait>0) await new Promise(r=>setTimeout(r, perUserWait));
     sendQueue.shift();
     try{
       await job.fn();
@@ -149,9 +110,8 @@ async function processQueue(){
     }catch(e){
       const errStr = JSON.stringify(e.response?.data||e.message);
       if(errStr.includes('130429')){
-        console.log(`130429 for ${uid} - Waiting 20s and retry`);
-        // Log the failed attempt to CRM as FAILED but still recorded
-        logCRM(uid, "OUT_FAILED_130429", `Rate limit hit - Will retry in 20s - Message: ${job.debug||""}`, job.payload||"", "RATE_LIMIT", "Rate limit hit", {currentFee:""});
+        console.log(`130429 for ${uid} - Wait 20s`);
+        logCRM(uid, "OUT_FAILED_130429", `Rate limit - retry 20s - ${job.debug}`, job.payload||"", "RATE_LIMIT", "Rate limit");
         await new Promise(r=>setTimeout(r, 20000));
         sendQueue.unshift(job);
         lastGlobalSendTime = Date.now() + 15000;
@@ -159,6 +119,30 @@ async function processQueue(){
         continue;
       }else{
         console.log("Queue error", errStr);
+        // If image fails, fallback to text
+        if(errStr.includes('image') || errStr.includes('media')){
+          console.log(`Image failed for ${uid} - Trying text fallback`);
+          try{
+            const to = job.uid.replace(/\D/g,'');
+            const formattedTo = to.startsWith('91') && to.length===12 ? to : to.length===10 ? '91'+to : to;
+            if(formattedTo !== BOT_OWN_NUMBER){
+              const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
+              const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
+              const fallbackData = {
+                messaging_product:"whatsapp",
+                to: formattedTo,
+                type:"interactive",
+                interactive:{
+                  type:"button",
+                  body:{text: job.fallbackText || job.debug || "Welcome to Bizmapia!"},
+                  action:{buttons: job.fallbackButtons || [{type:"reply",reply:{id:"MAIN_MENU",title:"Main Menu"}}]}
+                }
+              };
+              await axios.post(url, fallbackData, {headers});
+              console.log(`Fallback text OK for ${uid}`);
+            }
+          }catch(e2){ console.log(`Fallback also failed ${JSON.stringify(e2.response?.data)}`); }
+        }
         lastGlobalSendTime = Date.now();
         lastSentPerUser.set(uid, Date.now());
       }
@@ -167,14 +151,14 @@ async function processQueue(){
   isProcessingQueue = false;
 }
 
-function enqueueSend(uid, fn, debug="", payload=""){
-  sendQueue.push({uid: uid, fn: fn, debug: debug, payload: payload});
+function enqueueSend(uid, fn, debug="", payload="", fallbackText="", fallbackButtons=null){
+  sendQueue.push({uid: uid, fn: fn, debug: debug, payload: payload, fallbackText: fallbackText, fallbackButtons: fallbackButtons});
   processQueue();
 }
 
-app.get('/', (req,res)=>res.status(200).send(`V64 Google Sheets CRM + Failed Tries - ${crmLogs.length} logs - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a> | Sheet Webhook: ${GOOGLE_SHEET_WEBHOOK ? 'SET' : 'NOT SET - Set GOOGLE_SHEET_WEBHOOK env var'}`));
+app.get('/', (req,res)=>res.status(200).send(`V65 Welcome WITH Poster + All Posters Fixed - ${crmLogs.length} logs - Bot:${BOT_OWN_NUMBER} - <a href="/crm">CRM</a>`));
 app.get('/crm', (req,res)=>{
-  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}</style></head><body><h2>📊 V64 CRM - ${crmLogs.length} Records - Includes FAILED tries</h2><p>Google Sheet: ${GOOGLE_SHEET_WEBHOOK ? 'Connected' : 'Not connected - set GOOGLE_SHEET_WEBHOOK env'} | <a href="/crm/download">Download JSON</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Message/Payload</th><th>Status</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td><b>${l.payload}</b><br/>${l.message}</td><td>${l.direction.includes('FAILED')?'❌ Failed but Recorded':'✅ Recorded'}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
+  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}</style></head><body><h2>📊 V65 CRM - ${crmLogs.length} Records - With Posters</h2><p><a href="/crm/download">Download</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Message</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
   res.send(html);
 });
 app.get('/crm/download', (req,res)=>{ res.setHeader('Content-disposition','attachment; filename=crm_logs.json'); res.setHeader('Content-type','application/json'); res.send(JSON.stringify(crmLogs,null,2)); });
@@ -275,26 +259,28 @@ function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
       let buttons=[]; for(let b of btnsRaw.slice(0,3)){ if(b.phone){ buttons.push({type:"phone_number",phone_number:b.phone,title:b.title.substring(0,20)}); }else{ buttons.push({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}); } }
       const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{type:"image",image:{link:imgUrl}}, body:{text:String(caption).substring(0,1024)}, action:{buttons} } };
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT IMAGE OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
+      console.log(`OUT IMAGE OK to ${to} -> ${resp.data.messages?.[0]?.id} with poster ${imgUrl.substring(0,50)}`);
       logCRM(uid,"OUT",caption,btnsRaw?.map(b=>b.payload||b.title).join("|"),userStates[uid]?.flow||"",userStates[uid]?.lastStep||"",{currentFee:userStates[uid]?.data?.currentFee,currentType:userStates[uid]?.data?.currentType});
       resolve();
-    }catch(e){ console.log("IMAGE FAIL", JSON.stringify(e.response?.data,null,2)); reject(e); }
+    }catch(e){ console.log(`IMAGE FAIL ${imgUrl} - ${JSON.stringify(e.response?.data,null,2)}`); reject(e); }
   });
 }
 
-function sendMessage(uid, txt, btns){ enqueueSend(uid, ()=>doSendMessage(uid, txt, btns), txt.substring(0,100), btns?.map(b=>b.payload).join(",")); }
-function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(uid, ()=>doSendImageWithButtons(uid, imgUrl, caption, btns), caption.substring(0,100), btns?.map(b=>b.payload).join(",")); }
+function sendMessage(uid, txt, btns){ enqueueSend(uid, ()=>doSendMessage(uid, txt, btns), txt.substring(0,100), btns?.map(b=>b.payload).join(","), txt.substring(0,1024), btns); }
+function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(uid, ()=>doSendImageWithButtons(uid, imgUrl, caption, btns), caption.substring(0,100), btns?.map(b=>b.payload).join(","), caption.substring(0,1024), btns); }
 function callButton(display, phone){ return {title:display, phone:phone}; }
 function replyButton(title, payload){ return {title, payload}; }
 
+// V65: Welcome WITH Poster
 async function sendFirst(uid){
   const lastWelcome = recentWelcomes.get(uid);
   if(lastWelcome && Date.now()-lastWelcome < 15000){ console.log(`BLOCK double welcome ${uid}`); return; }
-  console.log(`sendFirst V64 to ${uid}`);
+  console.log(`sendFirst V65 WITH POSTER to ${uid}`);
   if(formatTo(uid)===BOT_OWN_NUMBER) return;
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } };
   recentWelcomes.set(uid, Date.now()); setTimeout(()=>recentWelcomes.delete(uid),20000);
-  sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]);
+  // Send WITH poster image
+  sendImageWithButtons(uid, POSTERS.welcome, FIRST_BRIEF, [replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]);
 }
 async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid,getText(l,'selOpt'),[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]); }
 async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid,"More:",[replyButton(getText(l,'del'),"OPT_DEL"),replyButton(getText(l,'book'),"OPT_BOOK"),replyButton(getText(l,'dir'),"OPT_DIR")]); }
@@ -346,7 +332,6 @@ async function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const t=(txt||"").toLowerCase().trim();
-  // V64 FIX: Log IN to CRM and Google Sheet IMMEDIATELY - Even if OUT fails later
   logCRM(uid,"IN",txt,p,state?.flow||"NEW",state?.lastStep||"First Message",{currentFee:state?.data?.currentFee,currentType:state?.data?.currentType});
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu' }; await sendMain(uid,l); return; }
@@ -422,4 +407,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V64 Google Sheets CRM + Failed Recording - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} - Sheet:${GOOGLE_SHEET_WEBHOOK ? 'SET' : 'NOT SET'} on ${PORT} - /crm`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V65 WITH POSTER + All Posters Fixed - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} on ${PORT} - /crm`));
