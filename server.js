@@ -1,6 +1,9 @@
-// V60 FINAL - HD POSTERS + NEW SHORT WELCOME + MODERATE & BASE INCLUDED + GOOD CHOICE + AUTO-DIAL CALL BUTTONS - BOT 7025630644
+// V61 FINAL WITH CRM - Records every chat activity as CRM - BOT 7025630644
+// Includes: HD Posters + Short Welcome + Moderate/Base + Good Choice + Auto-dial Call + CRM Logging
 const express = require('express');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 app.use(express.json());
 
@@ -47,6 +50,53 @@ const PHONES = {
 let userStates = {};
 const processedIds = new Set();
 
+// CRM STORAGE
+let crmLogs = []; // In-memory CRM
+const CRM_FILE = path.join(__dirname, 'crm_logs.json');
+
+// Load existing CRM if exists
+try{
+  if(fs.existsSync(CRM_FILE)){
+    const data = fs.readFileSync(CRM_FILE, 'utf8');
+    crmLogs = JSON.parse(data);
+    console.log(`CRM Loaded: ${crmLogs.length} records`);
+  }
+}catch(e){ console.log("CRM load error", e.message); crmLogs = []; }
+
+function saveCRM(){
+  try{
+    fs.writeFileSync(CRM_FILE, JSON.stringify(crmLogs.slice(-5000), null, 2)); // Keep last 5000
+  }catch(e){ console.log("CRM save error", e.message); }
+}
+
+function logCRM(uid, direction, message, payload, flow, lastStep, extra={}){
+  const entry = {
+    id: Date.now() + "_" + Math.random().toString(36).substring(2,7),
+    timestamp: new Date().toISOString(),
+    date: new Date().toLocaleString('en-IN', {timeZone: 'Asia/Kolkata'}),
+    phone: uid,
+    direction: direction, // IN = user to bot, OUT = bot to user
+    message: (message||"").substring(0,500),
+    payload: payload||"",
+    flow: flow||"",
+    lastStep: lastStep||"",
+    currentFee: extra.currentFee||"",
+    currentType: extra.currentType||"",
+    name: extra.name||userStates[uid]?.data?.name||"",
+    place: extra.place||userStates[uid]?.data?.place||"",
+    occ: extra.occ||userStates[uid]?.data?.occ||"",
+  };
+  crmLogs.push(entry);
+  console.log(`CRM ${direction} | ${uid} | ${flow} | ${lastStep} | ${message.substring(0,80)}`);
+  // Save every 10 logs to avoid too much IO
+  if(crmLogs.length % 5 === 0) saveCRM();
+  
+  // Optional: Send to Google Sheets webhook if configured
+  if(process.env.GOOGLE_SHEETS_WEBHOOK){
+    axios.post(process.env.GOOGLE_SHEETS_WEBHOOK, entry).catch(e=>{});
+  }
+}
+
 let lastSendTime = 0;
 const MIN_GAP_MS = 2000;
 const sendQueue = [];
@@ -66,7 +116,67 @@ async function processQueue(){
 }
 function enqueueSend(fn){ sendQueue.push(fn); processQueue(); }
 
-app.get('/', (req,res)=>res.status(200).send(`V60 FINAL HD + SHORT WELCOME + MODERATE BASE + GOOD CHOICE + CALL BUTTONS - Bot:${BOT_OWN_NUMBER}`));
+app.get('/', (req,res)=>res.status(200).send(`V61 FINAL WITH CRM - ${crmLogs.length} chats recorded - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a> | <a href="/crm/download">Download JSON</a>`));
+
+// CRM VIEW ENDPOINT - Shows all chats as table
+app.get('/crm', (req,res)=>{
+  const html = `
+  <html><head><title>Bizmapia CRM - ${crmLogs.length} records</title>
+  <style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px}th{background:#f2f2f2}tr:nth-child(even){background:#f9f9f9}.in{background:#e3f2fd}.out{background:#fff3e0}h2{color:#333}</style>
+  </head><body>
+  <h2>📊 Bizmapia CRM - ${crmLogs.length} Records (Last 200 shown)</h2>
+  <p>Bot: ${BOT_OWN_NUMBER} | Auto-refresh every 10 sec | <a href="/crm/download">Download Full JSON</a> | <a href="/crm/clear?key=${VERIFY_TOKEN}">Clear CRM</a></p>
+  <table><tr><th>Date (IST)</th><th>Phone</th><th>Direction</th><th>Flow</th><th>Last Step</th><th>Fee/Type</th><th>Message/Payload</th><th>Name/Place</th></tr>
+  ${crmLogs.slice(-200).reverse().map(log=>`
+    <tr class="${log.direction==='IN'?'in':'out'}">
+      <td>${log.date}</td>
+      <td>${log.phone}</td>
+      <td><b>${log.direction}</b></td>
+      <td>${log.flow}</td>
+      <td>${log.lastStep}</td>
+      <td>${log.currentFee}/${log.currentType}</td>
+      <td><b>${log.payload}</b><br/>${log.message}</td>
+      <td>${log.name}<br/>${log.place}<br/>${log.occ}</td>
+    </tr>
+  `).join('')}
+  </table>
+  <script>setTimeout(()=>location.reload(),10000);</script>
+  </body></html>`;
+  res.send(html);
+});
+
+app.get('/crm/download', (req,res)=>{
+  res.setHeader('Content-disposition', 'attachment; filename=crm_logs.json');
+  res.setHeader('Content-type', 'application/json');
+  res.send(JSON.stringify(crmLogs, null, 2));
+});
+
+app.get('/crm/clear', (req,res)=>{
+  if(req.query.key !== VERIFY_TOKEN) return res.status(403).send("Invalid key");
+  crmLogs = [];
+  saveCRM();
+  res.send("CRM Cleared");
+});
+
+app.get('/crm/stats', (req,res)=>{
+  const stats = {
+    total: crmLogs.length,
+    uniqueUsers: [...new Set(crmLogs.map(l=>l.phone))].length,
+    incoming: crmLogs.filter(l=>l.direction==='IN').length,
+    outgoing: crmLogs.filter(l=>l.direction==='OUT').length,
+    byFlow: {},
+    byStep: {},
+    byFee: {},
+    today: crmLogs.filter(l=>l.date.includes(new Date().toLocaleDateString('en-IN'))).length,
+  };
+  crmLogs.forEach(l=>{
+    stats.byFlow[l.flow] = (stats.byFlow[l.flow]||0)+1;
+    stats.byStep[l.lastStep] = (stats.byStep[l.lastStep]||0)+1;
+    if(l.currentFee) stats.byFee[l.currentFee] = (stats.byFee[l.currentFee]||0)+1;
+  });
+  res.json(stats);
+});
+
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -160,95 +270,26 @@ const T = {
 function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]||""; }
 function formatTo(to){ let c=String(to).replace(/\D/g,""); if(c.startsWith("91") && c.length===12) return c; if(c.length===10) return "91"+c; return c; }
 
-// Helper to build buttons with CALL support for auto-dialing
-function buildButtons(btns){
-  // btns: array of {title, payload, phone?, type?}
-  // Returns array suitable for WhatsApp API - will be split into reply, call, url
-  const replyButtons = [];
-  const callButtons = [];
-  const urlButtons = [];
-  
-  for(let b of btns){
-    if(b.phone){
-      // Call button - auto dial
-      callButtons.push({
-        type: "call",
-        title: b.title.substring(0,20),
-        phone: b.phone
-      });
-    }else if(b.url){
-      urlButtons.push({
-        type: "url",
-        title: b.title.substring(0,20),
-        url: b.url
-      });
-    }else{
-      replyButtons.push({
-        type: "reply",
-        reply: { id: b.payload, title: b.title.substring(0,20) }
-      });
-    }
-  }
-  
-  // WhatsApp allows max 3 buttons total, mixing types
-  // Priority: keep call buttons first for auto-dial
-  const all = [...callButtons, ...replyButtons, ...urlButtons].slice(0,3);
-  return all;
-}
-
 function doSendMessage(uid, txt, btnsRaw){
   return new Promise(async (resolve)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
+    const st = userStates[uid];
     try{
       const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
       const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
       let data;
       if(btnsRaw && btnsRaw.length>0){
-        // Check if any call buttons present - need to handle differently
         const hasCall = btnsRaw.some(b=>b.phone);
         if(hasCall){
-          // For call buttons, use interactive with action buttons that include call type
-          // WhatsApp Cloud API format for call buttons: we need to build action with buttons including call type
           const buttons = [];
           for(let b of btnsRaw.slice(0,3)){
             if(b.phone){
-              buttons.push({
-                type: "phone_number",
-                phone_number: b.phone,
-                title: b.title.substring(0,20)
-              });
+              buttons.push({ type:"phone_number", phone_number: b.phone, title: b.title.substring(0,20) });
             }else{
-              buttons.push({
-                type: "reply",
-                reply: { id: b.payload, title: b.title.substring(0,20) }
-              });
+              buttons.push({ type:"reply", reply: { id: b.payload, title: b.title.substring(0,20) } });
             }
           }
-          // Use button type message (not interactive button? Actually interactive with button type supports call)
-          // Try interactive with action buttons - for call we use type phone_number
-          data={
-            messaging_product:"whatsapp",
-            to,
-            type:"interactive",
-            interactive:{
-              type:"button",
-              body:{ text:String(txt).substring(0,1024) },
-              action:{ buttons: buttons.map(btn=>{
-                if(btn.type==="phone_number"){
-                  return {
-                    type:"phone_number",
-                    phone_number: btn.phone_number,
-                    title: btn.title
-                  };
-                }else{
-                  return {
-                    type:"reply",
-                    reply: btn.reply
-                  };
-                }
-              })}
-            }
-          };
+          data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:String(txt).substring(0,1024) }, action:{ buttons } } };
         }else{
           const quick=btnsRaw.slice(0,3).map(b=>({ type:"reply", reply:{ id:b.payload, title:String(b.title).substring(0,20) } }));
           data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", body:{ text:String(txt).substring(0,1024) }, action:{ buttons:quick } } };
@@ -258,15 +299,9 @@ function doSendMessage(uid, txt, btnsRaw){
       }
       const resp=await axios.post(url,data,{headers});
       console.log(`OUT OK to ${to} BTNS:${btnsRaw?.length||0} CALL:${btnsRaw?.some(b=>b.phone)?'YES':''} -> ${resp.data.messages?.[0]?.id}`);
-    }catch(e){ 
-      console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2));
-      // Fallback to text only if call button fails
-      try{
-        const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
-        const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
-        await axios.post(url,{ messaging_product:"whatsapp", to:formatTo(uid), type:"text", text:{ body: txt + "\n\nCall: "+btnsRaw.filter(b=>b.phone).map(b=>b.phone).join(", ") } },{headers});
-      }catch(e2){}
-    }
+      // CRM log OUT
+      logCRM(uid, "OUT", txt, btnsRaw?.map(b=>b.payload||b.title).join("|"), st?.flow||"", st?.lastStep||"", {currentFee: st?.data?.currentFee, currentType: st?.data?.currentType});
+    }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); }
     resolve();
   });
 }
@@ -274,30 +309,23 @@ function doSendMessage(uid, txt, btnsRaw){
 function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
   return new Promise(async (resolve)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
+    const st = userStates[uid];
     try{
       const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
       const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
       let buttons = [];
       for(let b of btnsRaw.slice(0,3)){
         if(b.phone){
-          buttons.push({
-            type:"phone_number",
-            phone_number: b.phone,
-            title: b.title.substring(0,20)
-          });
+          buttons.push({ type:"phone_number", phone_number: b.phone, title: b.title.substring(0,20) });
         }else{
-          buttons.push({
-            type:"reply",
-            reply: { id: b.payload, title: b.title.substring(0,20) }
-          });
+          buttons.push({ type:"reply", reply: { id: b.payload, title: b.title.substring(0,20) } });
         }
       }
-      const data={
-        messaging_product:"whatsapp", to, type:"interactive",
-        interactive:{ type:"button", header:{ type:"image", image:{ link:imgUrl } }, body:{ text:String(caption).substring(0,1024) }, action:{ buttons } }
-      };
+      const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{ type:"image", image:{ link:imgUrl } }, body:{ text:String(caption).substring(0,1024) }, action:{ buttons } } };
       const resp=await axios.post(url,data,{headers});
       console.log(`OUT IMAGE+BTNS OK to ${to} CALL:${btnsRaw.some(b=>b.phone)?'YES':''} -> ${resp.data.messages?.[0]?.id}`);
+      // CRM log OUT
+      logCRM(uid, "OUT", caption, btnsRaw?.map(b=>b.payload||b.title).join("|"), st?.flow||"", st?.lastStep||"", {currentFee: st?.data?.currentFee, currentType: st?.data?.currentType});
     }catch(e){
       console.log("IMAGE+BTNS FAIL fallback", JSON.stringify(e.response?.data,null,2));
       await doSendMessage(uid, caption, btnsRaw);
@@ -309,11 +337,16 @@ function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
 function sendMessage(uid, txt, btns){ enqueueSend(()=>doSendMessage(uid, txt, btns)); }
 function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(()=>doSendImageWithButtons(uid, imgUrl, caption, btns)); }
 
-// Helper to create CALL buttons with auto-dial
 function callButton(display, phone){ return { title: display, phone: phone }; }
 function replyButton(title, payload){ return { title, payload }; }
 
-async function sendFirst(uid){ console.log(`sendFirst V60 FINAL to ${uid}`); if(formatTo(uid)===BOT_OWN_NUMBER) return; sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]); userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } }; }
+async function sendFirst(uid){ 
+  console.log(`sendFirst V61 CRM to ${uid}`); 
+  if(formatTo(uid)===BOT_OWN_NUMBER) return; 
+  sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]); 
+  userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } }; 
+  logCRM(uid, "OUT", FIRST_BRIEF, "LANG_EN|LANG_HI|LANG_ML", "WELCOME", "Language Selection");
+}
 async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid,getText(l,'selOpt'),[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]); }
 async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid,"More:",[replyButton(getText(l,'del'),"OPT_DEL"),replyButton(getText(l,'book'),"OPT_BOOK"),replyButton(getText(l,'dir'),"OPT_DIR")]); }
 async function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; sendImageWithButtons(uid,POSTERS.rideCustomer,getText(l,'rideGoodChoice')+"\n\n"+getText(l,'rideOpt'),[replyButton(getText(l,'bookRide'),"RIDE_BOOK"),replyButton(getText(l,'attach'),"RIDE_ATTACH")]); }
@@ -353,32 +386,21 @@ async function sendSup(uid,l){ sendImageWithButtons(uid,POSTERS.support,getText(
 async function sendReq(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=(type==="Business Center")?getText(l,'reqBusinessCenter'):getText(l,'reqDistrict'); sendImageWithButtons(uid,POSTERS.requirements,getText(l,'reqGoodChoice')+"\n\n"+text,[replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
 async function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; sendMessage(uid,getText(l,'corpQGoodChoice')+"\n\n"+getText(l,'corpQ'),[replyButton(getText(l,'yesCorp'),"CORP_YES"),replyButton(getText(l,'noCorp'),"CORP_NO")]); }
 async function sendReady(uid,l){ const fee=userStates[uid].data.currentFee||"15L"; let text="",btn=""; if(fee==="15L"){text=getText(l,'ready15');btn=getText(l,'readyBtn15');}else if(fee==="7L"){text=getText(l,'ready7');btn=getText(l,'readyBtn7');}else if(fee==="3L"){text=getText(l,'ready3');btn=getText(l,'readyBtn3');}else{text=getText(l,'readyBC');btn=getText(l,'readyBtnBC');} userStates[uid].lastStep='Ready to Pay '+fee; sendMessage(uid,getText(l,'readyGoodChoice')+"\n\n"+text,[replyButton(btn,"READY_"+fee),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
-async function sendPay(uid,l){ 
-  userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; 
-  const to=formatTo(uid); 
-  const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; 
-  const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; 
-  enqueueSend(async()=>{ 
-    try{ 
-      await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); 
-      console.log(`OUT PAY OK to ${to}`); 
-      setTimeout(()=>{ 
-        // After payment, show CALL button auto-dial for help
-        sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); 
-      },1500); 
-    }catch(e){ console.log("PAY CTA FAIL", e.response?.data); sendMessage(uid,getText(l,'payReg')+"\n"+RAZORPAY_ALL,[replyButton("I Paid","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); } 
-  }); 
-}
+async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },1500); }catch(e){ console.log("PAY CTA FAIL", e.response?.data); sendMessage(uid,getText(l,'payReg')+"\n"+RAZORPAY_ALL,[replyButton("I Paid","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); } }); }
 async function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid,getText(l,'emiGoodChoice')+"\n\n"+getText(l,'emiOpt'),[replyButton(getText(l,'emi10'),"EMI_10"),replyButton(getText(l,'emi20'),"EMI_20"),replyButton(getText(l,'emiBusiness'),"EMI_BC")]); }
 async function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:userStates[uid].data, lastStep:'Lead - Name' }; sendMessage(uid,getText(l,'leadGoodChoice')+"\n\n"+getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); }
 async function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; sendMessage(uid,"Place / District / State?"); }else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; sendMessage(uid,getText(s.lang,'occQGoodChoice')+"\n\n"+getText(s.lang,'occQ'),[replyButton(getText(s.lang,'bus'),"OCC_BUS"),replyButton(getText(s.lang,'emp'),"OCC_EMP"),replyButton(getText(s.lang,'house'),"OCC_HOUSE")]); } }
 async function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; sendMessage(uid,getText(s.lang,'dateGoodChoice')+"\n\n"+getText(s.lang,'tender')+"\n"+LINKS.tenderDistrict+"\n\n"+getText(s.lang,'date'),[replyButton(getText(s.lang,'today'),"DATE_TODAY"),replyButton(getText(s.lang,'tom'),"DATE_TOMORROW")]); }
-async function handleDate(uid,d){ const s=userStates[uid]; sendMessage(uid,getText(s.lang,'thanksGoodChoice')+getText(s.lang,'thanks')+" - "+s.data.name+" - "+d+" - Fee:"+s.data.currentFee); delete userStates[uid]; }
+async function handleDate(uid,d){ const s=userStates[uid]; sendMessage(uid,getText(s.lang,'thanksGoodChoice')+getText(s.lang,'thanks')+" - "+s.data.name+" - "+d+" - Fee:"+s.data.currentFee); delete userStates[uid]; saveCRM(); }
 
 async function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const t=(txt||"").toLowerCase().trim();
+  
+  // CRM Log IN - Every user message
+  logCRM(uid, "IN", txt, p, state?.flow||"NEW", state?.lastStep||"First Message", {currentFee: state?.data?.currentFee, currentType: state?.data?.currentType});
+  
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu' }; await sendMain(uid,l); return; }
   if(!state){ console.log(`FIRST MESSAGE from ${uid}`); await sendFirst(uid); return; }
@@ -454,4 +476,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V60 FINAL BOT ${BOT_OWN_NUMBER} WITH CALL BUTTONS on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V61 FINAL WITH CRM - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} WITH CALL BUTTONS + CRM on ${PORT} - View CRM at /crm`));
