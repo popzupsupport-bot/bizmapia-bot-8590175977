@@ -1,4 +1,4 @@
-// V65 - Welcome WITH Poster + All Posters Fixed + No Rate Limit + CRM - BOT 7025630644
+// V70 FINAL - 9 Correct Posters + Correct Reminder Intervals: Others 5min,30min,8h,16h,24h (final) | Driver 5min,30min,8h,16h,24h,48h,72h final - BOT 7025630644
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -13,46 +13,42 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || "";
 
-// V65: Fixed Posters - All valid i.ibb.co URLs
+// V70: 9 CORRECT POSTERS FROM USER
 const POSTERS = {
-  welcome: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png", // Welcome poster
-  onlineBooking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png",
+  welcome: "https://i.ibb.co/F4YWDzvg/bizmapia-welcome-HD-1080.png",
+  customerRide: "https://i.ibb.co/C3KWxFJv/bizmapia-customer-welcome-HD.png",
+  driverRide: "https://i.ibb.co/mC3pLbyq/bizmapia-driver-welcome-HD.png",
+  businessDir: "https://i.ibb.co/RTz6MWy3/bizmapia-business-reg-HD.png",
   delivery: "https://i.ibb.co/nN5pMLm8/Bizmapia-Fast-Safe-Local-Delivery.png",
-  businessDir: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  businessList: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  businessSearch: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  rideCustomer: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
-  rideDriver: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
-  districtFranchise: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  corporation: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  municipal: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  businessCenter: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  franchisee: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  benefits: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
-  support: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  requirements: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
-  extra: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
+  booking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png",
+  businessOpp: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
+  driverReminderBenefits: "https://i.ibb.co/TxHz2jFH/bizmapia-benefit-reminder-HD.png",
+  businessReminderOffer: "https://i.ibb.co/d0vbRFYs/bizmapia-1year-discount-HD.png",
+  onlineBooking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png",
+  districtFranchise: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
+  corporation: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
+  municipal: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
+  businessCenter: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
 };
 
 const LINKS = {
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
   driverApp: "https://play.google.com/store/apps/details?id=com.bizmapia.driver",
   businessApp: "https://play.google.com/store/apps/details?id=com.bizmapia.business",
-  businessWebsite: "https://bizmapia.com",
   tenderDistrict: "https://bizmapia.com/tender/district.pdf",
 };
 
-const PHONES = {
-  gopalan: "919745226642",
-  business: "918590175977",
-  displayG: "97452 26642",
-  displayB: "85901 75977",
-};
+const PHONES = { gopalan: "919745226642", business: "918590175977", displayG: "97452 26642", displayB: "85901 75977" };
 
 let userStates = {};
 const processedIds = new Set();
 const lastSentPerUser = new Map();
 const recentWelcomes = new Map();
+
+let reminderStore = {};
+const REMINDER_FILE = path.join(__dirname, 'reminders.json');
+try{ if(fs.existsSync(REMINDER_FILE)){ reminderStore = JSON.parse(fs.readFileSync(REMINDER_FILE,'utf8')); } }catch(e){ reminderStore={}; }
+function saveReminders(){ try{ fs.writeFileSync(REMINDER_FILE, JSON.stringify(reminderStore, null, 2)); }catch(e){} }
 
 let crmLogs = [];
 const CRM_FILE = path.join(__dirname, 'crm_logs.json');
@@ -64,10 +60,7 @@ async function pushToGoogleSheet(entry){
   if(crmLogs.length%5===0) saveCRM();
   console.log(`CRM ${entry.direction} | ${entry.phone} | ${entry.flow} | ${entry.lastStep} | ${entry.message.substring(0,80)}`);
   if(GOOGLE_SHEET_WEBHOOK && GOOGLE_SHEET_WEBHOOK.startsWith('http')){
-    try{
-      await axios.post(GOOGLE_SHEET_WEBHOOK, {timestamp: entry.date, phone: entry.phone, name: entry.name, message: entry.message, payload: entry.payload, direction: entry.direction, flow: entry.flow, lastStep: entry.lastStep, fee: entry.currentFee}, {timeout: 5000});
-      console.log(`Sheet OK ${entry.phone}`);
-    }catch(e){ console.log(`Sheet FAIL ${e.message}`); }
+    try{ await axios.post(GOOGLE_SHEET_WEBHOOK, entry, {timeout: 5000}); }catch(e){}
   }
 }
 
@@ -81,8 +74,144 @@ function logCRM(uid, direction, message, payload, flow, lastStep, extra={}){
     name:extra.name||userStates[uid]?.data?.name||"", place:extra.place||userStates[uid]?.data?.place||"", occ:extra.occ||userStates[uid]?.data?.occ||"",
   };
   pushToGoogleSheet(entry);
-  return entry;
 }
+
+function updateReminder(uid, lastStep, lastButtons, lastPoster, lastText, flow, fee, type, isDriver=false, isBusinessDir=false){
+  reminderStore[uid] = {
+    uid, lastActivity: Date.now(), lastStep, lastButtons, lastPoster, lastText, flow, fee, type,
+    isDriver, isBusinessDir, reminderCount: 0, lastReminderTime: null,
+  };
+  saveReminders();
+}
+
+async function sendReminder(uid, reminderType){
+  const r = reminderStore[uid];
+  if(!r) return;
+  const now = Date.now();
+  let posterToUse = r.lastPoster;
+  let reminderText = "";
+  let buttons = r.lastButtons;
+  
+  if(r.isDriver) posterToUse = POSTERS.driverReminderBenefits;
+  else if(r.isBusinessDir) posterToUse = POSTERS.businessReminderOffer;
+  
+  if(reminderType === '5min'){
+    reminderText = `⏰ *Quick Reminder - You just left (5 min ago)*\n\nYou stopped at: *${r.lastStep}*\n\n${r.lastText.substring(0,300)}\n\n👉 *What you need to do:*\n${getWhatToDo(r)}\n\n🎁 *What you GET:*\n${getWhatYouGet(r)}\n\n⚡ Complete right now - Tap below:`;
+    r.reminderCount = 1;
+  } else if(reminderType === '30min'){
+    reminderText = `⏰ *Reminder - 30 min ago you left & not responded*\n\nYou stopped at: *${r.lastStep}*\n\nYou haven't responded in last 30 min.\n\n👉 *What you need to do NOW:*\n${getWhatToDo(r)}\n\n🎁 *What you GET:*\n${getWhatYouGet(r)}\n\n⚡ Do it right now - Tap below:`;
+    r.reminderCount = 2;
+  } else if(reminderType === '8h'){
+    reminderText = `🔔 *Reminder - 8 hours ago you left*\n\nYou were at: *${r.lastStep}*\n\nYour opportunity is waiting!\n\n👉 *What to do:*\n${getWhatToDo(r)}\n\n🎁 *Benefits:*\n${getWhatYouGet(r)}\n\nComplete now:`;
+    r.reminderCount = 3;
+  } else if(reminderType === '16h'){
+    reminderText = `⏰ *Reminder - 16 hours ago - Still pending*\n\nHi, you left at *${r.lastStep}* and didn't complete.\n\n👉 *Action needed:*\n${getWhatToDo(r)}\n\n🎁 *You will get:*\n${getWhatYouGet(r)}\n\nTap to continue now:`;
+    r.reminderCount = 4;
+  } else if(reminderType === '24h'){
+    // For Others: FINAL lost chance + retry options | For Driver: Warning, not final
+    if(r.isDriver){
+      reminderText = `⚠️ *Reminder - 24 hours - Driver Opportunity*\n\nYou started at *${r.lastStep}* 24 hours ago.\n\nYour driver application is pending. Complete now!\n\n👉 *What to do:*\n${getWhatToDo(r)}\n\n🎁 *Benefits:*\n${getWhatYouGet(r)}\n\nTap below:`;
+      r.reminderCount = 5;
+    } else {
+      reminderText = `❌ *Last Reminder - 24 hours - You lost your chance*\n\nYou started at *${r.lastStep}* 24 hours ago and didn't complete. Your application has expired.\n\nBut you can RETRY again now! Don't miss again.\n\n👇 Select to start again:`;
+      buttons = [
+        {title: "Ride - Hailing", payload: "OPT_RIDE"},
+        {title: "Business Directory", payload: "OPT_DIR"},
+        {title: "Earn with Bizmapia", payload: "OPT_EARN"},
+      ];
+      r.reminderCount = 5;
+      // For non-driver, 24h is FINAL - delete after 1 min
+      setTimeout(()=>{ delete reminderStore[uid]; saveReminders(); }, 60000);
+    }
+  } else if(reminderType === '48h' && r.isDriver){
+    reminderText = `🔔 *Driver Reminder - 48 hours - 2nd Last Chance*\n\nYou left at *${r.lastStep}* 48 hours ago.\n\nDon't miss your driver earning chance!\n\n👉 *Action:*\n${getWhatToDo(r)}\n\n🎁 *Benefits:*\n${getWhatYouGet(r)}\n\nComplete now:`;
+    r.reminderCount = 6;
+  } else if(reminderType === '72h' && r.isDriver){
+    reminderText = `❌ *LAST Driver Reminder - 72 hours - You lost your chance*\n\nYou started at *${r.lastStep}* 72 hours ago and didn't complete. Your driver application has expired.\n\nBut you can RETRY again now!\n\n👇 Select to start again:`;
+    buttons = [
+      {title: "Attach Vehicle", payload: "RIDE_ATTACH"},
+      {title: "Book a Ride", payload: "RIDE_BOOK"},
+      {title: "Main Menu", payload: "MAIN_MENU"},
+    ];
+    r.reminderCount = 7;
+    setTimeout(()=>{ delete reminderStore[uid]; saveReminders(); }, 60000);
+  } else {
+    return; // Don't send if not matching condition (e.g., 48h for non-driver)
+  }
+  
+  r.lastReminderTime = now;
+  saveReminders();
+  console.log(`Sending ${reminderType} to ${uid} isDriver:${r.isDriver} with ${posterToUse.split('/').pop()}`);
+  logCRM(uid, `REMINDER_${reminderType.toUpperCase()}`, reminderText, buttons?.map(b=>b.payload||b.title).join("|"), r.flow, `Reminder ${reminderType} - ${r.lastStep}`, {currentFee: r.fee, currentType: r.type});
+  sendImageWithButtons(uid, posterToUse, reminderText, buttons);
+}
+
+function getWhatToDo(r){
+  const step = r.lastStep || "";
+  if(step.includes('Language')) return "1. Select language (English/Hindi/Malayalam)";
+  if(step.includes('Main Menu')) return "1. Select: Ride, Business Directory, Delivery, Booking, or Earn";
+  if(step.includes('Ride Selection')) return "1. Choose: Book a ride or Attach your vehicle\n2. Download app";
+  if(r.isDriver) return "1. Download Driver App\n2. Register as driver\n3. Upload License, RC, Aadhaar\n4. Start earning Rs.1500-2500 daily";
+  if(r.isBusinessDir) return "1. Download Business App\n2. Add your business\n3. Get FREE listing + 1 Year Discount\n4. Get customers";
+  if(step.includes('Delivery')) return "1. Select Book Parcel or Join as Agent\n2. Download app";
+  if(step.includes('Booking')) return "1. Select Room/Appointment/Movie\n2. Download app";
+  if(step.includes('Earn') || step.includes('District') || step.includes('Corporation')) return `1. Pay Rs.5000 registration (part of ${r.fee||'15L'})\n2. Share Name, Place, District\n3. Agreement date`;
+  if(step.includes('Corporation Check')) return "1. Select Yes Corp / No Corp";
+  if(step.includes('Ready to Pay')) return `1. Confirm ready to pay ${r.fee||'15L'}\n2. Pay Rs.5000`;
+  if(step.includes('Pay Rs.5000')) return "1. Tap Pay Now - Rs.5000\n2. Share details";
+  if(step.includes('Lead') || step.includes('Name') || step.includes('Place')) return "1. Share Name, Place, District\n2. Select occupation";
+  return "Tap buttons below to continue: " + step;
+}
+
+function getWhatYouGet(r){
+  if(r.isDriver) return "💰 Rs.1500-2500 daily\n✅ Daily payout\n✅ Bonus\n✅ Work near home";
+  if(r.isBusinessDir) return "🏪 FREE listing\n✅ 10L+ network\n✅ Customers\n✅ 1 Year Discount";
+  if(r.lastStep.includes('Ride')) return "🚖 Cheapest Taxi/Auto - 10% discount";
+  if(r.lastStep.includes('Delivery')) return "📦 2 Hours delivery\n💰 Earn Rs.800-1500/day";
+  if(r.lastStep.includes('Earn') || r.lastStep.includes('District')) return `💰 ${r.fee||'15L'} earning\n✅ Lifetime royalty\n✅ Support`;
+  return "✅ Complete application\n✅ Team call within 24h";
+}
+
+// V70: Correct Intervals: Others 5min,30min,8h,16h,24h FINAL | Driver 5min,30min,8h,16h,24h,48h,72h FINAL
+setInterval(()=>{
+  const now = Date.now();
+  for(const uid in reminderStore){
+    const r = reminderStore[uid];
+    if(!r || !r.lastActivity) continue;
+    const diffMs = now - r.lastActivity;
+    const diffM = diffMs / 60000;
+    const diffH = diffMs / 3600000;
+    
+    if(diffM >= 5 && diffM < 6 && r.reminderCount === 0){
+      sendReminder(uid, '5min');
+    }
+    else if(diffM >= 30 && diffM < 31 && r.reminderCount === 1){
+      sendReminder(uid, '30min');
+    }
+    else if(diffH >= 8 && diffH < 8.05 && r.reminderCount === 2){
+      sendReminder(uid, '8h');
+    }
+    else if(diffH >= 16 && diffH < 16.05 && r.reminderCount === 3){
+      sendReminder(uid, '16h');
+    }
+    else if(diffH >= 24 && diffH < 24.05 && r.reminderCount === 4){
+      sendReminder(uid, '24h');
+    }
+    else if(r.isDriver && diffH >= 48 && diffH < 48.05 && r.reminderCount === 5){
+      sendReminder(uid, '48h');
+    }
+    else if(r.isDriver && diffH >= 72 && diffH < 72.05 && r.reminderCount === 6){
+      sendReminder(uid, '72h');
+    }
+    else if(!r.isDriver && diffH > 25){
+      delete reminderStore[uid]; saveReminders();
+    }
+    else if(r.isDriver && diffH > 73){
+      delete reminderStore[uid]; saveReminders();
+    }
+  }
+}, 60 * 1000);
+console.log("V70 Reminder: Others 5min,30min,8h,16h,24h FINAL | Driver 5min,30min,8h,16h,24h,48h,72h FINAL - Checks every 60s");
 
 let lastGlobalSendTime = 0;
 const GLOBAL_GAP_MS = 6000;
@@ -110,8 +239,7 @@ async function processQueue(){
     }catch(e){
       const errStr = JSON.stringify(e.response?.data||e.message);
       if(errStr.includes('130429')){
-        console.log(`130429 for ${uid} - Wait 20s`);
-        logCRM(uid, "OUT_FAILED_130429", `Rate limit - retry 20s - ${job.debug}`, job.payload||"", "RATE_LIMIT", "Rate limit");
+        logCRM(uid, "OUT_FAILED_130429", `Rate limit - ${job.debug}`, job.payload||"", "RATE_LIMIT", "Rate limit");
         await new Promise(r=>setTimeout(r, 20000));
         sendQueue.unshift(job);
         lastGlobalSendTime = Date.now() + 15000;
@@ -119,29 +247,17 @@ async function processQueue(){
         continue;
       }else{
         console.log("Queue error", errStr);
-        // If image fails, fallback to text
-        if(errStr.includes('image') || errStr.includes('media')){
-          console.log(`Image failed for ${uid} - Trying text fallback`);
+        if(errStr.includes('image') || errStr.includes('media') || errStr.includes('190')){
           try{
             const to = job.uid.replace(/\D/g,'');
             const formattedTo = to.startsWith('91') && to.length===12 ? to : to.length===10 ? '91'+to : to;
             if(formattedTo !== BOT_OWN_NUMBER){
               const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
               const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
-              const fallbackData = {
-                messaging_product:"whatsapp",
-                to: formattedTo,
-                type:"interactive",
-                interactive:{
-                  type:"button",
-                  body:{text: job.fallbackText || job.debug || "Welcome to Bizmapia!"},
-                  action:{buttons: job.fallbackButtons || [{type:"reply",reply:{id:"MAIN_MENU",title:"Main Menu"}}]}
-                }
-              };
+              const fallbackData = { messaging_product:"whatsapp", to: formattedTo, type:"interactive", interactive:{ type:"button", body:{text: job.fallbackText || "Welcome to Bizmapia!"}, action:{buttons: job.fallbackButtons?.map(b=>({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}})) || [{type:"reply",reply:{id:"MAIN_MENU",title:"Main Menu"}}]} } };
               await axios.post(url, fallbackData, {headers});
-              console.log(`Fallback text OK for ${uid}`);
             }
-          }catch(e2){ console.log(`Fallback also failed ${JSON.stringify(e2.response?.data)}`); }
+          }catch(e2){}
         }
         lastGlobalSendTime = Date.now();
         lastSentPerUser.set(uid, Date.now());
@@ -152,16 +268,19 @@ async function processQueue(){
 }
 
 function enqueueSend(uid, fn, debug="", payload="", fallbackText="", fallbackButtons=null){
-  sendQueue.push({uid: uid, fn: fn, debug: debug, payload: payload, fallbackText: fallbackText, fallbackButtons: fallbackButtons});
+  sendQueue.push({uid, fn, debug, payload, fallbackText, fallbackButtons});
   processQueue();
 }
 
-app.get('/', (req,res)=>res.status(200).send(`V65 Welcome WITH Poster + All Posters Fixed - ${crmLogs.length} logs - Bot:${BOT_OWN_NUMBER} - <a href="/crm">CRM</a>`));
+app.get('/', (req,res)=>res.status(200).send(`V70 FINAL - 9 Posters - Reminders: Others 5min,30min,8h,16h,24h FINAL | Driver up to 72h - ${crmLogs.length} logs - ${Object.keys(reminderStore).length} pending - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a>`));
 app.get('/crm', (req,res)=>{
-  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}</style></head><body><h2>📊 V65 CRM - ${crmLogs.length} Records - With Posters</h2><p><a href="/crm/download">Download</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Message</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
+  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}.rem{background:#e8f5e9}</style></head><body><h2>📊 V70 CRM - 9 Posters + Correct Intervals - ${crmLogs.length} Records</h2><p><a href="/reminders">Reminders</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Message</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':l.direction.includes('REMINDER')?'rem':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
   res.send(html);
 });
-app.get('/crm/download', (req,res)=>{ res.setHeader('Content-disposition','attachment; filename=crm_logs.json'); res.setHeader('Content-type','application/json'); res.send(JSON.stringify(crmLogs,null,2)); });
+app.get('/reminders', (req,res)=>{
+  const html=`<html><head><title>Reminders ${Object.keys(reminderStore).length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}</style></head><body><h2>⏰ V70 Reminders: Others 5min,30min,8h,16h,24h FINAL | Driver 5min,30min,8h,16h,24h,48h,72h FINAL - ${Object.keys(reminderStore).length} Pending</h2><p><a href="/crm">CRM</a></p><table><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th><th>Poster</th><th>Buttons</th></tr>${Object.values(reminderStore).map(r=>{ const diffM = Math.floor((Date.now()-r.lastActivity)/60000); return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min ago</td><td>${r.reminderCount}</td><td>Driver:${r.isDriver} BizDir:${r.isBusinessDir} Fee:${r.fee}</td><td>${r.lastPoster.split('/').pop()}</td><td>${r.lastButtons?.map(b=>b.payload||b.title).join(', ')}</td></tr>`; }).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
+  res.send(html);
+});
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
 
 const FIRST_BRIEF = `🌟 Welcome to Bizmapia - All India 4-in-1 Services!
@@ -182,42 +301,43 @@ const T = {
     rideGoodChoice:"✅ Good choice! *Ride - Hailing*\n\nNow book/attach Cab/Auto/Bike/Ambulance anywhere India.", rideOpt:"A. Book a ride\nB. Attach your vehicle", bookRide:"Book a ride", attach:"Attach your vehicle",
     custGoodChoice:"✅ Good choice! *Book a Ride*\n\nNow see cheapest Taxi/Auto/Bike with 10% Discount.", custPost:"🚖 Book ride anywhere India\nCheapest Taxi/Auto/Bike - 10% Discount\nCab/Auto/Bike/Ambulance\n\n📱 "+LINKS.customerApp,
     drivGoodChoice:"✅ Good choice! *Attach Vehicle*\n\nNow see how to earn Rs.1500-2500 daily.", drivPost:"💰 Attach vehicle\nDaily Rs.1500-2500\nTaxi/Auto/Bike/Ambulance\nDaily payout\n\n📱 "+LINKS.driverApp,
-    businessDirGoodChoice:"✅ Good choice! *Business Directory*\n\nNow list your business FREE or search 10,00,000+ businesses.", businessDirIntro:"🏪 Business Directory\n10,00,000+ Businesses\n✅ Free Listing\n✅ More Customers",
+    businessDirGoodChoice:"✅ Good choice! *Business Directory*\n\nNow list your business FREE or search 10,00,000+ businesses.", businessDirIntro:"🏪 Business Directory\n10,00,000+ Businesses\n✅ Free Listing\n✅ More Customers\n✅ 1 Year Discount Offer!",
     businessDirBtn1:"List My Business", businessDirBtn2:"Search Business", businessDirBtn3:"How to List?",
-    businessListGoodChoice:"✅ Good choice! *List Business*\n\nNow learn benefits & procedure to list FREE.", businessListIntro:"📝 LIST YOUR BUSINESS\nList FREE on Bizmapia!\n✅ Photo, Contact, Location\n✅ Direct customer calls",
-    businessListBenefits:"🌟 BENEFITS\n✅ 100% Free basic\n✅ Get nearby calls\n✅ Google + Bizmapia\n✅ Rating & Review", businessListProcedure:"📋 PROCEDURE\n1. Download Business App\n2. Add Business\n3. Enter Name, Category, Address\n4. Add Photos, Contact\n5. Submit\n6. Live in 24h",
+    businessListGoodChoice:"✅ Good choice! *List Business*\n\nNow learn benefits & procedure to list FREE.", businessListIntro:"📝 LIST YOUR BUSINESS\nList FREE on Bizmapia!\n✅ Photo, Contact, Location\n✅ Direct customer calls\n✅ 1 Year Discount Offer!",
+    businessListBenefits:"🌟 BENEFITS - Business Directory\n✅ 100% Free basic\n✅ Get nearby calls\n✅ Google + Bizmapia\n✅ Rating & Review\n✅ 1 Year Discount!", businessListProcedure:"📋 PROCEDURE\n1. Download Business App\n2. Add Business\n3. Enter Name, Category, Address\n4. Add Photos, Contact\n5. Submit\n6. Live in 24h",
     businessListApp:"Download:\n"+LINKS.businessApp, businessSearchGoodChoice:"✅ Good choice! *Search Business*\n\nNow search any business anywhere India.", businessSearchIntro:"🔍 SEARCH BUSINESS\nFind any business India\n✅ Name, category, place\n✅ 10 lakh+ listed",
     businessSearchHow:"How to Search?\n1. Download App\n2. Search name/category\n3. Select place\n4. Get contact\n5. Call directly",
     deliveryGoodChoice:"✅ Good choice! *Online Delivery*\n\nNow send parcel in 2 Hours anywhere India, or join as agent.", deliveryIntro:"📦 Online Delivery\n⚡ 2 Hours Delivery\n📍 Anywhere India\n💰 Cheapest Rates", deliveryBtn1:"Book Parcel", deliveryBtn2:"Join as Agent", deliveryBtn3:"How it Works?",
     deliveryBookGoodChoice:"✅ Good choice! *Book Parcel*\n\nNow see parcel types & booking procedure.", deliveryBookIntro:"📦 BOOK PARCEL\nSend anything in 2 Hours!\n✅ Documents, Food, Gifts, Medicine",
     deliveryBookProcedure:"📋 PROCEDURE - Book Parcel\n1. Download App\n2. Select Delivery\n3. Enter Pickup/Delivery Address\n4. Enter parcel details\n5. Get price\n6. Confirm & Pay\n7. Pickup 30 mins\n8. Delivered 2 Hours!", deliveryBookCharges:"💰 CHARGES\n• City: Rs.50+\n• District: Rs.100+\n• Inter-District: KM based",
     deliveryAgentGoodChoice:"✅ Good choice! *Join as Agent*\n\nNow see benefits, requirements, procedure to earn daily.", deliveryAgentIntro:"🏍️ JOIN AS AGENT\n💰 Rs.800-1500/day\n✅ Part/full time\n✅ Own bike\n✅ Daily payout",
-    deliveryAgentBenefits:"🌟 BENEFITS\n✅ Rs.800-1500/day\n✅ Bonus\n✅ No office\n✅ Work near area", deliveryAgentRequirements:"📋 REQUIREMENTS\n✅ Bike + License + RC\n✅ Android Mobile\n✅ Aadhaar + PAN\n✅ 18+ Age",
-    deliveryAgentProcedure:"📋 PROCEDURE - Join\n1. Download Driver App\n2. Register as Agent\n3. Upload Bike, License, Aadhaar\n4. Verify 24h\n5. Training\n6. Start!\n"+LINKS.driverApp,
-    bookingGoodChoice:"✅ Good choice! *Online Booking*\n\nNow book Rooms, Appointments, Movie Tickets in 1 click.", bookIntro:"🏨 Online Booking\nBook Rooms, Appointments & Movie Tickets in 1 Click!\n✅ Rooms - Hotels, Resorts\n✅ Appointments - Doctors, Salons\n✅ Movies - All Theatres\nAffordable, Instant, Safe!",
+    deliveryAgentBenefits:"🌟 BENEFITS - Join as Agent\n✅ Rs.800-1500/day\n✅ Bonus per delivery\n✅ No office\n✅ Work near your area\n✅ Daily payout", deliveryAgentRequirements:"📋 REQUIREMENTS - Join as Agent\n✅ Bike + License + RC\n✅ Android Mobile\n✅ Aadhaar + PAN\n✅ 18+ Age", 
+    deliveryAgentProcedure:"📋 PROCEDURE - Join as Agent\n1. Download Driver App\n2. Register as Agent\n3. Upload Bike, License, Aadhaar\n4. Verify 24h\n5. Training\n6. Start Earning!\n"+LINKS.driverApp,
+    riderBenefitsDetail:"🏍️ RIDER BENEFITS\n💰 Daily Rs.1500-2500\n✅ Part time / Full time\n✅ Own vehicle\n✅ Daily payout\n✅ Bonus", driverRemindBenefits:"🔔 DRIVER REMINDER - Benefits\n💰 Earn Rs.1500-2500 daily!\n🚖 Taxi/Auto/Bike/Ambulance\n✅ Daily payout\n✅ Bonus\n\nDownload Driver App:\n"+LINKS.driverApp,
+    bookingGoodChoice:"✅ Good choice! *Online Booking*\n\nNow book Rooms, Appointments, Movie Tickets in 1 click.", bookIntro:"🏨 Online Booking\nBook Rooms, Appointments & Movie Tickets in 1 Click!\n✅ Rooms - Hotels, Resorts\n✅ Appointments - Doctors, Salons\n✅ Movies - All Theatres",
     bookRoom:"Book Room", bookAppointment:"Book Appointment", bookMovie:"Book Movie",
-    bookRoomGoodChoice:"✅ Good choice! *Book Rooms*\n\nNow see how to book hotels/resorts/homestays.", bookRoomDetail:"🏨 BOOK ROOMS\nHotels | Resorts | Homestays\n✅ Affordable Rates\n✅ Instant Confirmation\n✅ Safe Payments",
-    bookAppointmentGoodChoice:"✅ Good choice! *Book Appointments*", bookAppointmentDetail:"🩺 BOOK APPOINTMENTS\nDoctors | Salons | Services\n✅ Instant Confirmation\n✅ Trusted",
+    bookRoomGoodChoice:"✅ Good choice! *Book Rooms*", bookRoomDetail:"🏨 BOOK ROOMS\nHotels | Resorts | Homestays\n✅ Affordable Rates\n✅ Instant Confirmation",
+    bookAppointmentGoodChoice:"✅ Good choice! *Book Appointments*", bookAppointmentDetail:"🩺 BOOK APPOINTMENTS\nDoctors | Salons | Services\n✅ Instant Confirmation",
     bookMovieGoodChoice:"✅ Good choice! *Book Movie Tickets*", bookMovieDetail:"🎬 BOOK MOVIE TICKETS\nLatest Movies | All Theatres\n✅ Easy, Fast, Affordable",
-    earnGoodChoice:"✅ Good choice! *Earn with Bizmapia*\n\nNow choose High, Moderate, Base opportunity.", earnIntro:"💰 Earn with Bizmapia\nChoose your opportunity\nWhat type you looking?",
+    earnGoodChoice:"✅ Good choice! *Earn with Bizmapia*\n\nNow choose High, Moderate, Base opportunity.", earnIntro:"💰 Earn with Bizmapia\nChoose your opportunity",
     high:"High Earning (15L)", mod:"Moderate (3-7L)", base:"Base (Business Center)", franchisee:"Franchisee", businessCenter:"Business Center",
     highGoodChoice:"✅ Good choice! *High Earning*\n\nNow see District/Corp/Municipal details. ONE per district.", highIntro:"🔥 HIGH EARNING\nOnly ONE per district!\n💰 District - 15L\nCorp - 7L\nMunicipal - 3L", highOptDistrict:"District - 15L", highOptCorp:"Corporation - 7L", highOptMuni:"Municipal - 3L",
-    moderateGoodChoice:"✅ Good choice! *Moderate Earning*\n\nNow see Corporation 7L & Municipal 3L details.", moderateIntro:"💼 MODERATE EARNING - 3-7L CONFIRMED\n\nCity/Town level entrepreneurs\nChoose:\n• Corp - 7L - Full corp control\n• Municipal - 3L - Municipality\n• BC - 50K-1L", 
-    corpGoodChoice:"✅ Good choice! *Corporation 7L*\n\nNow see benefits, support, requirements.", corpIntro:"🏙️ CORPORATION - 7 Lakhs\n• Corporation area\n• Control Business Centers", 
-    municipalGoodChoice:"✅ Good choice! *Municipal 3L*", municipalIntro:"🏘️ MUNICIPAL - 3 Lakhs\n• Municipality area\n• Good income, low invest",
-    baseGoodChoice:"✅ Good choice! *Base - Business Center*\n\nNow see low investment 50K-1L opportunity.", baseIntro:"🏪 BASE - BUSINESS CENTER - 50K-1L CONFIRMED\n\nLow Investment, High Return\nPerfect for small towns, villages\n• Panchayat/Small Town\n• Earn from 4 services", 
-    businessCenterIntro:"🏪 BUSINESS CENTER - 50K-1L\n• Panchayat/Small Town\n• You are local center\n• Earn from 4 services\n• Company leads\n• Training", businessCenterBenefits:"🌟 BENEFITS - BC\n✅ 50K-1L low invest\n✅ Earn 4 services\n✅ 90sqft enough\n✅ Marketing support",
+    moderateGoodChoice:"✅ Good choice! *Moderate Earning*", moderateIntro:"💼 MODERATE EARNING - 3-7L CONFIRMED\nChoose:\n• Corp - 7L\n• Municipal - 3L\n• BC - 50K-1L", 
+    corpGoodChoice:"✅ Good choice! *Corporation 7L*", corpIntro:"🏙️ CORPORATION - 7 Lakhs\n• Corporation area\n• Control Business Centers", 
+    municipalGoodChoice:"✅ Good choice! *Municipal 3L*", municipalIntro:"🏘️ MUNICIPAL - 3 Lakhs\n• Municipality area",
+    baseGoodChoice:"✅ Good choice! *Base - Business Center*", baseIntro:"🏪 BASE - BUSINESS CENTER - 50K-1L CONFIRMED\nLow Investment, High Return", 
+    businessCenterIntro:"🏪 BUSINESS CENTER - 50K-1L\n• Panchayat/Small Town\n• You are local center\n• Earn from 4 services", businessCenterBenefits:"🌟 BENEFITS - BC\n✅ 50K-1L low invest\n✅ Earn 4 services\n✅ 90sqft enough",
     franchiseeGoodChoice:"✅ Good choice! *All Franchisee Types*", franchiseeIntro:"📋 ALL TYPES CONFIRMED\n1️⃣ District - 15L\n2️⃣ Corp - 7L\n3️⃣ Municipal - 3L\n4️⃣ BC - 50K-1L",
-    procedureGoodChoice:"✅ Good choice! *Procedure*", procedureTitle:"📝 PROCEDURE", procedureDistrict:"PROCEDURE - District 15L\n1. Know benefits\n2. Corp check Yes/No\n3. Confirm ready 15L\n4. Pay Rs.5000 (part of 15L)\n5. Share Name, Place, District\n6. Agreement Date\n7. Tender\n8. Team call 24h\n9. Balance + Training", procedureBusinessCenter:"PROCEDURE - BC 50K-1L\n1. Know benefits\n2. Requirements 90sqft\n3. Pay Rs.5000\n4. Share details\n5. Agreement Date\n6. Tender\n7. Verification\n8. Balance + Start", procedureCommon:"GENERAL PROCEDURE - All 4 types\n1. Select type\n2. Benefits, Support, Requirements\n3. Corp check\n4. Ready to pay\n5. Pay Rs.5000\n6. EMI\n7. Share details\n8. Occupation\n9. Agreement date\n10. Tender\n11. Verification\n12. Launch",
-    benGoodChoice:"✅ Good choice! *Benefits*", benTitle:"🌟 BENEFITS", benDistrict:"BENEFITS - District 15L\n✅ Top level franchisee\n✅ % on ALL earnings\n✅ Direct Company contact\n✅ Lifetime royalty", benCorp:"BENEFITS - Corp 7L\n✅ Control corp area\n✅ % from BCs", benBusinessCenter:"BENEFITS - BC 50K-1L\n✅ Low invest\n✅ Earn 4 services",
-    supGoodChoice:"✅ Good choice! *Support*", supTitle:"🤝 SUPPORT", supText:"SUPPORT\n✅ 12 months marketing\n✅ 6 months Rent (District)\n✅ 6 months Staff salary\n✅ Software + Training",
-    reqGoodChoice:"✅ Good choice! *Requirements*", reqTitle:"📋 REQUIREMENTS", reqDistrict:"REQUIREMENTS - District 15L\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 15L\n✅ Aadhaar + PAN", reqBusinessCenter:"REQUIREMENTS - BC\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 50K-1L\n✅ Aadhaar + PAN",
+    procedureGoodChoice:"✅ Good choice! *Procedure*", procedureDistrict:"PROCEDURE - District 15L\n1. Know benefits\n2. Corp check Yes/No\n3. Confirm ready 15L\n4. Pay Rs.5000\n5. Share Name, Place, District\n6. Agreement Date\n7. Tender\n8. Team call 24h\n9. Balance + Training", procedureBusinessCenter:"PROCEDURE - BC 50K-1L\n1. Know benefits\n2. Requirements 90sqft\n3. Pay Rs.5000\n4. Share details\n5. Agreement Date", procedureCommon:"GENERAL PROCEDURE - All 4 types\n1. Select type\n2. Benefits, Support, Requirements\n3. Corp check\n4. Ready to pay\n5. Pay Rs.5000\n6. EMI\n7. Share details\n8. Occupation\n9. Agreement date\n10. Tender\n11. Verification\n12. Launch",
+    benGoodChoice:"✅ Good choice! *Benefits*", benDistrict:"BENEFITS - District 15L\n✅ Top level franchisee\n✅ % on ALL earnings\n✅ Direct Company contact\n✅ Lifetime royalty", benCorp:"BENEFITS - Corp 7L\n✅ Control corp area\n✅ % from BCs", benBusinessCenter:"BENEFITS - BC 50K-1L\n✅ Low invest\n✅ Earn 4 services",
+    supGoodChoice:"✅ Good choice! *Support*", supText:"SUPPORT\n✅ 12 months marketing\n✅ 6 months Rent (District)\n✅ 6 months Staff salary\n✅ Software + Training",
+    reqGoodChoice:"✅ Good choice! *Requirements*", reqDistrict:"REQUIREMENTS - District 15L\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 15L\n✅ Aadhaar + PAN", reqBusinessCenter:"REQUIREMENTS - BC\n✅ 90 Sqft room\n✅ 1 staff\n✅ PC/Mobile\n✅ Ready 50K-1L",
     corpQGoodChoice:"✅ Good choice! Ready to submit.\n\nNow: Did district contain corporation?", corpQ:"Did district contain corporation? If HQ has Corporation (e.g. Kochi), select Yes Corp.", yesCorp:"Yes Corp", noCorp:"No Corp",
     readyGoodChoice:"✅ Good choice! Corp status confirmed.\n\nNow confirm ready to pay fee.", ready15:"Confirm ready to pay 15 Lakhs as District fee.\n👉 Next: Pay Rs.5000 registration.", ready7:"Confirm ready to pay 7 Lakhs as Corporation fee.", ready3:"Confirm ready to pay 3 Lakhs as Municipal fee.", readyBC:"Confirm ready to pay 50K-1L as Business Center fee.", readyBtn15:"Yes Ready - 15L", readyBtn7:"Yes Ready - 7L", readyBtn3:"Yes Ready - 3L", readyBtnBC:"Yes Ready - BC",
     payGoodChoice:"✅ Good choice! Ready confirmed.\n\nNow pay Rs.5000 registration. Part of total fee, not extra.", payReg:"Pay Rs.5000 to proceed.\nPart of total fee, not extra.\nTap Pay Now below.", emiGoodChoice:"✅ Good choice! EMI options.", emiOpt:"Select EMI:\nDown 5 Lac + 10 Months / Down 5 Lac + 20 Months", emi10:"5L + 10x1L", emi20:"5L + 20x50k", emiBusiness:"BC EMI",
-    leadGoodChoice:"✅ Good choice! Payment done.\n\nNow share contact details. Final step.", leadAsk:"Share contact:\nName, Place, District, State, Contact, Occupation\n\nName as per Aadhaar:", occQGoodChoice:"✅ Good choice! Place shared.\n\nNow select occupation.", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", busman:"Businessman", tender:"Download Tender", dateGoodChoice:"✅ Good choice! Occupation selected.\n\nNow select agreement date.", date:"Select Agreement Date:", today:"Today", tom:"Tomorrow", thanksGoodChoice:"✅ Great! All details received.\n\n", thanks:"Thanks! Team will call within 24h. Application submitted!",
+    leadGoodChoice:"✅ Good choice! Payment done.\n\nNow share contact details. Final step.", leadAsk:"Share contact:\nName, Place, District, State, Contact, Occupation\n\nName as per Aadhaar:", occQGoodChoice:"✅ Good choice! Place shared.\n\nNow select occupation.", occQ:"Select Occupation:", bus:"Business", house:"Housewife", emp:"Employee", tender:"Download Tender", dateGoodChoice:"✅ Good choice! Occupation selected.\n\nNow select agreement date.", date:"Select Agreement Date:", today:"Today", tom:"Tomorrow", thanksGoodChoice:"✅ Great! All details received.\n\n", thanks:"Thanks! Team will call within 24h. Application submitted!",
     callG:"97452 26642", callB:"85901 75977", bookNow:"Book Now", dlDriv:"Driver App",
-    knowProcedure:"Know Procedure", knowFranchiseeTypes:"All Franchisee Types", backToEarn:"Back to Earn", viewTender:"View Tender", video:"Video Link", benefits:"Benefits", support:"Support", requirements:"Requirements", submit:"Submit Application", pay:"Pay Rs.5000", emi:"EMI Options",
+    knowProcedure:"Know Procedure", backToEarn:"Back to Earn", viewTender:"View Tender", video:"Video Link", benefits:"Benefits", support:"Support", requirements:"Requirements", submit:"Submit Application", pay:"Pay Rs.5000", emi:"EMI Options",
     howToList:"How to List?", searchBusiness:"Search Business", howItWorks:"How it Works?", bookParcel:"Book Parcel", joinAgent:"Join as Agent", listBusiness:"List Business", downloadApp:"Download App"
   }
 };
@@ -243,10 +363,9 @@ function doSendMessage(uid, txt, btnsRaw){
         }
       }else{ data={ messaging_product:"whatsapp", to, type:"text", text:{body:String(txt).substring(0,4096)} }; }
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
       logCRM(uid,"OUT",txt,btnsRaw?.map(b=>b.payload||b.title).join("|"),userStates[uid]?.flow||"",userStates[uid]?.lastStep||"",{currentFee:userStates[uid]?.data?.currentFee,currentType:userStates[uid]?.data?.currentType});
       resolve();
-    }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); reject(e); }
+    }catch(e){ reject(e); }
   });
 }
 
@@ -259,10 +378,9 @@ function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
       let buttons=[]; for(let b of btnsRaw.slice(0,3)){ if(b.phone){ buttons.push({type:"phone_number",phone_number:b.phone,title:b.title.substring(0,20)}); }else{ buttons.push({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}); } }
       const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{type:"image",image:{link:imgUrl}}, body:{text:String(caption).substring(0,1024)}, action:{buttons} } };
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT IMAGE OK to ${to} -> ${resp.data.messages?.[0]?.id} with poster ${imgUrl.substring(0,50)}`);
       logCRM(uid,"OUT",caption,btnsRaw?.map(b=>b.payload||b.title).join("|"),userStates[uid]?.flow||"",userStates[uid]?.lastStep||"",{currentFee:userStates[uid]?.data?.currentFee,currentType:userStates[uid]?.data?.currentType});
       resolve();
-    }catch(e){ console.log(`IMAGE FAIL ${imgUrl} - ${JSON.stringify(e.response?.data,null,2)}`); reject(e); }
+    }catch(e){ reject(e); }
   });
 }
 
@@ -271,78 +389,79 @@ function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(uid, ()=>
 function callButton(display, phone){ return {title:display, phone:phone}; }
 function replyButton(title, payload){ return {title, payload}; }
 
-// V65: Welcome WITH Poster
 async function sendFirst(uid){
   const lastWelcome = recentWelcomes.get(uid);
-  if(lastWelcome && Date.now()-lastWelcome < 15000){ console.log(`BLOCK double welcome ${uid}`); return; }
-  console.log(`sendFirst V65 WITH POSTER to ${uid}`);
+  if(lastWelcome && Date.now()-lastWelcome < 15000) return;
   if(formatTo(uid)===BOT_OWN_NUMBER) return;
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } };
   recentWelcomes.set(uid, Date.now()); setTimeout(()=>recentWelcomes.delete(uid),20000);
-  // Send WITH poster image
-  sendImageWithButtons(uid, POSTERS.welcome, FIRST_BRIEF, [replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]);
+  const btns = [replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")];
+  sendImageWithButtons(uid, POSTERS.welcome, FIRST_BRIEF, btns);
+  updateReminder(uid, 'Language Selection', btns, POSTERS.welcome, FIRST_BRIEF, 'WELCOME', '15L', 'District', false, false);
 }
-async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid,getText(l,'selOpt'),[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]); }
-async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid,"More:",[replyButton(getText(l,'del'),"OPT_DEL"),replyButton(getText(l,'book'),"OPT_BOOK"),replyButton(getText(l,'dir'),"OPT_DIR")]); }
-async function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; sendImageWithButtons(uid,POSTERS.rideCustomer,getText(l,'rideGoodChoice')+"\n\n"+getText(l,'rideOpt'),[replyButton(getText(l,'bookRide'),"RIDE_BOOK"),replyButton(getText(l,'attach'),"RIDE_ATTACH")]); }
-async function sendCust(uid,l){ userStates[uid].lastStep='Book a Ride'; sendImageWithButtons(uid,POSTERS.rideCustomer,getText(l,'custGoodChoice')+"\n\n"+getText(l,'custPost'),[replyButton(getText(l,'bookNow'),"BOOK_NOW"), callButton(PHONES.displayG, PHONES.gopalan)]); }
-async function sendDriv(uid,l){ userStates[uid].lastStep='Driver Attach'; userStates[uid].flow='DRIVER'; sendImageWithButtons(uid,POSTERS.rideDriver,getText(l,'drivGoodChoice')+"\n\n"+getText(l,'drivPost'),[replyButton(getText(l,'dlDriv'),"DL_DRIV"), callButton(PHONES.displayG, PHONES.gopalan)]); }
-async function sendBusinessDir(uid,l){ userStates[uid].lastStep='Business Directory Main'; sendImageWithButtons(uid,POSTERS.businessDir,getText(l,'businessDirGoodChoice')+"\n\n"+getText(l,'businessDirIntro'),[replyButton(getText(l,'businessDirBtn1'),"BIZ_LIST"),replyButton(getText(l,'businessDirBtn2'),"BIZ_SEARCH"),replyButton(getText(l,'businessDirBtn3'),"BIZ_HOW")]); }
-async function sendBusinessList(uid,l){ userStates[uid].lastStep='Business Directory - List'; sendImageWithButtons(uid,POSTERS.businessList,getText(l,'businessListGoodChoice')+"\n\n"+getText(l,'businessListIntro'),[replyButton(getText(l,'benefits'),"BIZ_BENEFITS"),replyButton(getText(l,'requirements'),"BIZ_PROCEDURE"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD")]); }
-async function sendBusinessListBenefits(uid,l){ sendImageWithButtons(uid,POSTERS.businessList,getText(l,'businessListBenefits'),[replyButton(getText(l,'requirements'),"BIZ_PROCEDURE"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton(getText(l,'backToEarn'),"OPT_DIR")]); }
-async function sendBusinessListProcedure(uid,l){ sendImageWithButtons(uid,POSTERS.businessList,getText(l,'businessListProcedure'),[replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton(getText(l,'businessDirBtn2'),"BIZ_SEARCH"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendBusinessSearch(uid,l){ userStates[uid].lastStep='Business Directory - Search'; sendImageWithButtons(uid,POSTERS.businessSearch,getText(l,'businessSearchGoodChoice')+"\n\n"+getText(l,'businessSearchIntro'),[replyButton(getText(l,'howToList'),"BIZ_HOW"),replyButton(getText(l,'searchBusiness'),"BIZ_SEARCH_HOW"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD")]); }
-async function sendBusinessSearchHow(uid,l){ sendMessage(uid,getText(l,'businessSearchHow'),[replyButton(getText(l,'listBusiness'),"BIZ_LIST"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendDel(uid,l){ userStates[uid].lastStep='Delivery Main'; sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryGoodChoice')+"\n\n"+getText(l,'deliveryIntro'),[replyButton(getText(l,'deliveryBtn1'),"DEL_BOOK"),replyButton(getText(l,'deliveryBtn2'),"DEL_AGENT"),replyButton(getText(l,'deliveryBtn3'),"DEL_HOW")]); }
-async function sendDeliveryBook(uid,l){ userStates[uid].lastStep='Delivery - Book Parcel'; sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryBookGoodChoice')+"\n\n"+getText(l,'deliveryBookIntro'),[replyButton(getText(l,'requirements'),"DEL_BOOK_PROC"),replyButton("Charges","DEL_CHARGES"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD")]); }
-async function sendDeliveryBookProcedure(uid,l){ sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryBookProcedure'),[replyButton("Charges","DEL_CHARGES"),replyButton(getText(l,'joinAgent'),"DEL_AGENT"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendDeliveryCharges(uid,l){ sendMessage(uid,getText(l,'deliveryBookCharges'),[replyButton(getText(l,'bookParcel'),"DEL_BOOK"),replyButton(getText(l,'joinAgent'),"DEL_AGENT"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendDeliveryAgent(uid,l){ userStates[uid].lastStep='Delivery - Agent'; sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryAgentGoodChoice')+"\n\n"+getText(l,'deliveryAgentIntro'),[replyButton(getText(l,'benefits'),"DEL_AGENT_BEN"),replyButton(getText(l,'requirements'),"DEL_AGENT_REQ"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD")]); }
-async function sendDeliveryAgentBenefits(uid,l){ sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryAgentBenefits'),[replyButton(getText(l,'requirements'),"DEL_AGENT_REQ"),replyButton(getText(l,'knowProcedure'),"DEL_AGENT_PROC"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendDeliveryAgentRequirements(uid,l){ sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryAgentRequirements'),[replyButton(getText(l,'knowProcedure'),"DEL_AGENT_PROC"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendDeliveryAgentProcedure(uid,l){ sendImageWithButtons(uid,POSTERS.delivery,getText(l,'deliveryAgentProcedure'),[replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD"),replyButton(getText(l,'bookParcel'),"DEL_BOOK"),callButton(PHONES.displayG, PHONES.gopalan)]); }
-async function sendRoom(uid,l){ userStates[uid].lastStep='Room Booking'; sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookingGoodChoice')+"\n\n"+getText(l,'bookIntro'),[replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE")]); }
-async function sendRoomDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookRoomGoodChoice')+"\n\n"+getText(l,'bookRoomDetail'),[replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendAppointmentDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookAppointmentGoodChoice')+"\n\n"+getText(l,'bookAppointmentDetail'),[replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendMovieDetail(uid,l){ sendImageWithButtons(uid,POSTERS.onlineBooking,getText(l,'bookMovieGoodChoice')+"\n\n"+getText(l,'bookMovieDetail'),[replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton("Main Menu","MAIN_MENU")]); }
-async function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'earnGoodChoice')+"\n\n"+getText(l,'earnIntro'),[replyButton(getText(l,'high'),"EARN_HIGH"),replyButton(getText(l,'mod'),"EARN_MOD"),replyButton(getText(l,'base'),"EARN_BASE")]); }
-async function sendHigh(uid,l){ userStates[uid].lastStep='High Earning'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'highGoodChoice')+"\n\n"+getText(l,'highIntro'),[replyButton(getText(l,'highOptDistrict'),"FRAN_DISTRICT"),replyButton(getText(l,'highOptCorp'),"FRAN_CORP"),replyButton(getText(l,'highOptMuni'),"FRAN_MUNICIPAL")]); }
-async function sendModerate(uid,l){ userStates[uid].lastStep='Moderate Earning CONFIRMED'; sendImageWithButtons(uid,POSTERS.corporation,getText(l,'moderateGoodChoice')+"\n\n"+getText(l,'moderateIntro'),[replyButton("Corporation - 7L","FRAN_CORP"),replyButton("Municipal - 3L","FRAN_MUNICIPAL"),replyButton(getText(l,'businessCenter'),"FRAN_BC")]); }
-async function sendBase(uid,l){ userStates[uid].lastStep='Base Earning CONFIRMED'; sendImageWithButtons(uid,POSTERS.businessCenter,getText(l,'baseGoodChoice')+"\n\n"+getText(l,'baseIntro'),[replyButton("Business Center","FRAN_BC"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE_BC"),replyButton(getText(l,'benefits'),"BEN_BC")]); }
-async function sendFranchiseeTypes(uid,l){ userStates[uid].lastStep='All Franchisee Types'; sendImageWithButtons(uid,POSTERS.franchisee,getText(l,'franchiseeGoodChoice')+"\n\n"+getText(l,'franchiseeIntro'),[replyButton("District - 15L","FRAN_DISTRICT"),replyButton("Corporation - 7L","FRAN_CORP"),replyButton("Business Center","FRAN_BC")]); }
-async function sendDistrictDetail(uid,l){ userStates[uid].data.currentFee="15L"; userStates[uid].data.currentType="District"; userStates[uid].lastStep='District Detail'; sendImageWithButtons(uid,POSTERS.districtFranchise,getText(l,'benGoodChoice')+"\n\n"+getText(l,'benDistrict'),[replyButton(getText(l,'video'),"VIDEO_DISTRICT"),replyButton(getText(l,'support'),"SUP_DISTRICT"),replyButton(getText(l,'requirements'),"REQ_DISTRICT")]); }
-async function sendCorpDetail(uid,l){ userStates[uid].data.currentFee="7L"; userStates[uid].data.currentType="Corporation"; userStates[uid].lastStep='Corporation Detail'; sendImageWithButtons(uid,POSTERS.corporation,getText(l,'corpGoodChoice')+"\n\n"+getText(l,'corpIntro'),[replyButton(getText(l,'benefits'),"BEN_CORP"),replyButton(getText(l,'support'),"SUP_CORP"),replyButton(getText(l,'requirements'),"REQ_CORP")]); }
-async function sendMunicipalDetail(uid,l){ userStates[uid].data.currentFee="3L"; userStates[uid].data.currentType="Municipal"; userStates[uid].lastStep='Municipal Detail'; sendImageWithButtons(uid,POSTERS.municipal,getText(l,'municipalGoodChoice')+"\n\n"+getText(l,'municipalIntro'),[replyButton(getText(l,'benefits'),"BEN_MUNI"),replyButton(getText(l,'support'),"SUP_MUNI"),replyButton(getText(l,'requirements'),"REQ_MUNI")]); }
-async function sendBusinessCenterDetail(uid,l){ userStates[uid].data.currentFee="BC"; userStates[uid].data.currentType="Business Center"; userStates[uid].lastStep='Business Center Detail'; sendImageWithButtons(uid,POSTERS.businessCenter,getText(l,'baseGoodChoice')+"\n\n"+getText(l,'businessCenterIntro'),[replyButton(getText(l,'benefits'),"BEN_BC"),replyButton(getText(l,'support'),"SUP_BC"),replyButton(getText(l,'requirements'),"REQ_BC")]); }
-async function sendProcedure(uid,l,type="common"){ userStates[uid].lastStep='Procedure '+type; let text=""; if(type==="district") text=getText(l,'procedureDistrict'); else if(type==="bc") text=getText(l,'procedureBusinessCenter'); else text=getText(l,'procedureCommon'); sendImageWithButtons(uid,POSTERS.extra,text,[replyButton(getText(l,'viewTender'),"VIEW_TENDER"),replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'backToEarn'),"OPT_EARN")]); }
-async function sendBen(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=""; if(type==="District") text=getText(l,'benDistrict'); else if(type==="Corporation") text=getText(l,'benCorp'); else text=getText(l,'benBusinessCenter'); sendImageWithButtons(uid,POSTERS.benefits,getText(l,'benGoodChoice')+"\n\n"+text,[replyButton(getText(l,'support'),"KNOW_SUP"),replyButton(getText(l,'requirements'),"KNOW_REQ"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE")]); }
-async function sendBenBC(uid,l){ sendImageWithButtons(uid,POSTERS.businessCenter,getText(l,'benGoodChoice')+"\n\n"+getText(l,'businessCenterBenefits'),[replyButton(getText(l,'support'),"SUP_BC"),replyButton(getText(l,'requirements'),"REQ_BC"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE_BC")]); }
-async function sendSup(uid,l){ sendImageWithButtons(uid,POSTERS.support,getText(l,'supGoodChoice')+"\n\n"+getText(l,'supText'),[replyButton(getText(l,'requirements'),"KNOW_REQ"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'submit'),"SUBMIT_APP")]); }
-async function sendReq(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=(type==="Business Center")?getText(l,'reqBusinessCenter'):getText(l,'reqDistrict'); sendImageWithButtons(uid,POSTERS.requirements,getText(l,'reqGoodChoice')+"\n\n"+text,[replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
-async function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; sendMessage(uid,getText(l,'corpQGoodChoice')+"\n\n"+getText(l,'corpQ'),[replyButton(getText(l,'yesCorp'),"CORP_YES"),replyButton(getText(l,'noCorp'),"CORP_NO")]); }
-async function sendReady(uid,l){ const fee=userStates[uid].data.currentFee||"15L"; let text="",btn=""; if(fee==="15L"){text=getText(l,'ready15');btn=getText(l,'readyBtn15');}else if(fee==="7L"){text=getText(l,'ready7');btn=getText(l,'readyBtn7');}else if(fee==="3L"){text=getText(l,'ready3');btn=getText(l,'readyBtn3');}else{text=getText(l,'readyBC');btn=getText(l,'readyBtnBC');} userStates[uid].lastStep='Ready to Pay '+fee; sendMessage(uid,getText(l,'readyGoodChoice')+"\n\n"+text,[replyButton(btn,"READY_"+fee),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
-async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(uid, async()=>{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },7000); }, "Pay CTA", "PAY_CTA"); }
-async function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid,getText(l,'emiGoodChoice')+"\n\n"+getText(l,'emiOpt'),[replyButton(getText(l,'emi10'),"EMI_10"),replyButton(getText(l,'emi20'),"EMI_20"),replyButton(getText(l,'emiBusiness'),"EMI_BC")]); }
-async function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:userStates[uid].data, lastStep:'Lead - Name' }; sendMessage(uid,getText(l,'leadGoodChoice')+"\n\n"+getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); }
-async function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; sendMessage(uid,"Place / District / State?"); }else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; sendMessage(uid,getText(s.lang,'occQGoodChoice')+"\n\n"+getText(s.lang,'occQ'),[replyButton(getText(s.lang,'bus'),"OCC_BUS"),replyButton(getText(s.lang,'emp'),"OCC_EMP"),replyButton(getText(s.lang,'house'),"OCC_HOUSE")]); } }
-async function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; sendMessage(uid,getText(s.lang,'dateGoodChoice')+"\n\n"+getText(s.lang,'tender')+"\n"+LINKS.tenderDistrict+"\n\n"+getText(s.lang,'date'),[replyButton(getText(s.lang,'today'),"DATE_TODAY"),replyButton(getText(s.lang,'tom'),"DATE_TOMORROW")]); }
-async function handleDate(uid,d){ const s=userStates[uid]; sendMessage(uid,getText(s.lang,'thanksGoodChoice')+getText(s.lang,'thanks')+" - "+s.data.name+" - "+d+" - Fee:"+s.data.currentFee); delete userStates[uid]; saveCRM(); }
+async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; const btns = [replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]; const txt = getText(l,'selOpt'); sendImageWithButtons(uid, POSTERS.welcome, txt, btns); updateReminder(uid, 'Main Menu', btns, POSTERS.welcome, txt, 'MAIN', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; const btns = [replyButton(getText(l,'del'),"OPT_DEL"),replyButton(getText(l,'book'),"OPT_BOOK"),replyButton(getText(l,'dir'),"OPT_DIR")]; const txt = "More Options:"; sendImageWithButtons(uid, POSTERS.businessOpp, txt, btns); updateReminder(uid, 'More Options', btns, POSTERS.businessOpp, txt, 'MORE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; const btns = [replyButton(getText(l,'bookRide'),"RIDE_BOOK"),replyButton(getText(l,'attach'),"RIDE_ATTACH")]; const txt = getText(l,'rideGoodChoice')+"\n\n"+getText(l,'rideOpt'); sendImageWithButtons(uid,POSTERS.customerRide,txt,btns); updateReminder(uid, 'Ride Selection', btns, POSTERS.customerRide, txt, 'RIDE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendCust(uid,l){ userStates[uid].lastStep='Book a Ride - Customer'; const btns = [replyButton(getText(l,'bookNow'),"BOOK_NOW"), callButton(PHONES.displayG, PHONES.gopalan)]; const txt = getText(l,'custGoodChoice')+"\n\n"+getText(l,'custPost'); sendImageWithButtons(uid,POSTERS.customerRide,txt,btns); updateReminder(uid, 'Book a Ride - Customer', btns, POSTERS.customerRide, txt, 'RIDE_CUSTOMER', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDriv(uid,l){ userStates[uid].lastStep='Driver Attach - Benefits'; userStates[uid].flow='DRIVER'; const btns = [replyButton(getText(l,'dlDriv'),"DL_DRIV"), callButton(PHONES.displayG, PHONES.gopalan), replyButton("Benefits","DRIVER_BENEFITS")]; const txt = getText(l,'drivGoodChoice')+"\n\n"+getText(l,'riderBenefitsDetail')+"\n\n"+getText(l,'drivPost'); sendImageWithButtons(uid,POSTERS.driverRide,txt,btns); updateReminder(uid, 'Driver Attach - Benefits', btns, POSTERS.driverRide, txt, 'DRIVER', userStates[uid].data.currentFee, userStates[uid].data.currentType, true, false); }
+async function sendDriverBenefits(uid,l){ userStates[uid].lastStep='Rider Benefits - Reminder'; const btns = [replyButton(getText(l,'dlDriv'),"DL_DRIV"), callButton(PHONES.displayG, PHONES.gopalan), replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'riderBenefitsDetail')+"\n\n"+getText(l,'driverRemindBenefits'); sendImageWithButtons(uid,POSTERS.driverReminderBenefits,txt,btns); updateReminder(uid, 'Rider Benefits - Reminder', btns, POSTERS.driverReminderBenefits, txt, 'DRIVER_BENEFITS', userStates[uid].data.currentFee, userStates[uid].data.currentType, true, false); }
+async function sendBusinessDir(uid,l){ userStates[uid].lastStep='Business Directory Main'; const btns = [replyButton(getText(l,'businessDirBtn1'),"BIZ_LIST"),replyButton(getText(l,'businessDirBtn2'),"BIZ_SEARCH"),replyButton(getText(l,'businessDirBtn3'),"BIZ_HOW")]; const txt = getText(l,'businessDirGoodChoice')+"\n\n"+getText(l,'businessDirIntro'); sendImageWithButtons(uid,POSTERS.businessDir,txt,btns); updateReminder(uid, 'Business Directory Main', btns, POSTERS.businessDir, txt, 'BUSINESS_DIR', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendBusinessList(uid,l){ userStates[uid].lastStep='Business Directory - List'; const btns = [replyButton(getText(l,'benefits'),"BIZ_BENEFITS"),replyButton(getText(l,'requirements'),"BIZ_PROCEDURE"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD")]; const txt = getText(l,'businessListGoodChoice')+"\n\n"+getText(l,'businessListIntro'); sendImageWithButtons(uid,POSTERS.businessDir,txt,btns); updateReminder(uid, 'Business Directory - List', btns, POSTERS.businessDir, txt, 'BUSINESS_DIR_LIST', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendBusinessListBenefits(uid,l){ const btns = [replyButton(getText(l,'requirements'),"BIZ_PROCEDURE"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton(getText(l,'backToEarn'),"OPT_DIR")]; const txt = getText(l,'businessListBenefits'); sendImageWithButtons(uid,POSTERS.businessReminderOffer,txt,btns); updateReminder(uid, 'Business Directory - Benefits', btns, POSTERS.businessReminderOffer, txt, 'BUSINESS_DIR_BENEFITS', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendBusinessListProcedure(uid,l){ const btns = [replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton(getText(l,'businessDirBtn2'),"BIZ_SEARCH"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'businessListProcedure'); sendImageWithButtons(uid,POSTERS.businessDir,txt,btns); updateReminder(uid, 'Business Directory - Procedure', btns, POSTERS.businessDir, txt, 'BUSINESS_DIR_PROCEDURE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendBusinessSearch(uid,l){ userStates[uid].lastStep='Business Directory - Search'; const btns = [replyButton(getText(l,'howToList'),"BIZ_HOW"),replyButton(getText(l,'searchBusiness'),"BIZ_SEARCH_HOW"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD")]; const txt = getText(l,'businessSearchGoodChoice')+"\n\n"+getText(l,'businessSearchIntro'); sendImageWithButtons(uid,POSTERS.businessDir,txt,btns); updateReminder(uid, 'Business Directory - Search', btns, POSTERS.businessDir, txt, 'BUSINESS_DIR_SEARCH', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendBusinessSearchHow(uid,l){ const btns = [replyButton(getText(l,'listBusiness'),"BIZ_LIST"),replyButton(getText(l,'downloadApp'),"BIZ_APP_DOWNLOAD"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'businessSearchHow'); sendImageWithButtons(uid,POSTERS.businessDir,txt,btns); updateReminder(uid, 'Business Directory - Search How', btns, POSTERS.businessDir, txt, 'BUSINESS_DIR_SEARCH_HOW', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, true); }
+async function sendDel(uid,l){ userStates[uid].lastStep='Delivery Main'; const btns = [replyButton(getText(l,'deliveryBtn1'),"DEL_BOOK"),replyButton(getText(l,'deliveryBtn2'),"DEL_AGENT"),replyButton(getText(l,'deliveryBtn3'),"DEL_HOW")]; const txt = getText(l,'deliveryGoodChoice')+"\n\n"+getText(l,'deliveryIntro'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery Main', btns, POSTERS.delivery, txt, 'DELIVERY', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryBook(uid,l){ userStates[uid].lastStep='Delivery - Book Parcel'; const btns = [replyButton(getText(l,'requirements'),"DEL_BOOK_PROC"),replyButton("Charges","DEL_CHARGES"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD")]; const txt = getText(l,'deliveryBookGoodChoice')+"\n\n"+getText(l,'deliveryBookIntro'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Book Parcel', btns, POSTERS.delivery, txt, 'DELIVERY_BOOK', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryBookProcedure(uid,l){ const btns = [replyButton("Charges","DEL_CHARGES"),replyButton(getText(l,'joinAgent'),"DEL_AGENT"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'deliveryBookProcedure'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Book Procedure', btns, POSTERS.delivery, txt, 'DELIVERY_BOOK_PROC', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryCharges(uid,l){ const btns = [replyButton(getText(l,'bookParcel'),"DEL_BOOK"),replyButton(getText(l,'joinAgent'),"DEL_AGENT"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'deliveryBookCharges'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Charges', btns, POSTERS.delivery, txt, 'DELIVERY_CHARGES', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryAgent(uid,l){ userStates[uid].lastStep='Delivery - Agent'; const btns = [replyButton(getText(l,'benefits'),"DEL_AGENT_BEN"),replyButton(getText(l,'requirements'),"DEL_AGENT_REQ"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD")]; const txt = getText(l,'deliveryAgentGoodChoice')+"\n\n"+getText(l,'deliveryAgentIntro'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Agent', btns, POSTERS.delivery, txt, 'DELIVERY_AGENT', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryAgentBenefits(uid,l){ const btns = [replyButton(getText(l,'requirements'),"DEL_AGENT_REQ"),replyButton(getText(l,'knowProcedure'),"DEL_AGENT_PROC"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'deliveryAgentBenefits'); sendImageWithButtons(uid,POSTERS.driverReminderBenefits,txt,btns); updateReminder(uid, 'Delivery - Agent Benefits', btns, POSTERS.driverReminderBenefits, txt, 'DELIVERY_AGENT_BEN', userStates[uid].data.currentFee, userStates[uid].data.currentType, true, false); }
+async function sendDeliveryAgentRequirements(uid,l){ const btns = [replyButton(getText(l,'knowProcedure'),"DEL_AGENT_PROC"),replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'deliveryAgentRequirements'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Agent Requirements', btns, POSTERS.delivery, txt, 'DELIVERY_AGENT_REQ', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDeliveryAgentProcedure(uid,l){ const btns = [replyButton(getText(l,'downloadApp'),"DEL_APP_DOWNLOAD"),replyButton(getText(l,'bookParcel'),"DEL_BOOK"),callButton(PHONES.displayG, PHONES.gopalan)]; const txt = getText(l,'deliveryAgentProcedure'); sendImageWithButtons(uid,POSTERS.delivery,txt,btns); updateReminder(uid, 'Delivery - Agent Procedure', btns, POSTERS.delivery, txt, 'DELIVERY_AGENT_PROC', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendRoom(uid,l){ userStates[uid].lastStep='Room Booking'; const btns = [replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE")]; const txt = getText(l,'bookingGoodChoice')+"\n\n"+getText(l,'bookIntro'); sendImageWithButtons(uid,POSTERS.booking,txt,btns); updateReminder(uid, 'Room Booking', btns, POSTERS.booking, txt, 'BOOKING', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendRoomDetail(uid,l){ const btns = [replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'bookRoomGoodChoice')+"\n\n"+getText(l,'bookRoomDetail'); sendImageWithButtons(uid,POSTERS.booking,txt,btns); updateReminder(uid, 'Room Booking Detail', btns, POSTERS.booking, txt, 'BOOKING_ROOM', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendAppointmentDetail(uid,l){ const btns = [replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookMovie'),"BOOK_MOVIE"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'bookAppointmentGoodChoice')+"\n\n"+getText(l,'bookAppointmentDetail'); sendImageWithButtons(uid,POSTERS.booking,txt,btns); updateReminder(uid, 'Appointment Detail', btns, POSTERS.booking, txt, 'BOOKING_APPOINTMENT', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendMovieDetail(uid,l){ const btns = [replyButton(getText(l,'bookRoom'),"BOOK_ROOM_DETAIL"),replyButton(getText(l,'bookAppointment'),"BOOK_APPOINTMENT"),replyButton("Main Menu","MAIN_MENU")]; const txt = getText(l,'bookMovieGoodChoice')+"\n\n"+getText(l,'bookMovieDetail'); sendImageWithButtons(uid,POSTERS.booking,txt,btns); updateReminder(uid, 'Movie Detail', btns, POSTERS.booking, txt, 'BOOKING_MOVIE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendEarn(uid,l){ userStates[uid].lastStep='Earn Selection'; const btns = [replyButton(getText(l,'high'),"EARN_HIGH"),replyButton(getText(l,'mod'),"EARN_MOD"),replyButton(getText(l,'base'),"EARN_BASE")]; const txt = getText(l,'earnGoodChoice')+"\n\n"+getText(l,'earnIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Earn Selection', btns, POSTERS.businessOpp, txt, 'EARN', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendHigh(uid,l){ userStates[uid].lastStep='High Earning'; const btns = [replyButton(getText(l,'highOptDistrict'),"FRAN_DISTRICT"),replyButton(getText(l,'highOptCorp'),"FRAN_CORP"),replyButton(getText(l,'highOptMuni'),"FRAN_MUNICIPAL")]; const txt = getText(l,'highGoodChoice')+"\n\n"+getText(l,'highIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'High Earning', btns, POSTERS.businessOpp, txt, 'EARN_HIGH', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendModerate(uid,l){ userStates[uid].lastStep='Moderate Earning CONFIRMED'; const btns = [replyButton("Corporation - 7L","FRAN_CORP"),replyButton("Municipal - 3L","FRAN_MUNICIPAL"),replyButton(getText(l,'businessCenter'),"FRAN_BC")]; const txt = getText(l,'moderateGoodChoice')+"\n\n"+getText(l,'moderateIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Moderate Earning', btns, POSTERS.businessOpp, txt, 'EARN_MOD', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendBase(uid,l){ userStates[uid].lastStep='Base Earning CONFIRMED'; const btns = [replyButton("Business Center","FRAN_BC"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE_BC"),replyButton(getText(l,'benefits'),"BEN_BC")]; const txt = getText(l,'baseGoodChoice')+"\n\n"+getText(l,'baseIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Base Earning', btns, POSTERS.businessOpp, txt, 'EARN_BASE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendFranchiseeTypes(uid,l){ userStates[uid].lastStep='All Franchisee Types'; const btns = [replyButton("District - 15L","FRAN_DISTRICT"),replyButton("Corporation - 7L","FRAN_CORP"),replyButton("Business Center","FRAN_BC")]; const txt = getText(l,'franchiseeGoodChoice')+"\n\n"+getText(l,'franchiseeIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'All Franchisee Types', btns, POSTERS.businessOpp, txt, 'FRANCHISEE_TYPES', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendDistrictDetail(uid,l){ userStates[uid].data.currentFee="15L"; userStates[uid].data.currentType="District"; userStates[uid].lastStep='District Detail'; const btns = [replyButton(getText(l,'video'),"VIDEO_DISTRICT"),replyButton(getText(l,'support'),"SUP_DISTRICT"),replyButton(getText(l,'requirements'),"REQ_DISTRICT")]; const txt = getText(l,'benGoodChoice')+"\n\n"+getText(l,'benDistrict'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'District Detail', btns, POSTERS.businessOpp, txt, 'DISTRICT_DETAIL', '15L', 'District', false, false); }
+async function sendCorpDetail(uid,l){ userStates[uid].data.currentFee="7L"; userStates[uid].data.currentType="Corporation"; userStates[uid].lastStep='Corporation Detail'; const btns = [replyButton(getText(l,'benefits'),"BEN_CORP"),replyButton(getText(l,'support'),"SUP_CORP"),replyButton(getText(l,'requirements'),"REQ_CORP")]; const txt = getText(l,'corpGoodChoice')+"\n\n"+getText(l,'corpIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Corporation Detail', btns, POSTERS.businessOpp, txt, 'CORP_DETAIL', '7L', 'Corporation', false, false); }
+async function sendMunicipalDetail(uid,l){ userStates[uid].data.currentFee="3L"; userStates[uid].data.currentType="Municipal"; userStates[uid].lastStep='Municipal Detail'; const btns = [replyButton(getText(l,'benefits'),"BEN_MUNI"),replyButton(getText(l,'support'),"SUP_MUNI"),replyButton(getText(l,'requirements'),"REQ_MUNI")]; const txt = getText(l,'municipalGoodChoice')+"\n\n"+getText(l,'municipalIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Municipal Detail', btns, POSTERS.businessOpp, txt, 'MUNICIPAL_DETAIL', '3L', 'Municipal', false, false); }
+async function sendBusinessCenterDetail(uid,l){ userStates[uid].data.currentFee="BC"; userStates[uid].data.currentType="Business Center"; userStates[uid].lastStep='Business Center Detail'; const btns = [replyButton(getText(l,'benefits'),"BEN_BC"),replyButton(getText(l,'support'),"SUP_BC"),replyButton(getText(l,'requirements'),"REQ_BC")]; const txt = getText(l,'baseGoodChoice')+"\n\n"+getText(l,'businessCenterIntro'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Business Center Detail', btns, POSTERS.businessOpp, txt, 'BC_DETAIL', 'BC', 'Business Center', false, false); }
+async function sendProcedure(uid,l,type="common"){ userStates[uid].lastStep='Procedure '+type; let text=""; if(type==="district") text=getText(l,'procedureDistrict'); else if(type==="bc") text=getText(l,'procedureBusinessCenter'); else text=getText(l,'procedureCommon'); const btns = [replyButton(getText(l,'viewTender'),"VIEW_TENDER"),replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'backToEarn'),"OPT_EARN")]; sendImageWithButtons(uid,POSTERS.businessOpp,text,btns); updateReminder(uid, 'Procedure '+type, btns, POSTERS.businessOpp, text, 'PROCEDURE', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendBen(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=""; if(type==="District") text=getText(l,'benDistrict'); else if(type==="Corporation") text=getText(l,'benCorp'); else text=getText(l,'benBusinessCenter'); const btns = [replyButton(getText(l,'support'),"KNOW_SUP"),replyButton(getText(l,'requirements'),"KNOW_REQ"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE")]; const fullText = getText(l,'benGoodChoice')+"\n\n"+text; sendImageWithButtons(uid,POSTERS.businessOpp,fullText,btns); updateReminder(uid, 'Benefits - '+type, btns, POSTERS.businessOpp, fullText, 'BENEFITS', userStates[uid].data.currentFee, type, false, false); }
+async function sendBenBC(uid,l){ const btns = [replyButton(getText(l,'support'),"SUP_BC"),replyButton(getText(l,'requirements'),"REQ_BC"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE_BC")]; const txt = getText(l,'benGoodChoice')+"\n\n"+getText(l,'businessCenterBenefits'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Benefits - BC', btns, POSTERS.businessOpp, txt, 'BENEFITS_BC', 'BC', 'Business Center', false, false); }
+async function sendSup(uid,l){ const btns = [replyButton(getText(l,'requirements'),"KNOW_REQ"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'submit'),"SUBMIT_APP")]; const txt = getText(l,'supGoodChoice')+"\n\n"+getText(l,'supText'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Support', btns, POSTERS.businessOpp, txt, 'SUPPORT', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendReq(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=(type==="Business Center")?getText(l,'reqBusinessCenter'):getText(l,'reqDistrict'); const btns = [replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'emi'),"KNOW_EMI")]; const fullText = getText(l,'reqGoodChoice')+"\n\n"+text; sendImageWithButtons(uid,POSTERS.businessOpp,fullText,btns); updateReminder(uid, 'Requirements - '+type, btns, POSTERS.businessOpp, fullText, 'REQUIREMENTS', userStates[uid].data.currentFee, type, false, false); }
+async function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; const btns = [replyButton(getText(l,'yesCorp'),"CORP_YES"),replyButton(getText(l,'noCorp'),"CORP_NO")]; const txt = getText(l,'corpQGoodChoice')+"\n\n"+getText(l,'corpQ'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Corporation Check', btns, POSTERS.businessOpp, txt, 'CORP_CHECK', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function sendReady(uid,l){ const fee=userStates[uid].data.currentFee||"15L"; let text="",btn=""; if(fee==="15L"){text=getText(l,'ready15');btn=getText(l,'readyBtn15');}else if(fee==="7L"){text=getText(l,'ready7');btn=getText(l,'readyBtn7');}else if(fee==="3L"){text=getText(l,'ready3');btn=getText(l,'readyBtn3');}else{text=getText(l,'readyBC');btn=getText(l,'readyBtnBC');} userStates[uid].lastStep='Ready to Pay '+fee; const btns = [replyButton(btn,"READY_"+fee),replyButton(getText(l,'emi'),"KNOW_EMI")]; const txt = getText(l,'readyGoodChoice')+"\n\n"+text; sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Ready to Pay '+fee, btns, POSTERS.businessOpp, txt, 'READY_TO_PAY', fee, userStates[uid].data.currentType, false, false); }
+async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const btns = [replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]; const txt = getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg'); const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(uid, async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", header:{type:"image",image:{link:POSTERS.businessOpp}}, body:{ text: txt+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); logCRM(uid,"OUT",txt,"PAY_CTA",userStates[uid].flow, userStates[uid].lastStep, {currentFee:userStates[uid].data.currentFee, currentType:userStates[uid].data.currentType}); updateReminder(uid, 'Pay Rs.5000 - '+userStates[uid].data.currentFee, btns, POSTERS.businessOpp, txt, 'PAY', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",btns); },7000); }catch(e){ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text: txt }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); } }, "Pay CTA", "PAY_CTA", txt, btns); }
+async function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; const btns = [replyButton(getText(l,'emi10'),"EMI_10"),replyButton(getText(l,'emi20'),"EMI_20"),replyButton(getText(l,'emiBusiness'),"EMI_BC")]; const txt = getText(l,'emiGoodChoice')+"\n\n"+getText(l,'emiOpt'); sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'EMI Options', btns, POSTERS.businessOpp, txt, 'EMI', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:userStates[uid].data, lastStep:'Lead - Name' }; const btns = []; const txt = getText(l,'leadGoodChoice')+"\n\n"+getText(l,'leadAsk')+"\n\nName as per Aadhaar:"; sendImageWithButtons(uid,POSTERS.businessOpp,txt,btns); updateReminder(uid, 'Lead - Name', btns, POSTERS.businessOpp, txt, 'LEAD', userStates[uid].data.currentFee, userStates[uid].data.currentType, false, false); }
+async function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; const msg = "Place / District / State?"; sendImageWithButtons(uid,POSTERS.businessOpp,msg,[]); updateReminder(uid, 'Lead - Place', [], POSTERS.businessOpp, msg, 'LEAD', s.data.currentFee, s.data.currentType, false, false); }else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; const btns = [replyButton(getText(s.lang,'bus'),"OCC_BUS"),replyButton(getText(s.lang,'emp'),"OCC_EMP"),replyButton(getText(s.lang,'house'),"OCC_HOUSE")]; const msg = getText(s.lang,'occQGoodChoice')+"\n\n"+getText(s.lang,'occQ'); sendImageWithButtons(uid,POSTERS.businessOpp,msg,btns); updateReminder(uid, 'Lead - Occupation', btns, POSTERS.businessOpp, msg, 'LEAD', s.data.currentFee, s.data.currentType, false, false); } }
+async function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; const btns = [replyButton(getText(s.lang,'today'),"DATE_TODAY"),replyButton(getText(s.lang,'tom'),"DATE_TOMORROW")]; const msg = getText(s.lang,'dateGoodChoice')+"\n\n"+getText(s.lang,'tender')+"\n"+LINKS.tenderDistrict+"\n\n"+getText(s.lang,'date'); sendImageWithButtons(uid,POSTERS.businessOpp,msg,btns); updateReminder(uid, 'Agreement Date', btns, POSTERS.businessOpp, msg, 'LEAD', s.data.currentFee, s.data.currentType, false, false); }
+async function handleDate(uid,d){ const s=userStates[uid]; const btns = [replyButton("Main Menu","MAIN_MENU"), callButton(PHONES.displayB, PHONES.business)]; const msg = getText(s.lang,'thanksGoodChoice')+getText(s.lang,'thanks')+" - "+s.data.name+" - "+d+" - Fee:"+s.data.currentFee; sendImageWithButtons(uid,POSTERS.welcome,msg,btns); delete reminderStore[uid]; saveReminders(); delete userStates[uid]; saveCRM(); }
 
 async function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
   const t=(txt||"").toLowerCase().trim();
   logCRM(uid,"IN",txt,p,state?.flow||"NEW",state?.lastStep||"First Message",{currentFee:state?.data?.currentFee,currentType:state?.data?.currentType});
+  if(reminderStore[uid]){ reminderStore[uid].lastActivity = Date.now(); reminderStore[uid].reminderCount = 0; saveReminders(); }
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu' }; await sendMain(uid,l); return; }
-  if(!state){ console.log(`FIRST MESSAGE from ${uid}`); await sendFirst(uid); return; }
-  if(isHi){ const lastWelcome = recentWelcomes.get(uid); if(lastWelcome && Date.now()-lastWelcome < 15000){ console.log(`Ignoring HI ${uid}`); return; } console.log(`HI RESET -> ${uid}`); delete userStates[uid]; await sendFirst(uid); return; }
+  if(!state){ await sendFirst(uid); return; }
+  if(isHi){ const lastWelcome = recentWelcomes.get(uid); if(lastWelcome && Date.now()-lastWelcome < 15000) return; delete userStates[uid]; delete reminderStore[uid]; saveReminders(); await sendFirst(uid); return; }
   const lang=state.lang||'en';
   if(p==="MAIN_MENU") return await sendMain(uid,lang);
   if(p==="OPT_MORE") return await sendMore(uid,lang);
   if(p==="OPT_RIDE") return await sendRide(uid,lang);
   if(p==="RIDE_BOOK") return await sendCust(uid,lang);
-  if(p==="RIDE_ATTACH") return await sendDriv(uid,lang);
+  if(p==="RIDE_ATTACH"||p==="DRIVER_BENEFITS") return await sendDriverBenefits(uid,lang);
   if(p==="OPT_DIR") return await sendBusinessDir(uid,lang);
   if(p==="BIZ_LIST") return await sendBusinessList(uid,lang);
   if(p==="BIZ_BENEFITS") return await sendBusinessListBenefits(uid,lang);
@@ -394,17 +513,16 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
   try{
     const value=req.body.entry?.[0]?.changes?.[0]?.value;
-    if(value?.statuses?.[0]){ const st=value.statuses[0]; if(st.errors){ console.log(`STATUS ${st.status} to ${st.recipient_id} - ${JSON.stringify(st.errors)} - id:${st.id}`); if(JSON.stringify(st.errors).includes('130429')){ logCRM(st.recipient_id, "OUT_FAILED_130429_DELIVERY", `Delivery failed - Rate limit - ID:${st.id}`, "", "RATE_LIMIT", "Delivery Rate limit"); } } return; }
+    if(value?.statuses?.[0]){ const st=value.statuses[0]; if(st.errors && JSON.stringify(st.errors).includes('130429')){ logCRM(st.recipient_id, "OUT_FAILED_130429_DELIVERY", `Delivery failed - Rate limit`, "", "RATE_LIMIT", "Delivery Rate limit"); } return; }
     const msg=value?.messages?.[0];
     if(msg){
-      if(processedIds.has(msg.id)){ console.log(`Duplicate ${msg.id} ignored`); return; }
+      if(processedIds.has(msg.id)) return;
       processedIds.add(msg.id); setTimeout(()=>processedIds.delete(msg.id),60000);
       const uid=msg.from; const txt=msg.text?.body||""; const payload=msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || "";
-      console.log("IN "+uid+" "+txt+" "+payload);
       await onMessage(uid,txt,payload||txt);
     }
   }catch(e){ console.log("webhook error", e.message); }
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V65 WITH POSTER + All Posters Fixed - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} on ${PORT} - /crm`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V70 FINAL - 9 Posters - Others 5min,30min,8h,16h,24h FINAL | Driver 5min,30min,8h,16h,24h,48h,72h FINAL - ${crmLogs.length} logs - ${Object.keys(reminderStore).length} reminders - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
