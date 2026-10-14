@@ -1,4 +1,4 @@
-// V48.6 - YOUR CODE - FIXED SYNTAX ERROR
+// V48.7 - FINAL WORKING - FIXED SYNTAX
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V48.6 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V48.7 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -135,16 +135,34 @@ function sendReady(uid,l){ userStates[uid].lastStep='Ready to Pay 15L'; sendMess
 
 async function sendPay(uid,l){
   userStates[uid].lastStep='Pay Rs.5000';
+  const to=formatTo(uid);
+  const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
+  const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
   try{
-    const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
-    const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
-    const to=formatTo(uid);
-    await axios.post(url, {
-      messaging_product:"whatsapp", to: to, type:"interactive",
-      interactive:{ type:"cta_url", body:{ text:getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } }
-    }, { headers: headers });
-    setTimeout(()=>{ sendMessage(uid, "After payment:", [{ title:"I Paid - Rs.5000", payload:"PAY_DONE" }, { title:getText(l,'callB'), payload:"CALL_B" }]); }, 2000);
-  }catch(e){ sendMessage(uid, getText(l,'payReg')+"\n"+RAZORPAY_ALL, [{ title:"I Paid", payload:"PAY_DONE" }]); }
+    const body = {
+      messaging_product:"whatsapp",
+      to: to,
+      type:"interactive",
+      interactive:{
+        type:"cta_url",
+        body:{ text: getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" },
+        action:{
+          name:"cta_url",
+          parameters:{
+            display_text:"Pay Now - Rs.5000",
+            url: RAZORPAY_ALL
+          }
+        }
+      }
+    };
+    await axios.post(url, body, { headers: headers });
+    setTimeout(()=>{
+      sendMessage(uid, "After payment:", [{ title:"I Paid - Rs.5000", payload:"PAY_DONE" }, { title:getText(l,'callB'), payload:"CALL_B" }]);
+    }, 2000);
+  }catch(e){
+    console.log("PAY CTA FAIL", e.response?.data);
+    await sendMessage(uid, getText(l,'payReg')+"\n"+RAZORPAY_ALL, [{ title:"I Paid", payload:"PAY_DONE" }]);
+  }
 }
 
 function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid, getText(l,'emiOpt'), [{ title:getText(l,'emi10'), payload:"EMI_10" }, { title:getText(l,'emi20'), payload:"EMI_20" }]); }
@@ -200,4 +218,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V48.6 FIXED WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V48.7 FIXED WORKING on "+PORT));
