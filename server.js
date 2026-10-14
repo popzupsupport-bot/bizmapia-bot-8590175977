@@ -1,4 +1,4 @@
-// V49.2 - TEXT ONLY WELCOME - FIXES NO REPLY BUG
+// V49.2 - TEXT ONLY WELCOME - FIXES NO REPLY BUG - FINAL PRODUCTION
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -113,7 +113,6 @@ function setReminders(uid,l){
   reminderTimers[uid]=[t1,t2];
 }
 
-// ===== V49.2 CHANGED FUNCTION - TEXT ONLY, NO IMAGE LINK =====
 function sendFirst(uid){
   console.log(`sendFirst TEXT ONLY to ${uid} - V49.2 FIX`);
   sendMessage(uid, FIRST_BRIEF, [
@@ -124,7 +123,6 @@ function sendFirst(uid){
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
   setReminders(uid,'en');
 }
-// ===== END OF CHANGED FUNCTION =====
 
 function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); }
 function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); }
