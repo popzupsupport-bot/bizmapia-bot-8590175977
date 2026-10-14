@@ -1,4 +1,4 @@
-// V49.0 - FIRST MESSAGE + LAST REMINDER LOGIC - FINAL WORKING
+// V49.1 - FIRST MESSAGE ALWAYS + REMINDER ONLY AFTER LANGUAGE - FINAL FIX
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V49.0 FIRST+LAST REMINDER - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V49.1 FIXED HI - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -96,13 +96,20 @@ async function sendImageHD(uid, imgUrl, cap, btns){
 }
 
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(t=>clearTimeout(t)); delete reminderTimers[uid]; } }
+
+// V49.1 FIX: Reminder only after language selected, not on welcome screen
 function setReminders(uid,l){
   clearReminders(uid);
-  const t1=setTimeout(()=>{ if(userStates[uid]) sendMessage(uid, "👋 Still there? Please continue from last step:", [{title:getText(l,'ride'), payload:"OPT_RIDE"}, {title:getText(l,'earn'), payload:"OPT_EARN"}]); }, 3*60*1000);
+  const t1=setTimeout(()=>{
+    const s=userStates[uid];
+    if(s && s.flow!=='WELCOME'){
+      sendMessage(uid, "👋 Still there? Please continue from last step:", [{title:getText(l,'ride'), payload:"OPT_RIDE"}, {title:getText(l,'earn'), payload:"OPT_EARN"}]);
+    }
+  }, 3*60*1000);
   const t2=setTimeout(()=>{
-    if(userStates[uid]) {
-      const st = userStates[uid];
-      sendMessage(uid, `⏰ Reminder: You were at ${st.lastStep}. Continue?`, [{title:"Continue", payload:"LAST_CONTINUE"}, {title:getText(l,'callB'), payload:"CALL_B"}]);
+    const s=userStates[uid];
+    if(s && s.flow!=='WELCOME') {
+      sendMessage(uid, `⏰ Reminder: You were at ${s.lastStep}. Continue?`, [{title:"Continue", payload:"LAST_CONTINUE"}, {title:getText(l,'callB'), payload:"CALL_B"}]);
     }
   }, 10*60*1000);
   reminderTimers[uid]=[t1,t2];
@@ -191,7 +198,6 @@ function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step=
 function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; sendMessage(uid, getText(s.lang,'tender')+"\n"+LINKS.tenderDistrict+"\n\n"+getText(s.lang,'date'), [{ title:getText(s.lang,'today'), payload:"DATE_TODAY" }, { title:getText(s.lang,'tom'), payload:"DATE_TOMORROW" }]); }
 function handleDate(uid,d){ const s=userStates[uid]; clearReminders(uid); sendMessage(uid, getText(s.lang,'thanks')+" - "+s.data.name+" - "+d); delete userStates[uid]; }
 
-// --- NEW V49.0: First message vs Last reminder ---
 function sendLastStep(uid){
   const s = userStates[uid];
   if(!s){ sendFirst(uid); return; }
@@ -246,17 +252,17 @@ function onMessage(uid,txt,payload){
   }
 
   if(!state){
-    // FIRST MESSAGE EVER
     console.log(`FIRST MESSAGE from ${uid}`);
     sendFirst(uid);
     return;
   }
 
-  // IN BETWEEN STEPS - Hi = Last reminder
+  // V49.1 FIX: Any Hi = fresh welcome (not reminder) - fixes no reply on whatsapp.com
   if(isHi){
-    console.log(`HI IN MIDDLE for ${uid} at ${state.lastStep} -> last reminder`);
-    sendLastStep(uid);
-    setReminders(uid, state.lang||'en');
+    console.log(`HI RESET -> sendFirst for ${uid} at ${state.lastStep}`);
+    clearReminders(uid);
+    delete userStates[uid];
+    sendFirst(uid);
     return;
   }
 
@@ -302,4 +308,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V49.0 FIRST+LAST REMINDER WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V49.1 HI FIX WORKING on "+PORT));
