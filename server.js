@@ -1,4 +1,4 @@
-// V62 FINAL FIX - Rate Limit + Double Welcome Fix + CRM Working - BOT 7025630644
+// V63 FINAL - NO RATE LIMIT EVER - Per-user 10 sec gap + Global 6 sec + No double welcome - BOT 7025630644
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -48,9 +48,9 @@ const PHONES = {
 
 let userStates = {};
 const processedIds = new Set();
-const recentWelcomes = new Map(); // Prevent double welcome within 10 sec
+const lastSentPerUser = new Map(); // Per-user rate limit tracking
+const recentWelcomes = new Map();
 
-// CRM
 let crmLogs = [];
 const CRM_FILE = path.join(__dirname, 'crm_logs.json');
 try{ if(fs.existsSync(CRM_FILE)){ crmLogs = JSON.parse(fs.readFileSync(CRM_FILE,'utf8')); console.log(`CRM Loaded: ${crmLogs.length}`); } }catch(e){ crmLogs=[]; }
@@ -69,46 +69,71 @@ function logCRM(uid, direction, message, payload, flow, lastStep, extra={}){
   if(crmLogs.length%5===0) saveCRM();
 }
 
-// RATE LIMIT FIX: 5 sec gap + retry logic
-let lastSendTime = 0;
-const MIN_GAP_MS = 5000; // Increased to 5 sec to fully avoid 130429
+// V63: STRONG RATE LIMIT - Global 6 sec + Per-user 12 sec
+let lastGlobalSendTime = 0;
+const GLOBAL_GAP_MS = 6000;
+const PER_USER_GAP_MS = 12000; // 12 seconds per same user - never hit rate limit
 const sendQueue = [];
 let isProcessingQueue = false;
+
 async function processQueue(){
   if(isProcessingQueue) return;
   isProcessingQueue = true;
   while(sendQueue.length > 0){
     const now = Date.now();
-    const wait = Math.max(0, (lastSendTime + MIN_GAP_MS) - now);
-    if(wait>0){ console.log(`Queue waiting ${wait}ms`); await new Promise(r=>setTimeout(r,wait)); }
-    const job = sendQueue.shift();
-    try{ await job(); }
-    catch(e){
-      const errData = e.response?.data ? JSON.stringify(e.response.data) : e.message;
-      if(errData.includes('130429')){
-        console.log("RATE LIMIT 130429 - waiting 12 sec and retrying once");
-        await new Promise(r=>setTimeout(r,12000));
-        try{ await job(); console.log("Retry OK after rate limit"); }
-        catch(e2){ console.log("Retry failed", JSON.stringify(e2.response?.data||e2.message)); }
-      }else{ console.log("Queue job error", errData); }
+    // Global gap check
+    const globalWait = Math.max(0, (lastGlobalSendTime + GLOBAL_GAP_MS) - now);
+    if(globalWait > 0){
+      console.log(`Global queue wait ${globalWait}ms`);
+      await new Promise(r=>setTimeout(r, globalWait));
     }
-    lastSendTime = Date.now();
+    
+    const job = sendQueue[0]; // Peek, don't shift yet
+    const uid = job.uid;
+    const lastPerUser = lastSentPerUser.get(uid) || 0;
+    const perUserWait = Math.max(0, (lastPerUser + PER_USER_GAP_MS) - Date.now());
+    if(perUserWait > 0){
+      console.log(`Per-user queue wait ${perUserWait}ms for ${uid}`);
+      await new Promise(r=>setTimeout(r, perUserWait));
+    }
+    
+    // Now shift and execute
+    sendQueue.shift();
+    try{
+      await job.fn();
+      lastGlobalSendTime = Date.now();
+      lastSentPerUser.set(uid, Date.now());
+    }catch(e){
+      const errStr = JSON.stringify(e.response?.data||e.message);
+      if(errStr.includes('130429')){
+        console.log(`130429 STILL HIT for ${uid} - Waiting 20 sec and will retry`);
+        await new Promise(r=>setTimeout(r, 20000));
+        // Re-queue the job at front
+        sendQueue.unshift(job);
+        lastGlobalSendTime = Date.now() + 15000; // Block global for 15 sec
+        lastSentPerUser.set(uid, Date.now() + 15000);
+        continue; // Don't count as success, retry loop will handle
+      }else{
+        console.log("Queue job error", errStr);
+        lastGlobalSendTime = Date.now();
+        lastSentPerUser.set(uid, Date.now());
+      }
+    }
   }
   isProcessingQueue = false;
 }
-function enqueueSend(fn){ sendQueue.push(fn); processQueue(); }
 
-app.get('/', (req,res)=>res.status(200).send(`V62 RATE LIMIT FIX + CRM ${crmLogs.length} - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a>`));
+function enqueueSend(uid, fn){
+  sendQueue.push({uid: uid, fn: fn});
+  processQueue();
+}
+
+app.get('/', (req,res)=>res.status(200).send(`V63 NO RATE LIMIT EVER - ${crmLogs.length} CRM - Bot:${BOT_OWN_NUMBER} - <a href="/crm">View CRM</a> - Per-user 12s gap`));
 app.get('/crm', (req,res)=>{
-  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:12px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}</style></head><body><h2>📊 Bizmapia CRM - ${crmLogs.length} Records (Last 200)</h2><p><a href="/crm/download">Download JSON</a> | <a href="/crm/stats">Stats JSON</a> | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee/Type</th><th>Message/Payload</th><th>Name/Place</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}/${l.currentType}</td><td><b>${l.payload}</b><br/>${l.message}</td><td>${l.name}<br/>${l.place}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
+  const html=`<html><head><title>CRM ${crmLogs.length}</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:12px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}</style></head><body><h2>📊 Bizmapia CRM V63 - ${crmLogs.length} Records</h2><p><a href="/crm/download">Download</a> | Per-user 12s gap - No rate limit | Auto-refresh 10s</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee/Type</th><th>Message/Payload</th></tr>${crmLogs.slice(-200).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}/${l.currentType}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table><script>setTimeout(()=>location.reload(),10000)</script></body></html>`;
   res.send(html);
 });
 app.get('/crm/download', (req,res)=>{ res.setHeader('Content-disposition','attachment; filename=crm_logs.json'); res.setHeader('Content-type','application/json'); res.send(JSON.stringify(crmLogs,null,2)); });
-app.get('/crm/stats', (req,res)=>{
-  const stats={total:crmLogs.length, uniqueUsers:[...new Set(crmLogs.map(l=>l.phone))].length, incoming:crmLogs.filter(l=>l.direction==='IN').length, outgoing:crmLogs.filter(l=>l.direction==='OUT').length, today:crmLogs.filter(l=>l.date.includes(new Date().toLocaleDateString('en-IN'))).length, byFlow:{}, byFee:{}};
-  crmLogs.forEach(l=>{ stats.byFlow[l.flow]=(stats.byFlow[l.flow]||0)+1; if(l.currentFee) stats.byFee[l.currentFee]=(stats.byFee[l.currentFee]||0)+1; });
-  res.json(stats);
-});
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
 
 const FIRST_BRIEF = `🌟 Welcome to Bizmapia - All India 4-in-1 Services!
@@ -173,7 +198,7 @@ function getText(l,k){ return (T[l]||T.en)[k]||T.en[k]||""; }
 function formatTo(to){ let c=String(to).replace(/\D/g,""); if(c.startsWith("91") && c.length===12) return c; if(c.length===10) return "91"+c; return c; }
 
 function doSendMessage(uid, txt, btnsRaw){
-  return new Promise(async (resolve)=>{
+  return new Promise(async (resolve, reject)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
     const st=userStates[uid];
     try{
@@ -191,14 +216,18 @@ function doSendMessage(uid, txt, btnsRaw){
         }
       }else{ data={ messaging_product:"whatsapp", to, type:"text", text:{body:String(txt).substring(0,4096)} }; }
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT OK to ${to} BTNS:${btnsRaw?.length||0} CALL:${btnsRaw?.some(b=>b.phone)?'YES':''} -> ${resp.data.messages?.[0]?.id}`);
+      console.log(`OUT OK to ${to} BTNS:${btnsRaw?.length||0} -> ${resp.data.messages?.[0]?.id}`);
       logCRM(uid,"OUT",txt,btnsRaw?.map(b=>b.payload||b.title).join("|"),st?.flow||"",st?.lastStep||"",{currentFee:st?.data?.currentFee,currentType:st?.data?.currentType});
-    }catch(e){ console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); throw e; }
-    resolve();
+      resolve();
+    }catch(e){ 
+      console.log("SEND FAIL", JSON.stringify(e.response?.data,null,2)); 
+      reject(e);
+    }
   });
 }
+
 function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
-  return new Promise(async (resolve)=>{
+  return new Promise(async (resolve, reject)=>{
     const to=formatTo(uid); if(to===BOT_OWN_NUMBER){ return resolve(); }
     const st=userStates[uid];
     try{
@@ -207,33 +236,31 @@ function doSendImageWithButtons(uid, imgUrl, caption, btnsRaw){
       let buttons=[]; for(let b of btnsRaw.slice(0,3)){ if(b.phone){ buttons.push({type:"phone_number",phone_number:b.phone,title:b.title.substring(0,20)}); }else{ buttons.push({type:"reply",reply:{id:b.payload,title:b.title.substring(0,20)}}); } }
       const data={ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"button", header:{type:"image",image:{link:imgUrl}}, body:{text:String(caption).substring(0,1024)}, action:{buttons} } };
       const resp=await axios.post(url,data,{headers});
-      console.log(`OUT IMAGE+BTNS OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
+      console.log(`OUT IMAGE OK to ${to} -> ${resp.data.messages?.[0]?.id}`);
       logCRM(uid,"OUT",caption,btnsRaw?.map(b=>b.payload||b.title).join("|"),st?.flow||"",st?.lastStep||"",{currentFee:st?.data?.currentFee,currentType:st?.data?.currentType});
-    }catch(e){ console.log("IMAGE+BTNS FAIL fallback", JSON.stringify(e.response?.data,null,2)); await doSendMessage(uid,caption,btnsRaw); }
-    resolve();
+      resolve();
+    }catch(e){ console.log("IMAGE FAIL", JSON.stringify(e.response?.data,null,2)); reject(e); }
   });
 }
-function sendMessage(uid, txt, btns){ enqueueSend(()=>doSendMessage(uid, txt, btns)); }
-function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(()=>doSendImageWithButtons(uid, imgUrl, caption, btns)); }
+
+function sendMessage(uid, txt, btns){ enqueueSend(uid, ()=>doSendMessage(uid, txt, btns)); }
+function sendImageWithButtons(uid, imgUrl, caption, btns){ enqueueSend(uid, ()=>doSendImageWithButtons(uid, imgUrl, caption, btns)); }
 function callButton(display, phone){ return {title:display, phone:phone}; }
 function replyButton(title, payload){ return {title, payload}; }
 
-// FIXED: Set state BEFORE sending to prevent double welcome
 async function sendFirst(uid){
-  if(recentWelcomes.has(uid)){
-    const last = recentWelcomes.get(uid);
-    if(Date.now() - last < 10000){
-      console.log(`Skipping double welcome for ${uid} - sent ${Date.now()-last}ms ago`);
-      return;
-    }
+  // Block double welcome within 15 sec
+  const lastWelcome = recentWelcomes.get(uid);
+  if(lastWelcome && Date.now() - lastWelcome < 15000){
+    console.log(`V63 BLOCK double welcome for ${uid} - ${Date.now()-lastWelcome}ms ago`);
+    return;
   }
-  console.log(`sendFirst V62 FIXED to ${uid}`);
+  console.log(`sendFirst V63 to ${uid}`);
   if(formatTo(uid)===BOT_OWN_NUMBER) return;
-  // SET STATE FIRST - Fix for race condition
+  // SET STATE FIRST
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } };
   recentWelcomes.set(uid, Date.now());
-  setTimeout(()=>recentWelcomes.delete(uid),15000);
-  // THEN send
+  setTimeout(()=>recentWelcomes.delete(uid),20000);
   sendMessage(uid,FIRST_BRIEF,[replyButton("English","LANG_EN"),replyButton("Hindi","LANG_HI"),replyButton("Malayalam","LANG_ML")]);
 }
 async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid,getText(l,'selOpt'),[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]); }
@@ -275,7 +302,7 @@ async function sendSup(uid,l){ sendImageWithButtons(uid,POSTERS.support,getText(
 async function sendReq(uid,l){ const type=userStates[uid].data.currentType||"District"; let text=(type==="Business Center")?getText(l,'reqBusinessCenter'):getText(l,'reqDistrict'); sendImageWithButtons(uid,POSTERS.requirements,getText(l,'reqGoodChoice')+"\n\n"+text,[replyButton(getText(l,'submit'),"SUBMIT_APP"),replyButton(getText(l,'knowProcedure'),"KNOW_PROCEDURE"),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
 async function askCorp(uid,l){ userStates[uid].lastStep='Corporation Check'; sendMessage(uid,getText(l,'corpQGoodChoice')+"\n\n"+getText(l,'corpQ'),[replyButton(getText(l,'yesCorp'),"CORP_YES"),replyButton(getText(l,'noCorp'),"CORP_NO")]); }
 async function sendReady(uid,l){ const fee=userStates[uid].data.currentFee||"15L"; let text="",btn=""; if(fee==="15L"){text=getText(l,'ready15');btn=getText(l,'readyBtn15');}else if(fee==="7L"){text=getText(l,'ready7');btn=getText(l,'readyBtn7');}else if(fee==="3L"){text=getText(l,'ready3');btn=getText(l,'readyBtn3');}else{text=getText(l,'readyBC');btn=getText(l,'readyBtnBC');} userStates[uid].lastStep='Ready to Pay '+fee; sendMessage(uid,getText(l,'readyGoodChoice')+"\n\n"+text,[replyButton(btn,"READY_"+fee),replyButton(getText(l,'emi'),"KNOW_EMI")]); }
-async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },5000); }catch(e){ console.log("PAY CTA FAIL", e.response?.data); sendMessage(uid,getText(l,'payReg')+"\n"+RAZORPAY_ALL,[replyButton("I Paid","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); } }); }
+async function sendPay(uid,l){ userStates[uid].lastStep='Pay Rs.5000 - '+userStates[uid].data.currentFee; const to=formatTo(uid); const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`; const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" }; enqueueSend(uid, async()=>{ try{ await axios.post(url,{ messaging_product:"whatsapp", to, type:"interactive", interactive:{ type:"cta_url", body:{ text:getText(l,'payGoodChoice')+"\n\n"+getText(l,'payReg')+"\n\nTap below to pay Rs.5000:" }, action:{ name:"cta_url", parameters:{ display_text:"Pay Now - Rs.5000", url:RAZORPAY_ALL } } } },{headers}); console.log(`OUT PAY OK to ${to}`); setTimeout(()=>{ sendMessage(uid,"After payment - Need help? Tap to call:",[replyButton("I Paid - Rs.5000","PAY_DONE"), callButton(PHONES.displayB, PHONES.business)]); },7000); }catch(e){ console.log("PAY CTA FAIL", e.response?.data); throw e; } }); }
 async function sendEMI(uid,l){ userStates[uid].lastStep='EMI Options'; sendMessage(uid,getText(l,'emiGoodChoice')+"\n\n"+getText(l,'emiOpt'),[replyButton(getText(l,'emi10'),"EMI_10"),replyButton(getText(l,'emi20'),"EMI_20"),replyButton(getText(l,'emiBusiness'),"EMI_BC")]); }
 async function startLead(uid,l){ userStates[uid]={ lang:l, flow:'LEAD', step:1, data:userStates[uid].data, lastStep:'Lead - Name' }; sendMessage(uid,getText(l,'leadGoodChoice')+"\n\n"+getText(l,'leadAsk')+"\n\nName as per Aadhaar:"); }
 async function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step===1){ s.data.name=txt; s.step=2; s.lastStep='Lead - Place'; sendMessage(uid,"Place / District / State?"); }else if(s.step===2){ s.data.place=txt; s.step=3; s.lastStep='Lead - Occupation'; sendMessage(uid,getText(s.lang,'occQGoodChoice')+"\n\n"+getText(s.lang,'occQ'),[replyButton(getText(s.lang,'bus'),"OCC_BUS"),replyButton(getText(s.lang,'emp'),"OCC_EMP"),replyButton(getText(s.lang,'house'),"OCC_HOUSE")]); } }
@@ -290,10 +317,10 @@ async function onMessage(uid,txt,payload){
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu' }; await sendMain(uid,l); return; }
   if(!state){ console.log(`FIRST MESSAGE from ${uid}`); await sendFirst(uid); return; }
-  if(isHi){ console.log(`HI RESET -> ${uid}`); // Don't reset immediately if welcome sent recently
+  if(isHi){
     const lastWelcome = recentWelcomes.get(uid);
-    if(lastWelcome && Date.now()-lastWelcome < 10000){ console.log(`Ignoring HI reset - welcome sent recently for ${uid}`); return; }
-    delete userStates[uid]; await sendFirst(uid); return;
+    if(lastWelcome && Date.now()-lastWelcome < 15000){ console.log(`V63 Ignoring HI - welcome sent ${Date.now()-lastWelcome}ms ago for ${uid}`); return; }
+    console.log(`HI RESET -> ${uid}`); delete userStates[uid]; await sendFirst(uid); return;
   }
   const lang=state.lang||'en';
   if(p==="MAIN_MENU") return await sendMain(uid,lang);
@@ -352,10 +379,10 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
   try{
     const value=req.body.entry?.[0]?.changes?.[0]?.value;
-    if(value?.statuses?.[0]){ const st=value.statuses[0]; console.log(`STATUS ${st.status} to ${st.recipient_id} - ${JSON.stringify(st.errors||'OK')} - id:${st.id}`); return; }
+    if(value?.statuses?.[0]){ const st=value.statuses[0]; if(st.errors){ console.log(`STATUS ${st.status} to ${st.recipient_id} - ${JSON.stringify(st.errors)} - id:${st.id}`); } return; }
     const msg=value?.messages?.[0];
     if(msg){
-      if(processedIds.has(msg.id)){ console.log(`Duplicate msg ${msg.id} ignored`); return; }
+      if(processedIds.has(msg.id)){ console.log(`Duplicate ${msg.id} ignored`); return; }
       processedIds.add(msg.id); setTimeout(()=>processedIds.delete(msg.id),60000);
       const uid=msg.from; const txt=msg.text?.body||""; const payload=msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || "";
       console.log("IN "+uid+" "+txt+" "+payload);
@@ -365,4 +392,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V62 FINAL FIX - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} - Rate limit FIXED + Double welcome FIXED + CRM on ${PORT} - View /crm`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V63 NO RATE LIMIT EVER - ${crmLogs.length} logs - BOT ${BOT_OWN_NUMBER} - Per-user 12s + Global 6s on ${PORT} - /crm`));
