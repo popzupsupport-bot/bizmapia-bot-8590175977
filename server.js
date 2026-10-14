@@ -1,4 +1,4 @@
-// V48.8 - FIXED LANGUAGE BUTTONS - FINAL WORKING
+// V49.0 - FIRST MESSAGE + LAST REMINDER LOGIC - FINAL WORKING
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V48.8 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V49.0 FIRST+LAST REMINDER - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -98,23 +98,24 @@ async function sendImageHD(uid, imgUrl, cap, btns){
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(t=>clearTimeout(t)); delete reminderTimers[uid]; } }
 function setReminders(uid,l){
   clearReminders(uid);
-  const t1=setTimeout(()=>{ if(userStates[uid]) sendMessage(uid, "👋 Still there? Please continue:", [{title:getText(l,'ride'), payload:"OPT_RIDE"}, {title:getText(l,'earn'), payload:"OPT_EARN"}]); }, 3*60*1000);
-  const t2=setTimeout(()=>{ if(userStates[uid]) sendMessage(uid, "⏰ Reminder: Your Bizmapia franchise slot is waiting!", [{title:"Continue", payload:"OPT_EARN"}]); }, 10*60*1000);
+  const t1=setTimeout(()=>{ if(userStates[uid]) sendMessage(uid, "👋 Still there? Please continue from last step:", [{title:getText(l,'ride'), payload:"OPT_RIDE"}, {title:getText(l,'earn'), payload:"OPT_EARN"}]); }, 3*60*1000);
+  const t2=setTimeout(()=>{
+    if(userStates[uid]) {
+      const st = userStates[uid];
+      sendMessage(uid, `⏰ Reminder: You were at ${st.lastStep}. Continue?`, [{title:"Continue", payload:"LAST_CONTINUE"}, {title:getText(l,'callB'), payload:"CALL_B"}]);
+    }
+  }, 10*60*1000);
   reminderTimers[uid]=[t1,t2];
 }
 
-// --- FIXED: Image first, then language buttons clearly ---
 function sendFirst(uid){
   console.log(`sendFirst to ${uid}`);
   const to=formatTo(uid);
   const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
   const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
-
-  // 1. Send welcome image with caption only
   axios.post(url, { messaging_product:"whatsapp", to: to, type:"image", image:{ link:LINKS.welcomePoster, caption:FIRST_BRIEF.substring(0,1024) } }, { headers: headers })
- .then(()=>{
+.then(()=>{
     console.log(`OUT IMAGE OK to ${to}`);
-    // 2. After 3.5 sec, send language buttons as separate message - GUARANTEED TO SHOW
     setTimeout(()=>{
       sendMessage(uid, "👇 Please select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:", [
         { title:"English", payload:"LANG_EN" },
@@ -125,7 +126,7 @@ function sendFirst(uid){
       setReminders(uid,'en');
     }, 3500);
   })
- .catch(e=>{
+.catch(e=>{
     console.log("IMAGE FAIL fallback", e.response?.data);
     sendMessage(uid, FIRST_BRIEF, [
       { title:"English", payload:"LANG_EN" },
@@ -190,11 +191,75 @@ function handleLead(uid,txt){ const s=userStates[uid]; if(!s) return; if(s.step=
 function handleOcc(uid,occ){ const s=userStates[uid]; s.data.occ=occ; s.step=4; s.lastStep='Agreement Date'; sendMessage(uid, getText(s.lang,'tender')+"\n"+LINKS.tenderDistrict+"\n\n"+getText(s.lang,'date'), [{ title:getText(s.lang,'today'), payload:"DATE_TODAY" }, { title:getText(s.lang,'tom'), payload:"DATE_TOMORROW" }]); }
 function handleDate(uid,d){ const s=userStates[uid]; clearReminders(uid); sendMessage(uid, getText(s.lang,'thanks')+" - "+s.data.name+" - "+d); delete userStates[uid]; }
 
+// --- NEW V49.0: First message vs Last reminder ---
+function sendLastStep(uid){
+  const s = userStates[uid];
+  if(!s){ sendFirst(uid); return; }
+  const l = s.lang || 'en';
+  const step = s.lastStep || 'Main Menu';
+  console.log(`RESEND LAST STEP for ${uid} -> ${step}`);
+  sendMessage(uid, `👋 Welcome back! You were at: ${step}\nContinue from last step:`);
+  setTimeout(()=>{
+    if(step==='Language Selection') sendFirst(uid);
+    else if(step==='Main Menu') sendMain(uid,l);
+    else if(step==='More Options') sendMore(uid,l);
+    else if(step==='Ride Selection') sendRide(uid,l);
+    else if(step==='Book a Ride') sendCust(uid,l);
+    else if(step==='Driver Attach') sendDriv(uid,l);
+    else if(step==='Delivery') sendDel(uid,l);
+    else if(step==='Room Booking') sendRoom(uid,l);
+    else if(step==='Earn Selection') sendEarn(uid,l);
+    else if(step==='High Earning Details') sendHigh(uid,l);
+    else if(step==='Benefits') sendBen(uid,l);
+    else if(step==='Support') sendSup(uid,l);
+    else if(step==='Requirements') sendReq(uid,l);
+    else if(step==='Corporation Check') askCorp(uid,l);
+    else if(step==='Ready to Pay 15L') sendReady(uid,l);
+    else if(step==='Pay Rs.5000') sendPay(uid,l);
+    else if(step==='EMI Options') sendEMI(uid,l);
+    else if(step.startsWith('Lead')){
+      if(s.step===1) sendMessage(uid, getText(l,'leadAsk')+"\n\nName as per Aadhaar:");
+      else if(s.step===2) sendMessage(uid, "Place / District / State?");
+      else if(s.step===3) sendMessage(uid, getText(l,'occQ'), [{ title:getText(l,'bus'), payload:"OCC_BUS" }, { title:getText(l,'emp'), payload:"OCC_EMP" }, { title:getText(l,'house'), payload:"OCC_HOUSE" }]);
+      else sendMain(uid,l);
+    }
+    else sendMain(uid,l);
+  }, 1500);
+}
+
 function onMessage(uid,txt,payload){
   let state=userStates[uid];
   const p=(payload||"").trim();
-  if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{}, lastStep:'Main Menu' }; sendMain(uid,l); return; }
-  if(!state){ sendFirst(uid); return; }
+  const t=(txt||"").toLowerCase().trim();
+  const isHi = (t==="hi" || t==="hello" || t==="hey" || t==="hai" || t==="start");
+
+  if(p.startsWith("LANG_")){
+    const l=p.replace("LANG_","").toLowerCase();
+    userStates[uid]={ lang:l, flow:'MAIN', data:{}, lastStep:'Main Menu' };
+    sendMain(uid,l);
+    return;
+  }
+
+  if(p==="LAST_CONTINUE"){
+    sendLastStep(uid);
+    return;
+  }
+
+  if(!state){
+    // FIRST MESSAGE EVER
+    console.log(`FIRST MESSAGE from ${uid}`);
+    sendFirst(uid);
+    return;
+  }
+
+  // IN BETWEEN STEPS - Hi = Last reminder
+  if(isHi){
+    console.log(`HI IN MIDDLE for ${uid} at ${state.lastStep} -> last reminder`);
+    sendLastStep(uid);
+    setReminders(uid, state.lang||'en');
+    return;
+  }
+
   const lang=state.lang||'en';
   if(p==="OPT_MORE"){ sendMore(uid,lang); return; }
   if(p==="OPT_RIDE"){ sendRide(uid,lang); return; }
@@ -237,4 +302,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V48.8 FIXED WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V49.0 FIRST+LAST REMINDER WORKING on "+PORT));
