@@ -1,4 +1,4 @@
-// V49.1 - FIRST MESSAGE ALWAYS + REMINDER ONLY AFTER LANGUAGE - FINAL FIX
+// V49.2 - TEXT ONLY WELCOME - FIXES NO REPLY BUG
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V49.1 FIXED HI - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V49.2 TEXT WELCOME FIX - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -96,8 +96,6 @@ async function sendImageHD(uid, imgUrl, cap, btns){
 }
 
 function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEach(t=>clearTimeout(t)); delete reminderTimers[uid]; } }
-
-// V49.1 FIX: Reminder only after language selected, not on welcome screen
 function setReminders(uid,l){
   clearReminders(uid);
   const t1=setTimeout(()=>{
@@ -115,35 +113,18 @@ function setReminders(uid,l){
   reminderTimers[uid]=[t1,t2];
 }
 
+// ===== V49.2 CHANGED FUNCTION - TEXT ONLY, NO IMAGE LINK =====
 function sendFirst(uid){
-  console.log(`sendFirst to ${uid}`);
-  const to=formatTo(uid);
-  const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
-  const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
-  axios.post(url, { messaging_product:"whatsapp", to: to, type:"image", image:{ link:LINKS.welcomePoster, caption:FIRST_BRIEF.substring(0,1024) } }, { headers: headers })
-.then(()=>{
-    console.log(`OUT IMAGE OK to ${to}`);
-    setTimeout(()=>{
-      sendMessage(uid, "👇 Please select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:", [
-        { title:"English", payload:"LANG_EN" },
-        { title:"Hindi", payload:"LANG_HI" },
-        { title:"Malayalam", payload:"LANG_ML" }
-      ]);
-      userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
-      setReminders(uid,'en');
-    }, 3500);
-  })
-.catch(e=>{
-    console.log("IMAGE FAIL fallback", e.response?.data);
-    sendMessage(uid, FIRST_BRIEF, [
-      { title:"English", payload:"LANG_EN" },
-      { title:"Hindi", payload:"LANG_HI" },
-      { title:"Malayalam", payload:"LANG_ML" }
-    ]);
-    userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
-    setReminders(uid,'en');
-  });
+  console.log(`sendFirst TEXT ONLY to ${uid} - V49.2 FIX`);
+  sendMessage(uid, FIRST_BRIEF, [
+    { title:"English", payload:"LANG_EN" },
+    { title:"Hindi", payload:"LANG_HI" },
+    { title:"Malayalam", payload:"LANG_ML" }
+  ]);
+  userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
+  setReminders(uid,'en');
 }
+// ===== END OF CHANGED FUNCTION =====
 
 function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); }
 function sendMore(uid,l){ userStates[uid].lastStep='More Options'; sendMessage(uid, "More:", [{ title:getText(l,'del'), payload:"OPT_DEL" }, { title:getText(l,'book'), payload:"OPT_BOOK" }, { title:getText(l,'dir'), payload:"OPT_DIR" }]); }
@@ -257,7 +238,6 @@ function onMessage(uid,txt,payload){
     return;
   }
 
-  // V49.1 FIX: Any Hi = fresh welcome (not reminder) - fixes no reply on whatsapp.com
   if(isHi){
     console.log(`HI RESET -> sendFirst for ${uid} at ${state.lastStep}`);
     clearReminders(uid);
@@ -308,4 +288,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V49.1 HI FIX WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V49.2 TEXT WELCOME FIX on "+PORT));
