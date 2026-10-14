@@ -1,4 +1,5 @@
-// V75 FINAL COMPLETE - All Requirements Combined - 9 Posters + 5 Sheet CRM + More Options Fixed + Rate Limit Safe 5s/10s + Reminders Others 5min,30min,8h,16h,24h FINAL + Driver 48h,72h FINAL up to 72h - BOT 7025630644
+// V76 FINAL - Direct Google Sheets API INSIDE server.js - No Apps Script Needed - Works Perfect in Render
+// INSTALL: npm install googleapis
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -11,19 +12,173 @@ const BOT_OWN_NUMBER = "917025630644";
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || ""; // Set in Render Env
 
-// 9 CORRECT POSTERS - As you provided
+// GOOGLE SHEET - Direct API - Set these 2 in Render Environment
+const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || ""; // Your Sheet ID from URL: docs.google.com/spreadsheets/d/THIS_PART/
+const GOOGLE_SERVICE_ACCOUNT_JSON = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || ""; // Full JSON content of service account
+const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || ""; // Optional fallback webhook
+
+let sheetsClient = null;
+async function getSheetsClient() {
+  if (sheetsClient) return sheetsClient;
+  if (!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return null;
+  try {
+    const { google } = require('googleapis');
+    let credentials;
+    try {
+      credentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
+    } catch(e) {
+      console.log("GOOGLE_SERVICE_ACCOUNT_JSON parse error - Make sure it's full JSON");
+      return null;
+    }
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    const client = await auth.getClient();
+    sheetsClient = google.sheets({ version: 'v4', auth: client });
+    console.log("Google Sheets API client ready - Direct mode");
+    return sheetsClient;
+  } catch(e) {
+    console.log("Sheets API init fail - Install googleapis: npm install googleapis - Error:", e.message);
+    return null;
+  }
+}
+
+async function ensureSheetExists(sheets, sheetName, headers) {
+  try {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId: GOOGLE_SHEET_ID });
+    const exists = meta.data.sheets.some(s => s.properties.title === sheetName);
+    if (!exists) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        resource: { requests: [{ addSheet: { properties: { title: sheetName } } }] }
+      });
+      if (headers) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: GOOGLE_SHEET_ID,
+          range: `${sheetName}!A1`,
+          valueInputOption: 'RAW',
+          resource: { values: [headers] }
+        });
+        // Bold header
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: GOOGLE_SHEET_ID,
+          resource: {
+            requests: [{
+              repeatCell: {
+                range: { sheetId: meta.data.sheets.find(s=>s.properties.title===sheetName)?.properties.sheetId || 0, startRowIndex: 0, endRowIndex: 1 },
+                cell: { userEnteredFormat: { backgroundColor: { red: 0.26, green: 0.52, blue: 0.96 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
+                fields: "userEnteredFormat(backgroundColor,textFormat)"
+              }
+            }]
+          }
+        });
+      }
+      console.log(`Created sheet ${sheetName}`);
+    }
+  } catch(e) {
+    console.log(`Ensure sheet ${sheetName} error:`, e.message);
+  }
+}
+
+async function pushToSheetDirect(entry) {
+  if (!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return false;
+  try {
+    const sheets = await getSheetsClient();
+    if (!sheets) return false;
+
+    const timestamp = entry.date;
+    const phone = entry.phone;
+    const direction = entry.direction;
+    const flow = entry.flow;
+    const lastStep = entry.lastStep;
+    const message = entry.message;
+    const payload = entry.payload;
+    const fee = entry.currentFee || "";
+    const type = entry.currentType || "";
+    const name = entry.name || "";
+    const place = entry.place || "";
+    const occ = entry.occ || "";
+    const agreementDate = entry.agreementDate || "";
+
+    const isBusinessOpp = flow.includes('EARN') || flow.includes('DISTRICT') || flow.includes('CORP') || flow.includes('MUNICIPAL') || flow.includes('BC_') || flow.includes('READY') || flow.includes('PAY') || flow.includes('LEAD') || flow.includes('EMI');
+    const isDriver = flow.includes('DRIVER') || flow.includes('RIDE_ATTACH') || entry.isDriver === true;
+    const isCustomer = flow.includes('RIDE_CUSTOMER') || flow.includes('CUSTOMER');
+    const isBusinessDir = flow.includes('BUSINESS_DIR') || entry.isBusinessDir === true;
+    const isFinalLead = entry.isFinalLead === true || direction === 'FINAL_LEAD';
+
+    // Always push to All Logs
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: GOOGLE_SHEET_ID,
+      range: 'Sheet6 - All Logs!A:M',
+      valueInputOption: 'USER_ENTERED',
+      resource: { values: [[timestamp, phone, direction, flow, lastStep, message, payload, fee, type, name, place, occ, agreementDate]] }
+    });
+
+    if (isFinalLead) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet1 - Final Leads!A:K',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, name, place, fee, type, occ, agreementDate || lastStep, flow, lastStep, message]] }
+      });
+      // Also to Business Opp
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet2 - Business Opportunity!A:J',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, flow, lastStep, message, payload, fee, type, name, place]] }
+      });
+    } else if (isBusinessOpp) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet2 - Business Opportunity!A:J',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, flow, lastStep, message, payload, fee, type, name, place]] }
+      });
+    } else if (isDriver) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet3 - Drivers!A:I',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, flow, lastStep, message, payload, entry.reminderType || "", entry.isDriver ? "Yes" : "", name]] }
+      });
+    } else if (isCustomer) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet4 - Customers!A:F',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, flow, lastStep, message, payload]] }
+      });
+    } else if (isBusinessDir) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: GOOGLE_SHEET_ID,
+        range: 'Sheet5 - Business Directory!A:H',
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [[timestamp, phone, flow, lastStep, message, payload, "Yes", "1 Year Discount"]] }
+      });
+    }
+
+    console.log(`Direct Sheet OK ${phone} ${flow} -> ${isFinalLead?'Final Leads':isBusinessOpp?'Business Opp':isDriver?'Drivers':isCustomer?'Customers':isBusinessDir?'Business Dir':'All Logs'}`);
+    return true;
+  } catch(e) {
+    console.log(`Direct Sheet FAIL: ${e.message}`);
+    return false;
+  }
+}
+
+// 9 POSTERS
 const POSTERS = {
-  welcome: "https://i.ibb.co/F4YWDzvg/bizmapia-welcome-HD-1080.png", // Welcome 4-in-1
-  customerRide: "https://i.ibb.co/C3KWxFJv/bizmapia-customer-welcome-HD.png", // Customer Ride
-  driverRide: "https://i.ibb.co/mC3pLbyq/bizmapia-driver-welcome-HD.png", // Driver Ride
-  businessDir: "https://i.ibb.co/RTz6MWy3/bizmapia-business-reg-HD.png", // Business Directory
-  delivery: "https://i.ibb.co/nN5pMLm8/Bizmapia-Fast-Safe-Local-Delivery.png", // Delivery
-  booking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png", // Online Booking
-  businessOpp: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png", // Business Opportunity
-  driverReminderBenefits: "https://i.ibb.co/TxHz2jFH/bizmapia-benefit-reminder-HD.png", // Driver Reminder Benefits - V70+
-  businessReminderOffer: "https://i.ibb.co/d0vbRFYs/bizmapia-1year-discount-HD.png", // Business Reminder 1 Year Discount - V70+
+  welcome: "https://i.ibb.co/F4YWDzvg/bizmapia-welcome-HD-1080.png",
+  customerRide: "https://i.ibb.co/C3KWxFJv/bizmapia-customer-welcome-HD.png",
+  driverRide: "https://i.ibb.co/mC3pLbyq/bizmapia-driver-welcome-HD.png",
+  businessDir: "https://i.ibb.co/RTz6MWy3/bizmapia-business-reg-HD.png",
+  delivery: "https://i.ibb.co/nN5pMLm8/Bizmapia-Fast-Safe-Local-Delivery.png",
+  booking: "https://i.ibb.co/Y7FmRY7v/Bizmapia-Online-Booking-Made-Easy.png",
+  businessOpp: "https://i.ibb.co/DPrK49YV/bizmapia-biz-opp-HD.png",
+  driverReminderBenefits: "https://i.ibb.co/TxHz2jFH/bizmapia-benefit-reminder-HD.png",
+  businessReminderOffer: "https://i.ibb.co/d0vbRFYs/bizmapia-1year-discount-HD.png",
 };
 
 const LINKS = {
@@ -58,8 +213,12 @@ function logCRM(uid, dir, msg, payload, flow, step, extra={}){
   crmLogs.push(entry);
   if(crmLogs.length>5000) crmLogs.shift();
   console.log(`CRM ${dir} | ${uid} | ${flow} | ${step} | ${msg.substring(0,80)}`);
-  if(GOOGLE_SHEET_WEBHOOK && GOOGLE_SHEET_WEBHOOK.startsWith('http')){
-    axios.post(GOOGLE_SHEET_WEBHOOK, entry, {timeout: 5000}).catch(e=>console.log(`Sheet push fail ${e.message}`));
+  
+  // Try direct Sheets API first, then webhook fallback
+  if(GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_JSON){
+    pushToSheetDirect(entry);
+  } else if(GOOGLE_SHEET_WEBHOOK && GOOGLE_SHEET_WEBHOOK.startsWith('http')){
+    axios.post(GOOGLE_SHEET_WEBHOOK, entry, {timeout: 5000}).catch(()=>{});
   }
 }
 
@@ -78,24 +237,23 @@ async function sendReminder(uid, reminderType){
   else if(r.isBusinessDir) posterToUse = POSTERS.businessReminderOffer;
   
   if(reminderType==='5min'){ text=`⏰ *5 min reminder*\n\nYou left at *${r.lastStep}*\n\n${r.lastText.substring(0,250)}\n\n👉 *What to do:* ${getWhatToDo(r)}\n🎁 *What you get:* ${getWhatYouGet(r)}\n\nTap now:`; r.reminderCount=1; }
-  else if(reminderType==='30min'){ text=`⏰ *30 min - No response - Do it now*\n\nLeft at *${r.lastStep}*\n\n👉 *Do NOW:* ${getWhatToDo(r)}\n🎁 *Benefits:* ${getWhatYouGet(r)}\n\n⚡ Tap now:`; r.reminderCount=2; }
-  else if(reminderType==='8h'){ text=`🔔 *8 hours reminder*\n\nYou were at *${r.lastStep}*\n\n👉 *What to do:* ${getWhatToDo(r)}\n🎁 *What you get:* ${getWhatYouGet(r)}\n\nComplete now:`; r.reminderCount=3; }
-  else if(reminderType==='16h'){ text=`⏰ *16 hours - Still pending*\n\nLeft at *${r.lastStep}*\n\n👉 *Action:* ${getWhatToDo(r)}\n🎁 *Get:* ${getWhatYouGet(r)}`; r.reminderCount=4; }
+  else if(reminderType==='30min'){ text=`⏰ *30 min - No response*\n\nLeft at *${r.lastStep}*\n\n👉 *Do NOW:* ${getWhatToDo(r)}\n🎁 *Get:* ${getWhatYouGet(r)}\n\n⚡ Tap now:`; r.reminderCount=2; }
+  else if(reminderType==='8h'){ text=`🔔 *8h reminder*\n\nAt *${r.lastStep}*\n\n👉 ${getWhatToDo(r)}\n🎁 ${getWhatYouGet(r)}`; r.reminderCount=3; }
+  else if(reminderType==='16h'){ text=`⏰ *16h pending*\n\nLeft at *${r.lastStep}*\n\n👉 ${getWhatToDo(r)}\n🎁 ${getWhatYouGet(r)}`; r.reminderCount=4; }
   else if(reminderType==='24h'){
-    if(r.isDriver){ text=`⚠️ *24 hours - Driver pending*\n\nStarted at *${r.lastStep}* 24h ago.\n\n👉 *Do:* ${getWhatToDo(r)}\n🎁 *Get:* ${getWhatYouGet(r)}\n\nComplete now:`; r.reminderCount=5; }
-    else{ text=`❌ *24h FINAL - You lost your chance*\n\nStarted at *${r.lastStep}* 24h ago.\n\nRetry with options below:\n\n👇 Select again:`; buttons=[{title:"Ride - Hailing",payload:"OPT_RIDE"},{title:"Business Directory",payload:"OPT_DIR"},{title:"Earn with Bizmapia",payload:"OPT_EARN"}]; r.reminderCount=5; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); }
+    if(r.isDriver){ text=`⚠️ *24h Driver pending*\n\nAt *${r.lastStep}* 24h ago.\n\n👉 ${getWhatToDo(r)}`; r.reminderCount=5; }
+    else{ text=`❌ *24h FINAL - Lost chance*\n\nAt *${r.lastStep}* 24h ago. Retry now!\n\n👇 Select again:`; buttons=[{title:"Ride - Hailing",payload:"OPT_RIDE"},{title:"Business Directory",payload:"OPT_DIR"},{title:"Earn with Bizmapia",payload:"OPT_EARN"}]; r.reminderCount=5; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); }
   }
-  else if(reminderType==='48h' && r.isDriver){ text=`🔔 *Driver 48h - 2nd Last Chance*\n\nLeft at *${r.lastStep}* 48h ago.\n\n👉 *Action:* ${getWhatToDo(r)}\n🎁 *Benefits:* ${getWhatYouGet(r)}`; r.reminderCount=6; }
-  else if(reminderType==='72h' && r.isDriver){ text=`❌ *72h FINAL - Last chance - Lost*\n\nStarted at *${r.lastStep}* 72h ago.\n\nRetry now!\n\n👇 Select again:`; buttons=[{title:"Attach Vehicle",payload:"RIDE_ATTACH"},{title:"Book a Ride",payload:"RIDE_BOOK"},{title:"Main Menu",payload:"MAIN_MENU"}]; r.reminderCount=7; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); }
+  else if(reminderType==='48h' && r.isDriver){ text=`🔔 *Driver 48h - 2nd Last Chance*\n\nLeft at *${r.lastStep}* 48h ago.\n\n👉 ${getWhatToDo(r)}\n🎁 ${getWhatYouGet(r)}`; r.reminderCount=6; }
+  else if(reminderType==='72h' && r.isDriver){ text=`❌ *72h LAST - Lost*\n\nAt *${r.lastStep}* 72h ago. Retry!\n\n👇 Select:`; buttons=[{title:"Attach Vehicle",payload:"RIDE_ATTACH"},{title:"Book a Ride",payload:"RIDE_BOOK"},{title:"Main Menu",payload:"MAIN_MENU"}]; r.reminderCount=7; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); }
   else return;
   r.lastReminderTime=Date.now(); saveReminders();
   logCRM(uid,`REMINDER_${reminderType}`,text,buttons?.map(b=>b.payload).join("|"),r.flow,`Reminder ${reminderType} - ${r.lastStep}`,{currentFee:r.fee,currentType:r.type,isDriver:r.isDriver,isBusinessDir:r.isBusinessDir,reminderType:reminderType});
   sendImageWithButtons(uid,posterToUse,text,buttons);
 }
-function getWhatToDo(r){ if(r.isDriver) return "1. Download Driver App\n2. Register\n3. Upload License, RC, Aadhaar\n4. Earn Rs.1500-2500 daily"; if(r.isBusinessDir) return "1. Download Business App\n2. Add business\n3. FREE listing + 1 Year Discount\n4. Get customers"; return "Tap buttons below to continue: "+r.lastStep; }
-function getWhatYouGet(r){ if(r.isDriver) return "💰 Rs.1500-2500 daily\n✅ Daily payout\n✅ Bonus"; if(r.isBusinessDir) return "🏪 FREE listing\n✅ 10L+ network\n✅ 1 Year Discount Offer"; return "✅ Team call within 24h\n✅ Start earning"; }
+function getWhatToDo(r){ if(r.isDriver) return "Download Driver App, Register, Upload docs, Earn 1500-2500/day"; if(r.isBusinessDir) return "Download Business App, Add business, FREE listing + 1 Year Discount"; return "Tap buttons below to continue: "+r.lastStep; }
+function getWhatYouGet(r){ if(r.isDriver) return "Rs.1500-2500 daily, Daily payout"; if(r.isBusinessDir) return "FREE listing, 10L+ network, 1 Year Discount"; return "Team call within 24h"; }
 
-// Reminder checker: Others 5min,30min,8h,16h,24h FINAL | Driver +48h,72h FINAL
 setInterval(()=>{
   const now=Date.now();
   for(const uid in reminderStore){
@@ -113,7 +271,6 @@ setInterval(()=>{
   }
 },60*1000);
 
-// Queue: Render Free Tier SAFE - 5s global, 10s per user - No 130429
 let lastGlobalSendTime=0;
 const GLOBAL_GAP_MS=5000;
 const PER_USER_GAP_MS=10000;
@@ -161,13 +318,27 @@ async function processQueue(){
 }
 function enqueueSend(uid,fn,debug="",payload=""){ sendQueue.push({uid,fn,debug,payload, retryCount:0}); processQueue(); }
 
-app.get('/',(req,res)=>res.status(200).send(`V75 FINAL COMPLETE - All Requirements - 9 Posters Correct - More Options 3 buttons Fixed - Rate Limit Safe 5s/10s - 5 Sheet CRM - Reminders Others 5min,30min,8h,16h,24h FINAL + Driver 48h,72h FINAL - ${Object.keys(reminderStore).length} pending - Sheet: ${GOOGLE_SHEET_WEBHOOK?'SET':'NOT SET'} - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a>`));
+app.get('/',(req,res)=>res.status(200).send(`V76 FINAL - Direct Sheets API Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - 5 Sheet CRM Direct - Reminders 5min,30min,8h,16h,24h FINAL + Driver 48h,72h - ${Object.keys(reminderStore).length} pending - Sheet Direct: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} Webhook: ${GOOGLE_SHEET_WEBHOOK?'SET':'NOT SET'} - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
+app.get('/setup-sheets', async (req,res)=>{
+  if(!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return res.send("Set GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON env first. See instructions.");
+  try{
+    const sheets = await getSheetsClient();
+    if(!sheets) return res.send("Sheets client fail - Check JSON and install googleapis");
+    await ensureSheetExists(sheets, "Sheet1 - Final Leads", ["Timestamp IST", "Phone", "Name", "Place/District", "Fee", "Type", "Occupation", "Agreement Date", "Flow", "Last Step", "Full Message"]);
+    await ensureSheetExists(sheets, "Sheet2 - Business Opportunity", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Fee", "Type", "Name", "Place"]);
+    await ensureSheetExists(sheets, "Sheet3 - Drivers", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Reminder Type", "Is Driver", "Name"]);
+    await ensureSheetExists(sheets, "Sheet4 - Customers", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload"]);
+    await ensureSheetExists(sheets, "Sheet5 - Business Directory", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Is BusinessDir", "Offer"]);
+    await ensureSheetExists(sheets, "Sheet6 - All Logs", ["Timestamp IST", "Phone", "Direction", "Flow", "Last Step", "Message", "Payload", "Fee", "Type", "Name", "Place", "Occ", "Agreement Date"]);
+    res.send("All 6 sheets created! Sheet1 Final Leads, Sheet2 Business Opp, Sheet3 Drivers, Sheet4 Customers, Sheet5 Business Dir, Sheet6 All Logs - Check your Google Sheet now.");
+  }catch(e){ res.send("Error setup sheets: "+e.message); }
+});
 app.get('/crm',(req,res)=>{
-  const html=`<html><head><title>CRM V75</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}.rem{background:#e8f5e9}</style></head><body><h2>V75 FINAL COMPLETE - ${crmLogs.length} logs - 9 Posters - 5 Sheets</h2><p><a href="/reminders">Reminders</a> | Sheets: Final Leads, Business Opp, Drivers, Customers, Business Dir, All Logs</p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee</th><th>Message</th></tr>${crmLogs.slice(-150).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':l.direction.includes('REMINDER')?'rem':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table></body></html>`;
+  const html=`<html><head><title>CRM V76 Direct Sheets</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}.rem{background:#e8f5e9}</style></head><body><h2>V76 FINAL - Direct Sheets Inside - ${crmLogs.length} logs - Sheet: ${GOOGLE_SHEET_ID?'Direct SET':'Webhook '+ (GOOGLE_SHEET_WEBHOOK?'SET':'NOT SET')}</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets (Click once)</a></p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee</th><th>Message</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':l.direction.includes('REMINDER')?'rem':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table></body></html>`;
   res.send(html);
 });
 app.get('/reminders',(req,res)=>{
-  const html=`<html><head><title>Reminders V75</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}</style></head><body><h2>Reminders Others 5min,30min,8h,16h,24h FINAL | Driver 48h,72h FINAL - ${Object.keys(reminderStore).length} pending</h2><table><tr><th>Phone</th><th>Last Step</th><th>Diff min</th><th>Count</th><th>Type</th><th>Poster</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>Driver:${r.isDriver} Biz:${r.isBusinessDir} Fee:${r.fee}</td><td>${r.lastPoster?.split('/').pop()}</td></tr>`;}).join('')}</table></body></html>`;
+  const html=`<html><head><title>Reminders V76</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}</style></head><body><h2>Reminders Others 5min,30min,8h,16h,24h FINAL | Driver 48h,72h FINAL - ${Object.keys(reminderStore).length} pending</h2><table><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>Driver:${r.isDriver} Biz:${r.isBusinessDir} Fee:${r.fee}</td></tr>`;}).join('')}</table></body></html>`;
   res.send(html);
 });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
@@ -278,7 +449,7 @@ function replyButton(title, payload){ return {title, payload}; }
 
 async function sendFirst(uid){
   const lastWelcome=recentWelcomes.get(uid);
-  if(lastWelcome && Date.now()-lastWelcome<60000){ console.log(`BLOCK double welcome ${uid} within 60s`); return; }
+  if(lastWelcome && Date.now()-lastWelcome<60000) return;
   if(formatTo(uid)===BOT_OWN_NUMBER) return;
   userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{ currentFee:"15L", currentType:"District" } };
   recentWelcomes.set(uid,Date.now()); setTimeout(()=>recentWelcomes.delete(uid),60000);
@@ -337,14 +508,14 @@ async function onMessage(uid,txt,payload){
   const p=(payload||"").trim();
   const t=(txt||"").toLowerCase().trim();
   const lastInteraction=lastInteractionPerUser.get(uid)||0;
-  if(p && Date.now()-lastInteraction<10000 && p===(userStates[uid]?.lastPayload||"")){ console.log(`BLOCK duplicate ${uid} ${p} 10s`); return; }
+  if(p && Date.now()-lastInteraction<10000 && p===(userStates[uid]?.lastPayload||"")) return;
   lastInteractionPerUser.set(uid,Date.now());
   logCRM(uid,"IN",txt,p,state?.flow||"NEW",state?.lastStep||"First",{currentFee:state?.data?.currentFee, currentType:state?.data?.currentType});
   if(reminderStore[uid]){ reminderStore[uid].lastActivity=Date.now(); reminderStore[uid].reminderCount=0; saveReminders(); }
   const isHi=["hi","hello","hey","hai","start","menu"].includes(t);
   if(p.startsWith("LANG_")){ const l=p.replace("LANG_","").toLowerCase(); userStates[uid]={ lang:l, flow:'MAIN', data:{ currentFee:"15L", currentType:"District" }, lastStep:'Main Menu', lastPayload:p }; await sendMain(uid,l); return; }
   if(!state){ await sendFirst(uid); return; }
-  if(isHi){ const lastWelcome=recentWelcomes.get(uid); if(lastWelcome && Date.now()-lastWelcome<60000){ console.log(`BLOCK Hi double 60s ${uid}`); return; } delete userStates[uid]; delete reminderStore[uid]; saveReminders(); await sendFirst(uid); return; }
+  if(isHi){ const lastWelcome=recentWelcomes.get(uid); if(lastWelcome && Date.now()-lastWelcome<60000) return; delete userStates[uid]; delete reminderStore[uid]; saveReminders(); await sendFirst(uid); return; }
   const lang=state.lang||'en'; userStates[uid].lastPayload=p;
   if(p==="MAIN_MENU") return await sendMain(uid,lang);
   if(p==="OPT_MORE") return await sendMore(uid,lang);
@@ -419,4 +590,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V75 FINAL COMPLETE - All Requirements - 9 Posters - More Options 3 buttons Fixed - Rate Limit Safe 5s/10s - 5 Sheet CRM - Reminders Others 5min,30min,8h,16h,24h FINAL + Driver 48h,72h FINAL - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V76 FINAL Direct Sheets Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - Direct Sheets: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
