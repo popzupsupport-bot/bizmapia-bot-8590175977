@@ -1,6 +1,6 @@
-// V50 - TEMPLATE + MAINTENANCE - BOT: 7025630644 - READY TO PASTE
+// V50 - TEMPLATE + MAINTENANCE - BOT: 7025630644 - FINAL CLEAN
 const express = require('express');
-const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
+const axios = require('axios');
 const app = express();
 app.use(express.json());
 
@@ -26,7 +26,7 @@ const LINKS = {
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const WELCOME_TEMPLATE = process.env.WELCOME_TEMPLATE || ""; // e.g. bizmapia_welcome
+const WELCOME_TEMPLATE = process.env.WELCOME_TEMPLATE || "";
 
 let userStates = {};
 const processedIds = new Set();
@@ -64,7 +64,6 @@ function formatTo(to){
   return c;
 }
 
-// CORE SENDERS
 async function sendMessage(uid, txt, btns){
   if(!btns) btns=[];
   const to=formatTo(uid);
@@ -112,9 +111,9 @@ async function sendImageHD(uid, imgUrl, cap, btns){
     const headers={ Authorization:`Bearer ${WHATSAPP_TOKEN}`, "Content-Type":"application/json" };
     await axios.post(url,{ messaging_product:"whatsapp", to, type:"image", image:{ link:imgUrl, caption:String(cap).substring(0,1024) } },{headers});
     console.log(`OUT IMAGE OK to ${to}`);
-    if(btns?.length>0) setTimeout(()=>{ sendMessage(uid,"👇 Please select:",btns); },1200);
+    if(btns && btns.length>0) setTimeout(()=>{ sendMessage(uid,"👇 Please select:",btns); },1200);
   }catch(e){
-    console.log("IMAGE FAIL fallback", e.response?.data?.error?.message);
+    console.log("IMAGE FAIL fallback", e.response?.data?.error?.message || e.message);
     await sendMessage(uid,cap,btns);
   }
 }
@@ -123,15 +122,12 @@ function clearReminders(uid){ if(reminderTimers[uid]){ reminderTimers[uid].forEa
 function setReminders(uid,l){
   clearReminders(uid);
   const t1=setTimeout(()=>{ const s=userStates[uid]; if(s && s.flow!=='WELCOME') sendMessage(uid,"👋 Still there?",[{title:getText(l,'ride'),payload:"OPT_RIDE"},{title:getText(l,'earn'),payload:"OPT_EARN"}]); },3*60*1000);
-  reminderTimers[uid]=;
+  reminderTimers[uid]=[t1];
 }
 
-// MAIN WELCOME WITH TEMPLATE SUPPORT
 async function sendFirst(uid){
-  console.log(`sendFirst to ${uid} - V50 TEMPLATE CHECK`);
+  console.log(`sendFirst to ${uid} - V50`);
   if(formatTo(uid)===BOT_OWN_NUMBER) return;
-
-  // Try Template first if configured
   if(WELCOME_TEMPLATE){
     const ok=await sendTemplate(uid,WELCOME_TEMPLATE,"en_US");
     if(ok){
@@ -147,7 +143,6 @@ async function sendFirst(uid){
       return;
     }
   }
-  // Fallback text welcome
   await sendMessage(uid,FIRST_BRIEF,[
     {title:"English",payload:"LANG_EN"},
     {title:"Hindi",payload:"LANG_HI"},
@@ -157,7 +152,6 @@ async function sendFirst(uid){
   setReminders(uid,'en');
 }
 
-// All flows
 async function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; await sendMessage(uid,getText(l,'selOpt'),[{title:getText(l,'ride'),payload:"OPT_RIDE"},{title:getText(l,'earn'),payload:"OPT_EARN"},{title:getText(l,'more'),payload:"OPT_MORE"}]); }
 async function sendMore(uid,l){ userStates[uid].lastStep='More Options'; await sendMessage(uid,"More:",[{title:getText(l,'del'),payload:"OPT_DEL"},{title:getText(l,'book'),payload:"OPT_BOOK"},{title:getText(l,'dir'),payload:"OPT_DIR"}]); }
 async function sendRide(uid,l){ userStates[uid].lastStep='Ride Selection'; await sendMessage(uid,getText(l,'rideOpt'),[{title:getText(l,'bookRide'),payload:"RIDE_BOOK"},{title:getText(l,'attach'),payload:"RIDE_ATTACH"}]); }
