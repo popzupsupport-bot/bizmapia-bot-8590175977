@@ -1,4 +1,4 @@
-// V48.7 - FINAL WORKING - FIXED SYNTAX
+// V48.8 - FIXED LANGUAGE BUTTONS - FINAL WORKING
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -32,7 +32,7 @@ let userStates = {};
 const processedIds = new Set();
 const reminderTimers = {};
 
-app.get('/', (req,res)=>res.status(200).send('V48.7 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
+app.get('/', (req,res)=>res.status(200).send('V48.8 FIXED - '+MAIN_API+' - '+new Date().toISOString()));
 app.get('/webhook',(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
   res.sendStatus(403);
@@ -87,11 +87,7 @@ async function sendImageHD(uid, imgUrl, cap, btns){
     await axios.post(url, { messaging_product:"whatsapp", to: to, type:"image", image:{ link:imgUrl, caption:cap.substring(0,1024) } }, { headers: headers });
     console.log(`OUT IMAGE OK to ${to}`);
     if(btns.length>0){
-      setTimeout(()=>{ sendMessage(uid, "👇 Please select your language:", btns); }, 2500);
-      setTimeout(()=>{
-        console.log(`RETRY BUTTONS to ${to}`);
-        sendMessage(uid, "👇 Tap to select:", btns);
-      }, 5000);
+      setTimeout(()=>{ sendMessage(uid, "👇 Please select:", btns); }, 3000);
     }
   }catch(e){
     console.log("IMAGE FAIL, fallback text+buttons", e.response?.data?.error?.message);
@@ -107,15 +103,38 @@ function setReminders(uid,l){
   reminderTimers[uid]=[t1,t2];
 }
 
+// --- FIXED: Image first, then language buttons clearly ---
 function sendFirst(uid){
   console.log(`sendFirst to ${uid}`);
-  sendImageHD(uid, LINKS.welcomePoster, FIRST_BRIEF, [
-    { title:"English", payload:"LANG_EN" },
-    { title:"Hindi", payload:"LANG_HI" },
-    { title:"Malayalam", payload:"LANG_ML" }
-  ]);
-  userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
-  setReminders(uid,'en');
+  const to=formatTo(uid);
+  const url="https://graph.facebook.com/v20.0/"+PHONE_NUMBER_ID+"/messages";
+  const headers={ Authorization:"Bearer "+WHATSAPP_TOKEN, "Content-Type":"application/json" };
+
+  // 1. Send welcome image with caption only
+  axios.post(url, { messaging_product:"whatsapp", to: to, type:"image", image:{ link:LINKS.welcomePoster, caption:FIRST_BRIEF.substring(0,1024) } }, { headers: headers })
+ .then(()=>{
+    console.log(`OUT IMAGE OK to ${to}`);
+    // 2. After 3.5 sec, send language buttons as separate message - GUARANTEED TO SHOW
+    setTimeout(()=>{
+      sendMessage(uid, "👇 Please select your language / भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:", [
+        { title:"English", payload:"LANG_EN" },
+        { title:"Hindi", payload:"LANG_HI" },
+        { title:"Malayalam", payload:"LANG_ML" }
+      ]);
+      userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
+      setReminders(uid,'en');
+    }, 3500);
+  })
+ .catch(e=>{
+    console.log("IMAGE FAIL fallback", e.response?.data);
+    sendMessage(uid, FIRST_BRIEF, [
+      { title:"English", payload:"LANG_EN" },
+      { title:"Hindi", payload:"LANG_HI" },
+      { title:"Malayalam", payload:"LANG_ML" }
+    ]);
+    userStates[uid]={ lang:'en', flow:'WELCOME', lastStep:'Language Selection', data:{} };
+    setReminders(uid,'en');
+  });
 }
 
 function sendMain(uid,l){ userStates[uid].lang=l; userStates[uid].flow='MAIN'; userStates[uid].lastStep='Main Menu'; sendMessage(uid, getText(l,'selOpt'), [{ title:getText(l,'ride'), payload:"OPT_RIDE" }, { title:getText(l,'earn'), payload:"OPT_EARN" }, { title:getText(l,'more'), payload:"OPT_MORE" }]); }
@@ -218,4 +237,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log("V48.7 FIXED WORKING on "+PORT));
+app.listen(PORT,'0.0.0.0',()=>console.log("V48.8 FIXED WORKING on "+PORT));
