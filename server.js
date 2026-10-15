@@ -1,4 +1,4 @@
-// V78 FINAL MULTILINGUAL - English + Hindi + Malayalam - All steps translated with meaningful sentences - 9 Posters + 5 Sheet CRM + More Options Fixed + Rate Limit Safe + Reminders
+// V79 FINAL FIXED RANGE - Fixed Sheet range parse error - All sheet names with single quotes - Multilingual EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -36,7 +36,11 @@ async function ensureSheetExists(sheets, sheetName, headers) {
     const exists = meta.data.sheets.some(s => s.properties.title === sheetName);
     if (!exists) {
       await sheets.spreadsheets.batchUpdate({ spreadsheetId: GOOGLE_SHEET_ID, resource: { requests: [{ addSheet: { properties: { title: sheetName } } }] } });
-      if (headers) await sheets.spreadsheets.values.update({ spreadsheetId: GOOGLE_SHEET_ID, range: `${sheetName}!A1`, valueInputOption: 'RAW', resource: { values: [headers] } });
+      if (headers) {
+        // FIXED: Use single quotes around sheet name
+        await sheets.spreadsheets.values.update({ spreadsheetId: GOOGLE_SHEET_ID, range: `'${sheetName}'!A1`, valueInputOption: 'RAW', resource: { values: [headers] } });
+      }
+      console.log(`Created sheet ${sheetName}`);
     }
   } catch(e) { console.log(`Ensure ${sheetName} ${e.message}`); }
 }
@@ -50,21 +54,25 @@ async function pushToSheetDirect(entry) {
     const isBusinessDir = entry.flow.includes('BUSINESS_DIR')||entry.isBusinessDir;
     const isFinalLead = entry.isFinalLead||entry.direction==='FINAL_LEAD';
     const rowAll = [entry.date, entry.phone, entry.direction, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place, entry.occ, entry.agreementDate];
-    await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet6 - All Logs!A:M', valueInputOption: 'USER_ENTERED', resource: { values: [rowAll] } });
+
+    // FIXED: All ranges now with single quotes - 'SheetName'!A:M format to fix "Unable to parse range" error
+    await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet6 - All Logs'!A:M`, valueInputOption: 'USER_ENTERED', resource: { values: [rowAll] } });
+    console.log(`Sheet6 OK ${entry.phone}`);
+
     if(isFinalLead){
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet1 - Final Leads!A:K', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.name, entry.place, entry.currentFee, entry.currentType, entry.occ, entry.agreementDate, entry.flow, entry.lastStep, entry.message]] } });
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet2 - Business Opportunity!A:J', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet1 - Final Leads'!A:K`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.name, entry.place, entry.currentFee, entry.currentType, entry.occ, entry.agreementDate, entry.flow, entry.lastStep, entry.message]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet2 - Business Opportunity'!A:J`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place]] } });
     } else if(isBusinessOpp){
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet2 - Business Opportunity!A:J', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet2 - Business Opportunity'!A:J`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place]] } });
     } else if(isDriver){
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet3 - Drivers!A:I', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.reminderType||"", "Yes", entry.name]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet3 - Drivers'!A:I`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.reminderType||"", "Yes", entry.name]] } });
     } else if(isCustomer){
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet4 - Customers!A:F', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet4 - Customers'!A:F`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload]] } });
     } else if(isBusinessDir){
-      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: 'Sheet5 - Business Directory!A:H', valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, "Yes", "1 Year Discount"]] } });
+      await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet5 - Business Directory'!A:H`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, "Yes", "1 Year Discount"]] } });
     }
     return true;
-  } catch(e){ console.log(`Sheet fail ${e.message}`); return false; }
+  } catch(e){ console.log(`Sheet fail ${e.message} for ${entry.phone} ${entry.flow}`); return false; }
 }
 
 const POSTERS = {
@@ -114,7 +122,7 @@ let lastGlobalSendTime=0; const GLOBAL_GAP_MS=5000; const PER_USER_GAP_MS=10000;
 async function processQueue(){ if(isProcessingQueue) return; isProcessingQueue=true; while(sendQueue.length>0){ if(sendQueue.length>10){ sendQueue.splice(0, sendQueue.length-10); } const now=Date.now(); const globalWait=Math.max(0,(lastGlobalSendTime+GLOBAL_GAP_MS)-now); if(globalWait>0) await new Promise(r=>setTimeout(r,globalWait)); const job=sendQueue[0]; const uid=job.uid; const lastPerUser=lastSentPerUser.get(uid)||0; const perUserWait=Math.max(0,(lastPerUser+PER_USER_GAP_MS)-Date.now()); if(perUserWait>0) await new Promise(r=>setTimeout(r,perUserWait)); sendQueue.shift(); try{ await job.fn(); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); }catch(e){ const errStr=JSON.stringify(e.response?.data||e.message); if(errStr.includes('130429')){ logCRM(uid,"OUT_FAILED_130429",`Rate limit 130429 - ${job.debug}`,job.payload,"RATE_LIMIT","Rate limit"); await new Promise(r=>setTimeout(r,30000)); if((job.retryCount||0)>2){ lastGlobalSendTime=Date.now()+15000; lastSentPerUser.set(uid,Date.now()+15000); continue; } job.retryCount=(job.retryCount||0)+1; sendQueue.unshift(job); lastGlobalSendTime=Date.now()+15000; lastSentPerUser.set(uid,Date.now()+15000); continue; } else { console.log("Queue error",errStr.substring(0,400)); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); } } } isProcessingQueue=false; }
 function enqueueSend(uid,fn,debug="",payload=""){ sendQueue.push({uid,fn,debug,payload, retryCount:0}); processQueue(); }
 
-app.get('/',(req,res)=>res.status(200).send(`V78 MULTILINGUAL - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets - Reminders - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
+app.get('/',(req,res)=>res.status(200).send(`V79 FIXED RANGE - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets Fixed - Reminders - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
 app.get('/setup-sheets', async (req,res)=>{
   if(!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return res.send(`Set GOOGLE_SHEET_ID and GOOGLE_CREDENTIALS env. Current SHEET_ID=${GOOGLE_SHEET_ID?'SET':'NOT SET'} CREDS=${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'}`);
   try{
@@ -125,14 +133,13 @@ app.get('/setup-sheets', async (req,res)=>{
     await ensureSheetExists(sheets, "Sheet4 - Customers", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload"]);
     await ensureSheetExists(sheets, "Sheet5 - Business Directory", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Is BusinessDir", "Offer"]);
     await ensureSheetExists(sheets, "Sheet6 - All Logs", ["Timestamp IST", "Phone", "Direction", "Flow", "Last Step", "Message", "Payload", "Fee", "Type", "Name", "Place", "Occ", "Agreement Date"]);
-    res.send("SUCCESS! All 6 sheets created!");
+    res.send("SUCCESS! All 6 sheets created! Range parse fixed!");
   }catch(e){ res.send("Error: "+e.message); }
 });
-app.get('/crm',(req,res)=>{ const html=`<html><body><h2>CRM V78 Multilingual ${crmLogs.length} logs</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a></p><table border=1><tr><th>Date</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Step</th><th>Fee</th><th>Msg</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr><td>${l.date}</td><td>${l.phone}</td><td>${l.direction}</td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td>${l.payload}<br/>${l.message}</td></tr>`).join('')}</table></body></html>`; res.send(html); });
+app.get('/crm',(req,res)=>{ const html=`<html><body><h2>CRM V79 Fixed Range ${crmLogs.length} logs</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a></p><table border=1><tr><th>Date</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Step</th><th>Fee</th><th>Msg</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr><td>${l.date}</td><td>${l.phone}</td><td>${l.direction}</td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td>${l.payload}<br/>${l.message}</td></tr>`).join('')}</table></body></html>`; res.send(html); });
 app.get('/reminders',(req,res)=>{ const html=`<html><body><h2>Reminders ${Object.keys(reminderStore).length} pending</h2><table border=1><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>${r.fee}</td></tr>`;}).join('')}</table></body></html>`; res.send(html); });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
 
-// MULTILINGUAL TEXTS - ENGLISH / HINDI / MALAYALAM - MEANINGFUL TRANSLATIONS
 const T = {
   en: {
     selOpt:"Please select any one from below:", ride:"Ride - Hailing", dir:"Business Directory", del:"Online Delivery", book:"Online Booking", earn:"Earn with Bizmapia", more:"More Options",
@@ -335,7 +342,6 @@ async function sendMain(uid,l){
   const btns=[replyButton(getText(l,'ride'),"OPT_RIDE"),replyButton(getText(l,'earn'),"OPT_EARN"),replyButton(getText(l,'more'),"OPT_MORE")]; 
   const txt=getText(l,'selOpt'); 
   const brief = l==='hi' ? FIRST_BRIEF_HI : l==='ml' ? FIRST_BRIEF_ML : FIRST_BRIEF_EN;
-  // After language selection, show main menu with brief in that language
   sendImageWithButtons(uid,POSTERS.welcome,brief+"\n\n"+txt,btns); 
   updateReminder(uid,'Main Menu',btns,POSTERS.welcome,txt,'MAIN',userStates[uid].data.currentFee,userStates[uid].data.currentType,false,false); 
 }
@@ -459,4 +465,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V78 MULTILINGUAL FINAL - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V79 FIXED RANGE - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets Fixed - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
