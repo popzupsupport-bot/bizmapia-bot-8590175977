@@ -1,4 +1,4 @@
-// V79 FINAL FIXED RANGE - Fixed Sheet range parse error - All sheet names with single quotes - Multilingual EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets
+// V80 FINAL - STRONG RATE LIMIT FIX 130429 - 15sec global / 30sec per user - No 5min spam - Clears old reminders - Same V79 features EN/HI/ML
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -37,7 +37,6 @@ async function ensureSheetExists(sheets, sheetName, headers) {
     if (!exists) {
       await sheets.spreadsheets.batchUpdate({ spreadsheetId: GOOGLE_SHEET_ID, resource: { requests: [{ addSheet: { properties: { title: sheetName } } }] } });
       if (headers) {
-        // FIXED: Use single quotes around sheet name
         await sheets.spreadsheets.values.update({ spreadsheetId: GOOGLE_SHEET_ID, range: `'${sheetName}'!A1`, valueInputOption: 'RAW', resource: { values: [headers] } });
       }
       console.log(`Created sheet ${sheetName}`);
@@ -54,11 +53,8 @@ async function pushToSheetDirect(entry) {
     const isBusinessDir = entry.flow.includes('BUSINESS_DIR')||entry.isBusinessDir;
     const isFinalLead = entry.isFinalLead||entry.direction==='FINAL_LEAD';
     const rowAll = [entry.date, entry.phone, entry.direction, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place, entry.occ, entry.agreementDate];
-
-    // FIXED: All ranges now with single quotes - 'SheetName'!A:M format to fix "Unable to parse range" error
     await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet6 - All Logs'!A:M`, valueInputOption: 'USER_ENTERED', resource: { values: [rowAll] } });
     console.log(`Sheet6 OK ${entry.phone}`);
-
     if(isFinalLead){
       await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet1 - Final Leads'!A:K`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.name, entry.place, entry.currentFee, entry.currentType, entry.occ, entry.agreementDate, entry.flow, entry.lastStep, entry.message]] } });
       await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: `'Sheet2 - Business Opportunity'!A:J`, valueInputOption: 'USER_ENTERED', resource: { values: [[entry.date, entry.phone, entry.flow, entry.lastStep, entry.message, entry.payload, entry.currentFee, entry.currentType, entry.name, entry.place]] } });
@@ -90,8 +86,16 @@ const LINKS = { customerApp: "https://play.google.com/store/apps/details?id=com.
 const PHONES = { gopalan: "919745226642", business: "918590175977", displayG: "97452 26642", displayB: "85901 75977" };
 
 let userStates = {}; const processedIds = new Set(); const lastSentPerUser = new Map(); const recentWelcomes = new Map(); const lastInteractionPerUser = new Map();
-let reminderStore = {}; const REMINDER_FILE = path.join(__dirname, 'reminders.json');
-try{ if(fs.existsSync(REMINDER_FILE)){ reminderStore = JSON.parse(fs.readFileSync(REMINDER_FILE,'utf8')); } }catch(e){ reminderStore={}; }
+let reminderStore = {};
+const REMINDER_FILE = path.join(__dirname, 'reminders.json');
+// V80: Clear old reminders on startup to fix 130429 spam
+try{ 
+  if(fs.existsSync(REMINDER_FILE)){ 
+    fs.unlinkSync(REMINDER_FILE); 
+    console.log("Old reminders cleared - fixing 130429");
+  } 
+  reminderStore = {}; 
+} catch(e){ reminderStore={}; }
 function saveReminders(){ try{ fs.writeFileSync(REMINDER_FILE, JSON.stringify(reminderStore, null, 2)); }catch(e){} }
 let crmLogs = [];
 function logCRM(uid, dir, msg, payload, flow, step, extra={}){
@@ -99,30 +103,46 @@ function logCRM(uid, dir, msg, payload, flow, step, extra={}){
   crmLogs.push(entry); if(crmLogs.length>5000) crmLogs.shift();
   if(GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_JSON) pushToSheetDirect(entry); else if(GOOGLE_SHEET_WEBHOOK) axios.post(GOOGLE_SHEET_WEBHOOK, entry, {timeout: 5000}).catch(()=>{});
 }
-function updateReminder(uid, lastStep, lastButtons, lastPoster, lastText, flow, fee, type, isDriver=false, isBusinessDir=false){ reminderStore[uid] = { uid, lastActivity: Date.now(), lastStep, lastButtons, lastPoster, lastText, flow, fee, type, isDriver, isBusinessDir, reminderCount: 0 }; saveReminders(); }
+function updateReminder(uid, lastStep, lastButtons, lastPoster, lastText, flow, fee, type, isDriver=false, isBusinessDir=false){ 
+  // V80: No 5min reminder - only 30min+ to avoid 130429
+  reminderStore[uid] = { uid, lastActivity: Date.now(), lastStep, lastButtons, lastPoster, lastText, flow, fee, type, isDriver, isBusinessDir, reminderCount: 0 }; 
+  saveReminders(); 
+}
 async function sendReminder(uid, reminderType){
-  const r = reminderStore[uid]; if(!r) return; let posterToUse = r.lastPoster; let text = ""; let buttons = r.lastButtons;
+  const r = reminderStore[uid]; if(!r) return; 
+  let posterToUse = r.lastPoster; let text = ""; let buttons = r.lastButtons;
   if(r.isDriver) posterToUse = POSTERS.driverReminderBenefits; else if(r.isBusinessDir) posterToUse = POSTERS.businessReminderOffer;
   const lang = userStates[uid]?.lang || 'en';
-  if(reminderType==='5min'){ text = lang==='hi' ? `⏰ *5 मिनट रिमाइंडर*\n\nआप *${r.lastStep}* पर रुके थे\n\n👉 *क्या करना है:* ${getWhatToDo(r,lang)}\n🎁 *क्या मिलेगा:* ${getWhatYouGet(r,lang)}\n\nतुरंत टैप करें:` : lang==='ml' ? `⏰ *5 മിനിറ്റ് ഓർമ്മപ്പെടുത്തൽ*\n\nതാങ്കൾ *${r.lastStep}* ൽ നിർത്തി\n\n👉 *ചെയ്യേണ്ടത്:* ${getWhatToDo(r,lang)}\n🎁 *ലഭിക്കുന്നത്:* ${getWhatYouGet(r,lang)}\n\nഇപ്പോൾ ടാപ്പ് ചെയ്യൂ:` : `⏰ *5 min reminder*\n\nYou left at *${r.lastStep}*\n\n👉 *What to do:* ${getWhatToDo(r,lang)}\n🎁 *What you get:* ${getWhatYouGet(r,lang)}\n\nTap now:`; r.reminderCount=1; }
-  else if(reminderType==='30min'){ text = lang==='hi' ? `⏰ *30 मिनट - कोई जवाब नहीं*\n\n*${r.lastStep}* पर रुके थे\n\n👉 *अभी करें:* ${getWhatToDo(r,lang)}` : lang==='ml' ? `⏰ *30 മിനിറ്റ് - മറുപടി ഇല്ല*\n\n*${r.lastStep}* ൽ നിർത്തി\n\n👉 *ഇപ്പോൾ ചെയ്യുക:* ${getWhatToDo(r,lang)}` : `⏰ *30 min - No response*\n\nLeft at *${r.lastStep}*\n\n👉 *Do NOW:* ${getWhatToDo(r,lang)}`; r.reminderCount=2; }
-  else if(reminderType==='8h'){ text = `🔔 *8h reminder*\n\nAt *${r.lastStep}*\n\n👉 ${getWhatToDo(r,lang)}\n🎁 ${getWhatYouGet(r,lang)}`; r.reminderCount=3; }
-  else if(reminderType==='16h'){ text = `⏰ *16h pending*\n\nLeft at *${r.lastStep}*`; r.reminderCount=4; }
-  else if(reminderType==='24h'){ if(r.isDriver){ text=`⚠️ *24h Driver pending*\n\nAt *${r.lastStep}*`; r.reminderCount=5; } else{ text = lang==='hi' ? `❌ *24 घंटे FINAL - मौका गया*\n\n*${r.lastStep}* पर 24 घंटे पहले रुके थे\n\nफिर से शुरू करें:\n\n👇 चुनें:` : lang==='ml' ? `❌ *24 മണിക്കൂർ FINAL - അവസരം നഷ്ടമായി*\n\n*${r.lastStep}* ൽ 24 മണിക്കൂർ മുൻപ് നിർത്തി\n\nവീണ്ടും തിരഞ്ഞെടുക്കൂ:` : `❌ *24h FINAL - Lost chance*\n\nAt *${r.lastStep}* 24h ago. Retry!\n\n👇 Select:`; buttons = lang==='hi' ? [{title:"राइड - हैलिंग",payload:"OPT_RIDE"},{title:"बिजनेस डायरेक्टरी",payload:"OPT_DIR"},{title:"बिज़मापिया से कमाएं",payload:"OPT_EARN"}] : lang==='ml' ? [{title:"റൈഡ് - ഹെയ്‌ലിംഗ്",payload:"OPT_RIDE"},{title:"ബിസിനസ് ഡയറക്ടറി",payload:"OPT_DIR"},{title:"ബിസ്മാപിയയിൽ നിന്ന് നേടൂ",payload:"OPT_EARN"}] : [{title:"Ride - Hailing",payload:"OPT_RIDE"},{title:"Business Directory",payload:"OPT_DIR"},{title:"Earn with Bizmapia",payload:"OPT_EARN"}]; r.reminderCount=5; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); } }
-  else if(reminderType==='48h' && r.isDriver){ text=`🔔 *Driver 48h - 2nd Last Chance*`; r.reminderCount=6; }
-  else if(reminderType==='72h' && r.isDriver){ text=`❌ *72h FINAL - Last chance*`; buttons=[{title:"Attach Vehicle",payload:"RIDE_ATTACH"},{title:"Book a Ride",payload:"RIDE_BOOK"},{title:"Main Menu",payload:"MAIN_MENU"}]; r.reminderCount=7; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); } else return;
+  // V80: Removed 5min reminder - start from 30min
+  if(reminderType==='30min'){ 
+    text = lang==='hi' ? `⏰ *30 मिनट - कोई जवाब नहीं*\n\n*${r.lastStep}* पर रुके थे\n\n👉 *अभी करें:* ${getWhatToDo(r,lang)}` : lang==='ml' ? `⏰ *30 മിനിറ്റ് - മറുപടി ഇല്ല*\n\n*${r.lastStep}* ൽ നിർത്തി\n\n👉 *ഇപ്പോൾ ചെയ്യുക:* ${getWhatToDo(r,lang)}` : `⏰ *30 min - No response*\n\nLeft at *${r.lastStep}*\n\n👉 *Do NOW:* ${getWhatToDo(r,lang)}`; r.reminderCount=1; 
+  }
+  else if(reminderType==='8h'){ text = `🔔 *8h reminder*\n\nAt *${r.lastStep}*\n\n👉 ${getWhatToDo(r,lang)}\n🎁 ${getWhatYouGet(r,lang)}`; r.reminderCount=2; }
+  else if(reminderType==='16h'){ text = `⏰ *16h pending*\n\nLeft at *${r.lastStep}*`; r.reminderCount=3; }
+  else if(reminderType==='24h'){ 
+    if(r.isDriver){ text=`⚠️ *24h Driver pending*\n\nAt *${r.lastStep}*`; r.reminderCount=4; } 
+    else{ 
+      text = lang==='hi' ? `❌ *24 घंटे FINAL - मौका गया*\n\n*${r.lastStep}* पर 24 घंटे पहले रुके थे\n\nफिर से शुरू करें:\n\n👇 चुनें:` : lang==='ml' ? `❌ *24 മണിക്കൂർ FINAL - അവസരം നഷ്ടമായി*\n\n*${r.lastStep}* ൽ 24 മണിക്കൂർ മുൻപ് നിർത്തി\n\nവീണ്ടും തിരഞ്ഞെടുക്കൂ:` : `❌ *24h FINAL - Lost chance*\n\nAt *${r.lastStep}* 24h ago. Retry!\n\n👇 Select:`; 
+      buttons = lang==='hi' ? [{title:"राइड - हैलिंग",payload:"OPT_RIDE"},{title:"बिजनेस डायरेक्टरी",payload:"OPT_DIR"},{title:"बिज़मापिया से कमाएं",payload:"OPT_EARN"}] : lang==='ml' ? [{title:"റൈഡ് - ഹെയ്‌ലിംഗ്",payload:"OPT_RIDE"},{title:"ബിസിനസ് ഡയറക്ടറി",payload:"OPT_DIR"},{title:"ബിസ്മാപിയയിൽ നിന്ന് നേടൂ",payload:"OPT_EARN"}] : [{title:"Ride - Hailing",payload:"OPT_RIDE"},{title:"Business Directory",payload:"OPT_DIR"},{title:"Earn with Bizmapia",payload:"OPT_EARN"}]; r.reminderCount=4; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); 
+    } 
+  }
+  else if(reminderType==='48h' && r.isDriver){ text=`🔔 *Driver 48h - 2nd Last Chance*`; r.reminderCount=5; }
+  else if(reminderType==='72h' && r.isDriver){ text=`❌ *72h FINAL - Last chance*`; buttons=[{title:"Attach Vehicle",payload:"RIDE_ATTACH"},{title:"Book a Ride",payload:"RIDE_BOOK"},{title:"Main Menu",payload:"MAIN_MENU"}]; r.reminderCount=6; setTimeout(()=>{delete reminderStore[uid];saveReminders();},60000); } else return;
   r.lastReminderTime=Date.now(); saveReminders(); logCRM(uid,`REMINDER_${reminderType}`,text,buttons?.map(b=>b.payload).join("|"),r.flow,`Reminder ${reminderType} - ${r.lastStep}`,{currentFee:r.fee,currentType:r.type,isDriver:r.isDriver,isBusinessDir:r.isBusinessDir,reminderType:reminderType}); sendImageWithButtons(uid,posterToUse,text,buttons);
 }
 function getWhatToDo(r,lang='en'){ if(r.isDriver) return lang==='hi' ? "ड्राइवर ऐप डाउनलोड करें, रजिस्टर करें, लाइसेंस/RC/आधार अपलोड करें, रोज़ Rs.1500-2500 कमाएं" : lang==='ml' ? "ഡ്രൈവർ ആപ്പ് ഡൗൺലോഡ് ചെയ്യുക, രജിസ്റ്റർ ചെയ്യുക, ലൈസൻസ്/RC/ആധാർ അപ്‌ലോഡ് ചെയ്യുക, ദിവസം Rs.1500-2500 നേടുക" : "Download Driver App, Register, Upload License/RC/Aadhaar, Earn Rs.1500-2500 daily"; if(r.isBusinessDir) return lang==='hi' ? "बिजनेस ऐप डाउनलोड करें, बिजनेस जोड़ें, FREE लिस्टिंग + 1 साल डिस्काउंट" : lang==='ml' ? "ബിസിനസ് ആപ്പ് ഡൗൺലോഡ് ചെയ്യുക, ബിസിനസ് ചേർക്കുക, FREE ലിസ്റ്റിംഗ് + 1 വർഷ കിഴിവ്" : "Download Business App, Add business, FREE listing + 1 Year Discount"; return lang==='hi' ? "नीचे दिए बटन पर टैप करके जारी रखें: "+r.lastStep : lang==='ml' ? "താഴെയുള്ള ബട്ടണിൽ ടാപ്പ് ചെയ്ത് തുടരുക: "+r.lastStep : "Tap buttons below to continue: "+r.lastStep; }
 function getWhatYouGet(r,lang='en'){ if(r.isDriver) return lang==='hi' ? "रोज़ Rs.1500-2500, डेली पेमेंट, बोनस" : lang==='ml' ? "ദിവസം Rs.1500-2500, ഡെയ്‌ലി പേയ്‌മെന്റ്, ബോണസ്" : "Rs.1500-2500 daily, Daily payout, Bonus"; if(r.isBusinessDir) return lang==='hi' ? "FREE लिस्टिंग, 10 लाख+ नेटवर्क, 1 साल ऑफर" : lang==='ml' ? "FREE ലിസ്റ്റിംഗ്, 10 ലക്ഷം+ നെറ്റ്‌വർക്ക്, 1 വർഷ ഓഫർ" : "FREE listing, 10L+ network, 1 Year Offer"; return lang==='hi' ? "24 घंटे में टीम कॉल करेगी" : lang==='ml' ? "24 മണിക്കൂറിനുള്ളിൽ ടീം വിളിക്കും" : "Team call within 24h"; }
 
-setInterval(()=>{ const now=Date.now(); for(const uid in reminderStore){ const r=reminderStore[uid]; if(!r) continue; const diffM=(now-r.lastActivity)/60000; const diffH=diffM/60; if(diffM>=5 && diffM<6 && r.reminderCount===0) sendReminder(uid,'5min'); else if(diffM>=30 && diffM<31 && r.reminderCount===1) sendReminder(uid,'30min'); else if(diffH>=8 && diffH<8.05 && r.reminderCount===2) sendReminder(uid,'8h'); else if(diffH>=16 && diffH<16.05 && r.reminderCount===3) sendReminder(uid,'16h'); else if(diffH>=24 && diffH<24.05 && r.reminderCount===4) sendReminder(uid,'24h'); else if(r.isDriver && diffH>=48 && diffH<48.05 && r.reminderCount===5) sendReminder(uid,'48h'); else if(r.isDriver && diffH>=72 && diffH<72.05 && r.reminderCount===6) sendReminder(uid,'72h'); else if(!r.isDriver && diffH>25){ delete reminderStore[uid]; saveReminders(); } else if(r.isDriver && diffH>73){ delete reminderStore[uid]; saveReminders(); } } },60*1000);
+// V80: Only 30min+ reminders, no 5min spam
+setInterval(()=>{ const now=Date.now(); for(const uid in reminderStore){ const r=reminderStore[uid]; if(!r) continue; const diffM=(now-r.lastActivity)/60000; const diffH=diffM/60; if(diffM>=30 && diffM<31 && r.reminderCount===0) sendReminder(uid,'30min'); else if(diffH>=8 && diffH<8.05 && r.reminderCount===1) sendReminder(uid,'8h'); else if(diffH>=16 && diffH<16.05 && r.reminderCount===2) sendReminder(uid,'16h'); else if(diffH>=24 && diffH<24.05 && r.reminderCount===3) sendReminder(uid,'24h'); else if(r.isDriver && diffH>=48 && diffH<48.05 && r.reminderCount===4) sendReminder(uid,'48h'); else if(r.isDriver && diffH>=72 && diffH<72.05 && r.reminderCount===5) sendReminder(uid,'72h'); else if(!r.isDriver && diffH>25){ delete reminderStore[uid]; saveReminders(); } else if(r.isDriver && diffH>73){ delete reminderStore[uid]; saveReminders(); } } },60*1000);
 
-let lastGlobalSendTime=0; const GLOBAL_GAP_MS=5000; const PER_USER_GAP_MS=10000; const sendQueue=[]; let isProcessingQueue=false;
-async function processQueue(){ if(isProcessingQueue) return; isProcessingQueue=true; while(sendQueue.length>0){ if(sendQueue.length>10){ sendQueue.splice(0, sendQueue.length-10); } const now=Date.now(); const globalWait=Math.max(0,(lastGlobalSendTime+GLOBAL_GAP_MS)-now); if(globalWait>0) await new Promise(r=>setTimeout(r,globalWait)); const job=sendQueue[0]; const uid=job.uid; const lastPerUser=lastSentPerUser.get(uid)||0; const perUserWait=Math.max(0,(lastPerUser+PER_USER_GAP_MS)-Date.now()); if(perUserWait>0) await new Promise(r=>setTimeout(r,perUserWait)); sendQueue.shift(); try{ await job.fn(); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); }catch(e){ const errStr=JSON.stringify(e.response?.data||e.message); if(errStr.includes('130429')){ logCRM(uid,"OUT_FAILED_130429",`Rate limit 130429 - ${job.debug}`,job.payload,"RATE_LIMIT","Rate limit"); await new Promise(r=>setTimeout(r,30000)); if((job.retryCount||0)>2){ lastGlobalSendTime=Date.now()+15000; lastSentPerUser.set(uid,Date.now()+15000); continue; } job.retryCount=(job.retryCount||0)+1; sendQueue.unshift(job); lastGlobalSendTime=Date.now()+15000; lastSentPerUser.set(uid,Date.now()+15000); continue; } else { console.log("Queue error",errStr.substring(0,400)); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); } } } isProcessingQueue=false; }
+// V80 STRONG RATE LIMIT: 15sec global, 30sec per user - Fixes 130429
+let lastGlobalSendTime=0; const GLOBAL_GAP_MS=15000; const PER_USER_GAP_MS=30000; const sendQueue=[]; let isProcessingQueue=false;
+async function processQueue(){ if(isProcessingQueue) return; isProcessingQueue=true; while(sendQueue.length>0){ if(sendQueue.length>10){ sendQueue.splice(0, sendQueue.length-10); } const now=Date.now(); const globalWait=Math.max(0,(lastGlobalSendTime+GLOBAL_GAP_MS)-now); if(globalWait>0) await new Promise(r=>setTimeout(r,globalWait)); const job=sendQueue[0]; const uid=job.uid; const lastPerUser=lastSentPerUser.get(uid)||0; const perUserWait=Math.max(0,(lastPerUser+PER_USER_GAP_MS)-Date.now()); if(perUserWait>0) await new Promise(r=>setTimeout(r,perUserWait)); sendQueue.shift(); try{ await job.fn(); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); }catch(e){ const errStr=JSON.stringify(e.response?.data||e.message); if(errStr.includes('130429')){ logCRM(uid,"OUT_FAILED_130429",`Rate limit 130429 - ${job.debug}`,job.payload,"RATE_LIMIT","Rate limit"); console.log(`130429 RATE LIMIT - Waiting 60s for ${uid}`); await new Promise(r=>setTimeout(r,60000)); if((job.retryCount||0)>1){ console.log(`130429 - Dropping message for ${uid} after retry`); lastGlobalSendTime=Date.now()+60000; lastSentPerUser.set(uid,Date.now()+60000); continue; } job.retryCount=(job.retryCount||0)+1; sendQueue.unshift(job); lastGlobalSendTime=Date.now()+60000; lastSentPerUser.set(uid,Date.now()+60000); continue; } else { console.log("Queue error",errStr.substring(0,400)); lastGlobalSendTime=Date.now(); lastSentPerUser.set(uid,Date.now()); } } } isProcessingQueue=false; }
 function enqueueSend(uid,fn,debug="",payload=""){ sendQueue.push({uid,fn,debug,payload, retryCount:0}); processQueue(); }
 
-app.get('/',(req,res)=>res.status(200).send(`V79 FIXED RANGE - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets Fixed - Reminders - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
+app.get('/',(req,res)=>res.status(200).send(`V80 RATE LIMIT FIX 130429 - 15sec/30sec - EN/HI/ML - 9 Posters - More Options Fixed - Direct Sheets Fixed - Reminders - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a> | <a href="/clear-reminders">Clear Reminders</a>`));
+app.get('/clear-reminders',(req,res)=>{ reminderStore={}; try{ if(fs.existsSync(REMINDER_FILE)) fs.unlinkSync(REMINDER_FILE); }catch(e){} saveReminders(); res.send("All reminders cleared! 130429 fixed. Now test Hi again."); });
 app.get('/setup-sheets', async (req,res)=>{
   if(!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return res.send(`Set GOOGLE_SHEET_ID and GOOGLE_CREDENTIALS env. Current SHEET_ID=${GOOGLE_SHEET_ID?'SET':'NOT SET'} CREDS=${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'}`);
   try{
@@ -136,8 +156,8 @@ app.get('/setup-sheets', async (req,res)=>{
     res.send("SUCCESS! All 6 sheets created! Range parse fixed!");
   }catch(e){ res.send("Error: "+e.message); }
 });
-app.get('/crm',(req,res)=>{ const html=`<html><body><h2>CRM V79 Fixed Range ${crmLogs.length} logs</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a></p><table border=1><tr><th>Date</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Step</th><th>Fee</th><th>Msg</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr><td>${l.date}</td><td>${l.phone}</td><td>${l.direction}</td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td>${l.payload}<br/>${l.message}</td></tr>`).join('')}</table></body></html>`; res.send(html); });
-app.get('/reminders',(req,res)=>{ const html=`<html><body><h2>Reminders ${Object.keys(reminderStore).length} pending</h2><table border=1><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>${r.fee}</td></tr>`;}).join('')}</table></body></html>`; res.send(html); });
+app.get('/crm',(req,res)=>{ const html=`<html><body><h2>CRM V80 Rate Limit Fix ${crmLogs.length} logs</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a> | <a href="/clear-reminders">Clear Reminders</a></p><table border=1><tr><th>Date</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Step</th><th>Fee</th><th>Msg</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr><td>${l.date}</td><td>${l.phone}</td><td>${l.direction}</td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td>${l.payload}<br/>${l.message}</td></tr>`).join('')}</table></body></html>`; res.send(html); });
+app.get('/reminders',(req,res)=>{ const html=`<html><body><h2>Reminders ${Object.keys(reminderStore).length} pending - V80 No 5min spam</h2><table border=1><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>${r.fee}</td></tr>`;}).join('')}</table></body></html>`; res.send(html); });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
 
 const T = {
@@ -465,4 +485,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V79 FIXED RANGE - EN/HI/ML - 9 Posters - More Options Fixed - Rate Limit Safe - Direct Sheets Fixed - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V80 RATE LIMIT FIX 130429 - 15sec/30sec - No 5min spam - Cleared old reminders - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
