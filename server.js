@@ -1,6 +1,9 @@
+
 /*************************************************
- * BIZMAPIA BOT - V81 FINAL - PERMANENT FIX CODE
+ * BIZMAPIA BOT - V82 FINAL - PERMANENT FIX + DEBUG
+ * Based on YOUR full V81 file you sent
  * Fixes: Language Loop + Range Error + 130429 + Sleep
+ * NEW: Full Meta API Error Logging + /test-send
  * EN/HI/ML + 9 Posters + CRM + Reminders + Sheets
  *************************************************/
 const express = require('express');
@@ -17,6 +20,15 @@ const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const SHEET_ID = process.env.SHEET_ID;
 
 const PORT = process.env.PORT || 10000;
+
+// ====== V82 STARTUP DEBUG CHECK ======
+console.log('=== V82 STARTUP CHECK ===');
+console.log('PHONE_NUMBER_ID:', PHONE_NUMBER_ID || 'MISSING!');
+console.log('WHATSAPP_TOKEN exists:', !!WHATSAPP_TOKEN);
+console.log('WHATSAPP_TOKEN last 10 chars:', WHATSAPP_TOKEN ? WHATSAPP_TOKEN.slice(-10) : 'NONE');
+console.log('SHEET_ID exists:', !!SHEET_ID);
+console.log('VERIFY_TOKEN:', VERIFY_TOKEN);
+console.log('=========================');
 
 // ====== IN-MEMORY STATE (V81 CRITICAL FIX) ======
 // FIX 1: Language loop - Save in memory FIRST, sheet second (never rely on sheet)
@@ -109,7 +121,7 @@ async function saveToSheet(range, values) {
   }
 }
 
-// ====== WHATSAPP SEND FUNCTIONS - V81 RATE LIMIT FIX ======
+// ====== WHATSAPP SEND FUNCTIONS - V82 FULL DEBUG LOGGING ======
 async function sendWhatsAppMessage(to, payload) {
   // V81 FIX 130429: 15sec for same user, 30sec for broadcast
   const now = Date.now();
@@ -123,26 +135,37 @@ async function sendWhatsAppMessage(to, payload) {
 
   try {
     const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
-    await axios.post(url, {
+    console.log(`SENDING to ${to} via ${PHONE_NUMBER_ID}:`, JSON.stringify(payload).substring(0, 250));
+    const response = await axios.post(url, {
       messaging_product: 'whatsapp',
       to: to,
       ...payload
     }, {
-      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
+      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' }
     });
-    console.log(`OUT to ${to}: ${payload.type || 'button'}`);
+    console.log(`META SUCCESS to ${to}:`, JSON.stringify(response.data));
+    console.log(`OUT to ${to}: ${payload.type || 'button'} - WAMID: ${response.data.messages?.[0]?.id}`);
     // Log to Sheet6 - All Logs with safe range
-    await saveToSheet('Sheet6 - All Logs!A:M', [[new Date().toISOString(), to, 'OUT', JSON.stringify(payload).substring(0, 400), '', '', '', '', '', '', '', '', '']]);
+    await saveToSheet('Sheet6 - All Logs!A:M', [[new Date().toISOString(), to, 'OUT', JSON.stringify(payload).substring(0, 400), JSON.stringify(response.data), '', '', '', '', '', '', '', '']]);
     return true;
   } catch (e) {
-    const err = e.response?.data?.error;
-    console.log(`OUT_FAILED to ${to}:`, err?.code, err?.message);
+    const errData = e.response?.data;
+    const err = errData?.error;
+    console.log(`====== META ERROR to ${to} ======`);
+    console.log(`HTTP Status:`, e.response?.status);
+    console.log(`Error Code:`, err?.code);
+    console.log(`Error Subcode:`, err?.error_subcode);
+    console.log(`Error Message:`, err?.message);
+    console.log(`Error Type:`, err?.type);
+    console.log(`Fbtrace ID:`, err?.fbtrace_id);
+    console.log(`Full Error JSON:`, JSON.stringify(errData));
+    console.log(`============================`);
     if (err?.code === 130429) {
       console.log('130429 HIT - Waiting 60 sec');
       await new Promise(r => setTimeout(r, 60000));
       rateLimit[to] = Date.now() + 60000;
     }
-    await saveToSheet('Sheet6 - All Logs!A:M', [[new Date().toISOString(), to, 'OUT_FAILED', err?.code + ' ' + err?.message, '', '', '', '', '', '', '', '', '']]);
+    await saveToSheet('Sheet6 - All Logs!A:M', [[new Date().toISOString(), to, 'OUT_FAILED', `${err?.code} ${err?.message}`, JSON.stringify(errData || {}).substring(0, 500), '', '', '', '', '', '', '', '']]);
     return false;
   }
 }
@@ -208,7 +231,7 @@ async function sendRideMenu(to, lang) {
 }
 
 // ====== WEBHOOK VERIFY ======
-app.get('/', (req, res) => res.send('V81 FINAL - Rate Limit Fix 130429 - 15sec/30sec - EN/HI/ML - 9 Posters - More Options Fixed - Direct Sheets Fixed - Reminders - CRM | Reminders | Setup Sheets | Clear Reminders'));
+app.get('/', (req, res) => res.send('V82 FINAL DEBUG - Rate Limit Fix 130429 - 15sec/30sec - EN/HI/ML - 9 Posters - More Options Fixed - Direct Sheets Fixed - Reminders - CRM | Reminders | Setup Sheets | Clear Reminders | Test Endpoint /test-send'));
 
 app.get('/webhook', (req, res) => {
   if (req.query['hub.verify_token'] === VERIFY_TOKEN) {
@@ -217,15 +240,26 @@ app.get('/webhook', (req, res) => {
 });
 
 // Health for UptimeRobot - V81 CRITICAL FOR NO SLEEP
-app.get('/health', (req, res) => res.send('OK V81'));
+app.get('/health', (req, res) => res.send('OK V82'));
 app.get('/ping', (req, res) => res.send('pong'));
+
+// V82 NEW: Test Send Endpoint - Use to debug token!
+app.get('/test-send', async (req, res) => {
+  const to = req.query.to || '918590175977';
+  console.log(`TEST-SEND requested to ${to} - Token ends with ${WHATSAPP_TOKEN?.slice(-6)} - PhoneID ${PHONE_NUMBER_ID}`);
+  const ok = await sendWhatsAppMessage(to, {
+    type: 'text',
+    text: { body: `Test from V82 DEBUG - ${new Date().toISOString()} - Token:${WHATSAPP_TOKEN?.slice(-6)} Phone:${PHONE_NUMBER_ID}` }
+  });
+  res.send(ok ? `✅ Test SENT to ${to} - Check Render logs for META SUCCESS` : `❌ Test FAILED to ${to} - Check Render logs for META ERROR - That error is the real reason!`);
+});
 
 // Clear reminders endpoint
 app.get('/clear-reminders', (req, res) => {
   Object.values(reminders).forEach(id => clearTimeout(id));
   Object.keys(reminders).forEach(k => delete reminders[k]);
   console.log('All reminders cleared!');
-  res.send('All reminders cleared! V81 No spam.');
+  res.send('All reminders cleared! V82 No spam.');
 });
 
 // ====== WEBHOOK MESSAGE HANDLER - V81 FINAL FIX ======
@@ -407,8 +441,7 @@ function setReminder(to) {
 
 // ====== START SERVER ======
 app.listen(PORT, async () => {
-  console.log(`V81 FINAL listening on ${PORT}`);
-  console.log('V81 FIXED RANGE with quotes, Rate limit 15sec/30sec, Language Memory First');
+  console.log(`V82 FINAL DEBUG listening on ${PORT}`);
+  console.log('V82 FIXED RANGE with quotes, Rate limit 15sec/30sec, Language Memory First + Full Meta Error Logging');
   await getSheetsClient();
 });
-
