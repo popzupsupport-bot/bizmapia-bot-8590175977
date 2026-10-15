@@ -1,5 +1,4 @@
-// V76 FINAL - Direct Google Sheets API INSIDE server.js - No Apps Script Needed - Works Perfect in Render
-// INSTALL: npm install googleapis
+// V77 FINAL - Accepts GOOGLE_CREDENTIALS OR GOOGLE_SERVICE_ACCOUNT_JSON - Works with your existing Render env - Direct Sheets Inside
 const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
@@ -13,22 +12,25 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "bizmapia123";
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// GOOGLE SHEET - Direct API - Set these 2 in Render Environment
-const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || ""; // Your Sheet ID from URL: docs.google.com/spreadsheets/d/THIS_PART/
-const GOOGLE_SERVICE_ACCOUNT_JSON = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || ""; // Full JSON content of service account
-const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || ""; // Optional fallback webhook
+// ACCEPT BOTH NAMES - Your Render has GOOGLE_CREDENTIALS, code also accepts GOOGLE_SERVICE_ACCOUNT_JSON
+const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || "";
+const GOOGLE_SERVICE_ACCOUNT_JSON = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_CREDENTIALS || ""; // FIX: Accept both
+const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK || "";
 
 let sheetsClient = null;
 async function getSheetsClient() {
   if (sheetsClient) return sheetsClient;
-  if (!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return null;
+  if (!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) {
+    console.log(`Sheets env missing: SHEET_ID=${GOOGLE_SHEET_ID?'SET':'NOT SET'} CREDENTIALS=${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'} (checked GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_CREDENTIALS)`);
+    return null;
+  }
   try {
     const { google } = require('googleapis');
     let credentials;
     try {
       credentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
     } catch(e) {
-      console.log("GOOGLE_SERVICE_ACCOUNT_JSON parse error - Make sure it's full JSON");
+      console.log("JSON parse error:", e.message, "- First 100 chars:", GOOGLE_SERVICE_ACCOUNT_JSON.substring(0,100));
       return null;
     }
     const auth = new google.auth.GoogleAuth({
@@ -37,10 +39,10 @@ async function getSheetsClient() {
     });
     const client = await auth.getClient();
     sheetsClient = google.sheets({ version: 'v4', auth: client });
-    console.log("Google Sheets API client ready - Direct mode");
+    console.log("Google Sheets API client ready - Direct mode - Using", process.env.GOOGLE_CREDENTIALS ? "GOOGLE_CREDENTIALS" : "GOOGLE_SERVICE_ACCOUNT_JSON");
     return sheetsClient;
   } catch(e) {
-    console.log("Sheets API init fail - Install googleapis: npm install googleapis - Error:", e.message);
+    console.log("Sheets API init fail - npm install googleapis - Error:", e.message);
     return null;
   }
 }
@@ -60,19 +62,6 @@ async function ensureSheetExists(sheets, sheetName, headers) {
           range: `${sheetName}!A1`,
           valueInputOption: 'RAW',
           resource: { values: [headers] }
-        });
-        // Bold header
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: GOOGLE_SHEET_ID,
-          resource: {
-            requests: [{
-              repeatCell: {
-                range: { sheetId: meta.data.sheets.find(s=>s.properties.title===sheetName)?.properties.sheetId || 0, startRowIndex: 0, endRowIndex: 1 },
-                cell: { userEnteredFormat: { backgroundColor: { red: 0.26, green: 0.52, blue: 0.96 }, textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
-                fields: "userEnteredFormat(backgroundColor,textFormat)"
-              }
-            }]
-          }
         });
       }
       console.log(`Created sheet ${sheetName}`);
@@ -108,7 +97,6 @@ async function pushToSheetDirect(entry) {
     const isBusinessDir = flow.includes('BUSINESS_DIR') || entry.isBusinessDir === true;
     const isFinalLead = entry.isFinalLead === true || direction === 'FINAL_LEAD';
 
-    // Always push to All Logs
     await sheets.spreadsheets.values.append({
       spreadsheetId: GOOGLE_SHEET_ID,
       range: 'Sheet6 - All Logs!A:M',
@@ -123,7 +111,6 @@ async function pushToSheetDirect(entry) {
         valueInputOption: 'USER_ENTERED',
         resource: { values: [[timestamp, phone, name, place, fee, type, occ, agreementDate || lastStep, flow, lastStep, message]] }
       });
-      // Also to Business Opp
       await sheets.spreadsheets.values.append({
         spreadsheetId: GOOGLE_SHEET_ID,
         range: 'Sheet2 - Business Opportunity!A:J',
@@ -159,8 +146,7 @@ async function pushToSheetDirect(entry) {
         resource: { values: [[timestamp, phone, flow, lastStep, message, payload, "Yes", "1 Year Discount"]] }
       });
     }
-
-    console.log(`Direct Sheet OK ${phone} ${flow} -> ${isFinalLead?'Final Leads':isBusinessOpp?'Business Opp':isDriver?'Drivers':isCustomer?'Customers':isBusinessDir?'Business Dir':'All Logs'}`);
+    console.log(`Direct Sheet OK ${phone} ${flow}`);
     return true;
   } catch(e) {
     console.log(`Direct Sheet FAIL: ${e.message}`);
@@ -168,7 +154,6 @@ async function pushToSheetDirect(entry) {
   }
 }
 
-// 9 POSTERS
 const POSTERS = {
   welcome: "https://i.ibb.co/F4YWDzvg/bizmapia-welcome-HD-1080.png",
   customerRide: "https://i.ibb.co/C3KWxFJv/bizmapia-customer-welcome-HD.png",
@@ -213,8 +198,6 @@ function logCRM(uid, dir, msg, payload, flow, step, extra={}){
   crmLogs.push(entry);
   if(crmLogs.length>5000) crmLogs.shift();
   console.log(`CRM ${dir} | ${uid} | ${flow} | ${step} | ${msg.substring(0,80)}`);
-  
-  // Try direct Sheets API first, then webhook fallback
   if(GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_JSON){
     pushToSheetDirect(entry);
   } else if(GOOGLE_SHEET_WEBHOOK && GOOGLE_SHEET_WEBHOOK.startsWith('http')){
@@ -318,27 +301,29 @@ async function processQueue(){
 }
 function enqueueSend(uid,fn,debug="",payload=""){ sendQueue.push({uid,fn,debug,payload, retryCount:0}); processQueue(); }
 
-app.get('/',(req,res)=>res.status(200).send(`V76 FINAL - Direct Sheets API Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - 5 Sheet CRM Direct - Reminders 5min,30min,8h,16h,24h FINAL + Driver 48h,72h - ${Object.keys(reminderStore).length} pending - Sheet Direct: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} Webhook: ${GOOGLE_SHEET_WEBHOOK?'SET':'NOT SET'} - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
+app.get('/',(req,res)=>res.status(200).send(`V77 FINAL - Accepts GOOGLE_CREDENTIALS - Direct Sheets Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - 5 Sheet CRM Direct - Reminders 5min,30min,8h,16h,24h FINAL + Driver 48h,72h - ${Object.keys(reminderStore).length} pending - Sheet Direct: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} Creds: ${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'} - <a href="/crm">CRM</a> | <a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets</a>`));
 app.get('/setup-sheets', async (req,res)=>{
-  if(!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) return res.send("Set GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON env first. See instructions.");
+  if(!GOOGLE_SHEET_ID || !GOOGLE_SERVICE_ACCOUNT_JSON) {
+    return res.send(`Set GOOGLE_SHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON (or GOOGLE_CREDENTIALS) env first.<br><br>Current: SHEET_ID=${GOOGLE_SHEET_ID?'SET':'NOT SET'} CREDENTIALS=${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'}<br>Checked both GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_CREDENTIALS. Your Render has GOOGLE_CREDENTIALS=${process.env.GOOGLE_CREDENTIALS?'SET':'NOT SET'} GOOGLE_SERVICE_ACCOUNT_JSON=${process.env.GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'}`);
+  }
   try{
     const sheets = await getSheetsClient();
-    if(!sheets) return res.send("Sheets client fail - Check JSON and install googleapis");
+    if(!sheets) return res.send("Sheets client fail - Check JSON valid and install googleapis - npm install googleapis");
     await ensureSheetExists(sheets, "Sheet1 - Final Leads", ["Timestamp IST", "Phone", "Name", "Place/District", "Fee", "Type", "Occupation", "Agreement Date", "Flow", "Last Step", "Full Message"]);
     await ensureSheetExists(sheets, "Sheet2 - Business Opportunity", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Fee", "Type", "Name", "Place"]);
     await ensureSheetExists(sheets, "Sheet3 - Drivers", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Reminder Type", "Is Driver", "Name"]);
     await ensureSheetExists(sheets, "Sheet4 - Customers", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload"]);
     await ensureSheetExists(sheets, "Sheet5 - Business Directory", ["Timestamp IST", "Phone", "Flow", "Last Step", "Message", "Payload", "Is BusinessDir", "Offer"]);
     await ensureSheetExists(sheets, "Sheet6 - All Logs", ["Timestamp IST", "Phone", "Direction", "Flow", "Last Step", "Message", "Payload", "Fee", "Type", "Name", "Place", "Occ", "Agreement Date"]);
-    res.send("All 6 sheets created! Sheet1 Final Leads, Sheet2 Business Opp, Sheet3 Drivers, Sheet4 Customers, Sheet5 Business Dir, Sheet6 All Logs - Check your Google Sheet now.");
-  }catch(e){ res.send("Error setup sheets: "+e.message); }
+    res.send("SUCCESS! All 6 sheets created! Sheet1 Final Leads, Sheet2 Business Opp, Sheet3 Drivers, Sheet4 Customers, Sheet5 Business Dir, Sheet6 All Logs - Check your Google Sheet now. Your sheet is now READY with our changes!");
+  }catch(e){ res.send("Error setup sheets: "+e.message+"<br>Stack: "+e.stack); }
 });
 app.get('/crm',(req,res)=>{
-  const html=`<html><head><title>CRM V76 Direct Sheets</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}.rem{background:#e8f5e9}</style></head><body><h2>V76 FINAL - Direct Sheets Inside - ${crmLogs.length} logs - Sheet: ${GOOGLE_SHEET_ID?'Direct SET':'Webhook '+ (GOOGLE_SHEET_WEBHOOK?'SET':'NOT SET')}</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets (Click once)</a></p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee</th><th>Message</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':l.direction.includes('REMINDER')?'rem':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table></body></html>`;
+  const html=`<html><head><title>CRM V77</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}.in{background:#e3f2fd}.out{background:#fff3e0}.fail{background:#ffebee}.rem{background:#e8f5e9}</style></head><body><h2>V77 FINAL - Accepts GOOGLE_CREDENTIALS - ${crmLogs.length} logs - Sheet: ${GOOGLE_SHEET_ID?'Direct SET':'NOT SET'} Creds: ${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'}</h2><p><a href="/reminders">Reminders</a> | <a href="/setup-sheets">Setup Sheets (Click once)</a></p><table><tr><th>Date IST</th><th>Phone</th><th>Dir</th><th>Flow</th><th>Last Step</th><th>Fee</th><th>Message</th></tr>${crmLogs.slice(-100).reverse().map(l=>`<tr class="${l.direction==='IN'?'in':l.direction.includes('FAILED')?'fail':l.direction.includes('REMINDER')?'rem':'out'}"><td>${l.date}</td><td>${l.phone}</td><td><b>${l.direction}</b></td><td>${l.flow}</td><td>${l.lastStep}</td><td>${l.currentFee}</td><td><b>${l.payload}</b><br/>${l.message}</td></tr>`).join('')}</table></body></html>`;
   res.send(html);
 });
 app.get('/reminders',(req,res)=>{
-  const html=`<html><head><title>Reminders V76</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}</style></head><body><h2>Reminders Others 5min,30min,8h,16h,24h FINAL | Driver 48h,72h FINAL - ${Object.keys(reminderStore).length} pending</h2><table><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>Driver:${r.isDriver} Biz:${r.isBusinessDir} Fee:${r.fee}</td></tr>`;}).join('')}</table></body></html>`;
+  const html=`<html><head><title>Reminders V77</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;font-size:11px}th{background:#f2f2f2}</style></head><body><h2>Reminders Others 5min,30min,8h,16h,24h FINAL | Driver 48h,72h FINAL - ${Object.keys(reminderStore).length} pending</h2><table><tr><th>Phone</th><th>Last Step</th><th>Diff</th><th>Count</th><th>Type</th></tr>${Object.values(reminderStore).map(r=>{const diffM=Math.floor((Date.now()-r.lastActivity)/60000);return `<tr><td>${r.uid}</td><td>${r.lastStep}</td><td>${diffM} min</td><td>${r.reminderCount}</td><td>Driver:${r.isDriver} Biz:${r.isBusinessDir} Fee:${r.fee}</td></tr>`;}).join('')}</table></body></html>`;
   res.send(html);
 });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
@@ -590,4 +575,4 @@ app.post('/webhook', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||10000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V76 FINAL Direct Sheets Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - Direct Sheets: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V77 FINAL - Accepts GOOGLE_CREDENTIALS - Direct Sheets Inside - 9 Posters - More Options Fixed - Rate Limit Safe 5s/10s - Direct Sheets: ${GOOGLE_SHEET_ID?'SET':'NOT SET'} Creds: ${GOOGLE_SERVICE_ACCOUNT_JSON?'SET':'NOT SET'} - BOT ${BOT_OWN_NUMBER} on ${PORT}`));
