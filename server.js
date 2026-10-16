@@ -1,9 +1,9 @@
-// BIZMAPIA BOT - V85 REDIS PERMANENT FIX - 2026-10-16
-// FIXED: Redis persistence so 130429 + duplicate never happens even after Render sleep
-// If REDIS_URL is not set, it auto-falls back to memory (so it works without Redis too)
+// BIZMAPIA BOT - V86 REDIS STABLE FIX - 2026-10-16
+// FIXED: Upstash ECONNRESET - added tls:{} + maxRetriesPerRequest:null + stable config
+// Everything else same as your V85
 
 const express = require('express');
-const axios = require('axios');
+const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
 const { google } = require('googleapis');
 let Redis = null;
 try { Redis = require('ioredis'); } catch(e) { console.log('ioredis not installed - using memory fallback'); }
@@ -16,22 +16,37 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia123';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const SHEET_ID = process.env.SHEET_ID;
-const REDIS_URL = process.env.REDIS_URL; // Upstash Redis URL
+const REDIS_URL = process.env.REDIS_URL;
 const PORT = process.env.PORT || 10000;
 
-// ===== REDIS SETUP =====
+// ===== REDIS SETUP - FIXED FOR UPSTASH =====
 let redis = null;
 let redisReady = false;
 if (REDIS_URL && Redis) {
   try {
-    redis = new Redis(REDIS_URL, { 
-      maxRetriesPerRequest: 2,
-      retryStrategy: (times) => Math.min(times * 100, 1000),
-      lazyConnect: true
+    redis = new Redis(REDIS_URL, {
+      tls: {}, // REQUIRED for Upstash rediss://
+      maxRetriesPerRequest: null, // REQUIRED for Upstash - fixes "max retries" error
+      enableReadyCheck: false,
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      reconnectOnError: (err) => {
+        const targetError = 'READONLY';
+        if (err.message.includes(targetError)) {
+          return true;
+        }
+        return false;
+      },
+      keepAlive: 10000,
+      connectTimeout: 10000,
+      lazyConnect: false
     });
     redis.on('connect', () => { console.log('✅ REDIS CONNECTED - Permanent fix active'); redisReady = true; });
+    redis.on('ready', () => { console.log('✅ REDIS READY - Permanent fix active'); redisReady = true; });
     redis.on('error', (e) => { console.log('Redis error (fallback to memory):', e.message); redisReady = false; });
-    redis.connect().catch(() => {});
+    redis.on('close', () => { console.log('Redis closed, reconnecting...'); redisReady = false; });
   } catch(e) { console.log('Redis init failed, using memory:', e.message); }
 } else {
   console.log('REDIS_URL not set - using memory fallback (will reset on Render sleep)');
@@ -45,9 +60,9 @@ const sendingLockMem = new Map();
 const userStates = {};
 const reminders = {};
 
-console.log('=== BIZMAPIA BOT V85 REDIS PERMANENT FIX ===');
+console.log('=== BIZMAPIA BOT V86 REDIS STABLE FIX ===');
 console.log('PHONE_NUMBER_ID:', PHONE_NUMBER_ID || 'MISSING!');
-console.log('REDIS:', redis ? (redisReady ? 'CONNECTED' : 'CONNECTING...') : 'MEMORY FALLBACK');
+console.log('REDIS:', redis? 'CONNECTING...' : 'MEMORY FALLBACK');
 console.log('================================================');
 
 // ===== REDIS HELPERS WITH FALLBACK =====
@@ -56,11 +71,10 @@ async function isDuplicateMessage(msgId) {
     if (redis && redisReady) {
       const exists = await redis.get(`msg:${msgId}`);
       if (exists) return true;
-      await redis.set(`msg:${msgId}`, '1', 'EX', 300); // 5 min
+      await redis.set(`msg:${msgId}`, '1', 'EX', 300);
       return false;
     }
   } catch(e) {}
-  // Memory fallback
   if (processedMem.has(msgId)) return true;
   processedMem.set(msgId, Date.now());
   return false;
@@ -71,7 +85,7 @@ async function isWelcomeCooldown(uid) {
     if (redis && redisReady) {
       const exists = await redis.get(`welcome:${uid}`);
       if (exists) return true;
-      await redis.set(`welcome:${uid}`, '1', 'EX', 90); // 90 sec
+      await redis.set(`welcome:${uid}`, '1', 'EX', 90);
       return false;
     }
   } catch(e) {}
@@ -105,7 +119,6 @@ async function checkRateLimit(uid) {
       return;
     }
   } catch(e) {}
-  // Memory fallback
   const now = Date.now();
   const last = rateLimitMem[uid] || 0;
   if (last > now) {
@@ -133,7 +146,7 @@ async function acquireLock(uid) {
   try {
     if (redis && redisReady) {
       const res = await redis.set(`lock:${uid}`, '1', 'EX', 20, 'NX');
-      return res === 'OK'; // true if lock acquired
+      return res === 'OK';
     }
   } catch(e) {}
   if (sendingLockMem.get(uid)) return false;
@@ -151,7 +164,6 @@ async function releaseLock(uid) {
   sendingLockMem.delete(uid);
 }
 
-// Clean memory every minute
 setInterval(() => {
   const now = Date.now();
   for (const [id, ts] of processedMem.entries()) if (now - ts > 5*60*1000) processedMem.delete(id);
@@ -175,7 +187,7 @@ const LINKS = {
   rideLink: "https://bizmapia.com/ride",
   businessLink: "https://bizmapia.com/business",
   earnLink: "https://bizmapia.com/earn",
-  razorpay: "https://rzp.io/rzp/mq0zG6mS",
+  【entity-razorpay¦canonical_name=Razorpay】: "https://rzp.io/rzp/mq0zG6mS",
 };
 const BOT_NUMBER = "917025630644";
 const BUSINESS_CALL = "918590175977";
@@ -235,9 +247,8 @@ const T = {
     benText: "ആനുകൂല്യങ്ങൾ", supText: "പിന്തുണ", reqText: "ആവശ്യകതകൾ", corpQ: "കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp: "അതെ", noCorp: "ഇല്ല", ready15: "15 ലക്ഷം ഫീസ്?", readyBtn: "തയ്യാറാണ്", payReg: "Rs.5000 അടയ്ക്കുക - " + LINKS.razorpay, payBtn: "Rs.5000", emiOpt: "EMI തിരഞ്ഞെടുക്കുക", emi10: "5L + 10x1L", emi20: "5L + 20x50k", leadAsk: "വിവരങ്ങൾ പങ്കിടുക", occQ: "തൊഴിൽ:", bus: "ബിസിനസ്", house: "ഹൗസ് വൈഫ്", emp: "ജീവനക്കാരൻ", busman: "ബിസിനസ്സ്മാൻ", tender: "ടെൻഡർ", date: "തീയതി:", today: "ഇന്ന്", tom: "നാളെ", thanks: "നന്ദി!", callG: GENERAL_CALL, callB: BUSINESS_CALL
   }
 };
-function getText(l, k) { return (T[l] && T[l][k]) ? T[l][k] : (T.en[k] || k); }
+function getText(l, k) { return (T[l] && T[l][k])? T[l][k] : (T.en[k] || k); }
 
-// Sheets
 let sheetsClient = null;
 async function getSheets() {
   if (!SHEET_ID || SHEET_ID === 'false') return null;
@@ -260,7 +271,6 @@ async function saveToSheet(range, values) {
   } catch (e) { console.log(`Sheet skip ${range}: ${e.message}`); }
 }
 
-// ===== SEND - V85 REDIS FIXED =====
 async function sendWhatsAppMessage(to, payload) {
   if (!await acquireLock(to)) {
     console.log(`LOCKED skip duplicate to ${to}`);
@@ -270,7 +280,7 @@ async function sendWhatsAppMessage(to, payload) {
     await checkRateLimit(to);
     const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
     console.log(`SENDING to ${to} via ${PHONE_NUMBER_ID}: ${JSON.stringify(payload).substring(0, 300)}`);
-    const res = await axios.post(url, { messaging_product: 'whatsapp', to, ...payload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
+    const res = await axios.post(url, { messaging_product: 'whatsapp', to,...payload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
     console.log(`META SUCCESS to ${to}: ${JSON.stringify(res.data)} WAMID:${res.data.messages?.[0]?.id}`);
     console.log(`OUT to ${to}: ${payload.type || payload.interactive?.type} - ${res.data.messages?.[0]?.id}`);
     return true;
@@ -281,7 +291,7 @@ async function sendWhatsAppMessage(to, payload) {
     if (err?.code === 131053) {
       try {
         const textOnlyPayload = { type: 'interactive', interactive: { type: 'button', body: { text: payload.interactive?.body?.text || FIRST_BRIEF }, action: payload.interactive?.action } };
-        const retryRes = await axios.post(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`, { messaging_product: 'whatsapp', to, ...textOnlyPayload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
+        const retryRes = await axios.post(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`, { messaging_product: 'whatsapp', to,...textOnlyPayload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
         console.log(`RETRY SUCCESS without image to ${to}`);
         return true;
       } catch (retryE) {}
@@ -297,12 +307,12 @@ async function sendWhatsAppMessage(to, payload) {
 }
 
 async function sendMessage(uid, text, buttons) {
-  const btns = buttons ? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
+  const btns = buttons? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
   if (btns.length) return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', body: { text }, action: { buttons: btns } } });
   return await sendWhatsAppMessage(uid, { type: 'text', text: { body: text } });
 }
 async function sendImageHD(uid, imageLink, caption, buttons) {
-  const btns = buttons ? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
+  const btns = buttons? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
   if (btns.length) return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', header: { type: 'image', image: { link: imageLink } }, body: { text: caption }, footer: { text: "bizmapia.com - 7025630644" }, action: { buttons: btns } } });
   else return await sendWhatsAppMessage(uid, { type: 'image', image: { link: imageLink, caption } });
 }
@@ -371,7 +381,7 @@ async function sendReady(uid, l) {
 }
 async function sendPay(uid, l) {
   userStates[uid].lastStep = 'Pay Rs.5000';
-  const to = uid.startsWith('+') ? uid.substring(1) : uid;
+  const to = uid.startsWith('+')? uid.substring(1) : uid;
   const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
   const headers = { Authorization: `Bearer ${WHATSAPP_TOKEN}`, "Content-Type": "application/json" };
   try {
@@ -464,10 +474,9 @@ async function onMessage(uid, txt, payload) {
   await sendMain(uid, lang);
 }
 
-// ===== ROUTES =====
-app.get('/', (req, res) => res.send(`Bizmapia Bot V85 REDIS - Permanent Fix - ${new Date().toISOString()} - API ${BOT_NUMBER} - Redis:${redisReady?'ON':'Memory fallback'}`));
+app.get('/', (req, res) => res.send(`Bizmapia Bot V86 REDIS STABLE - ${new Date().toISOString()} - API ${BOT_NUMBER} - Redis:${redisReady?'ON':'Memory fallback'}`));
 app.get('/webhook', (req, res) => { if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
-app.get('/health', (req, res) => res.send(`OK V85 REDIS - ${redisReady?'Redis ON - Permanent':'Memory fallback'}`));
+app.get('/health', (req, res) => res.send(`OK V86 REDIS STABLE - ${redisReady?'Redis ON - Permanent':'Memory fallback'}`));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/test-send', async (req, res) => {
   const to = req.query.to || '918590175977';
@@ -506,6 +515,6 @@ app.post('/webhook', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`==> V85 REDIS listening on ${PORT} - API ${BOT_NUMBER} - Permanent fix - Ready - Redis:${redisReady?'ON':'connecting'}`);
+  console.log(`==> V86 REDIS STABLE listening on ${PORT} - API ${BOT_NUMBER} - Ready - Redis:${redisReady?'ON':'connecting'}`);
   await getSheets();
 });
