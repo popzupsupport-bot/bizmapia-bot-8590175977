@@ -1,8 +1,6 @@
-// BIZMAPIA BOT - V83 FINAL FIXED - ALL ERRORS CHECKED - 2026-10-15
-// FIXED: Image 404 error - Using working i.ibb.co links tested for WhatsApp
-// FIXED: Permanent token + Anti-spam cooldown + 130429 + Language loop
+// BIZMAPIA BOT - V84 FIXED - RATE LIMIT 130429 + DUPLICATE FIX - 2026-10-16
+// FIXED: Duplicate send on Render free spin-down, race condition, 15s cooldown, sending lock
 // API: 7025630644 - Test: 8590175977 - Phone ID: 122444880087590305
-// This is FULL 500+ rows with ALL business flows - No more edits needed
 
 const express = require('express');
 const axios = require('axios');
@@ -10,7 +8,7 @@ const { google } = require('googleapis');
 const app = express();
 app.use(express.json());
 
-// ===== CONFIG - CHECKED =====
+// ===== CONFIG =====
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia123';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
@@ -19,26 +17,38 @@ const PORT = process.env.PORT || 10000;
 
 const lastWelcome = new Map();
 const userStates = {};
-const processedIds = new Set();
+const processedIds = new Map(); // FIXED: Map with timestamp instead of Set
 const reminders = {};
 const rateLimit = {};
+const sendingLock = new Map(); // FIXED: Prevent concurrent sends
 
-console.log('=== BIZMAPIA BOT V83 FINAL FIXED - ALL CHECKS ===');
+console.log('=== BIZMAPIA BOT V84 FIXED - RATE LIMIT + DUPLICATE FIXED ===');
 console.log('PHONE_NUMBER_ID:', PHONE_NUMBER_ID || 'MISSING!');
 console.log('WHATSAPP_TOKEN exists:', !!WHATSAPP_TOKEN, 'ends:', WHATSAPP_TOKEN ? WHATSAPP_TOKEN.slice(-8) : 'NONE');
 console.log('SHEET_ID:', SHEET_ID || 'false - logs disabled');
 console.log('VERIFY_TOKEN:', VERIFY_TOKEN ? 'set' : 'MISSING');
 console.log('================================================');
 
-// ===== FIXED IMAGE LINKS - Tested working with WhatsApp (not GitHub raw) =====
-// These i.ibb.co links work with WhatsApp API - GitHub raw returns 404 for WhatsApp
+// Auto-clean processedIds every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, ts] of processedIds.entries()) {
+    if (now - ts > 5 * 60 * 1000) processedIds.delete(id);
+  }
+  // Also clean lastWelcome older than 10 min
+  for (const [uid, ts] of lastWelcome.entries()) {
+    if (now - ts > 10 * 60 * 1000) lastWelcome.delete(uid);
+  }
+}, 60 * 1000);
+
+// ===== FIXED IMAGE LINKS =====
 const IMAGES = {
-  welcome: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // WORKING - Tested
-  business: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg", // WORKING
-  benefit: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg", // WORKING
-  driver: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg", // WORKING
-  extra: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg", // WORKING
-  discount: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg", // WORKING
+  welcome: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
+  business: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
+  benefit: "https://i.ibb.co/67jpyTSS/67jpyTSS.jpg",
+  driver: "https://i.ibb.co/kgCH9jKM/kgCH9jKM.jpg",
+  extra: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
+  discount: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
 };
 
 const LINKS = {
@@ -137,25 +147,47 @@ async function saveToSheet(range, values) {
   } catch (e) { console.log(`Sheet skip ${range}: ${e.message}`); }
 }
 
-// ===== SEND WITH FULL ERROR LOGGING =====
+// ===== SEND WITH FULL ERROR LOGGING - V84 FIXED =====
 async function sendWhatsAppMessage(to, payload) {
-  const now = Date.now();
-  const last = rateLimit[to] || 0;
-  const gap = now - last;
-  if (gap < 8000) { await new Promise(r => setTimeout(r, 8000 - gap)); }
-  rateLimit[to] = Date.now();
+  // FIXED: Prevent parallel sends to same user
+  if (sendingLock.get(to)) {
+    console.log(`LOCKED - Skipping duplicate send to ${to} (already sending)`);
+    return false;
+  }
+  sendingLock.set(to, true);
+
   try {
+    const now = Date.now();
+    const last = rateLimit[to] || 0;
+    
+    // FIXED: Handle future block from 130429
+    if (last > now) {
+      const wait = last - now;
+      console.log(`Rate limit active for ${to} - waiting ${Math.ceil(wait/1000)}s`);
+      await new Promise(r => setTimeout(r, wait));
+    } else {
+      const gap = now - last;
+      if (gap < 15000) { // FIXED: 15 sec gap instead of 8
+        console.log(`Cooldown ${to} - waiting ${Math.ceil((15000-gap)/1000)}s`);
+        await new Promise(r => setTimeout(r, 15000 - gap));
+      }
+    }
+    
+    rateLimit[to] = Date.now(); // FIXED: Set BEFORE send to prevent race
+
     const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
     console.log(`SENDING to ${to} via ${PHONE_NUMBER_ID}: ${JSON.stringify(payload).substring(0, 300)}`);
     const res = await axios.post(url, { messaging_product: 'whatsapp', to, ...payload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
     console.log(`META SUCCESS to ${to}: ${JSON.stringify(res.data)} WAMID:${res.data.messages?.[0]?.id}`);
     console.log(`OUT to ${to}: ${payload.type || payload.interactive?.type} - ${res.data.messages?.[0]?.id}`);
+    rateLimit[to] = Date.now();
     return true;
+
   } catch (e) {
     const errData = e.response?.data;
     const err = errData?.error;
     console.log(`====== META ERROR to ${to} ====== Status:${e.response?.status} Code:${err?.code} Title:${errData?.error?.title || ''} Message:${err?.message} Full:${JSON.stringify(errData)} ==========================`);
-    // FALLBACK: If media error 131053, retry without image
+
     if (err?.code === 131053 || (err?.message && err.message.includes('Media upload'))) {
       console.log(`Media 404 - Retrying without image for ${to}`);
       try {
@@ -163,11 +195,20 @@ async function sendWhatsAppMessage(to, payload) {
         const retryUrl = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
         const retryRes = await axios.post(retryUrl, { messaging_product: 'whatsapp', to, ...textOnlyPayload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
         console.log(`RETRY SUCCESS without image to ${to}: ${retryRes.data.messages?.[0]?.id}`);
+        rateLimit[to] = Date.now();
         return true;
       } catch (retryE) { console.log(`Retry also failed ${to}: ${retryE.message}`); }
     }
-    if (err?.code === 130429) { await new Promise(r => setTimeout(r, 60000)); rateLimit[to] = Date.now() + 60000; }
+
+    if (err?.code === 130429) {
+      console.log(`130429 HIT - Blocking ${to} for 65 seconds`);
+      rateLimit[to] = Date.now() + 65000; // Block for 65 sec
+      // Don't sleep here, just return false - let next request wait via rateLimit check
+    }
     return false;
+
+  } finally {
+    sendingLock.delete(to);
   }
 }
 
@@ -191,7 +232,10 @@ async function sendImageHD(uid, imageLink, caption, buttons) {
 // ===== ALL FLOWS =====
 async function sendFirst(uid) {
   const now = Date.now();
-  if (lastWelcome.has(uid) && now - lastWelcome.get(uid) < 60000) { console.log(`Cooldown for ${uid} - skipping duplicate (60s)`); return; }
+  if (lastWelcome.has(uid) && now - lastWelcome.get(uid) < 90000) { 
+    console.log(`Cooldown for ${uid} - skipping duplicate welcome (90s)`); 
+    return; 
+  }
   lastWelcome.set(uid, now);
   userStates[uid] = { lang: null, flow: 'LANG', lastStep: 'Welcome', data: {} };
   await sendImageHD(uid, IMAGES.welcome, FIRST_BRIEF, [{ title: "English", payload: "LANG_en" }, { title: "हिन्दी", payload: "LANG_hi" }, { title: "മലയാളം", payload: "LANG_ml" }]);
@@ -379,22 +423,24 @@ async function onMessage(uid, txt, payload) {
 }
 
 // ===== ROUTES =====
-app.get('/', (req, res) => res.send(`Bizmapia Bot V83 FINAL FIXED - 500+ rows - ${new Date().toISOString()} - API ${BOT_NUMBER} - All errors checked`));
+app.get('/', (req, res) => res.send(`Bizmapia Bot V84 FIXED - 130429 + Duplicate Fixed - ${new Date().toISOString()} - API ${BOT_NUMBER}`));
 app.get('/webhook', (req, res) => { if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
-app.get('/health', (req, res) => res.send('OK V83 FINAL FIXED'));
+app.get('/health', (req, res) => res.send('OK V84 FIXED'));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/test-send', async (req, res) => {
   const to = req.query.to || '918590175977';
   console.log(`TEST-SEND to ${to}`);
   await sendFirst(to);
-  res.send(`✅ Test welcome with WORKING Image+Buttons sent to ${to} - Check logs for META SUCCESS - Image links FIXED`);
+  res.send(`✅ Test welcome with WORKING Image+Buttons sent to ${to} - Check logs for META SUCCESS - V84 FIXED`);
 });
 app.get('/clear-reminders', (req, res) => {
   Object.values(reminders).forEach(id => clearTimeout(id));
   Object.keys(reminders).forEach(k => delete reminders[k]);
   lastWelcome.clear();
   processedIds.clear();
-  res.send('✅ Cleared all reminders + cooldown + processedIds - Spam block removed! Now send Hi again');
+  sendingLock.clear();
+  Object.keys(rateLimit).forEach(k => delete rateLimit[k]);
+  res.send('✅ Cleared all reminders + cooldown + locks - Spam block removed! Now send Hi again');
 });
 
 app.post('/webhook', async (req, res) => {
@@ -408,9 +454,12 @@ app.post('/webhook', async (req, res) => {
     }
     const msg = value?.messages?.[0];
     if (msg) {
-      if (processedIds.has(msg.id)) { console.log(`Duplicate ${msg.id} skip`); return; }
-      processedIds.add(msg.id);
-      setTimeout(() => processedIds.delete(msg.id), 60000);
+      if (processedIds.has(msg.id)) { 
+        console.log(`Duplicate ${msg.id} skip - already processed`); 
+        return; 
+      }
+      processedIds.set(msg.id, Date.now());
+      
       const uid = msg.from;
       const txt = msg.text?.body || "";
       const payload = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || msg.button?.payload || "";
@@ -421,6 +470,6 @@ app.post('/webhook', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`==> V83 FINAL FIXED listening on ${PORT} - API ${BOT_NUMBER} - 500+ rows - All errors checked - Ready`);
+  console.log(`==> V84 FIXED listening on ${PORT} - API ${BOT_NUMBER} - 130429 + Duplicate FIXED - Ready`);
   await getSheets();
 });
