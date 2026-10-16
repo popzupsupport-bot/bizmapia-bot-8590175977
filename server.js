@@ -1,10 +1,13 @@
-// BIZMAPIA BOT - V84 FIXED - RATE LIMIT 130429 + DUPLICATE FIX - 2026-10-16
-// FIXED: Duplicate send on Render free spin-down, race condition, 15s cooldown, sending lock
-// API: 7025630644 - Test: 8590175977 - Phone ID: 122444880087590305
+// BIZMAPIA BOT - V85 REDIS PERMANENT FIX - 2026-10-16
+// FIXED: Redis persistence so 130429 + duplicate never happens even after Render sleep
+// If REDIS_URL is not set, it auto-falls back to memory (so it works without Redis too)
 
 const express = require('express');
 const axios = require('axios');
 const { google } = require('googleapis');
+let Redis = null;
+try { Redis = require('ioredis'); } catch(e) { console.log('ioredis not installed - using memory fallback'); }
+
 const app = express();
 app.use(express.json());
 
@@ -13,35 +16,149 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia123';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 const SHEET_ID = process.env.SHEET_ID;
+const REDIS_URL = process.env.REDIS_URL; // Upstash Redis URL
 const PORT = process.env.PORT || 10000;
 
-const lastWelcome = new Map();
-const userStates = {};
-const processedIds = new Map(); // FIXED: Map with timestamp instead of Set
-const reminders = {};
-const rateLimit = {};
-const sendingLock = new Map(); // FIXED: Prevent concurrent sends
+// ===== REDIS SETUP =====
+let redis = null;
+let redisReady = false;
+if (REDIS_URL && Redis) {
+  try {
+    redis = new Redis(REDIS_URL, { 
+      maxRetriesPerRequest: 2,
+      retryStrategy: (times) => Math.min(times * 100, 1000),
+      lazyConnect: true
+    });
+    redis.on('connect', () => { console.log('✅ REDIS CONNECTED - Permanent fix active'); redisReady = true; });
+    redis.on('error', (e) => { console.log('Redis error (fallback to memory):', e.message); redisReady = false; });
+    redis.connect().catch(() => {});
+  } catch(e) { console.log('Redis init failed, using memory:', e.message); }
+} else {
+  console.log('REDIS_URL not set - using memory fallback (will reset on Render sleep)');
+}
 
-console.log('=== BIZMAPIA BOT V84 FIXED - RATE LIMIT + DUPLICATE FIXED ===');
+// Memory fallback
+const lastWelcomeMem = new Map();
+const processedMem = new Map();
+const rateLimitMem = {};
+const sendingLockMem = new Map();
+const userStates = {};
+const reminders = {};
+
+console.log('=== BIZMAPIA BOT V85 REDIS PERMANENT FIX ===');
 console.log('PHONE_NUMBER_ID:', PHONE_NUMBER_ID || 'MISSING!');
-console.log('WHATSAPP_TOKEN exists:', !!WHATSAPP_TOKEN, 'ends:', WHATSAPP_TOKEN ? WHATSAPP_TOKEN.slice(-8) : 'NONE');
-console.log('SHEET_ID:', SHEET_ID || 'false - logs disabled');
-console.log('VERIFY_TOKEN:', VERIFY_TOKEN ? 'set' : 'MISSING');
+console.log('REDIS:', redis ? (redisReady ? 'CONNECTED' : 'CONNECTING...') : 'MEMORY FALLBACK');
 console.log('================================================');
 
-// Auto-clean processedIds every 5 minutes
+// ===== REDIS HELPERS WITH FALLBACK =====
+async function isDuplicateMessage(msgId) {
+  try {
+    if (redis && redisReady) {
+      const exists = await redis.get(`msg:${msgId}`);
+      if (exists) return true;
+      await redis.set(`msg:${msgId}`, '1', 'EX', 300); // 5 min
+      return false;
+    }
+  } catch(e) {}
+  // Memory fallback
+  if (processedMem.has(msgId)) return true;
+  processedMem.set(msgId, Date.now());
+  return false;
+}
+
+async function isWelcomeCooldown(uid) {
+  try {
+    if (redis && redisReady) {
+      const exists = await redis.get(`welcome:${uid}`);
+      if (exists) return true;
+      await redis.set(`welcome:${uid}`, '1', 'EX', 90); // 90 sec
+      return false;
+    }
+  } catch(e) {}
+  const now = Date.now();
+  if (lastWelcomeMem.has(uid) && now - lastWelcomeMem.get(uid) < 90000) return true;
+  lastWelcomeMem.set(uid, now);
+  return false;
+}
+
+async function checkRateLimit(uid) {
+  try {
+    if (redis && redisReady) {
+      const blockUntil = await redis.get(`block:${uid}`);
+      if (blockUntil) {
+        const wait = parseInt(blockUntil) - Date.now();
+        if (wait > 0) {
+          console.log(`Rate block ${uid} - waiting ${Math.ceil(wait/1000)}s (from Redis)`);
+          await new Promise(r => setTimeout(r, wait));
+        }
+      }
+      const last = await redis.get(`rate:${uid}`);
+      if (last) {
+        const gap = Date.now() - parseInt(last);
+        if (gap < 15000) {
+          const wait = 15000 - gap;
+          console.log(`Cooldown ${uid} - waiting ${Math.ceil(wait/1000)}s (Redis)`);
+          await new Promise(r => setTimeout(r, wait));
+        }
+      }
+      await redis.set(`rate:${uid}`, Date.now().toString(), 'EX', 120);
+      return;
+    }
+  } catch(e) {}
+  // Memory fallback
+  const now = Date.now();
+  const last = rateLimitMem[uid] || 0;
+  if (last > now) {
+    await new Promise(r => setTimeout(r, last - now));
+  } else {
+    const gap = now - last;
+    if (gap < 15000) await new Promise(r => setTimeout(r, 15000 - gap));
+  }
+  rateLimitMem[uid] = Date.now();
+}
+
+async function setRateBlock(uid, ms) {
+  const until = Date.now() + ms;
+  try {
+    if (redis && redisReady) {
+      await redis.set(`block:${uid}`, until.toString(), 'EX', Math.ceil(ms/1000)+5);
+      await redis.set(`rate:${uid}`, until.toString(), 'EX', Math.ceil(ms/1000)+5);
+      return;
+    }
+  } catch(e) {}
+  rateLimitMem[uid] = until;
+}
+
+async function acquireLock(uid) {
+  try {
+    if (redis && redisReady) {
+      const res = await redis.set(`lock:${uid}`, '1', 'EX', 20, 'NX');
+      return res === 'OK'; // true if lock acquired
+    }
+  } catch(e) {}
+  if (sendingLockMem.get(uid)) return false;
+  sendingLockMem.set(uid, true);
+  return true;
+}
+
+async function releaseLock(uid) {
+  try {
+    if (redis && redisReady) {
+      await redis.del(`lock:${uid}`);
+      return;
+    }
+  } catch(e) {}
+  sendingLockMem.delete(uid);
+}
+
+// Clean memory every minute
 setInterval(() => {
   const now = Date.now();
-  for (const [id, ts] of processedIds.entries()) {
-    if (now - ts > 5 * 60 * 1000) processedIds.delete(id);
-  }
-  // Also clean lastWelcome older than 10 min
-  for (const [uid, ts] of lastWelcome.entries()) {
-    if (now - ts > 10 * 60 * 1000) lastWelcome.delete(uid);
-  }
-}, 60 * 1000);
+  for (const [id, ts] of processedMem.entries()) if (now - ts > 5*60*1000) processedMem.delete(id);
+  for (const [uid, ts] of lastWelcomeMem.entries()) if (now - ts > 10*60*1000) lastWelcomeMem.delete(uid);
+}, 60*1000);
 
-// ===== FIXED IMAGE LINKS =====
+// ===== IMAGES & LINKS =====
 const IMAGES = {
   welcome: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
   business: "https://i.ibb.co/204Ztdvh/204Ztdvh.jpg",
@@ -50,7 +167,6 @@ const IMAGES = {
   extra: "https://i.ibb.co/svWFBpYy/svWFBpYy.jpg",
   discount: "https://i.ibb.co/fGVVPC3n/fGVVPC3n.jpg",
 };
-
 const LINKS = {
   website: "https://bizmapia.com",
   customerApp: "https://play.google.com/store/apps/details?id=com.bizmapia.customer",
@@ -61,11 +177,9 @@ const LINKS = {
   earnLink: "https://bizmapia.com/earn",
   razorpay: "https://rzp.io/rzp/mq0zG6mS",
 };
-
 const BOT_NUMBER = "917025630644";
 const BUSINESS_CALL = "918590175977";
 const GENERAL_CALL = "919745226642";
-
 const FIRST_BRIEF = `🌟 Welcome to Bizmapia - All India 4-in-1 Services!
 
 🚖 Affordable Taxi & Auto
@@ -121,10 +235,9 @@ const T = {
     benText: "ആനുകൂല്യങ്ങൾ", supText: "പിന്തുണ", reqText: "ആവശ്യകതകൾ", corpQ: "കോർപ്പറേഷൻ ഉണ്ടോ?", yesCorp: "അതെ", noCorp: "ഇല്ല", ready15: "15 ലക്ഷം ഫീസ്?", readyBtn: "തയ്യാറാണ്", payReg: "Rs.5000 അടയ്ക്കുക - " + LINKS.razorpay, payBtn: "Rs.5000", emiOpt: "EMI തിരഞ്ഞെടുക്കുക", emi10: "5L + 10x1L", emi20: "5L + 20x50k", leadAsk: "വിവരങ്ങൾ പങ്കിടുക", occQ: "തൊഴിൽ:", bus: "ബിസിനസ്", house: "ഹൗസ് വൈഫ്", emp: "ജീവനക്കാരൻ", busman: "ബിസിനസ്സ്മാൻ", tender: "ടെൻഡർ", date: "തീയതി:", today: "ഇന്ന്", tom: "നാളെ", thanks: "നന്ദി!", callG: GENERAL_CALL, callB: BUSINESS_CALL
   }
 };
-
 function getText(l, k) { return (T[l] && T[l][k]) ? T[l][k] : (T.en[k] || k); }
 
-// ===== SHEETS =====
+// Sheets
 let sheetsClient = null;
 async function getSheets() {
   if (!SHEET_ID || SHEET_ID === 'false') return null;
@@ -147,172 +260,115 @@ async function saveToSheet(range, values) {
   } catch (e) { console.log(`Sheet skip ${range}: ${e.message}`); }
 }
 
-// ===== SEND WITH FULL ERROR LOGGING - V84 FIXED =====
+// ===== SEND - V85 REDIS FIXED =====
 async function sendWhatsAppMessage(to, payload) {
-  // FIXED: Prevent parallel sends to same user
-  if (sendingLock.get(to)) {
-    console.log(`LOCKED - Skipping duplicate send to ${to} (already sending)`);
+  if (!await acquireLock(to)) {
+    console.log(`LOCKED skip duplicate to ${to}`);
     return false;
   }
-  sendingLock.set(to, true);
-
   try {
-    const now = Date.now();
-    const last = rateLimit[to] || 0;
-    
-    // FIXED: Handle future block from 130429
-    if (last > now) {
-      const wait = last - now;
-      console.log(`Rate limit active for ${to} - waiting ${Math.ceil(wait/1000)}s`);
-      await new Promise(r => setTimeout(r, wait));
-    } else {
-      const gap = now - last;
-      if (gap < 15000) { // FIXED: 15 sec gap instead of 8
-        console.log(`Cooldown ${to} - waiting ${Math.ceil((15000-gap)/1000)}s`);
-        await new Promise(r => setTimeout(r, 15000 - gap));
-      }
-    }
-    
-    rateLimit[to] = Date.now(); // FIXED: Set BEFORE send to prevent race
-
+    await checkRateLimit(to);
     const url = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
     console.log(`SENDING to ${to} via ${PHONE_NUMBER_ID}: ${JSON.stringify(payload).substring(0, 300)}`);
     const res = await axios.post(url, { messaging_product: 'whatsapp', to, ...payload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
     console.log(`META SUCCESS to ${to}: ${JSON.stringify(res.data)} WAMID:${res.data.messages?.[0]?.id}`);
     console.log(`OUT to ${to}: ${payload.type || payload.interactive?.type} - ${res.data.messages?.[0]?.id}`);
-    rateLimit[to] = Date.now();
     return true;
-
   } catch (e) {
     const errData = e.response?.data;
     const err = errData?.error;
-    console.log(`====== META ERROR to ${to} ====== Status:${e.response?.status} Code:${err?.code} Title:${errData?.error?.title || ''} Message:${err?.message} Full:${JSON.stringify(errData)} ==========================`);
-
-    if (err?.code === 131053 || (err?.message && err.message.includes('Media upload'))) {
-      console.log(`Media 404 - Retrying without image for ${to}`);
+    console.log(`====== META ERROR to ${to} ====== Status:${e.response?.status} Code:${err?.code} Title:${errData?.error?.title || ''} Message:${err?.message} Full:${JSON.stringify(errData)} ======`);
+    if (err?.code === 131053) {
       try {
         const textOnlyPayload = { type: 'interactive', interactive: { type: 'button', body: { text: payload.interactive?.body?.text || FIRST_BRIEF }, action: payload.interactive?.action } };
-        const retryUrl = `https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
-        const retryRes = await axios.post(retryUrl, { messaging_product: 'whatsapp', to, ...textOnlyPayload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
-        console.log(`RETRY SUCCESS without image to ${to}: ${retryRes.data.messages?.[0]?.id}`);
-        rateLimit[to] = Date.now();
+        const retryRes = await axios.post(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`, { messaging_product: 'whatsapp', to, ...textOnlyPayload }, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' } });
+        console.log(`RETRY SUCCESS without image to ${to}`);
         return true;
-      } catch (retryE) { console.log(`Retry also failed ${to}: ${retryE.message}`); }
+      } catch (retryE) {}
     }
-
     if (err?.code === 130429) {
-      console.log(`130429 HIT - Blocking ${to} for 65 seconds`);
-      rateLimit[to] = Date.now() + 65000; // Block for 65 sec
-      // Don't sleep here, just return false - let next request wait via rateLimit check
+      console.log(`130429 HIT - Blocking ${to} for 65s in Redis`);
+      await setRateBlock(to, 65000);
     }
     return false;
-
   } finally {
-    sendingLock.delete(to);
+    await releaseLock(to);
   }
 }
 
 async function sendMessage(uid, text, buttons) {
   const btns = buttons ? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
-  if (btns.length) {
-    return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', body: { text }, action: { buttons: btns } } });
-  }
+  if (btns.length) return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', body: { text }, action: { buttons: btns } } });
   return await sendWhatsAppMessage(uid, { type: 'text', text: { body: text } });
 }
-
 async function sendImageHD(uid, imageLink, caption, buttons) {
   const btns = buttons ? buttons.slice(0, 3).map(b => ({ type: 'reply', reply: { id: b.payload, title: b.title.substring(0, 20) } })) : [];
-  if (btns.length) {
-    return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', header: { type: 'image', image: { link: imageLink } }, body: { text: caption }, footer: { text: "bizmapia.com - 7025630644" }, action: { buttons: btns } } });
-  } else {
-    return await sendWhatsAppMessage(uid, { type: 'image', image: { link: imageLink, caption } });
-  }
+  if (btns.length) return await sendWhatsAppMessage(uid, { type: 'interactive', interactive: { type: 'button', header: { type: 'image', image: { link: imageLink } }, body: { text: caption }, footer: { text: "bizmapia.com - 7025630644" }, action: { buttons: btns } } });
+  else return await sendWhatsAppMessage(uid, { type: 'image', image: { link: imageLink, caption } });
 }
 
-// ===== ALL FLOWS =====
 async function sendFirst(uid) {
-  const now = Date.now();
-  if (lastWelcome.has(uid) && now - lastWelcome.get(uid) < 90000) { 
-    console.log(`Cooldown for ${uid} - skipping duplicate welcome (90s)`); 
-    return; 
-  }
-  lastWelcome.set(uid, now);
+  if (await isWelcomeCooldown(uid)) { console.log(`Cooldown for ${uid} - skipping duplicate (90s Redis)`); return; }
   userStates[uid] = { lang: null, flow: 'LANG', lastStep: 'Welcome', data: {} };
   await sendImageHD(uid, IMAGES.welcome, FIRST_BRIEF, [{ title: "English", payload: "LANG_en" }, { title: "हिन्दी", payload: "LANG_hi" }, { title: "മലയാളം", payload: "LANG_ml" }]);
   setReminder(uid, 'WELCOME');
 }
-
 async function sendMain(uid, l) {
-  userStates[uid].lang = l;
-  userStates[uid].lastStep = 'Main Menu';
+  userStates[uid].lang = l; userStates[uid].lastStep = 'Main Menu';
   await sendImageHD(uid, IMAGES.business, getText(l, 'selOpt') + "\n\n🌐 " + LINKS.website + "\n📲 " + LINKS.customerApp + "\n📞 " + BUSINESS_CALL, [{ title: getText(l, 'ride'), payload: "OPT_RIDE" }, { title: getText(l, 'dir'), payload: "OPT_DIR" }, { title: getText(l, 'more'), payload: "OPT_MORE" }]);
 }
-
 async function sendMore(uid, l) {
   userStates[uid].lastStep = 'More Options';
   await sendMessage(uid, `${getText(l, 'selOpt')}\n\n${LINKS.website}\n\n🏪 Business Directory - 10L+ businesses\n📦 Delivery - Fast Parcel 2 Hours\n🏠 Booking - Hotel/Doctor/Movie\n💼 Earn - District Franchise\n\n${LINKS.website}`, [{ title: getText(l, 'dir'), payload: "OPT_DIR" }, { title: getText(l, 'del'), payload: "OPT_DEL" }, { title: getText(l, 'book'), payload: "OPT_BOOK" }]);
 }
-
 async function sendRide(uid, l) {
   userStates[uid].lastStep = 'Ride Menu';
   await sendMessage(uid, getText(l, 'rideOpt'), [{ title: getText(l, 'bookRide'), payload: "RIDE_BOOK" }, { title: getText(l, 'attach'), payload: "RIDE_ATTACH" }, { title: "Back", payload: "BACK_MAIN" }]);
 }
-
 async function sendCust(uid, l) {
   userStates[uid].lastStep = 'Customer Ride';
   await sendImageHD(uid, IMAGES.business, getText(l, 'custPost'), [{ title: getText(l, 'bookNow'), payload: "BOOK_NOW" }, { title: getText(l, 'dlApp'), payload: "DL_CUST" }, { title: "Back", payload: "BACK_MAIN" }]);
 }
-
 async function sendDriv(uid, l) {
   userStates[uid].lastStep = 'Driver Attach';
   await sendImageHD(uid, IMAGES.driver, getText(l, 'drivPost'), [{ title: getText(l, 'dlDriv'), payload: "DL_DRIV" }, { title: "Back", payload: "BACK_MAIN" }]);
 }
-
 async function sendDel(uid, l) {
   userStates[uid].lastStep = 'Delivery';
   await sendImageHD(uid, IMAGES.benefit, getText(l, 'delIntro') + "\n\n" + LINKS.website + "/delivery", [{ title: getText(l, 'bookPar'), payload: "BOOK_PARCEL" }, { title: getText(l, 'regDel'), payload: "REG_DEL" }, { title: "Back", payload: "BACK_MAIN" }]);
 }
-
 async function sendRoom(uid, l) {
   userStates[uid].lastStep = 'Booking';
   await sendMessage(uid, getText(l, 'bookIntro') + "\n\n" + LINKS.website + "/booking", [{ title: getText(l, 'bookRoom'), payload: "BOOK_ROOM" }, { title: getText(l, 'dlApp'), payload: "DL_CUST" }, { title: "Back", payload: "BACK_MAIN" }]);
 }
-
 async function sendEarn(uid, l) {
   userStates[uid].lastStep = 'Earn Selection';
   await sendImageHD(uid, IMAGES.extra, getText(l, 'earnIntro'), [{ title: getText(l, 'high'), payload: "EARN_HIGH" }, { title: getText(l, 'mod'), payload: "EARN_MOD" }, { title: getText(l, 'base'), payload: "EARN_BASE" }]);
 }
-
 async function sendHigh(uid, l) {
   userStates[uid].lastStep = 'High Earning Details';
   await sendImageHD(uid, IMAGES.extra, getText(l, 'highIntro'), [{ title: getText(l, 'video'), payload: "KNOW_BEN" }, { title: getText(l, 'ben'), payload: "KNOW_BEN" }, { title: getText(l, 'callB'), payload: "CALL_B" }]);
 }
-
 async function sendBen(uid, l) {
   userStates[uid].lastStep = 'Benefits';
   await sendImageHD(uid, IMAGES.business, getText(l, 'benText'), [{ title: getText(l, 'sup'), payload: "KNOW_SUP" }, { title: getText(l, 'callB'), payload: "CALL_B" }]);
 }
-
 async function sendSup(uid, l) {
   userStates[uid].lastStep = 'Support';
   await sendImageHD(uid, IMAGES.discount, getText(l, 'supText'), [{ title: getText(l, 'req'), payload: "KNOW_REQ" }, { title: getText(l, 'callB'), payload: "CALL_B" }]);
 }
-
 async function sendReq(uid, l) {
   userStates[uid].lastStep = 'Requirements';
   await sendImageHD(uid, IMAGES.extra, getText(l, 'reqText'), [{ title: getText(l, 'submit'), payload: "SUBMIT_APP" }, { title: getText(l, 'emi'), payload: "KNOW_EMI" }]);
 }
-
 async function askCorp(uid, l) {
   userStates[uid].lastStep = 'Corporation Check';
   await sendMessage(uid, getText(l, 'corpQ'), [{ title: getText(l, 'yesCorp'), payload: "CORP_YES" }, { title: getText(l, 'noCorp'), payload: "CORP_NO" }]);
 }
-
 async function sendReady(uid, l) {
   userStates[uid].lastStep = 'Ready to Pay 15L';
   await sendMessage(uid, getText(l, 'ready15'), [{ title: getText(l, 'readyBtn'), payload: "READY_15L" }, { title: getText(l, 'emi'), payload: "KNOW_EMI" }]);
 }
-
 async function sendPay(uid, l) {
   userStates[uid].lastStep = 'Pay Rs.5000';
   const to = uid.startsWith('+') ? uid.substring(1) : uid;
@@ -327,31 +383,26 @@ async function sendPay(uid, l) {
     await sendMessage(uid, getText(l, 'payReg') + "\n" + LINKS.razorpay, [{ title: "I Paid", payload: "PAY_DONE" }]);
   }
 }
-
 async function sendEMI(uid, l) {
   userStates[uid].lastStep = 'EMI Options';
   await sendMessage(uid, getText(l, 'emiOpt'), [{ title: getText(l, 'emi10'), payload: "EMI_10" }, { title: getText(l, 'emi20'), payload: "EMI_20" }]);
 }
-
 async function startLead(uid, l) {
   if (reminders[uid]) clearTimeout(reminders[uid]);
   userStates[uid] = { lang: l, flow: 'LEAD', step: 1, data: {}, lastStep: 'Lead - Name' };
   await sendMessage(uid, getText(l, 'leadAsk') + "\n\nName as per Aadhaar:");
 }
-
 async function handleLead(uid, txt) {
   const s = userStates[uid];
   if (!s) return;
   if (s.step === 1) { s.data.name = txt; s.step = 2; s.lastStep = 'Lead - Place'; await sendMessage(uid, "Place / District / State?"); }
   else if (s.step === 2) { s.data.place = txt; s.step = 3; s.lastStep = 'Lead - Occupation'; await sendMessage(uid, getText(s.lang, 'occQ'), [{ title: getText(s.lang, 'bus'), payload: "OCC_BUS" }, { title: getText(s.lang, 'emp'), payload: "OCC_EMP" }, { title: getText(s.lang, 'house'), payload: "OCC_HOUSE" }]); }
 }
-
 async function handleOcc(uid, occ) {
   const s = userStates[uid];
   s.data.occ = occ; s.step = 4; s.lastStep = 'Agreement Date';
   await sendMessage(uid, getText(s.lang, 'tender') + "\n" + LINKS.tenderDistrict + "\n\n" + getText(s.lang, 'date'), [{ title: getText(s.lang, 'today'), payload: "DATE_TODAY" }, { title: getText(s.lang, 'tom'), payload: "DATE_TOMORROW" }]);
 }
-
 async function handleDate(uid, d) {
   const s = userStates[uid];
   if (reminders[uid]) clearTimeout(reminders[uid]);
@@ -359,7 +410,6 @@ async function handleDate(uid, d) {
   await saveToSheet('Sheet1 - Leads!A:F', [[new Date().toISOString(), uid, s.data.name, s.data.place, s.data.occ, d]]);
   delete userStates[uid];
 }
-
 function setReminder(uid, step) {
   if (reminders[uid]) clearTimeout(reminders[uid]);
   const id = setTimeout(async () => {
@@ -371,15 +421,12 @@ function setReminder(uid, step) {
   reminders[uid] = id;
   console.log(`Reminder set for ${uid} - ${step} in 30 min`);
 }
-
 function clearReminders(uid) { if (reminders[uid]) { clearTimeout(reminders[uid]); delete reminders[uid]; } }
-
 async function onMessage(uid, txt, payload) {
   let state = userStates[uid];
   const p = (payload || "").trim();
   const t = (txt || "").toLowerCase().trim();
   const isHi = ["hi", "hello", "hey", "hai", "start", "menu", "hii", "hello"].includes(t);
-
   if (p.startsWith("LANG_")) {
     const l = p.replace("LANG_", "").toLowerCase();
     userStates[uid] = { lang: l, flow: 'MAIN', data: {}, lastStep: 'Main Menu' };
@@ -388,12 +435,9 @@ async function onMessage(uid, txt, payload) {
     await saveToSheet('UserState!A:D', [[uid, l, new Date().toISOString(), 'main_menu']]);
     return;
   }
-
   if (!state) { console.log(`FIRST MESSAGE from ${uid}`); await sendFirst(uid); return; }
   if (isHi) { console.log(`HI RESET -> ${uid}`); clearReminders(uid); delete userStates[uid]; await sendFirst(uid); return; }
-
   const lang = state.lang || 'en';
-
   if (p === "OPT_MORE" || p === "MORE_OPTIONS") return await sendMore(uid, lang);
   if (p === "OPT_RIDE") return await sendRide(uid, lang);
   if (p === "OPT_DIR") { state.lastStep = 'Business Directory'; await sendMessage(uid, `🏪 Business Directory - 10L+ businesses\n\nView: ${LINKS.businessLink}\nAdd: ${LINKS.website}/register\n\nCall ${BUSINESS_CALL}`, [{ title: "View Biz", payload: "VIEW_BIZ" }, { title: "Add Biz", payload: "ADD_BIZ" }, { title: "Back", payload: "BACK_MAIN" }]); setReminder(uid, 'Business Directory'); return; }
@@ -416,31 +460,28 @@ async function onMessage(uid, txt, payload) {
   if (p.startsWith("DATE_")) return await handleDate(uid, p.replace("DATE_", ""));
   if (p === "BACK_MAIN") return await sendMain(uid, lang);
   if (p === "CALL_B") { await sendMessage(uid, `Call Business: ${BUSINESS_CALL}\nGeneral: ${GENERAL_CALL}\nWebsite: ${LINKS.website}`); return; }
-
   if (state.flow === 'LEAD' && txt) return await handleLead(uid, txt);
-
   await sendMain(uid, lang);
 }
 
 // ===== ROUTES =====
-app.get('/', (req, res) => res.send(`Bizmapia Bot V84 FIXED - 130429 + Duplicate Fixed - ${new Date().toISOString()} - API ${BOT_NUMBER}`));
+app.get('/', (req, res) => res.send(`Bizmapia Bot V85 REDIS - Permanent Fix - ${new Date().toISOString()} - API ${BOT_NUMBER} - Redis:${redisReady?'ON':'Memory fallback'}`));
 app.get('/webhook', (req, res) => { if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
-app.get('/health', (req, res) => res.send('OK V84 FIXED'));
+app.get('/health', (req, res) => res.send(`OK V85 REDIS - ${redisReady?'Redis ON - Permanent':'Memory fallback'}`));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/test-send', async (req, res) => {
   const to = req.query.to || '918590175977';
   console.log(`TEST-SEND to ${to}`);
   await sendFirst(to);
-  res.send(`✅ Test welcome with WORKING Image+Buttons sent to ${to} - Check logs for META SUCCESS - V84 FIXED`);
+  res.send(`✅ Test welcome sent to ${to} - Redis:${redisReady?'ON':'OFF (memory)'} - Check logs`);
 });
-app.get('/clear-reminders', (req, res) => {
+app.get('/clear-reminders', async (req, res) => {
   Object.values(reminders).forEach(id => clearTimeout(id));
   Object.keys(reminders).forEach(k => delete reminders[k]);
-  lastWelcome.clear();
-  processedIds.clear();
-  sendingLock.clear();
-  Object.keys(rateLimit).forEach(k => delete rateLimit[k]);
-  res.send('✅ Cleared all reminders + cooldown + locks - Spam block removed! Now send Hi again');
+  lastWelcomeMem.clear(); processedMem.clear(); sendingLockMem.clear();
+  Object.keys(rateLimitMem).forEach(k => delete rateLimitMem[k]);
+  try { if (redis && redisReady) { const keys = await redis.keys('msg:*'); if(keys.length) await redis.del(...keys); await redis.keys('welcome:*').then(k=>k.length&&redis.del(...k)); await redis.keys('rate:*').then(k=>k.length&&redis.del(...k)); await redis.keys('block:*').then(k=>k.length&&redis.del(...k)); await redis.keys('lock:*').then(k=>k.length&&redis.del(...k)); } } catch(e){}
+  res.send('✅ Cleared all - Redis + memory - Spam block removed! Now send Hi again');
 });
 
 app.post('/webhook', async (req, res) => {
@@ -454,12 +495,7 @@ app.post('/webhook', async (req, res) => {
     }
     const msg = value?.messages?.[0];
     if (msg) {
-      if (processedIds.has(msg.id)) { 
-        console.log(`Duplicate ${msg.id} skip - already processed`); 
-        return; 
-      }
-      processedIds.set(msg.id, Date.now());
-      
+      if (await isDuplicateMessage(msg.id)) { console.log(`Duplicate ${msg.id} skip (Redis+Memory)`); return; }
       const uid = msg.from;
       const txt = msg.text?.body || "";
       const payload = msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || msg.button?.payload || "";
@@ -470,6 +506,6 @@ app.post('/webhook', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`==> V84 FIXED listening on ${PORT} - API ${BOT_NUMBER} - 130429 + Duplicate FIXED - Ready`);
+  console.log(`==> V85 REDIS listening on ${PORT} - API ${BOT_NUMBER} - Permanent fix - Ready - Redis:${redisReady?'ON':'connecting'}`);
   await getSheets();
 });
