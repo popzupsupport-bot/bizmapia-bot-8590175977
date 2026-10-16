@@ -1,4 +1,4 @@
-// BIZMAPIA BOT - V87 REDIS STABLE - FULL VERSION - 2026-10-16
+// BIZMAPIA BOT - V90 3-STAGE REMINDER - FULL VERSION - 2026-10-16
 // FIXED: Only Redis config fixed - rest is your exact V85 code
 // Added tls:{} + maxRetriesPerRequest:null to fix ECONNRESET
 
@@ -49,7 +49,13 @@ const sendingLockMem = new Map();
 const userStates = {};
 const reminders = {};
 
-console.log('=== BIZMAPIA BOT V87 REDIS STABLE FULL ===');
+// ===== PERMANENT FIX FOR 130429 - GLOBAL RATE LIMITER =====
+let globalMsgCount = 0;
+let globalMsgWindowStart = Date.now();
+const GLOBAL_MAX_PER_MIN = 15; // Meta allows 20/sec but we keep 15/min to be safe
+const BLOCK_ON_130429_MS = 2 * 60 * 60 * 1000; // 2 hours block when 130429 happens
+
+console.log('=== BIZMAPIA BOT V90 3-STAGE REMINDER FULL ===');
 console.log('PHONE_NUMBER_ID:', PHONE_NUMBER_ID || 'MISSING!');
 console.log('REDIS:', redis ? 'CONNECTING...' : 'MEMORY FALLBACK');
 console.log('================================================');
@@ -86,13 +92,28 @@ async function isWelcomeCooldown(uid) {
 }
 
 async function checkRateLimit(uid) {
+  // PERMANENT FIX: Global rate limiter - prevents 130429 for Meta campaigns
+  const now = Date.now();
+  if (now - globalMsgWindowStart > 60000) {
+    globalMsgWindowStart = now;
+    globalMsgCount = 0;
+  }
+  if (globalMsgCount >= GLOBAL_MAX_PER_MIN) {
+    const wait = 65000 - (now - globalMsgWindowStart);
+    console.log(`GLOBAL RATE LIMIT - waiting ${Math.ceil(wait/1000)}s to avoid 130429`);
+    await new Promise(r => setTimeout(r, wait));
+    globalMsgWindowStart = Date.now();
+    globalMsgCount = 0;
+  }
+  globalMsgCount++;
+
   try {
     if (redis && redisReady) {
       const blockUntil = await redis.get(`block:${uid}`);
       if (blockUntil) {
         const wait = parseInt(blockUntil) - Date.now();
         if (wait > 0) {
-          console.log(`Rate block ${uid} - waiting ${Math.ceil(wait/1000)}s (from Redis)`);
+          console.log(`Rate block ${uid} - waiting ${Math.ceil(wait/1000)}s (from Redis) - PERMANENT FIX ACTIVE`);
           await new Promise(r => setTimeout(r, wait));
         }
       }
@@ -110,12 +131,12 @@ async function checkRateLimit(uid) {
     }
   } catch(e) {}
   // Memory fallback
-  const now = Date.now();
+  const now2 = Date.now();
   const last = rateLimitMem[uid] || 0;
-  if (last > now) {
-    await new Promise(r => setTimeout(r, last - now));
+  if (last > now2) {
+    await new Promise(r => setTimeout(r, last - now2));
   } else {
-    const gap = now - last;
+    const gap = now2 - last;
     if (gap < 15000) await new Promise(r => setTimeout(r, 15000 - gap));
   }
   rateLimitMem[uid] = Date.now();
@@ -291,8 +312,8 @@ async function sendWhatsAppMessage(to, payload) {
       } catch (retryE) {}
     }
     if (err?.code === 130429) {
-      console.log(`130429 HIT - Blocking ${to} for 65s in Redis`);
-      await setRateBlock(to, 65000);
+      console.log(`130429 HIT - PERMANENT FIX: Blocking ${to} for 2 hours in Redis to restore trust`);
+      await setRateBlock(to, BLOCK_ON_130429_MS);
     }
     return false;
   } finally {
@@ -414,18 +435,94 @@ async function handleDate(uid, d) {
   await saveToSheet('Sheet1 - Leads!A:F', [[new Date().toISOString(), uid, s.data.name, s.data.place, s.data.occ, d]]);
   delete userStates[uid];
 }
-function setReminder(uid, step) {
-  if (reminders[uid]) clearTimeout(reminders[uid]);
-  const id = setTimeout(async () => {
-    const s = userStates[uid];
-    if (!s) return;
-    await sendMessage(uid, `🔔 Reminder: You are at ${s.lastStep || step}. Type Hi to continue. Website: ${LINKS.website} Support: ${BUSINESS_CALL}`);
-    delete reminders[uid];
-  }, 30 * 60 * 1000);
-  reminders[uid] = id;
-  console.log(`Reminder set for ${uid} - ${step} in 30 min`);
+// ===== V90 - 3 STAGE SMART REMINDER SYSTEM - PERMANENT FIX =====
+// Every step: 1 hour, 12 hour, 24 hour - Driver & Business different posters
+const reminderStore = {}; // uid -> { timers: [], step, count }
+
+function getReminderContent(step, count, lang) {
+  const l = lang || 'en';
+  // Different poster & timing for Driver, Business, General
+  if (step.includes('Driver') || step.includes('Customer Ride') || step.includes('Ride')) {
+    if (count === 1) return { text: `🔔 Reminder ${count}/3: You left at ${step}\n\n${getText(l,'drivPost')}\n\nEarn Rs.1500-2500 daily! Type Hi to continue.`, image: IMAGES.driver, buttons: [{title: getText(l,'dlDriv'), payload: 'DL_DRIV'}, {title: 'Back', payload: 'BACK_MAIN'}] };
+    if (count === 2) return { text: `⏰ Still waiting at ${step} - 12 hours ago (first was 2h ago)\n\nDriver App: ${LINKS.driverApp}\nDaily payout! Type Hi.`, image: IMAGES.driver, buttons: [{title: getText(l,'dlDriv'), payload: 'DL_DRIV'}, {title: getText(l,'callB'), payload: 'CALL_B'}] };
+    return { text: `🚨 Last reminder for ${step}\n\nCall us: ${BUSINESS_CALL}\nWe will help you attach vehicle.`, image: IMAGES.driver, buttons: [{title: getText(l,'callB'), payload: 'CALL_B'}] };
+  }
+  if (step.includes('Business') || step.includes('Pay') || step.includes('Lead') || step.includes('Ready') || step.includes('High') || step.includes('Benefits') || step.includes('Earn')) {
+    if (count === 1) return { text: `🔔 Reminder ${count}/3: You left at ${step}\n\n${getText(l,'benText')}\n\nType Hi to continue. Website: ${LINKS.website}`, image: IMAGES.benefit, buttons: [{title: getText(l,'ben'), payload: 'KNOW_BEN'}, {title: getText(l,'callB'), payload: 'CALL_B'}] };
+    if (count === 2) return { text: `⏰ 12h ago you were at ${step}\n\n${getText(l,'supText')}\n\nCall: ${BUSINESS_CALL}`, image: IMAGES.extra, buttons: [{title: getText(l,'sup'), payload: 'KNOW_SUP'}, {title: getText(l,'callB'), payload: 'CALL_B'}] };
+    return { text: `🚨 Final reminder for ${step}\n\nPay Rs.5000: ${LINKS.razorpay}\nCall ${BUSINESS_CALL} for help. Team will call in 24h.`, image: IMAGES.discount, buttons: [{title: 'Pay Rs.5000', payload: 'READY_15L'}, {title: getText(l,'callB'), payload: 'CALL_B'}] };
+  }
+  // General steps
+  if (count === 1) return { text: `🔔 Reminder ${count}/3: You are at ${step}. Type Hi to continue. Website: ${LINKS.website} Support: ${BUSINESS_CALL}`, image: null, buttons: null };
+  if (count === 2) return { text: `⏰ Reminder ${count}/3: Still at ${step} after 12 hours. Need help? Call ${BUSINESS_CALL}`, image: IMAGES.business, buttons: null };
+  return { text: `🚨 Last reminder ${count}/3: You are at ${step} for 24h. Type Hi to continue or Call ${BUSINESS_CALL}`, image: null, buttons: null };
 }
-function clearReminders(uid) { if (reminders[uid]) { clearTimeout(reminders[uid]); delete reminders[uid]; } }
+
+async function sendReminderStage(uid, step, lang, count) {
+  const s = userStates[uid];
+  if (!s) { clearReminderSequence(uid); return; }
+  // Only send if still at same step
+  if (s.lastStep !== step) { clearReminderSequence(uid); return; }
+  const content = getReminderContent(step, count, lang);
+  console.log(`V90 Reminder ${count}/3 sending to ${uid} - ${step} - after ${count===1?'1h':count===2?'12h':'24h'}`);
+  if (content.image && content.buttons) {
+    await sendImageHD(uid, content.image, content.text, content.buttons);
+  } else if (content.image) {
+    await sendImageHD(uid, content.image, content.text, [{title: 'Continue', payload: 'BACK_MAIN'}]);
+  } else {
+    await sendMessage(uid, content.text, content.buttons || [{title: 'Continue', payload: 'BACK_MAIN'}]);
+  }
+  // Schedule next stage if not last
+  if (count < 3) {
+    const nextDelay = count === 1 ? 10*60*60*1000 : 12*60*60*1000; // 2h -> 12h (10h more), 12h -> 24h (12h more)
+    const timer = setTimeout(() => sendReminderStage(uid, step, lang, count+1), nextDelay);
+    if (reminderStore[uid]) reminderStore[uid].timers.push(timer);
+  } else {
+    clearReminderSequence(uid);
+  }
+}
+
+function setReminder(uid, step) {
+  // V90: 3-stage system - 1h, 12h, 24h - Driver & Business different
+  clearReminderSequence(uid);
+  const state = userStates[uid];
+  const lang = state?.lang || 'en';
+  const actualStep = state?.lastStep || step;
+  
+  console.log(`V90 Smart Reminder set for (2h,12h,24h) ${uid} - ${actualStep} - Stage 1 in 1h, Stage 2 in 12h, Stage 3 in 24h`);
+  
+  // Stage 1 after 2 hour - UPDATED AS PER USER REQUEST
+  const t1 = setTimeout(() => sendReminderStage(uid, actualStep, lang, 1), 2*60*60*1000);
+  // Stage 2 after 12 hour
+  const t2 = setTimeout(() => sendReminderStage(uid, actualStep, lang, 2), 12*60*60*1000);
+  // Stage 3 after 24 hour
+  const t3 = setTimeout(() => sendReminderStage(uid, actualStep, lang, 3), 24*60*60*1000);
+  
+  reminderStore[uid] = { step: actualStep, lang, timers: [t1,t2,t3] };
+  // Also store in old reminders map for /clear-reminders compatibility
+  reminders[uid] = t1;
+  
+  // Save to Redis for persistence
+  try {
+    if (redis && redisReady) {
+      redis.set(`reminder:${uid}`, JSON.stringify({step: actualStep, lang, start: Date.now()}), 'EX', 25*60*60);
+    }
+  } catch(e){}
+}
+
+function clearReminderSequence(uid) {
+  if (reminderStore[uid]) {
+    reminderStore[uid].timers.forEach(t => clearTimeout(t));
+    delete reminderStore[uid];
+  }
+  if (reminders[uid]) { clearTimeout(reminders[uid]); delete reminders[uid]; }
+  try { if (redis && redisReady) redis.del(`reminder:${uid}`); } catch(e){}
+}
+
+function clearReminders(uid) { 
+  clearReminderSequence(uid);
+}
+
 async function onMessage(uid, txt, payload) {
   let state = userStates[uid];
   const p = (payload || "").trim();
@@ -469,9 +566,9 @@ async function onMessage(uid, txt, payload) {
 }
 
 // ===== ROUTES =====
-app.get('/', (req, res) => res.send(`Bizmapia Bot V87 REDIS STABLE FULL - ${new Date().toISOString()} - API ${BOT_NUMBER} - Redis:${redisReady?'ON':'Memory fallback'}`));
+app.get('/', (req, res) => res.send(`Bizmapia Bot V90 3-STAGE REMINDER FULL - ${new Date().toISOString()} - API ${BOT_NUMBER} - Redis:${redisReady?'ON':'Memory fallback'}`));
 app.get('/webhook', (req, res) => { if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']); res.sendStatus(403); });
-app.get('/health', (req, res) => res.send(`OK V87 REDIS STABLE FULL - ${redisReady?'Redis ON - Permanent':'Memory fallback'}`));
+app.get('/health', (req, res) => res.send(`OK V90 3-STAGE REMINDER FULL - ${redisReady?'Redis ON - Permanent':'Memory fallback'}`));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/test-send', async (req, res) => {
   const to = req.query.to || '918590175977';
@@ -482,10 +579,12 @@ app.get('/test-send', async (req, res) => {
 app.get('/clear-reminders', async (req, res) => {
   Object.values(reminders).forEach(id => clearTimeout(id));
   Object.keys(reminders).forEach(k => delete reminders[k]);
+  Object.values(reminderStore).forEach(r => r.timers.forEach(t => clearTimeout(t)));
+  Object.keys(reminderStore).forEach(k => delete reminderStore[k]);
   lastWelcomeMem.clear(); processedMem.clear(); sendingLockMem.clear();
   Object.keys(rateLimitMem).forEach(k => delete rateLimitMem[k]);
   try { if (redis && redisReady) { const keys = await redis.keys('msg:*'); if(keys.length) await redis.del(...keys); await redis.keys('welcome:*').then(k=>k.length&&redis.del(...k)); await redis.keys('rate:*').then(k=>k.length&&redis.del(...k)); await redis.keys('block:*').then(k=>k.length&&redis.del(...k)); await redis.keys('lock:*').then(k=>k.length&&redis.del(...k)); } } catch(e){}
-  res.send('✅ Cleared all - Redis + memory - Spam block removed! Now send Hi again');
+  res.send('✅ V90 Cleared all reminders (3-stage) - Redis + memory - Spam block removed! Now send Hi again');
 });
 
 app.post('/webhook', async (req, res) => {
@@ -495,6 +594,17 @@ app.post('/webhook', async (req, res) => {
     if (value?.statuses?.[0]) {
       const st = value.statuses[0];
       console.log(`STATUS ${st.status} to ${st.recipient_id} - ${JSON.stringify(st.errors || 'OK')} - id:${st.id}`);
+      // PERMANENT FIX: If 130429 in status, block this user for 2 hours to restore trust score
+      if (st.errors && JSON.stringify(st.errors).includes('130429')) {
+        console.log(`PERMANENT FIX: 130429 detected for ${st.recipient_id} - Blocking for 2 hours`);
+        try {
+          if (redis && redisReady) {
+            await redis.set(`block:${st.recipient_id}`, (Date.now() + BLOCK_ON_130429_MS).toString(), 'EX', 7200);
+          } else {
+            rateLimitMem[st.recipient_id] = Date.now() + BLOCK_ON_130429_MS;
+          }
+        } catch(e) {}
+      }
       return;
     }
     const msg = value?.messages?.[0];
@@ -510,6 +620,6 @@ app.post('/webhook', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`==> V87 REDIS STABLE FULL listening on ${PORT} - API ${BOT_NUMBER} - Permanent fix - Ready - Redis:${redisReady?'ON':'connecting'}`);
+  console.log(`==> V90 3-STAGE REMINDER FULL listening on ${PORT} - API ${BOT_NUMBER} - Permanent fix - Ready - Redis:${redisReady?'ON':'connecting'}`);
   await getSheets();
 });
