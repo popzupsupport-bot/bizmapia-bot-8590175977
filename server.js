@@ -70,12 +70,12 @@ async function isWelcomeCooldown(uid) {
     if (redis && redisReady) {
       const exists = await redis.get('welcome:' + uid);
       if (exists) return true;
-      await redis.set('welcome:' + uid, '1', 'EX', 90);
+      await redis.set('welcome:' + uid, '1', 'EX', 300); // V92 FINAL: 5 min cooldown to avoid 130429
       return false;
     }
   } catch(e) {}
   const now = Date.now();
-  if (lastWelcomeMem.has(uid) && now - lastWelcomeMem.get(uid) < 90000) return true;
+  if (lastWelcomeMem.has(uid) && now - lastWelcomeMem.get(uid) < 300000) return true; // 5 min
   lastWelcomeMem.set(uid, now);
   return false;
 }
@@ -290,7 +290,7 @@ async function sendFirst(uid) {
   userStates[uid] = { lang: null, flow: 'LANG', lastStep: 'Welcome', data: {} };
   console.log('V92 TEXT-ONLY welcome to ' + uid);
   await sendMessage(uid, FIRST_BRIEF, [{ title: "English", payload: "LANG_en" }, { title: "Hindi", payload: "LANG_hi" }, { title: "Malayalam", payload: "LANG_ml" }]);
-  setReminder(uid, 'WELCOME');
+  // setReminder(uid, 'WELCOME'); // disabled for final fix
 }
 async function sendMain(uid, l) {
   userStates[uid].lang = l; userStates[uid].lastStep = 'Main Menu';
@@ -466,7 +466,7 @@ async function onMessage(uid, txt, payload) {
     const l = p.replace("LANG_", "").toLowerCase();
     userStates[uid] = { lang: l, flow: 'MAIN', data: {}, lastStep: 'Main Menu' };
     await sendMain(uid, l);
-    setReminder(uid, 'Main Menu');
+    // setReminder(uid, 'Main Menu'); // disabled
     await saveToSheet('UserState!A:D', [[uid, l, new Date().toISOString(), 'main_menu']]);
     return;
   }
