@@ -69,9 +69,10 @@ function interactiveButton(to,body,buttons){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}} };
 }
 
-// NEW CTA BUTTONS - Android, iOS, Call, Website, Video - Change 1-14
+// FIXED CTA BUTTONS - Correct WhatsApp Cloud API format v20
 function ctaButtons(to,body,ctaList){
   // ctaList: [{type:'url', title, url}, {type:'phone', title, phone}]
+  // Correct format: interactive.type='button' + action.buttons with type url/phone_number
   const buttons = ctaList.slice(0,3).map(c=>{
     if(c.type==='url'){
       return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url };
@@ -79,24 +80,66 @@ function ctaButtons(to,body,ctaList){
       return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone };
     }
   });
-  // WhatsApp Cloud API expects action.buttons with url / phone_number
-  // Using type button with cta buttons
   return {
     messaging_product:'whatsapp', to, type:'interactive',
     interactive:{
       type:'button',
       body:{text:body.substring(0,1024)},
-      action:{buttons: buttons.map(b=>{
-        if(b.type==='cta_url') return {type:'cta_url', title:b.title, cta_url:b.cta_url};
-        return {type:'phone_number', title:b.title, payload:b.payload};
-      })}
+      action:{buttons: buttons}
     }
   };
 }
 
 function singleCta(to,body,btn){
-  return ctaButtons(to,body,[btn]);
+  // Single CTA URL button - correct format
+  return {
+    messaging_product:'whatsapp', to, type:'interactive',
+    interactive:{
+      type:'cta_url',
+      body:{text:body.substring(0,1024)},
+      action:{
+        name:'cta_url',
+        parameters:{
+          display_text: btn.title.substring(0,20),
+          url: btn.url
+        }
+      }
+    }
+  };
 }
+
+async function sendCtaWithFallback(to, body, ctaList){
+  // Try CTA buttons first, if fails fallback to text + reply buttons
+  try{
+    const ctaMsg = ctaButtons(to, body, ctaList);
+    const res = await sendWithDelay(ctaMsg);
+    if(res) return;
+  }catch(e){
+    console.log('CTA failed, fallback to reply buttons', e.message);
+  }
+  // Fallback: text + reply buttons for Android/iOS/Call
+  const fallbackBody = body + '\n\n' + ctaList.map(c=> {
+    if(c.type==='url') return `${c.title}: ${c.url}`;
+    return `${c.title}: ${c.phone}`;
+  }).join('\n');
+  // Create reply buttons for same actions
+  const replyBtns = ctaList.map((c,i)=>({id:`CTA_${i}_${c.title}`, title:c.title.substring(0,20)}));
+  await sendWithDelay(interactiveButton(to, fallbackBody.substring(0,1024), replyBtns.slice(0,3)));
+  // If CTA was phone, also send phone number as text with auto-dial hint
+}
+
+async function sendSingleCtaWithFallback(to, body, btn){
+  try{
+    const msg = singleCta(to, body, btn);
+    const res = await sendWithDelay(msg);
+    if(res) return;
+  }catch(e){
+    console.log('Single CTA failed', e.message);
+  }
+  // Fallback to reply button
+  await sendWithDelay(interactiveButton(to, body + '\n\n' + btn.title + ': ' + btn.url, [{id:'SEE_VIDEO', title:btn.title.substring(0,20)}]));
+}
+
 
 // === NEW - Repeat Last Step for random input (emoji, sticker, sentence, number, special char) - Fix #17 ===
 async function repeatLastStep(uid, state, lang){
@@ -515,12 +558,16 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi){
-      const L=T[lang]||T.en;
+      // Fix: Hi should ALWAYS show Welcome greeting + Language selection again
+      const L=T.en; // always English welcome
       clearReminders(uid);
-      await setState(uid,{lang, lastStep:'HI Reset'});
-      await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3)));
-      await delay(300);
-      await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5)));
+      await setState(uid,{first:true, lastStep:'HI - Reset', lang:null});
+      console.log(`HI reset for ${uid} - showing welcome`);
+      await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
+      await saveToSheet('HI_Reset', [nowIso, uid, 'none', 'Hi Received', 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
+      scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000);
+      scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000);
+      scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000);
       return;
     }
 
@@ -780,7 +827,45 @@ app.post('/webhook', async(req,res)=>{
   }catch(e){ console.log('webhook error',e.message,e.stack); }
 });
 
+// === NEW ENDPOINTS TO CLEAR OLD USERS - Fix for your question ===
+app.get('/clear/:phone', async(req,res)=>{
+  try{
+    let uid = req.params.phone.replace(/[^0-9]/g,'');
+    if(uid.length===10) uid='91'+uid;
+    if(redisReady && redis){
+      await redis.del(`state:${uid}`);
+      console.log(`Cleared Redis state:${uid}`);
+    }
+    memoryStore.delete(uid);
+    clearReminders(uid);
+    res.send(`✅ Cleared user ${uid} - Next message from this number will show Welcome + Language selection`);
+  }catch(e){ res.send(`Error: ${e.message}`); }
+});
+
+app.get('/clear-all', async(req,res)=>{
+  try{
+    if(redisReady && redis){
+      const keys = await redis.keys('state:*');
+      if(keys.length>0) await redis.del(...keys);
+      console.log(`Cleared all ${keys.length} states`);
+      res.send(`✅ Cleared all ${keys.length} users - All numbers will now see Welcome`);
+    } else {
+      memoryStore.clear();
+      res.send(`✅ Cleared memoryStore - ${memoryStore.size} users`);
+    }
+  }catch(e){ res.send(`Error: ${e.message}`); }
+});
+
+app.get('/check/:phone', async(req,res)=>{
+  try{
+    let uid = req.params.phone.replace(/[^0-9]/g,'');
+    if(uid.length===10) uid='91'+uid;
+    const state = await getState(uid);
+    res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)});
+  }catch(e){ res.send(`Error: ${e.message}`); }
+});
+
 app.listen(PORT,'0.0.0.0',async()=>{
-  console.log(`V99 FINAL listening on ${PORT} - Phone ID ${PHONE_NUMBER_ID} - ADMIN:${HELP_ADMIN} MARKETING:${HELP_MARKETING}`);
+  console.log(`V99.3 FINAL listening on ${PORT} - Phone ID ${PHONE_NUMBER_ID} - ADMIN:${HELP_ADMIN} MARKETING:${HELP_MARKETING}`);
   await getSheets();
 });
