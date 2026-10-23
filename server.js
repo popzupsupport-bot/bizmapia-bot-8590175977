@@ -35,6 +35,92 @@ const LINKS_V92 = {
   razorpay: "https://rzp.io/rzp/mq0zG6mS",
 };
 
+// === PRICING - V98 old was District 15L, Corp 7L, Municipal 3L, EMI Down 5L + 10x1L
+// === NEW rates as per user: District with Corp 15L, without 10L, Corp Franchise 5L, Municipal 4L ===
+const PRICING = {
+  DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 }, // District: 15L with Corp, 10L without
+  CORP: { WITH_CORP: 5, WITHOUT_CORP: 4 }, // Corporation=5L, Municipal=4L (old V98 was 7L/3L)
+  CENTER: { DEFAULT: 1 } // Business Center - 1 Lac = 30k down + 10k*7 months
+};
+
+// Old EMI from V98: Down 5L + 10x1L = 15L, Down 5L + 20x50k = 15L
+// New EMI will be proportional to fee
+function getEMIText(lang, fee){
+  if(fee>=15){
+    // 15L -> Down 5L + 10x1L / Down 5L + 20x50k
+    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 1L = ${fee}L\nOption 2: Down 5L + 20 മാസം x 50k = ${fee}L` :
+           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 1 लाख = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 50 हजार = ${fee} लाख` :
+           `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 1L = ${fee}L\nOption 2: Down 5L + 20 Months x 50k = ${fee}L`;
+  } else if(fee>=10){
+    // 10L -> Down 5L + 10*50K / Down 5L + 20*25K
+    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 50k = ${fee}L\nOption 2: Down 5L + 20 മാസം x 25k = ${fee}L` :
+           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 50 हजार = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 25 हजार = ${fee} लाख` :
+           `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 50K = ${fee}L\nOption 2: Down 5L + 20 Months x 25K = ${fee}L`;
+  } else if(fee===5){
+    // 5L -> Down 3L + 10 Months / Down 3L + 20 Months
+    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 3L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 3L + 20 മാസം x 10k = ${fee}L` :
+           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 3 लाख + 10 महीने = ${fee} लाख\nविकल्प 2: डाउन 3 लाख + 20 महीने = ${fee} लाख` :
+           `EMI Options for ${fee}L:\nOption 1: Down 3L + 10 Months x 20k = ${fee}L\nOption 2: Down 3L + 20 Months x 10k = ${fee}L`;
+  } else if(fee===4){
+    // 4L -> Down 2L + 10 Months / Down 2L + 20 Months
+    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 2L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 2L + 20 മാസം x 10k = ${fee}L` :
+           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 2 लाख + 10 महीने x 20 हजार = ${fee} लाख\nविकल्प 2: डाउन 2 लाख + 20 महीने x 10 हजार = ${fee} लाख` :
+           `EMI Options for ${fee}L:\nOption 1: Down 2L + 10 Months x 20k = ${fee}L\nOption 2: Down 2L + 20 Months x 10k = ${fee}L`;
+  } else {
+    // 1L -> Down 30K + 7 Months
+    return lang==='ml' ? `Business Center ${fee}L-ന് EMI: Down Rs.30000 + 7 മാസം x Rs.10000 = ${fee}L` :
+           lang==='hi' ? `Business Center ${fee} लाख के लिए EMI: डाउन 30 हजार + 7 महीने x 10 हजार = ${fee} लाख` :
+           `Business Center EMI for ${fee}L: Down Rs.30000 + 7 Months x Rs.10000 = ${fee}L`;
+  }
+}
+
+
+function getFee(sub, corpYes){
+  if(sub==='OPP_DISTRICT'){
+    return corpYes ? PRICING.DISTRICT.WITH_CORP : PRICING.DISTRICT.WITHOUT_CORP;
+  } else if(sub==='OPP_CORP'){
+    return corpYes ? PRICING.CORP.WITH_CORP : PRICING.CORP.WITHOUT_CORP;
+  } else if(sub==='OPP_CENTER'){
+    return PRICING.CENTER.DEFAULT;
+  }
+  return 15;
+}
+
+function getFranchiseName(sub, corpYes, lang){
+  const L = T[lang]||T.en;
+  if(sub==='OPP_DISTRICT'){
+    return corpYes ? 'District with Corporation' : 'District without Corporation';
+  } else if(sub==='OPP_CORP'){
+    return corpYes ? 'Corporation Franchise' : 'Municipal Franchise';
+  } else if(sub==='OPP_CENTER'){
+    return 'Business Center';
+  }
+  return 'Franchise';
+}
+
+function getReadyText(lang, fee, franchiseName){
+  const L = T[lang]||T.en;
+  if(lang==='ml'){
+    return `നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ${franchiseName} ഫീസായി ${fee} ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`;
+  } else if(lang==='hi'){
+    return `आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं।`;
+  } else {
+    return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`;
+  }
+}
+
+function getPayText(lang, fee){
+  const L = T[lang]||T.en;
+  if(lang==='ml'){
+    return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay} - ${fee}L-ന്റെ ഭാഗം`;
+  } else if(lang==='hi'){
+    return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay} - ${fee}L का हिस्सा`;
+  } else {
+    return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. Link: ${LINKS_V92.razorpay} - Part of ${fee}L`;
+  }
+}
+
+
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
 const HELP_ADMIN_FULL = '+918590183646';
@@ -757,12 +843,55 @@ app.post('/webhook', async(req,res)=>{
     // === EMI / ADVANCE FULLY PRESERVED ===
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.benText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); await saveToSheet('Franchise_Benefits', [nowIso, uid, lang, 'Business Opportunity', 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000); return; }
     if(btnId==='KNOW_SUP'){ state.lastStep='Support'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); await saveToSheet('Franchise_Support', [nowIso, uid, lang, 'Business Opportunity', 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000); return; }
-    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}])); await saveToSheet('Franchise_Requirements', [nowIso, uid, lang, 'Business Opportunity', 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000); return; }
+    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}])); await saveToSheet('Franchise_Requirements', [nowIso, uid, lang, 'Business Opportunity', 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000); return; }
     if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}])); await saveToSheet('Franchise_Submit', [nowIso, uid, lang, 'Business Opportunity', 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
-    if(btnId==='CORP_YES'||btnId==='CORP_NO'){ state.lastStep='Ready 15L - Corp:'+btnId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.ready15,[{id:'READY_15L',title:L.readyBtn},{id:'KNOW_EMI',title:L.emiBtn}])); await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity', 'Corp Check '+btnId, 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
-    if(btnId==='READY_15L'){ state.lastStep='Pay Rs5000'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.payReg,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}])); await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity', 'Ready 15L', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
-    if(btnId==='KNOW_EMI'){ state.lastStep='EMI Options'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.emiOpt,[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity', 'EMI Options', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
-    if(btnId==='EMI_10'||btnId==='EMI_20'){ state.lastStep='EMI Selected '+btnId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.payReg,[{id:'PAY_DONE',title:L.payBtn}])); await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity', 'EMI '+btnId, 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
+    if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
+      const isYes = btnId==='CORP_YES';
+      const fee = getFee(state.sub, isYes);
+      const franchiseName = getFranchiseName(state.sub, isYes, lang);
+      state.fee = fee;
+      state.franchiseName = franchiseName;
+      state.isCorp = isYes;
+      state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const readyText = getReadyText(lang, fee, franchiseName);
+      const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`;
+      await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}])); 
+      await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity', `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
+      return; 
+    }
+    if(btnId==='READY_15L'){ 
+      const fee = state.fee || 15;
+      state.lastStep=`Pay Rs5000 - ${fee}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const payText = getPayText(lang, fee);
+      await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}])); 
+      await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity', `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
+      return; 
+    }
+    if(btnId==='KNOW_EMI'){ 
+      const fee = state.fee || 15;
+      state.lastStep=`EMI Options - ${fee}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const emiText = getEMIText(lang, fee);
+      const fullEmiMsg = emiText + "\n\nPlease select any one from below:-";
+      await sendWithDelay(interactiveButton(uid,fullEmiMsg,[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); 
+      await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity', `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
+      return; 
+    }
+    if(btnId==='EMI_10'||btnId==='EMI_20'){ 
+      const fee = state.fee || 15;
+      state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const payText = getPayText(lang, fee);
+      await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn}])); 
+      await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity', `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
+      return; 
+    }
     if(btnId==='PAY_DONE'){ state.lastStep='Pay Done - Lead Start'; state.flow='LEAD'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.leadAsk)); await saveToSheet('Franchise_PayDone', [nowIso, uid, lang, 'Business Opportunity', 'Pay Done', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
 
     if(btnId.startsWith('OCC_')){
