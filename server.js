@@ -380,8 +380,7 @@ async function sendWithDelay(msg){
 }
 
 // === REMINDER FIX V10 - Persistent with Redis + Context Aware ===
-const reminders = new Map(); // in-memory for quick access
-
+// reminders Map already declared earlier - don't redeclare
 async function saveReminderToRedis(uid, type, lang, ms){
   try{
     if(redisReady && redis){
