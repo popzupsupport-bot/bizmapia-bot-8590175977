@@ -379,40 +379,122 @@ async function sendWithDelay(msg){
   }
 }
 
-// === REMINDER FIX Change 12 & 13 - Deduplicate and Context Aware ===
+// === REMINDER FIX V10 - Persistent with Redis + Context Aware ===
+const reminders = new Map(); // in-memory for quick access
+
+async function saveReminderToRedis(uid, type, lang, ms){
+  try{
+    if(redisReady && redis){
+      const key = `reminder:${uid}:${type}`;
+      const data = JSON.stringify({lang, due: Date.now()+ms, type, uid});
+      await redis.set(key, data, 'EX', Math.ceil(ms/1000)+86400); // expire after due + 1 day
+      console.log(`Saved reminder to Redis: ${key} due in ${ms}ms`);
+    }
+  }catch(e){ console.log('saveReminder error', e.message); }
+}
+
+async function deleteReminderFromRedis(uid, typePattern){
+  try{
+    if(redisReady && redis){
+      if(typePattern){
+        const keys = await redis.keys(`reminder:${uid}:${typePattern}*`);
+        if(keys.length>0) await redis.del(...keys);
+      } else {
+        const keys = await redis.keys(`reminder:${uid}:*`);
+        if(keys.length>0) await redis.del(...keys);
+      }
+    }
+  }catch(e){ console.log('deleteReminder error', e.message); }
+}
+
 function clearReminders(uid){
+  // Clear in-memory
   for(let key of reminders.keys()){
     if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); }
   }
+  // Clear Redis persistent
+  deleteReminderFromRedis(uid, '');
+  console.log(`Cleared reminders for ${uid}`);
 }
+
 function scheduleReminder(uid, type, lang, ms){
   const key = `${uid}:${type}`;
   if(reminders.has(key)){ clearTimeout(reminders.get(key)); }
+  
+  // Save to Redis for persistence across restarts
+  saveReminderToRedis(uid, type, lang, ms);
+  
   const t = setTimeout(async()=>{
     reminders.delete(key);
     try{
+      // Delete from Redis as it's being executed
+      if(redisReady && redis){
+        await redis.del(`reminder:${uid}:${type}`);
+      }
       const state = await getState(uid);
+      if(!state) return; // user state cleared
       const L = T[lang]||T.en;
-      console.log(`REMINDER ${type} to ${uid} lastStep=${state.lastStep} sub=${state.sub}`);
+      console.log(`REMINDER FIRING ${type} to ${uid} lastStep=${state?.lastStep} sub=${state?.sub}`);
+      
+      // Don't send reminder if user already completed or is in active flow recently
+      const lastActive = state.lastActive ? Date.now() - state.lastActive : 999999999;
+      // If user was active in last 30 min, skip 1h reminder (they are still chatting)
+      if(type.includes(':1') && lastActive < 30*60*1000){
+        console.log(`Skipping 1h reminder, user active ${lastActive}ms ago`);
+        return;
+      }
+      
       if(type.startsWith('install:')){
         const sub = type.split(':')[1];
-        // Context aware - Change 12
-        if(sub.startsWith('OPP_') || sub.includes('Franchise') || state.service==='SVC_OPP'){
-          // Franchise reminder - should show Benefits/Support/Requirements not ride
-          const oppMsg = state.lastStep?.includes('District') ? L.highIntroSingle : state.lastStep?.includes('Corp') ? L.moderateIntroSingle : L.baseIntroSingle;
-          // After video, remind with expand buttons
+        if(sub.startsWith('OPP_') || sub.includes('Franchise') || state.service==='SVC_OPP' || (state.sub && state.sub.startsWith('OPP_'))){
           await sendWithDelay(interactiveButton(uid, L.reminderFranchise, [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
+          console.log(`Sent franchise reminder to ${uid}`);
         } else {
           await sendWithDelay(interactiveButton(uid, L.haveInstalled1, [{id:'YES_ACTIVATE',title:L.yesActivate},{id:'NO_LATER',title:L.noLater}]));
+          console.log(`Sent app install reminder to ${uid}`);
         }
       } else if(type.startsWith('noLang')||type.startsWith('noService')){
         const L2 = T[lang]||T.en;
         await sendWithDelay(interactiveButton(uid, L2.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
+        console.log(`Sent noLang/noService reminder to ${uid}`);
       }
-    }catch(e){ console.log('reminder error', e.message); }
+    }catch(e){ console.log('reminder error', e.message, e.stack); }
   }, ms);
   reminders.set(key, t);
+  console.log(`Scheduled reminder ${type} for ${uid} in ${ms}ms`);
 }
+
+// Background checker for Redis reminders that survived restart - runs every 5 min
+setInterval(async()=>{
+  try{
+    if(!redisReady || !redis) return;
+    const keys = await redis.keys('reminder:*');
+    if(keys.length===0) return;
+    console.log(`Checking ${keys.length} persistent reminders`);
+    for(let key of keys){
+      try{
+        const dataStr = await redis.get(key);
+        if(!dataStr) continue;
+        const data = JSON.parse(dataStr);
+        if(Date.now() >= data.due){
+          // Due - execute it
+          console.log(`Redis reminder due: ${key}`);
+          const uid = data.uid;
+          const type = data.type;
+          const lang = data.lang;
+          // Remove from Redis and trigger
+          await redis.del(key);
+          // Re-schedule as immediate execution via scheduleReminder with 1 sec? Or execute directly
+          // For simplicity, call scheduleReminder with 1 sec to reuse logic
+          scheduleReminder(uid, type, lang, 1000);
+        }
+      }catch(e){ console.log('reminder checker error', e.message); }
+    }
+  }catch(e){ console.log('reminder interval error', e.message); }
+}, 5*60*1000); // check every 5 min
+
+console.log('Reminder background checker started - every 5 min');
+
 
 // === TRANSLATIONS - Change 16 Full Hindi/Malayalam ===
 const T={
