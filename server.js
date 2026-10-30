@@ -1,5 +1,5 @@
 
-// V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V111 CLEAN PAY TEXT NO LINK 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -119,9 +119,9 @@ function getReadyText(lang, fee, franchiseName){
   else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
 function getPayText(lang, fee){
-  if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay} - ${fee}L-ന്റെ ഭാഗം`; }
-  else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay} - ${fee}L का हिस्सा`; }
-  else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. Link: ${LINKS_V92.razorpay} - Part of ${fee}L`; }
+  if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക.`; }
+  else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। यह ${fee}L का हिस्सा है, नीचे बटन पर क्लिक करके भुगतान करें।`; }
+  else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. This is part of ${fee}L, click the button below to pay.`; }
 }
 
 const HELP_ADMIN = '8590183646';
@@ -508,7 +508,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V111 CLEAN PAY TEXT NO LINK 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -680,4 +680,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V111 CLEAN PAY TEXT NO LINK 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
