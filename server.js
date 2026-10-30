@@ -1,8 +1,7 @@
-// V99 FINAL - All 16 Changes Applied - Preserving EMI/Advance 600 Steps
-// Phone ID 1382103134987818 - 95677 42507 - Changes 1-16 from user
+// V101 FINAL - Sheet Write Enabled + Exact Last Step Reminders - Preserving EMI 600 Steps
 const express = require('express');
 const bodyParser = require('body-parser');
-const axios = require('axios');
+const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
 let Redis = null;
 try { Redis = require('ioredis'); } catch(e) { console.log('ioredis not installed'); }
 let google = null;
@@ -22,7 +21,7 @@ const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.panditprog
 const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const WEBSITE = 'https://bizmapia.com/';
 const EARN_LINK = 'https://bizmapia.com/earn';
-const VIDEO_DISTRICT = 'https://bizmapia.com/video/district'; // Replace with real YouTube link
+const VIDEO_DISTRICT = 'https://bizmapia.com/video/district';
 const VIDEO_CORP = 'https://bizmapia.com/video/corporation';
 const VIDEO_CENTER = 'https://bizmapia.com/video/business-center';
 
@@ -35,91 +34,57 @@ const LINKS_V92 = {
   razorpay: "https://rzp.io/rzp/mq0zG6mS",
 };
 
-// === PRICING - V98 old was District 15L, Corp 7L, Municipal 3L, EMI Down 5L + 10x1L
-// === NEW rates as per user: District with Corp 15L, without 10L, Corp Franchise 5L, Municipal 4L ===
 const PRICING = {
-  DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 }, // District: 15L with Corp, 10L without
-  CORP: { WITH_CORP: 5, WITHOUT_CORP: 4 }, // Corporation=5L, Municipal=4L (old V98 was 7L/3L)
-  CENTER: { DEFAULT: 1 } // Business Center - 1 Lac = 30k down + 10k*7 months
+  DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 },
+  CORP: { WITH_CORP: 5, WITHOUT_CORP: 4 },
+  CENTER: { DEFAULT: 1 }
 };
 
-// Old EMI from V98: Down 5L + 10x1L = 15L, Down 5L + 20x50k = 15L
-// New EMI will be proportional to fee
 function getEMIText(lang, fee){
   if(fee>=15){
-    // 15L -> Down 5L + 10x1L / Down 5L + 20x50k
     return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 1L = ${fee}L\nOption 2: Down 5L + 20 മാസം x 50k = ${fee}L` :
            lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 1 लाख = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 50 हजार = ${fee} लाख` :
            `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 1L = ${fee}L\nOption 2: Down 5L + 20 Months x 50k = ${fee}L`;
   } else if(fee>=10){
-    // 10L -> Down 5L + 10*50K / Down 5L + 20*25K
     return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 50k = ${fee}L\nOption 2: Down 5L + 20 മാസം x 25k = ${fee}L` :
            lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 50 हजार = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 25 हजार = ${fee} लाख` :
            `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 50K = ${fee}L\nOption 2: Down 5L + 20 Months x 25K = ${fee}L`;
   } else if(fee===5){
-    // 5L -> Down 3L + 10 Months / Down 3L + 20 Months
     return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 3L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 3L + 20 മാസം x 10k = ${fee}L` :
            lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 3 लाख + 10 महीने = ${fee} लाख\nविकल्प 2: डाउन 3 लाख + 20 महीने = ${fee} लाख` :
            `EMI Options for ${fee}L:\nOption 1: Down 3L + 10 Months x 20k = ${fee}L\nOption 2: Down 3L + 20 Months x 10k = ${fee}L`;
   } else if(fee===4){
-    // 4L -> Down 2L + 10 Months / Down 2L + 20 Months
     return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 2L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 2L + 20 മാസം x 10k = ${fee}L` :
            lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 2 लाख + 10 महीने x 20 हजार = ${fee} लाख\nविकल्प 2: डाउन 2 लाख + 20 महीने x 10 हजार = ${fee} लाख` :
            `EMI Options for ${fee}L:\nOption 1: Down 2L + 10 Months x 20k = ${fee}L\nOption 2: Down 2L + 20 Months x 10k = ${fee}L`;
   } else {
-    // 1L -> Down 30K + 7 Months
     return lang==='ml' ? `Business Center ${fee}L-ന് EMI: Down Rs.30000 + 7 മാസം x Rs.10000 = ${fee}L` :
            lang==='hi' ? `Business Center ${fee} लाख के लिए EMI: डाउन 30 हजार + 7 महीने x 10 हजार = ${fee} लाख` :
            `Business Center EMI for ${fee}L: Down Rs.30000 + 7 Months x Rs.10000 = ${fee}L`;
   }
 }
-
-
 function getFee(sub, corpYes){
-  if(sub==='OPP_DISTRICT'){
-    return corpYes ? PRICING.DISTRICT.WITH_CORP : PRICING.DISTRICT.WITHOUT_CORP;
-  } else if(sub==='OPP_CORP'){
-    return corpYes ? PRICING.CORP.WITH_CORP : PRICING.CORP.WITHOUT_CORP;
-  } else if(sub==='OPP_CENTER'){
-    return PRICING.CENTER.DEFAULT;
-  }
+  if(sub==='OPP_DISTRICT'){ return corpYes ? PRICING.DISTRICT.WITH_CORP : PRICING.DISTRICT.WITHOUT_CORP; }
+  else if(sub==='OPP_CORP'){ return corpYes ? PRICING.CORP.WITH_CORP : PRICING.CORP.WITHOUT_CORP; }
+  else if(sub==='OPP_CENTER'){ return PRICING.CENTER.DEFAULT; }
   return 15;
 }
-
-function getFranchiseName(sub, corpYes, lang){
-  const L = T[lang]||T.en;
-  if(sub==='OPP_DISTRICT'){
-    return corpYes ? 'District with Corporation' : 'District without Corporation';
-  } else if(sub==='OPP_CORP'){
-    return corpYes ? 'Corporation Franchise' : 'Municipal Franchise';
-  } else if(sub==='OPP_CENTER'){
-    return 'Business Center';
-  }
+function getFranchiseName(sub, corpYes){
+  if(sub==='OPP_DISTRICT'){ return corpYes ? 'District with Corporation' : 'District without Corporation'; }
+  else if(sub==='OPP_CORP'){ return corpYes ? 'Corporation Franchise' : 'Municipal Franchise'; }
+  else if(sub==='OPP_CENTER'){ return 'Business Center'; }
   return 'Franchise';
 }
-
 function getReadyText(lang, fee, franchiseName){
-  const L = T[lang]||T.en;
-  if(lang==='ml'){
-    return `നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ${franchiseName} ഫീസായി ${fee} ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`;
-  } else if(lang==='hi'){
-    return `आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं।`;
-  } else {
-    return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`;
-  }
+  if(lang==='ml'){ return `നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ${franchiseName} ഫീസായി ${fee} ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`; }
+  else if(lang==='hi'){ return `आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं।`; }
+  else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
-
 function getPayText(lang, fee){
-  const L = T[lang]||T.en;
-  if(lang==='ml'){
-    return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay} - ${fee}L-ന്റെ ഭാഗം`;
-  } else if(lang==='hi'){
-    return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay} - ${fee}L का हिस्सा`;
-  } else {
-    return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. Link: ${LINKS_V92.razorpay} - Part of ${fee}L`;
-  }
+  if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay} - ${fee}L-ന്റെ ഭാഗം`; }
+  else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay} - ${fee}L का हिस्सा`; }
+  else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. Link: ${LINKS_V92.razorpay} - Part of ${fee}L`; }
 }
-
 
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
@@ -140,224 +105,63 @@ if (REDIS_URL && Redis) {
 const memoryStore = new Map();
 const reminders = new Map();
 
-async function getState(uid){ if(redisReady){ try{ const v=await redis.get(`state:${uid}`); if(v) return JSON.parse(v);}catch{} } return memoryStore.get(uid)||{}; }
-async function setState(uid,s){ memoryStore.set(uid,s); if(redisReady){ try{ await redis.set(`state:${uid}`, JSON.stringify(s), 'EX', 86400*7);}catch{} } }
-async function getSheets(){ return null; }
-async function saveToSheet(tab,row,isNew){ try{ console.log(`SHEET ${tab}`, row); }catch(e){} }
+// === GOOGLE SHEET RESTORED ===
+let sheetsClient = null;
+async function getSheets(){
+  if(!google) { console.log('googleapis not installed'); return null; }
+  const creds = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_CREDENTIALS_JSON;
+  if(!creds){ console.log('GOOGLE_CREDENTIALS missing'); return null; }
+  try{
+    if(sheetsClient) return sheetsClient;
+    let credentials;
+    try{ credentials = JSON.parse(creds); } catch{ credentials = JSON.parse(Buffer.from(creds, 'base64').toString()); }
+    const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+    const client = await auth.getClient();
+    sheetsClient = google.sheets({version:'v4', auth: client});
+    console.log('Google Sheets client ready');
+    return sheetsClient;
+  }catch(e){ console.log('getSheets error', e.message); return null; }
+}
 
+async function saveToSheet(tab, row, isNew){
+  try{
+    const sheets = await getSheets();
+    if(!sheets){
+      console.log(`SHEET ${tab}`, row);
+      return;
+    }
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${tab}!A:Z`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [row] }
+    });
+    console.log(`SHEET SAVED ${tab} -> ${row[1]||''} : ${row[3]||''}`);
+  }catch(e){
+    console.log(`SHEET FAIL ${tab}`, e.message, row);
+  }
+}
+
+async function getState(uid){ if(redisReady){ try{ const v=await redis.get(`state:${uid}`); if(v) return JSON.parse(v);}catch{} } return memoryStore.get(uid)||{}; }
+async function setState(uid,s){ s.lastActive = Date.now(); memoryStore.set(uid,s); if(redisReady){ try{ await redis.set(`state:${uid}`, JSON.stringify(s), 'EX', 86400*7);}catch{} } }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-// === MESSAGE BUILDERS ===
 function textMessage(to,body){ return { messaging_product:'whatsapp', to, type:'text', text:{body:body.substring(0,4096)} }; }
-
 function interactiveButton(to,body,buttons){
   const btns = buttons.slice(0,3).map(b=>({type:'reply', reply:{id:b.id, title:b.title.substring(0,20)}}));
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}} };
 }
-
-// FIXED CTA BUTTONS - Correct WhatsApp Cloud API format v20
 function ctaButtons(to,body,ctaList){
-  // ctaList: [{type:'url', title, url}, {type:'phone', title, phone}]
-  // Correct format: interactive.type='button' + action.buttons with type url/phone_number
   const buttons = ctaList.slice(0,3).map(c=>{
-    if(c.type==='url'){
-      return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url };
-    } else {
-      return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone };
-    }
+    if(c.type==='url'){ return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url }; }
+    else { return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone }; }
   });
-  return {
-    messaging_product:'whatsapp', to, type:'interactive',
-    interactive:{
-      type:'button',
-      body:{text:body.substring(0,1024)},
-      action:{buttons: buttons}
-    }
-  };
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:body.substring(0,1024)}, action:{buttons: buttons} } };
 }
-
 function singleCta(to,body,btn){
-  // Single CTA URL button - correct format
-  return {
-    messaging_product:'whatsapp', to, type:'interactive',
-    interactive:{
-      type:'cta_url',
-      body:{text:body.substring(0,1024)},
-      action:{
-        name:'cta_url',
-        parameters:{
-          display_text: btn.title.substring(0,20),
-          url: btn.url
-        }
-      }
-    }
-  };
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } } };
 }
-
-async function sendCtaWithFallback(to, body, ctaList){
-  // Try CTA buttons first, if fails fallback to text + reply buttons
-  try{
-    const ctaMsg = ctaButtons(to, body, ctaList);
-    const res = await sendWithDelay(ctaMsg);
-    if(res) return;
-  }catch(e){
-    console.log('CTA failed, fallback to reply buttons', e.message);
-  }
-  // Fallback: text + reply buttons for Android/iOS/Call
-  const fallbackBody = body + '\n\n' + ctaList.map(c=> {
-    if(c.type==='url') return `${c.title}: ${c.url}`;
-    return `${c.title}: ${c.phone}`;
-  }).join('\n');
-  // Create reply buttons for same actions
-  const replyBtns = ctaList.map((c,i)=>({id:`CTA_${i}_${c.title}`, title:c.title.substring(0,20)}));
-  await sendWithDelay(interactiveButton(to, fallbackBody.substring(0,1024), replyBtns.slice(0,3)));
-  // If CTA was phone, also send phone number as text with auto-dial hint
-}
-
-async function sendSingleCtaWithFallback(to, body, btn){
-  try{
-    const msg = singleCta(to, body, btn);
-    const res = await sendWithDelay(msg);
-    if(res) return;
-  }catch(e){
-    console.log('Single CTA failed', e.message);
-  }
-  // Fallback to reply button
-  await sendWithDelay(interactiveButton(to, body + '\n\n' + btn.title + ': ' + btn.url, [{id:'SEE_VIDEO', title:btn.title.substring(0,20)}]));
-}
-
-
-// === NEW - Repeat Last Step for random input (emoji, sticker, sentence, number, special char) - Fix #17 ===
-async function repeatLastStep(uid, state, lang){
-  const L = T[lang]||T.en;
-  const last = state.lastStep||'';
-  const sub = state.sub||'';
-  console.log(`REPEAT LAST STEP for ${uid} - last:${last} sub:${sub}`);
-
-  if(sub==='RIDE_BOOK' || last==='Book a Cab'){
-    return await sendWithDelay(ctaButtons(uid, L.bookCab, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'url', title:'iOS', url:APP_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='RIDE_ATTACH' || last==='Attach Cab'){
-    return await sendWithDelay(ctaButtons(uid, L.attachCab, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='BIZ_REGISTER' || last==='Register Business'){
-    return await sendWithDelay(ctaButtons(uid, L.bizRegister, [
-      {type:'url', title:'Register your Business', url:WEBSITE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='BIZ_ADS' || last==='Start Advertising'){
-    return await sendWithDelay(ctaButtons(uid, L.bizAds, [
-      {type:'url', title:'Advertise Now', url:WEBSITE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='DEL_ORDER' || last==='Order Stores'){
-    return await sendWithDelay(ctaButtons(uid, L.delOrder, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'url', title:'iOS', url:APP_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='DEL_PARTNER' || last==='Delivery Partner'){
-    return await sendWithDelay(ctaButtons(uid, L.delPartner, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='BOOK_ROOM' || last==='Book Rooms'){
-    return await sendWithDelay(ctaButtons(uid, L.bookRoom, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'url', title:'iOS', url:APP_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='BOOK_APPOINT' || last==='Book Appointments'){
-    return await sendWithDelay(ctaButtons(uid, L.bookAppoint, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'url', title:'iOS', url:APP_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='BOOK_MOVIE' || last==='Movie Tickets'){
-    return await sendWithDelay(ctaButtons(uid, L.bookMovie, [
-      {type:'url', title:'Android', url:PLAY_STORE},
-      {type:'url', title:'iOS', url:APP_STORE},
-      {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-    ]));
-  }
-  if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('District')){
-    await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_DISTRICT}));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-  }
-  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){
-    await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CORP}));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-  }
-  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){
-    await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CENTER}));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-  }
-  if(last==='Benefits'){
-    await sendWithDelay(textMessage(uid,L.benText));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ]));
-  }
-  if(last==='Support'){
-    await sendWithDelay(textMessage(uid,L.supText));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ]));
-  }
-  if(last==='Requirements'){
-    await sendWithDelay(textMessage(uid,L.reqText));
-    await delay(300);
-    return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}]));
-  }
-  if(last.includes('Corp Check') || last.includes('Submit Application')){
-    return await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}]));
-  }
-  if(last.includes('Ready 15L')){
-    return await sendWithDelay(interactiveButton(uid,L.ready15,[{id:'READY_15L',title:L.readyBtn},{id:'KNOW_EMI',title:L.emiBtn}]));
-  }
-  if(last.includes('Pay Rs5000') || last.includes('EMI Selected')){
-    return await sendWithDelay(interactiveButton(uid,L.payReg,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}]));
-  }
-  if(last.includes('EMI Options')){
-    return await sendWithDelay(interactiveButton(uid,L.emiOpt,[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}]));
-  }
-  if(last.includes('Pay Done') || last.includes('Lead')){
-    return await sendWithDelay(textMessage(uid,L.leadAsk));
-  }
-  if(last.includes('Occupation')){
-    return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}]));
-  }
-  if(last.includes('Date') || last.includes('Occupation')){
-    return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}]));
-  }
-  if(state.service){
-    // fallback to last main category
-    if(state.service==='SVC_RIDE') return await sendWithDelay(interactiveButton(uid, L.rideSelected, L.rideButtons));
-    if(state.service==='SVC_BIZDIR') return await sendWithDelay(interactiveButton(uid, L.bizDirSelected, L.bizDirButtons));
-    if(state.service==='SVC_DELIVERY') return await sendWithDelay(interactiveButton(uid, L.deliverySelected, L.deliveryButtons));
-    if(state.service==='SVC_BOOKING') return await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons));
-    if(state.service==='SVC_OPP') return await sendWithDelay(interactiveButton(uid, L.oppSelected, L.oppButtons));
-  }
-  // Final fallback - main menu
-  await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3)));
-  await delay(300);
-  await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5)));
-}
-
 
 async function sendWithDelay(msg){
   const now = Date.now();
@@ -379,123 +183,109 @@ async function sendWithDelay(msg){
   }
 }
 
-// === REMINDER FIX V10 - Persistent with Redis + Context Aware ===
-// reminders Map already declared earlier - don't redeclare
-async function saveReminderToRedis(uid, type, lang, ms){
-  try{
-    if(redisReady && redis){
-      const key = `reminder:${uid}:${type}`;
-      const data = JSON.stringify({lang, due: Date.now()+ms, type, uid});
-      await redis.set(key, data, 'EX', Math.ceil(ms/1000)+86400); // expire after due + 1 day
-      console.log(`Saved reminder to Redis: ${key} due in ${ms}ms`);
-    }
-  }catch(e){ console.log('saveReminder error', e.message); }
+async function repeatLastStep(uid, state, lang){
+  const L = T[lang]||T.en;
+  const last = state.lastStep||'';
+  const sub = state.sub||'';
+  console.log(`REPEAT LAST STEP for ${uid} - last:${last} sub:${sub} lang:${lang}`);
+  if(sub==='RIDE_BOOK' || last==='Book a Cab'){ return await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ return await sendWithDelay(ctaButtons(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='BIZ_REGISTER' || last==='Register Business'){ return await sendWithDelay(ctaButtons(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='BIZ_ADS' || last==='Start Advertising'){ return await sendWithDelay(ctaButtons(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='DEL_ORDER' || last==='Order Stores'){ return await sendWithDelay(ctaButtons(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='DEL_PARTNER' || last==='Delivery Partner'){ return await sendWithDelay(ctaButtons(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='BOOK_ROOM' || last==='Book Rooms'){ return await sendWithDelay(ctaButtons(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='BOOK_APPOINT' || last==='Book Appointments'){ return await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='BOOK_MOVIE' || last==='Movie Tickets'){ return await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); }
+  if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('District')){ await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_DISTRICT})); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); }
+  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CORP})); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); }
+  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CENTER})); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); }
+  if(last==='Benefits'){ await sendWithDelay(textMessage(uid,L.benText)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); }
+  if(last==='Support'){ await sendWithDelay(textMessage(uid,L.supText)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); }
+  if(last==='Requirements'){ await sendWithDelay(textMessage(uid,L.reqText)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}])); }
+  if(last.includes('Corp Check') || last.includes('Submit Application')){ return await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}])); }
+  if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; const readyText = getReadyText(lang, fee, franchiseName); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}])); }
+  if(last.includes('Pay Rs5000') || last.includes('EMI Selected')){ const fee = state.fee||15; const payText = getPayText(lang, fee); return await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}])); }
+  if(last.includes('EMI Options')){ const fee = state.fee||15; const emiText = getEMIText(lang, fee); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); }
+  if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid,L.leadAsk)); }
+  if(last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}])); }
+  if(last.includes('Date') || last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}])); }
+  if(state.service){
+    if(state.service==='SVC_RIDE') return await sendWithDelay(interactiveButton(uid, L.rideSelected, L.rideButtons));
+    if(state.service==='SVC_BIZDIR') return await sendWithDelay(interactiveButton(uid, L.bizDirSelected, L.bizDirButtons));
+    if(state.service==='SVC_DELIVERY') return await sendWithDelay(interactiveButton(uid, L.deliverySelected, L.deliveryButtons));
+    if(state.service==='SVC_BOOKING') return await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons));
+    if(state.service==='SVC_OPP') return await sendWithDelay(interactiveButton(uid, L.oppSelected, L.oppButtons));
+  }
+  await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3)));
+  await delay(300);
+  await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5)));
 }
 
+// === REMINDER FIX V101 - Repeat exact last step + Sheet logging ===
+async function saveReminderToRedis(uid, type, lang, ms){
+  try{ if(redisReady && redis){ const key = `reminder:${uid}:${type}`; const data = JSON.stringify({lang, due: Date.now()+ms, type, uid}); await redis.set(key, data, 'EX', Math.ceil(ms/1000)+86400); } }catch(e){ console.log('saveReminder error', e.message); }
+}
 async function deleteReminderFromRedis(uid, typePattern){
   try{
     if(redisReady && redis){
-      if(typePattern){
-        const keys = await redis.keys(`reminder:${uid}:${typePattern}*`);
-        if(keys.length>0) await redis.del(...keys);
-      } else {
-        const keys = await redis.keys(`reminder:${uid}:*`);
-        if(keys.length>0) await redis.del(...keys);
-      }
+      if(typePattern){ const keys = await redis.keys(`reminder:${uid}:${typePattern}*`); if(keys.length>0) await redis.del(...keys); }
+      else { const keys = await redis.keys(`reminder:${uid}:*`); if(keys.length>0) await redis.del(...keys); }
     }
   }catch(e){ console.log('deleteReminder error', e.message); }
 }
-
 function clearReminders(uid){
-  // Clear in-memory
-  for(let key of reminders.keys()){
-    if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); }
-  }
-  // Clear Redis persistent
+  for(let key of reminders.keys()){ if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); } }
   deleteReminderFromRedis(uid, '');
-  console.log(`Cleared reminders for ${uid}`);
 }
-
 function scheduleReminder(uid, type, lang, ms){
   const key = `${uid}:${type}`;
   if(reminders.has(key)){ clearTimeout(reminders.get(key)); }
-  
-  // Save to Redis for persistence across restarts
   saveReminderToRedis(uid, type, lang, ms);
-  
   const t = setTimeout(async()=>{
     reminders.delete(key);
     try{
-      // Delete from Redis as it's being executed
-      if(redisReady && redis){
-        await redis.del(`reminder:${uid}:${type}`);
-      }
+      if(redisReady && redis){ await redis.del(`reminder:${uid}:${type}`); }
       const state = await getState(uid);
-      if(!state) return; // user state cleared
-      const L = T[lang]||T.en;
-      console.log(`REMINDER FIRING ${type} to ${uid} lastStep=${state?.lastStep} sub=${state?.sub}`);
-      
-      // Don't send reminder if user already completed or is in active flow recently
+      if(!state || state.flow==='DONE') return;
       const lastActive = state.lastActive ? Date.now() - state.lastActive : 999999999;
-      // If user was active in last 30 min, skip 1h reminder (they are still chatting)
-      if(type.includes(':1') && lastActive < 30*60*1000){
-        console.log(`Skipping 1h reminder, user active ${lastActive}ms ago`);
-        return;
+      if(type.includes(':1') && lastActive < 30*60*1000){ console.log(`Skipping 1h reminder, active ${lastActive}ms ago`); return; }
+      const actualLang = state.lang || lang || 'en';
+      const L = T[actualLang]||T.en;
+      console.log(`REMINDER FIRING ${type} to ${uid} last=${state?.lastStep} - repeating exact step`);
+      if(type.startsWith('noLang')||type.startsWith('noService')){
+        await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
+      } else {
+        await repeatLastStep(uid, state, actualLang);
       }
-      
-      if(type.startsWith('install:')){
-        const sub = type.split(':')[1];
-        if(sub.startsWith('OPP_') || sub.includes('Franchise') || state.service==='SVC_OPP' || (state.sub && state.sub.startsWith('OPP_'))){
-          await sendWithDelay(interactiveButton(uid, L.reminderFranchise, [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-          console.log(`Sent franchise reminder to ${uid}`);
-        } else {
-          await sendWithDelay(interactiveButton(uid, L.haveInstalled1, [{id:'YES_ACTIVATE',title:L.yesActivate},{id:'NO_LATER',title:L.noLater}]));
-          console.log(`Sent app install reminder to ${uid}`);
-        }
-      } else if(type.startsWith('noLang')||type.startsWith('noService')){
-        const L2 = T[lang]||T.en;
-        await sendWithDelay(interactiveButton(uid, L2.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
-        console.log(`Sent noLang/noService reminder to ${uid}`);
-      }
-    }catch(e){ console.log('reminder error', e.message, e.stack); }
+    }catch(e){ console.log('reminder error', e.message); }
   }, ms);
   reminders.set(key, t);
-  console.log(`Scheduled reminder ${type} for ${uid} in ${ms}ms`);
 }
 
-// Background checker for Redis reminders that survived restart - runs every 5 min
 setInterval(async()=>{
   try{
     if(!redisReady || !redis) return;
     const keys = await redis.keys('reminder:*');
-    if(keys.length===0) return;
-    console.log(`Checking ${keys.length} persistent reminders`);
+    if(!keys.length) return;
+    // only log if due found to reduce spam
+    let dueCount = 0;
     for(let key of keys){
-      try{
-        const dataStr = await redis.get(key);
-        if(!dataStr) continue;
-        const data = JSON.parse(dataStr);
-        if(Date.now() >= data.due){
-          // Due - execute it
-          console.log(`Redis reminder due: ${key}`);
-          const uid = data.uid;
-          const type = data.type;
-          const lang = data.lang;
-          // Remove from Redis and trigger
-          await redis.del(key);
-          // Re-schedule as immediate execution via scheduleReminder with 1 sec? Or execute directly
-          // For simplicity, call scheduleReminder with 1 sec to reuse logic
-          scheduleReminder(uid, type, lang, 1000);
-        }
-      }catch(e){ console.log('reminder checker error', e.message); }
+      const dataStr = await redis.get(key);
+      if(!dataStr) continue;
+      const data = JSON.parse(dataStr);
+      if(Date.now() >= data.due){
+        dueCount++;
+        await redis.del(key);
+        scheduleReminder(data.uid, data.type, data.lang, 1000);
+      }
     }
+    if(dueCount>0) console.log(`Fired ${dueCount} due persistent reminders`);
   }catch(e){ console.log('reminder interval error', e.message); }
-}, 5*60*1000); // check every 5 min
+}, 5*60*1000);
 
-console.log('Reminder background checker started - every 5 min');
+console.log('Reminder checker every 5 min - only logs when due');
 
-
-// === TRANSLATIONS - Change 16 Full Hindi/Malayalam ===
 const T={
   en:{
     welcome:`Welcome to Bizmapia\nYou are in Indias first 4 in 1 service app platform\nPlease select your preferred language from below:-`,
@@ -612,13 +402,13 @@ const T={
     noProblem:`कोई बात नहीं! अपना समय लें। जब आप तैयार हों, तो नीचे क्लिक करके इंस्टॉल करें।`,
   },
   ml:{
-    welcome:`Bizmapia-യിലേക്ക് സ്വാഗതം\nനിങ്ങൾ ഇന്ത്യയിലെ ആദ്യത്തെ 4 ഇൻ 1 സർവീസ് ആപ്പ് പ്ലാറ്റ്‌ഫോമിലാണ്\nതാഴെ നിന്ന് നിങ്ങളുടെ ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    welcome:`Bizmapia-യിലേക്ക് സ്വാഗതം\nനിങ്ങൾ ഇന്ത്യയിലെ ആദ്യത്തെ 4 ഇൻ 1 സർവീസ് ആപ്പ് പ്ലാറ്റ്ഫോമിലാണ്\nതാഴെ നിന്ന് നിങ്ങളുടെ ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     mainMenu:`കൂടുതൽ സഹായത്തിനായി താഴെ നിന്ന് ഏതെങ്കിലും ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
     services:[{id:'SVC_RIDE',title:'റൈഡ് ഹെയ്ലിംഗ്'},{id:'SVC_BIZDIR',title:'ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'ബിസിനസ് അവസരം'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     noService:`നിങ്ങൾ ഇതുവരെ ഒരു സേവനവും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
-    rideSelected:`നിങ്ങൾ "റൈഡ് ഹെയ്ലിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nBizmapia അതിർത്തിയില്ലാതെ ഇന്ത്യ മുഴുവൻ റൈഡ് ഹെയ്ലിംഗ് സേവനം നൽകുന്ന ഒരേയൊരു പ്ലാറ്റ്‌ഫോമാണ്.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
+    rideSelected:`നിങ്ങൾ "റൈഡ് ഹെയ്ലിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nBizmapia അതിർത്തിയില്ലാതെ ഇന്ത്യ മുഴുവൻ റൈഡ് ഹെയ്ലിംഗ് സേവനം നൽകുന്ന ഒരേയൊരു പ്ലാറ്റ്ഫോമാണ്.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
     rideButtons:[{id:'RIDE_BOOK',title:'ക്യാബ് ബുക്ക് ചെയ്യുക'},{id:'RIDE_ATTACH',title:'ക്യാബ് അറ്റാച്ച് ചെയ്യുക'}],
     bookCab:`മികച്ച തിരഞ്ഞെടുപ്പ്, നിങ്ങൾ "ക്യാബ് ബുക്ക് ചെയ്യുക" സേവനം ക്ലിക്ക് ചെയ്തു.\nTwo wheeler/Autorickshaw/Hatchback/Sedan/SUV/XUV/Ambulance അടുത്ത പ്രദേശങ്ങളിൽ നിന്ന് മിതമായ നിരക്കിൽ ലഭിക്കും.\n\nതാഴെ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
     attachCab:`നിങ്ങൾ "ക്യാബ് അറ്റാച്ച് ചെയ്യുക" തിരഞ്ഞെടുത്തു\nനിങ്ങളുടെ Two wheeler/Auto/Car/SUV അറ്റാച്ച് ചെയ്ത് Bizmapia-യിലൂടെ ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
@@ -661,7 +451,7 @@ const T={
     emi10:'EMI 10 മാസം', emi20:'EMI 20 മാസം',
     leadAsk:`മികച്ചത്! ദയവായി നിങ്ങളുടെ പൂർണ്ണ നാമം, ജില്ല, മൊബൈൽ നമ്പർ ടൈപ്പ് ചെയ്യുക`,
     occQ:`നിങ്ങളുടെ തൊഴിൽ എന്താണ്?`,
-    bus:'ബിസിനസ്', house:'ഹൗസ്‌വൈഫ്', emp:'ജീവനക്കാരൻ',
+    bus:'ബിസിനസ്', house:'ഹൗസ്വൈഫ്', emp:'ജീവനക്കാരൻ',
     dateQ:`നിങ്ങൾക്ക് ഞങ്ങളുടെ ഹെഡ് ഓഫീസിൽ എപ്പോൾ വരാൻ കഴിയും?`,
     today:'ഇന്ന്', tomorrow:'നാളെ',
     tenderLink:`ജില്ലാ ഫ്രാഞ്ചൈസിക്കുള്ള ടെൻഡർ ഡോക്യുമെന്റ്: ${LINKS_V92.tenderDistrict}`,
@@ -670,14 +460,8 @@ const T={
   }
 };
 
-
-
-
-app.get('/',(req,res)=>res.send(`V99 listening - Phone ID ${PHONE_NUMBER_ID}`));
-app.get('/webhook',(req,res)=>{
-  if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); }
-  else res.sendStatus(403);
-});
+app.get('/',(req,res)=>res.send(`V101 listening - Phone ID ${PHONE_NUMBER_ID}`));
+app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
   res.sendStatus(200);
@@ -692,7 +476,6 @@ app.post('/webhook', async(req,res)=>{
     const btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
     const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = new Date().toISOString();
-
     let state = await getState(uid);
     let lang = state.lang || 'en';
 
@@ -712,12 +495,10 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
 
-    // === Fix #17 - First message ANY input: sentence, alphabet, numeric, special char, emoji, sticker, media ===
     if(!state.lang){
       const L=T.en;
       const msgType = msg.type||'text';
-      const rawInput = txt || msgType; // captures emoji, sticker, image etc
-      console.log(`FIRST MSG any input from ${uid} type=${msgType} txt=${txt}`);
+      const rawInput = txt || msgType;
       await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
       await setState(uid,{first:true, lastStep:'First Message', lang:null});
       await saveToSheet('No_Language', [nowIso, uid, 'none', 'First Message', `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
@@ -728,11 +509,9 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi){
-      // Fix: Hi should ALWAYS show Welcome greeting + Language selection again
-      const L=T.en; // always English welcome
+      const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null});
-      console.log(`HI reset for ${uid} - showing welcome`);
       await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}]));
       await saveToSheet('HI_Reset', [nowIso, uid, 'none', 'Hi Received', 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000);
@@ -743,7 +522,6 @@ app.post('/webhook', async(req,res)=>{
 
     const L=T[lang]||T.en;
 
-    // Main services
     if(btnId.startsWith('SVC_')){
       state.service=btnId; state.lastStep=btnId; await setState(uid,state);
       clearReminders(uid);
@@ -759,326 +537,59 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
 
-    // === Change 1-9 CTA Buttons ===
-    if(btnId==='RIDE_BOOK'){
-      state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bookCab, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Book_Cab', [nowIso, uid, lang, 'Ride Hailing', 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='RIDE_ATTACH'){
-      state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.attachCab, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Attach_Cab', [nowIso, uid, lang, 'Ride Hailing', 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='BIZ_REGISTER'){
-      state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bizRegister, [
-        {type:'url', title:'Register your Business', url:WEBSITE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Register_Business', [nowIso, uid, lang, 'Business Directory', 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='BIZ_ADS'){
-      state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bizAds, [
-        {type:'url', title:'Advertise Now', url:WEBSITE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Start_Advertising', [nowIso, uid, lang, 'Business Directory', 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='DEL_ORDER'){
-      state.sub='DEL_ORDER'; state.lastStep='Order Stores'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.delOrder, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Order_Stores', [nowIso, uid, lang, 'Online Delivery', 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='DEL_PARTNER'){
-      state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.delPartner, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Delivery_Partner', [nowIso, uid, lang, 'Online Delivery', 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='BOOK_ROOM'){
-      state.sub='BOOK_ROOM'; state.lastStep='Book Rooms'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bookRoom, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Book_Rooms', [nowIso, uid, lang, 'Online Booking', 'Book Rooms', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:BOOK_ROOM:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_ROOM:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_ROOM:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='BOOK_APPOINT'){
-      state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bookAppoint, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Book_Appointments', [nowIso, uid, lang, 'Online Booking', 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='BOOK_MOVIE'){
-      state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(ctaButtons(uid, L.bookMovie, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:HELP_ADMIN_FULL}
-      ]));
-      await saveToSheet('Book_Movie', [nowIso, uid, lang, 'Online Booking', 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000);
-      return;
-    }
+    if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Book_Cab', [nowIso, uid, lang, 'Ride Hailing', 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000); return; }
+    if(btnId==='RIDE_ATTACH'){ state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Attach_Cab', [nowIso, uid, lang, 'Ride Hailing', 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000); return; }
+    if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Register_Business', [nowIso, uid, lang, 'Business Directory', 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000); return; }
+    if(btnId==='BIZ_ADS'){ state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Start_Advertising', [nowIso, uid, lang, 'Business Directory', 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000); return; }
+    if(btnId==='DEL_ORDER'){ state.sub='DEL_ORDER'; state.lastStep='Order Stores'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Order_Stores', [nowIso, uid, lang, 'Online Delivery', 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000); return; }
+    if(btnId==='DEL_PARTNER'){ state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Delivery_Partner', [nowIso, uid, lang, 'Online Delivery', 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000); return; }
+    if(btnId==='BOOK_ROOM'){ state.sub='BOOK_ROOM'; state.lastStep='Book Rooms'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Book_Rooms', [nowIso, uid, lang, 'Online Booking', 'Book Rooms', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_ROOM:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:BOOK_ROOM:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:BOOK_ROOM:24', lang, 24*60*60*1000); return; }
+    if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Book_Appointments', [nowIso, uid, lang, 'Online Booking', 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000); return; }
+    if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}])); await saveToSheet('Book_Movie', [nowIso, uid, lang, 'Online Booking', 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000); return; }
 
-    // === Change 10-11 Business Opportunity ===
-    if(btnId==='OPP_DISTRICT'){
-      state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_DISTRICT}));
-      await delay(500);
-      await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-      await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity', 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='OPP_CORP'){
-      state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CORP}));
-      await delay(500);
-      await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-      await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity', 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000);
-      return;
-    }
-    if(btnId==='OPP_CENTER'){
-      state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; await setState(uid,state);
-      clearReminders(uid);
-      await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CENTER}));
-      await delay(500);
-      await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}]));
-      await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity', 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
-      scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000);
-      scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000);
-      return;
-    }
+    if(btnId==='OPP_DISTRICT'){ state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_DISTRICT})); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity', 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000); return; }
+    if(btnId==='OPP_CORP'){ state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CORP})); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity', 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000); return; }
+    if(btnId==='OPP_CENTER'){ state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:VIDEO_CENTER})); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}])); await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity', 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000); scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000); scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000); return; }
 
-    // === EMI / ADVANCE FULLY PRESERVED ===
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.benText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); await saveToSheet('Franchise_Benefits', [nowIso, uid, lang, 'Business Opportunity', 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000); return; }
     if(btnId==='KNOW_SUP'){ state.lastStep='Support'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ])); await saveToSheet('Franchise_Support', [nowIso, uid, lang, 'Business Opportunity', 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000); return; }
     if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}])); await saveToSheet('Franchise_Requirements', [nowIso, uid, lang, 'Business Opportunity', 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000); return; }
-    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}])); await saveToSheet('Franchise_Submit', [nowIso, uid, lang, 'Business Opportunity', 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
+    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}])); await saveToSheet('Franchise_Submit', [nowIso, uid, lang, 'Business Opportunity', 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
-      const isYes = btnId==='CORP_YES';
-      const fee = getFee(state.sub, isYes);
-      const franchiseName = getFranchiseName(state.sub, isYes, lang);
-      state.fee = fee;
-      state.franchiseName = franchiseName;
-      state.isCorp = isYes;
-      state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; 
-      await setState(uid,state); 
-      clearReminders(uid); 
+      const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
+      state.fee = fee; state.franchiseName = franchiseName; state.isCorp = isYes; state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; 
+      await setState(uid,state); clearReminders(uid); 
       const readyText = getReadyText(lang, fee, franchiseName);
       const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`;
       await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}])); 
-      await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity', `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
-      return; 
+      await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity', `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      scheduleReminder(uid,'install:OPP_CORPCHECK:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_CORPCHECK:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_CORPCHECK:24',lang,24*60*60*1000); return; 
     }
-    if(btnId==='READY_15L'){ 
-      const fee = state.fee || 15;
-      state.lastStep=`Pay Rs5000 - ${fee}L`; 
-      await setState(uid,state); 
-      clearReminders(uid); 
-      const payText = getPayText(lang, fee);
-      await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}])); 
-      await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity', `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
-      return; 
-    }
-    if(btnId==='KNOW_EMI'){ 
-      const fee = state.fee || 15;
-      state.lastStep=`EMI Options - ${fee}L`; 
-      await setState(uid,state); 
-      clearReminders(uid); 
-      const emiText = getEMIText(lang, fee);
-      const fullEmiMsg = emiText + "\n\nPlease select any one from below:-";
-      await sendWithDelay(interactiveButton(uid,fullEmiMsg,[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); 
-      await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity', `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
-      return; 
-    }
-    if(btnId==='EMI_10'||btnId==='EMI_20'){ 
-      const fee = state.fee || 15;
-      state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
-      await setState(uid,state); 
-      clearReminders(uid); 
-      const payText = getPayText(lang, fee);
-      await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn}])); 
-      await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity', `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); 
-      return; 
-    }
-    if(btnId==='PAY_DONE'){ state.lastStep='Pay Done - Lead Start'; state.flow='LEAD'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.leadAsk)); await saveToSheet('Franchise_PayDone', [nowIso, uid, lang, 'Business Opportunity', 'Pay Done', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); return; }
+    if(btnId==='READY_15L'){ const fee = state.fee || 15; state.lastStep=`Pay Rs5000 - ${fee}L`; await setState(uid,state); clearReminders(uid); const payText = getPayText(lang, fee); await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}])); await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity', `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000); return; }
+    if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity', `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000); return; }
+    if(btnId==='EMI_10'||btnId==='EMI_20'){ const fee = state.fee || 15; state.lastStep='EMI Selected '+btnId+` - ${fee}L`; await setState(uid,state); clearReminders(uid); const payText = getPayText(lang, fee); await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn}])); await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity', `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OPP_EMISEL:24',lang,24*60*60*1000); return; }
+    if(btnId==='PAY_DONE'){ state.lastStep='Pay Done - Lead Start'; state.flow='LEAD'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.leadAsk)); await saveToSheet('Franchise_PayDone', [nowIso, uid, lang, 'Business Opportunity', 'Pay Done', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:LEAD:1',lang,1*60*60*1000); scheduleReminder(uid,'install:LEAD:12',lang,12*60*60*1000); scheduleReminder(uid,'install:LEAD:24',lang,24*60*60*1000); return; }
 
-    if(btnId.startsWith('OCC_')){
-      const occ = btnId.replace('OCC_','');
-      state.occupation=occ; state.lastStep='Occupation '+occ; await setState(uid,state); clearReminders(uid);
-      await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}]));
-      await saveToSheet('Franchise_Occupation', [nowIso, uid, lang, 'Business Opportunity', 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true);
-      return;
-    }
-    if(btnId.startsWith('DATE_')){
-      const date = btnId.replace('DATE_','');
-      state.date=date; state.lastStep='Date '+date; await setState(uid,state); clearReminders(uid);
-      await sendWithDelay(textMessage(uid,L.tenderLink));
-      await delay(300);
-      await sendWithDelay(textMessage(uid,L.thanks));
-      await saveToSheet('Franchise_Date', [nowIso, uid, lang, 'Business Opportunity', 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true);
-      await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date});
-      return;
-    }
+    if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}])); await saveToSheet('Franchise_Occupation', [nowIso, uid, lang, 'Business Opportunity', 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000); return; }
+    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.tenderLink)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks)); await saveToSheet('Franchise_Date', [nowIso, uid, lang, 'Business Opportunity', 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date}); return; }
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated)); await saveToSheet('App_Install', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
-    if(btnId==='NO_LATER'){
-      state.lastStep='No Later'; await setState(uid,state); clearReminders(uid);
-      const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_');
-      const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL;
-      const callShort = isOpp ? HELP_MARKETING : HELP_ADMIN;
-      // Change 14 - No Later with Android+iOS+Call buttons
-      await sendWithDelay(ctaButtons(uid, L.noProblem, [
-        {type:'url', title:'Android', url:PLAY_STORE},
-        {type:'url', title:'iOS', url:APP_STORE},
-        {type:'phone', title:'Call', phone:callNum}
-      ]));
-      await saveToSheet('App_Install', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true);
-      scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000);
-      scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000);
-      scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000);
-      return;
-    }
+    if(btnId==='NO_LATER'){ state.lastStep='No Later'; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendWithDelay(ctaButtons(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}])); await saveToSheet('App_Install', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000); return; }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'){ await sendWithDelay(textMessage(uid,`📞 Customer Care: ${HELP_ADMIN}\n\nTap to call: +91 ${HELP_ADMIN}\n\ntel:+91${HELP_ADMIN}`)); return; }
     if(btnId==='CALL_MARKETING'||btnId==='HELP_MARKETING'){ await sendWithDelay(textMessage(uid,`📞 Franchise Team: ${HELP_MARKETING}\n\nTap to call: +91 ${HELP_MARKETING}\n\ntel:+91${HELP_MARKETING}`)); return; }
 
-    if(state.flow==='LEAD' && txt){
-      state.leadData=txt; state.lastStep='Lead Typed'; await setState(uid,state); clearReminders(uid);
-      await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}]));
-      await saveToSheet('Franchise_Leads', [nowIso, uid, lang, 'Business Opportunity', 'Lead Data', txt, HELP_MARKETING, state.lastStep, txt], true);
-      return;
-    }
+    if(state.flow==='LEAD' && txt){ state.leadData=txt; state.lastStep='Lead Typed'; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}])); await saveToSheet('Franchise_Leads', [nowIso, uid, lang, 'Business Opportunity', 'Lead Data', txt, HELP_MARKETING, state.lastStep, txt], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000); return; }
 
-    // === Fix #17 - Random input after any step (sentence, alphabet, numeric, special char, emoji, sticker) ===
-    // If user typed random text or sent emoji/sticker/media and not in LEAD flow, repeat last step
     const msgType = msg.type||'text';
-    const isSticker = msgType==='sticker';
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
-    const isRandomText = txt && btnId==='' && state.flow!=='LEAD'; // not button, not lead
-    const isRandomMedia = isMedia || isSticker;
-    
-    if((isRandomText || isRandomMedia) && state.lang){
-      console.log(`RANDOM INPUT detected from ${uid} type=${msgType} txt=${txt} - Repeating last step`);
-      await repeatLastStep(uid, state, lang);
-      return;
-    }
-
+    const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
+    if((isRandomText || isMedia) && state.lang){ await repeatLastStep(uid, state, lang); return; }
     if(state.lang){ await sendWithDelay(interactiveButton(uid,L.mainMenu,L.services.slice(0,3))); }
-
   }catch(e){ console.log('webhook error',e.message,e.stack); }
 });
 
-// === NEW ENDPOINTS TO CLEAR OLD USERS - Fix for your question ===
-app.get('/clear/:phone', async(req,res)=>{
-  try{
-    let uid = req.params.phone.replace(/[^0-9]/g,'');
-    if(uid.length===10) uid='91'+uid;
-    if(redisReady && redis){
-      await redis.del(`state:${uid}`);
-      console.log(`Cleared Redis state:${uid}`);
-    }
-    memoryStore.delete(uid);
-    clearReminders(uid);
-    res.send(`✅ Cleared user ${uid} - Next message from this number will show Welcome + Language selection`);
-  }catch(e){ res.send(`Error: ${e.message}`); }
-});
+app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; if(redisReady && redis){ await redis.del(`state:${uid}`); } memoryStore.delete(uid); clearReminders(uid); res.send(`✅ Cleared user ${uid}`); }catch(e){ res.send(`Error: ${e.message}`); } });
+app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
+app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.get('/clear-all', async(req,res)=>{
-  try{
-    if(redisReady && redis){
-      const keys = await redis.keys('state:*');
-      if(keys.length>0) await redis.del(...keys);
-      console.log(`Cleared all ${keys.length} states`);
-      res.send(`✅ Cleared all ${keys.length} users - All numbers will now see Welcome`);
-    } else {
-      memoryStore.clear();
-      res.send(`✅ Cleared memoryStore - ${memoryStore.size} users`);
-    }
-  }catch(e){ res.send(`Error: ${e.message}`); }
-});
-
-app.get('/check/:phone', async(req,res)=>{
-  try{
-    let uid = req.params.phone.replace(/[^0-9]/g,'');
-    if(uid.length===10) uid='91'+uid;
-    const state = await getState(uid);
-    res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)});
-  }catch(e){ res.send(`Error: ${e.message}`); }
-});
-
-app.listen(PORT,'0.0.0.0',async()=>{
-  console.log(`V99.3 FINAL listening on ${PORT} - Phone ID ${PHONE_NUMBER_ID} - ADMIN:${HELP_ADMIN} MARKETING:${HELP_MARKETING}`);
-  await getSheets();
-});
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V101 FINAL listening on ${PORT}`); await getSheets(); });
