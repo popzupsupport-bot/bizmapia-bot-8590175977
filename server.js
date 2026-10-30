@@ -1,5 +1,5 @@
 
-// V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -245,10 +245,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last.includes('Corp Check') || last.includes('Submit Application')){ return await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; const readyText = getReadyText(lang, fee, franchiseName); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
-    const fee = state.fee||15; 
-    const payText = getPayText(lang, fee); 
-    await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
-    await delay(800);
+    // Reminder flow: Yes paid / Not paid / Call
     return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}])); 
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; const emiText = getEMIText(lang, fee); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
@@ -511,7 +508,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -625,9 +622,8 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, fee);
+      // Only Pay fee now button now - reminder will be Yes/No/Call later
       await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
-      await delay(800);
-      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
       await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -642,8 +638,6 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, fee); 
       await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
-      await delay(800);
-      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
       await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -656,8 +650,6 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15);
       await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
-      await delay(800);
-      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
       await saveToSheet('Franchise_NotPaid', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -688,4 +680,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V110 PAY NOW + REMINDER SEPARATED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
