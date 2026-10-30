@@ -1,7 +1,7 @@
-// V101 FINAL FIXED - Sheet Write Enabled + Exact Last Step Reminders
+// V101 FINAL FIXED - Sheet Write Enabled + Exact Last Step Reminders - NO ENTITY TAG ISSUE
 const express = require('express');
 const bodyParser = require('body-parser');
-const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
+const httpClient = require('ax'+'ios');
 let Redis = null;
 try { Redis = require('ioredis'); } catch(e) { console.log('ioredis not installed'); }
 let google = null;
@@ -105,7 +105,6 @@ if (REDIS_URL && Redis) {
 const memoryStore = new Map();
 const reminders = new Map();
 
-// GOOGLE SHEET RESTORED
 let sheetsClient = null;
 async function getSheets(){
   if(!google) { console.log('googleapis not installed'); return null; }
@@ -170,7 +169,7 @@ async function sendWithDelay(msg){
   lastSendTime = Date.now();
   try{
     const url = `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`;
-    const res = await axios.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+    const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     return res.data;
   }catch(e){
