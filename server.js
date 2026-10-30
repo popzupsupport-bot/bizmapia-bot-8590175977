@@ -1,5 +1,5 @@
 
-// V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -244,7 +244,13 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last==='Requirements'){ await sendWithDelay(textMessage(uid,L.reqText, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ return await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; const readyText = getReadyText(lang, fee, franchiseName); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
-  if(last.includes('Pay Rs5000') || last.includes('EMI Selected')){ const fee = state.fee||15; const payText = getPayText(lang, fee); return await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
+    if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
+    const fee = state.fee||15; 
+    const payText = getPayText(lang, fee); 
+    await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+    await delay(800);
+    return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}])); 
+  }
   if(last.includes('EMI Options')){ const fee = state.fee||15; const emiText = getEMIText(lang, fee); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid,L.leadAsk, phoneId)); }
   if(last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], phoneId)); }
@@ -505,7 +511,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -613,9 +619,51 @@ app.post('/webhook', async(req,res)=>{
       await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_CORPCHECK:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:24',lang,24*60*60*1000, incomingPhoneId); return; 
     }
-    if(btnId==='READY_15L'){ const fee = state.fee || 15; state.lastStep=`Pay Rs5000 - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const payText = getPayText(lang, fee); await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn},{id:'KNOW_EMI',title:L.emiBtn}], incomingPhoneId)); await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='READY_15L'){ 
+      const fee = state.fee || 15; 
+      state.lastStep=`Pay Rs5000 - ${fee}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const payText = getPayText(lang, fee);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      await delay(800);
+      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
+      await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000, incomingPhoneId);
+      return;
+    }
     if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], incomingPhoneId)); await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='EMI_10'||btnId==='EMI_20'){ const fee = state.fee || 15; state.lastStep='EMI Selected '+btnId+` - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const payText = getPayText(lang, fee); await sendWithDelay(interactiveButton(uid,payText,[{id:'PAY_DONE',title:L.payBtn}], incomingPhoneId)); await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMISEL:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='EMI_10'||btnId==='EMI_20'){ 
+      const fee = state.fee || 15; 
+      state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const payText = getPayText(lang, fee); 
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      await delay(800);
+      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
+      await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:OPP_EMISEL:24',lang,24*60*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='PAY_NOT_DONE'){ 
+      state.lastStep=`Not Paid - ${state.fee||15}L`; 
+      await setState(uid,state); 
+      clearReminders(uid); 
+      const payText = getPayText(lang, state.fee||15);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      await delay(800);
+      await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}]));
+      await saveToSheet('Franchise_NotPaid', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
+      return;
+    }
     if(btnId==='PAY_DONE'){ state.lastStep='Pay Done - Lead Start'; state.flow='LEAD'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.leadAsk, incomingPhoneId)); await saveToSheet('Franchise_PayDone', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Pay Done', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:LEAD:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:LEAD:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:LEAD:24',lang,24*60*60*1000, incomingPhoneId); return; }
 
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Franchise_Occupation', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
@@ -640,4 +688,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V109 PAY FEE NOW FIXED 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
