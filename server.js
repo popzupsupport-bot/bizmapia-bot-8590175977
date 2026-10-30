@@ -1,4 +1,4 @@
-// V101 FINAL - Sheet Write Enabled + Exact Last Step Reminders - Preserving EMI 600 Steps
+// V101 FINAL FIXED - Sheet Write Enabled + Exact Last Step Reminders
 const express = require('express');
 const bodyParser = require('body-parser');
 const 【entity-axios¦canonical_name=axios】 = require('【entity-axios¦canonical_name=axios】');
@@ -105,12 +105,12 @@ if (REDIS_URL && Redis) {
 const memoryStore = new Map();
 const reminders = new Map();
 
-// === GOOGLE SHEET RESTORED ===
+// GOOGLE SHEET RESTORED
 let sheetsClient = null;
 async function getSheets(){
   if(!google) { console.log('googleapis not installed'); return null; }
   const creds = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_CREDENTIALS_JSON;
-  if(!creds){ console.log('GOOGLE_CREDENTIALS missing'); return null; }
+  if(!creds){ console.log('GOOGLE_CREDENTIALS missing - sheet will only console.log'); return null; }
   try{
     if(sheetsClient) return sheetsClient;
     let credentials;
@@ -209,7 +209,7 @@ async function repeatLastStep(uid, state, lang){
   if(last.includes('EMI Options')){ const fee = state.fee||15; const emiText = getEMIText(lang, fee); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}])); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid,L.leadAsk)); }
   if(last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}])); }
-  if(last.includes('Date') || last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}])); }
+  if(last.includes('Date')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}])); }
   if(state.service){
     if(state.service==='SVC_RIDE') return await sendWithDelay(interactiveButton(uid, L.rideSelected, L.rideButtons));
     if(state.service==='SVC_BIZDIR') return await sendWithDelay(interactiveButton(uid, L.bizDirSelected, L.bizDirButtons));
@@ -222,7 +222,6 @@ async function repeatLastStep(uid, state, lang){
   await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5)));
 }
 
-// === REMINDER FIX V101 - Repeat exact last step + Sheet logging ===
 async function saveReminderToRedis(uid, type, lang, ms){
   try{ if(redisReady && redis){ const key = `reminder:${uid}:${type}`; const data = JSON.stringify({lang, due: Date.now()+ms, type, uid}); await redis.set(key, data, 'EX', Math.ceil(ms/1000)+86400); } }catch(e){ console.log('saveReminder error', e.message); }
 }
@@ -268,7 +267,6 @@ setInterval(async()=>{
     if(!redisReady || !redis) return;
     const keys = await redis.keys('reminder:*');
     if(!keys.length) return;
-    // only log if due found to reduce spam
     let dueCount = 0;
     for(let key of keys){
       const dataStr = await redis.get(key);
@@ -460,7 +458,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V101 listening - Phone ID ${PHONE_NUMBER_ID}`));
+app.get('/',(req,res)=>res.send(`V101 FIXED listening - Phone ID ${PHONE_NUMBER_ID}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -592,4 +590,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V101 FINAL listening on ${PORT}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V101 FIXED listening on ${PORT}`); await getSheets(); });
