@@ -1,5 +1,5 @@
 
-// V107 FIXED VIDEOS FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -369,6 +369,9 @@ const T={
     readyBtn:'Yes Ready - 15L',
     payReg:`Great you confirmed ready for 15L. Please pay Rs5000 as registration fee to lock your district. Link: ${LINKS_V92.razorpay} - Part of 15L`,
     payBtn:'I Have Paid Rs5000',
+    payFeeNow:'Pay fee now',
+    notPaid:'Not paid 5000',
+    payAfter:'After payment, please select:-',
     emiOpt:`EMI options available:\nEMI 10 Months\nEMI 20 Months\nPlease select any one from below:-`,
     emi10:'EMI 10 Months', emi20:'EMI 20 Months',
     leadAsk:`Great! Please type your full name, district and mobile number (e.g. Ajo, Thodupuzha, 9567742507)`,
@@ -426,6 +429,9 @@ const T={
     readyBtn:'हाँ तैयार - 15L',
     payReg:`बहुत बढ़िया आपने 15L के लिए तैयार होने की पुष्टि की। कृपया अपने जिले को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay}`,
     payBtn:'मैंने 5000 भुगतान किया',
+    payFeeNow:'अभी भुगतान करें',
+    notPaid:'भुगतान नहीं किया',
+    payAfter:'भुगतान के बाद, कृपया चुनें:-',
     emiOpt:`EMI विकल्प उपलब्ध हैं:\nEMI 10 महीने\nEMI 20 महीने`,
     emi10:'EMI 10 महीने', emi20:'EMI 20 महीने',
     leadAsk:`बहुत बढ़िया! कृपया अपना पूरा नाम, जिला और मोबाइल नंबर टाइप करें`,
@@ -483,6 +489,9 @@ const T={
     readyBtn:'അതെ തയ്യാർ - 15L',
     payReg:`നിങ്ങൾ 15L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ജില്ല ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay}`,
     payBtn:'ഞാൻ 5000 അടച്ചു',
+    payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
+    notPaid:'അടച്ചില്ല',
+    payAfter:'പണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-',
     emiOpt:`EMI ഓപ്ഷനുകൾ ലഭ്യമാണ്:\nEMI 10 മാസം\nEMI 20 മാസം`,
     emi10:'EMI 10 മാസം', emi20:'EMI 20 മാസം',
     leadAsk:`മികച്ചത്! ദയവായി നിങ്ങളുടെ പൂർണ്ണ നാമം, ജില്ല, മൊബൈൽ നമ്പർ ടൈപ്പ് ചെയ്യുക`,
@@ -496,7 +505,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V107 FIXED VIDEOS FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -631,4 +640,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V107 FIXED VIDEOS FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V108 PAY FEE NOW FINAL 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
