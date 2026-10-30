@@ -1,5 +1,5 @@
 
-// V104 FINAL SINGLE 95623 24130 - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V106 FINAL EN+ML VIDEOS 95623 24130 - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -25,9 +25,43 @@ const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.panditprog
 const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const WEBSITE = 'https://bizmapia.com/';
 const EARN_LINK = 'https://bizmapia.com/earn';
-const VIDEO_DISTRICT = 'https://bizmapia.com/video/district';
-const VIDEO_CORP = 'https://bizmapia.com/video/corporation';
-const VIDEO_CENTER = 'https://bizmapia.com/video/business-center';
+// VIDEO LINKS - ALL LANGUAGES
+// ENGLISH
+const VIDEO_EN_DISTRICT = 'https://youtu.be/_y2JeFHBnqg?si=QLXX8704ovUY_5jC';
+const VIDEO_EN_CORP = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
+const VIDEO_EN_MUNICIPAL = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
+const VIDEO_EN_CENTER = 'https://youtu.be/r0X77XfmF94?si=_8Fej-ncUiO9GRCn';
+
+// MALAYALAM
+const VIDEO_ML_DISTRICT = 'https://youtu.be/Fll3OY-hilU?si=O5VnmyCXTdlfhpsB';
+const VIDEO_ML_CORP = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
+const VIDEO_ML_MUNICIPAL = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
+const VIDEO_ML_CENTER = 'https://youtu.be/Ds0lBtTaI6c?si=oQWgGTrCYg-ODBzF';
+
+// HINDI - using English links as fallback (update if you have separate Hindi links)
+const VIDEO_HI_DISTRICT = VIDEO_EN_DISTRICT;
+const VIDEO_HI_CORP = VIDEO_EN_CORP;
+const VIDEO_HI_MUNICIPAL = VIDEO_EN_MUNICIPAL;
+const VIDEO_HI_CENTER = VIDEO_EN_CENTER;
+
+function getVideoUrl(sub, lang){
+  if(lang==='ml'){
+    if(sub==='OPP_DISTRICT') return VIDEO_ML_DISTRICT;
+    if(sub==='OPP_CORP') return VIDEO_ML_CORP;
+    if(sub==='OPP_CENTER') return VIDEO_ML_CENTER;
+  }
+  if(lang==='hi'){
+    if(sub==='OPP_DISTRICT') return VIDEO_HI_DISTRICT;
+    if(sub==='OPP_CORP') return VIDEO_HI_CORP;
+    if(sub==='OPP_CENTER') return VIDEO_HI_CENTER;
+  }
+  // en default
+  if(sub==='OPP_DISTRICT') return VIDEO_EN_DISTRICT;
+  if(sub==='OPP_CORP') return VIDEO_EN_CORP;
+  if(sub==='OPP_CENTER') return VIDEO_EN_CENTER;
+  return VIDEO_EN_DISTRICT;
+}
+
 
 const LINKS_V92 = {
   website: WEBSITE,
@@ -462,7 +496,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V104 FINAL SINGLE 95623 24130 - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V106 FINAL EN+ML VIDEOS 95623 24130 - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -597,4 +631,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V104 FINAL SINGLE 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V106 FINAL EN+ML VIDEOS 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
