@@ -1,4 +1,4 @@
-// V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
+// V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -18,10 +18,14 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 const PORT = process.env.PORT || 10000;
 
 const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share';
 const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
+const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 const EARN_LINK = 'https://bizmapia.com/earn';
 // VIDEO LINKS - ALL LANGUAGES
@@ -117,6 +121,42 @@ function getReadyText(lang, fee, franchiseName){
   else if(lang==='hi'){ return `आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं।`; }
   else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
+
+async function createRazorpayPaymentLink(uid, fee){
+  try{
+    if(!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET){
+      console.log('RAZORPAY keys missing, using static link');
+      return LINKS_V92.razorpay;
+    }
+    const cleanPhone = uid.replace(/[^0-9]/g,'').slice(-10);
+    const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+    const res = await httpClient.post('https://api.razorpay.com/v1/payment_links', {
+      amount: 5000*100, // Rs5000 in paise
+      currency: 'INR',
+      accept_partial: false,
+      description: `Bizmapia ${fee}L Registration - ${uid}`,
+      customer: { contact: '+91'+cleanPhone },
+      notes: { whatsapp: uid, fee: String(fee), bot: 'bizmapia-bot-8590175977' },
+      notify: { sms: false, email: false },
+      reminder_enable: true,
+      callback_url: WEBSITE,
+      callback_method: 'get'
+    }, { headers: { Authorization: `Basic ${auth}`, 'Content-Type':'application/json' } });
+    console.log(`RAZORPAY LINK CREATED for ${uid} - ${res.data.short_url}`);
+    return res.data.short_url;
+  }catch(e){
+    console.log('RAZORPAY LINK FAIL', e.response?.data || e.message);
+    return LINKS_V92.razorpay; // fallback
+  }
+}
+
+function verifyRazorpaySignature(body, signature, secret){
+  try{
+    const expected = crypto.createHmac('sha256', secret).update(JSON.stringify(body)).digest('hex');
+    return expected === signature;
+  }catch{ return false; }
+}
+
 function getPayText(lang, fee){
   if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക.`; }
   else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। यह ${fee}L का हिस्सा है, नीचे बटन पर क्लिक करके भुगतान करें।`; }
@@ -594,7 +634,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -708,8 +748,8 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, fee);
-      // Only Pay fee now button now - reminder will be Yes/No/Call later
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      const dynamicLink = await createRazorpayPaymentLink(uid, fee);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
       await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -723,7 +763,8 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, fee); 
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      const dynamicLink = await createRazorpayPaymentLink(uid, fee);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
       await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -735,14 +776,25 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}));
+      const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
       await saveToSheet('Franchise_NotPaid', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-    if(btnId==='PAY_DONE'){ state.lastStep='Pay Done - Lead Start'; state.flow='LEAD'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.leadAsk, incomingPhoneId)); await saveToSheet('Franchise_PayDone', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Pay Done', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:LEAD:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:LEAD:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:LEAD:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='PAY_DONE'){
+      // USER CLAIMS PAID - BUT NOT VERIFIED YET
+      state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
+
+ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
+      await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
+      await saveToSheet('Unverified_Payments', [nowIso, uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid,'install:VERIFY:1',lang,5*60*1000, incomingPhoneId);
+      return;
+    }
 
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Franchise_Occupation', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.tenderLink, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Franchise_Date', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
@@ -770,8 +822,64 @@ app.post('/webhook', async(req,res)=>{
   }catch(e){ console.log('webhook error',e.message,e.stack); }
 });
 
+
+app.post('/razorpay-webhook', async(req,res)=>{
+  try{
+    const signature = req.headers['x-razorpay-signature'] || '';
+    if(RAZORPAY_WEBHOOK_SECRET && signature){
+      const isValid = verifyRazorpaySignature(req.body, signature, RAZORPAY_WEBHOOK_SECRET);
+      if(!isValid){ console.log('RAZORPAY SIGNATURE FAIL'); return res.status(400).send('invalid signature'); }
+    }
+    const event = req.body.event;
+    const payment = req.body.payload?.payment?.entity;
+    if(event==='payment.captured' && payment){
+      const notes = payment.notes || {};
+      const uid = notes.whatsapp || payment.contact?.replace(/\+91/,'') || null;
+      const fee = notes.fee || '15';
+      const paymentId = payment.id;
+      const amount = payment.amount/100;
+      console.log(`RAZORPAY VERIFIED PAYMENT ${paymentId} for ${uid} amount ${amount}`);
+      if(uid){
+        let cleanUid = uid.replace(/[^0-9]/g,'');
+        if(cleanUid.length===10) cleanUid='91'+cleanUid;
+        if(cleanUid.length<10){ // try find by contact
+          cleanUid = payment.contact?.replace(/[^0-9]/g,'') || uid;
+          if(cleanUid.length===10) cleanUid='91'+cleanUid;
+        }
+        const state = await getState(cleanUid);
+        const lang = state?.lang || 'en';
+        const phoneId = state?.phoneId || PHONE_NUMBER_ID;
+        const L = T[lang]||T.en;
+        await setState(cleanUid,{...state, flow:'LEAD', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee), phoneId});
+        clearReminders(cleanUid);
+        await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:`, phoneId));
+        await delay(300);
+        await sendWithDelay(textMessage(cleanUid, L.leadAsk, phoneId));
+        await saveToSheet('Franchise_PayDone_VERIFIED', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
+        await saveToSheet('OPP_Center', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
+      }
+    }
+    res.sendStatus(200);
+  }catch(e){ console.log('razorpay-webhook error', e.message, e.stack); res.sendStatus(200); }
+});
+
+app.get('/verify/:phone', async(req,res)=>{
+  try{
+    let uid = req.params.phone.replace(/[^0-9]/g,'');
+    if(uid.length===10) uid='91'+uid;
+    const state = await getState(uid);
+    const lang = state?.lang || 'en';
+    const phoneId = state?.phoneId || PHONE_NUMBER_ID;
+    const L = T[lang]||T.en;
+    await setState(uid,{...state, flow:'LEAD', lastStep:'Manually Verified', verified:true, phoneId});
+    await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!\n\n`+L.leadAsk, phoneId));
+    res.send(`✅ Manually verified ${uid}`);
+  }catch(e){ res.send(`Error ${e.message}`); }
+});
+
+
 app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; if(redisReady && redis){ await redis.del(`state:${uid}`); } memoryStore.delete(uid); clearReminders(uid); res.send(`✅ Cleared user ${uid}`); }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
