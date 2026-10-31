@@ -784,15 +784,40 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-    if(btnId==='PAY_DONE'){
-      // USER CLAIMS PAID - BUT NOT VERIFIED YET
+        if(btnId==='PAY_DONE'){
+      // USER CLAIMS PAID - BUT NOT VERIFIED YET - PURE AUTO
       state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
+      const verifyMsg = lang==='ml' ? `⏳ പേയ്മെന്റ് പരിശോധിക്കുന്നു...
 
-ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
+ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി സ്ഥിരീകരിക്കുന്നു. ✅ ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ അടുത്ത സ്റ്റെപ്പ് ഓട്ടോമാറ്റിക്കായി വരും.` : lang==='hi' ? `⏳ भुगतान सत्यापित हो रहा है...
+
+हम Razorpay से ऑटो-वेरिफाई कर रहे हैं। ✅ सही होने पर 2 मिनट में अगला स्टेप ऑटोमैटिक आएगा।` : `⏳ Verifying your payment...
+
+We are auto-checking with Razorpay. ✅ If genuine, next step will come automatically in 2 mins.`;
       await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
       await saveToSheet('Unverified_Payments', [nowIso, uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:VERIFY:1',lang,5*60*1000, incomingPhoneId);
+      // Auto-fail after 10 mins if still not verified
+      setTimeout(async()=>{
+        try{
+          const cur = await getState(uid);
+          if(cur && cur.lastStep && cur.lastStep.includes('Verifying') && !cur.verified){
+            const failMsg = cur.lang==='ml' ? `❌ പേയ്മെന്റ് കണ്ടെത്തിയില്ല.
+
+ദയവായി യഥാർത്ഥ പേയ്മെന്റ് പൂർത്തിയാക്കി വീണ്ടും ശ്രമിക്കുക.` : cur.lang==='hi' ? `❌ भुगतान नहीं मिला।
+
+कृपया वास्तविक भुगतान पूरा करें और फिर से प्रयास करें।` : `❌ Payment not found in Razorpay.
+
+Please complete real payment to unlock your area.`;
+            const dynamicLink2 = await createRazorpayPaymentLink(uid, cur.fee||15);
+            const L2 = T[cur.lang]||T.en;
+            await sendWithDelay(textMessage(uid, failMsg, cur.phoneId||incomingPhoneId));
+            await delay(300);
+            await sendWithDelay(singleCta(uid, getPayText(cur.lang, cur.fee||15), {type:'url', title:L2.payFeeNow, url:dynamicLink2}, cur.phoneId||incomingPhoneId));
+            await saveToSheet('Payment_Failed', [new Date().toISOString(), uid, cur.lang||'en', `FAILED ${cur.fee||15}L`, 'No payment found', 'FAILED', HELP_MARKETING, 'Payment not found', ''], true);
+          }
+        }catch(e){ console.log('verify fail check error', e.message); }
+      }, 10*60*1000);
       return;
     }
 
