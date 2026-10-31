@@ -686,6 +686,15 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi){
+      if(state.lang && state.lastStep && state.lastStep!=='Completed'){
+        // User typed Hi but is already in a flow - remind current step and repeat
+        const L=T[lang]||T.en;
+        const reminder = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ ഈ ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി ഈ ഘട്ടം പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी इस चरण में हैं: ${state.lastStep}\nकृपया इस चरण को पूरा करें।` : `🔔 You are currently in this step: ${state.lastStep}\nPlease finalize this step.`;
+        await sendWithDelay(textMessage(uid, reminder, incomingPhoneId));
+        await delay(400);
+        await repeatLastStep(uid, state, lang, incomingPhoneId);
+        return;
+      }
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
@@ -698,6 +707,15 @@ app.post('/webhook', async(req,res)=>{
     }
 
     const L=T[lang]||T.en;
+
+    // FIX: Don't reset on Hai/Hi if user is in Pay/Verifying stage - repeat pay instead
+    if(isHi && state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('Verifying') || state.lastStep.includes('CLAIMED') || state.lastStep.includes('Not Paid') || state.lastStep.includes('EMI Selected'))){
+      // Treat Hai as repeat pay, not reset
+      const payText = getPayText(lang, state.fee||15);
+      const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
+      return;
+    }
 
     if(btnId.startsWith('SVC_')){
       state.service=btnId; state.lastStep=btnId; state.phoneId=incomingPhoneId; await setState(uid,state);
@@ -834,12 +852,20 @@ Please complete real payment to unlock your area.`;
     const msgType = msg.type||'text';
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
-    if((isRandomText || isMedia) && state.lang){
-      if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
+    if((isRandomText || isMedia) && state.lang && state.lastStep && state.lastStep!=='Completed'){
+      // ANY random letters, special chars, sentences, emoji -> remind current step
+      if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('Verifying') || state.lastStep.includes('CLAIMED') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
+        const reminderPay = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ പേയ്മെന്റ് ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി പേയ്മെന്റ് പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी भुगतान चरण में हैं: ${state.lastStep}\nकृपया भुगतान पूरा करें।` : `🔔 You are in payment step: ${state.lastStep}\nPlease complete this payment step.`;
+        await sendWithDelay(textMessage(uid, reminderPay, incomingPhoneId));
+        await delay(300);
         const payText = getPayText(lang, state.fee||15);
-        await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}, incomingPhoneId));
+        const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
+        await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
         return;
       }
+      const reminderAny = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ ഈ ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി ഈ ഘട്ടം പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी इस चरण में हैं: ${state.lastStep}\nकृपया इस चरण को पूरा करें।` : `🔔 You are currently in this step: ${state.lastStep}\nPlease finalize this step to continue.`;
+      await sendWithDelay(textMessage(uid, reminderAny, incomingPhoneId));
+      await delay(400);
       await repeatLastStep(uid, state, lang, incomingPhoneId); 
       return; 
     }
