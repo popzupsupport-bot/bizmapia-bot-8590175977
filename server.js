@@ -369,11 +369,23 @@ function interactiveButton(to,body,buttons, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
 }
 function ctaButtons(to,body,ctaList, phoneId){
-  const buttons = ctaList.slice(0,3).map(c=>{
-    if(c.type==='url'){ return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url }; }
-    else { return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone }; }
-  });
-  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:body.substring(0,1024)}, action:{buttons: buttons} }, _phoneId: phoneId };
+  const firstUrl = ctaList.find(c=>c.type==='url');
+  const phoneObj = ctaList.find(c=>c.type==='phone');
+  let enhancedBody = body;
+  if(phoneObj){ enhancedBody += "\n\n📞 Call: " + phoneObj.phone.replace('+91',''); }
+  if(ctaList.length>1){
+    for(let c of ctaList){
+      if(c!==firstUrl){
+        if(c.type==='url'){ enhancedBody += "\n🔗 " + c.title + ": " + c.url; }
+      }
+    }
+  }
+  enhancedBody = enhancedBody.substring(0,1024);
+  if(firstUrl){
+    return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:enhancedBody}, action:{ name:'cta_url', parameters:{ display_text: firstUrl.title.substring(0,20), url: firstUrl.url } } }, _phoneId: phoneId };
+  } else {
+    return { messaging_product:'whatsapp', to, type:'text', text:{body:enhancedBody}, _phoneId: phoneId };
+  }
 }
 function singleCta(to,body,btn, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
@@ -902,7 +914,7 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, fee);
       const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -919,7 +931,7 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, fee); 
       const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -933,7 +945,7 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
       await saveToSheet('Payments', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
