@@ -1,5 +1,4 @@
-
-// V116 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write
+// V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -167,15 +166,42 @@ async function saveToSheet(tab, row, isNew){
       console.log(`SHEET ${tab}`, row);
       return;
     }
+    const cleanTab = String(tab).trim();
+    const range = `'${cleanTab}'!A:Z`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${tab}!A:Z`,
+      range: range,
       valueInputOption: 'USER_ENTERED',
       insertDataOption: 'INSERT_ROWS',
       requestBody: { values: [row] }
     });
-    console.log(`SHEET SAVED ${tab} -> ${row[1]||''} : ${row[3]||''}`);
+    console.log(`SHEET SAVED ${cleanTab} -> ${row[1]||''} : ${row[3]||''}`);
   }catch(e){
+    const msg = e.message || '';
+    if(msg.includes('Unable to parse range') || msg.includes('parsing')){
+      console.log(`SHEET ${tab} missing, trying to create tab...`);
+      try{
+        const sheets = await getSheets();
+        if(sheets){
+          await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: SHEET_ID,
+            requestBody: { requests: [{ addSheet: { properties: { title: String(tab).trim() } } }] }
+          });
+          console.log(`SHEET CREATED ${tab}, retrying save...`);
+          await sheets.spreadsheets.values.append({
+            spreadsheetId: SHEET_ID,
+            range: `'${String(tab).trim()}'!A:Z`,
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            requestBody: { values: [row] }
+          });
+          console.log(`SHEET SAVED AFTER CREATE ${tab}`);
+          return;
+        }
+      }catch(createErr){
+        console.log(`SHEET CREATE FAIL ${tab}`, createErr.message);
+      }
+    }
     console.log(`SHEET FAIL ${tab}`, e.message, row);
   }
 }
@@ -293,15 +319,15 @@ function getEscalatedPayText(lang, fee, level){
   // level: 1=1h, 12=12h, 24=24h
   if(lang==='ml'){
     if(level===1) return `പണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
-    if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ചെയ്തിട്ടില്ല - പണമടച്ചോ?\n\nപണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
+    if(level===12) return `⚠ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ചെയ്തിട്ടില്ല - പണമടച്ചോ?\n\nപണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
     if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ - നിങ്ങളുടെ ${fee}L ഏരിയ മറ്റൊരാൾക്ക് പോകുന്നതിന് മുൻപ് പണമടയ്ക്കൂ!\n\nപണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
   } else if(lang==='hi'){
     if(level===1) return `भुगतान के बाद, कृपया चुनें:-`;
-    if(level===12) return `⚠️ आपका ${fee}L एरिया अभी भी लॉक नहीं है - क्या आपने भुगतान किया?\n\nभुगतान के बाद, कृपया चुनें:-`;
+    if(level===12) return `⚠ आपका ${fee}L एरिया अभी भी लॉक नहीं है - क्या आपने भुगतान किया?\n\nभुगतान के बाद, कृपया चुनें:-`;
     if(level===24) return `⏰ अंतिम रिमाइंडर - आपका ${fee}L एरिया किसी और को जाने से पहले भुगतान करें!\n\nभुगतान के बाद, कृपया चुनें:-`;
   } else {
     if(level===1) return `After payment, please select:-`;
-    if(level===12) return `⚠️ Your ${fee}L area is still not locked - have you paid?\n\nAfter payment, please select:-`;
+    if(level===12) return `⚠ Your ${fee}L area is still not locked - have you paid?\n\nAfter payment, please select:-`;
     if(level===24) return `⏰ Last reminder - Pay before your ${fee}L area goes to someone else!\n\nAfter payment, please select:-`;
   }
   return `After payment, please select:-`;
@@ -310,9 +336,9 @@ function getEscalatedPayText(lang, fee, level){
 function getEscalatedGeneralText(lang, originalText, level, stepName){
   if(level===1) return originalText;
   if(level===12){
-    if(lang==='ml') return `⚠️ ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\nനിങ്ങളുടെ സ്ലോട്ട് ഇപ്പോഴും ഓപ്പൺ ആണ്!`;
-    if(lang==='hi') return `⚠️ रिमाइंडर: ${originalText}\n\nआपका स्लॉट अभी भी खुला है!`;
-    return `⚠️ Reminder: ${originalText}\n\nYour slot is still open!`;
+    if(lang==='ml') return `⚠ ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\nനിങ്ങളുടെ സ്ലോട്ട് ഇപ്പോഴും ഓപ്പൺ ആണ്!`;
+    if(lang==='hi') return `⚠ रिमाइंडर: ${originalText}\n\nआपका स्लॉट अभी भी खुला है!`;
+    return `⚠ Reminder: ${originalText}\n\nYour slot is still open!`;
   }
   if(level===24){
     if(lang==='ml') return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\nഇത് അവസാന അവസരമാണ്!`;
@@ -341,7 +367,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       if(type.startsWith('noLang')||type.startsWith('noService')){
         const L = T[actualLang]||T.en;
         let welcomeText = L.welcome;
-        if(level===12) welcomeText = (actualLang==='ml' ? `⚠️ ` : actualLang==='hi' ? `⚠️ ` : `⚠️ `) + welcomeText + (actualLang==='ml' ? `\n\nനിങ്ങൾ ഇതുവരെ ഭാഷ തിരഞ്ഞെടുത്തില്ല!` : actualLang==='hi' ? `\n\nआपने अभी तक भाषा नहीं चुनी!` : `\n\nYou haven't selected language yet!`);
+        if(level===12) welcomeText = (actualLang==='ml' ? `⚠ ` : actualLang==='hi' ? `⚠ ` : `⚠ `) + welcomeText + (actualLang==='ml' ? `\n\nനിങ്ങൾ ഇതുവരെ ഭാഷ തിരഞ്ഞെടുത്തില്ല!` : actualLang==='hi' ? `\n\nआपने अभी तक भाषा नहीं चुनी!` : `\n\nYou haven't selected language yet!`);
         if(level===24) welcomeText = `⏰ ` + L.welcome + (actualLang==='ml' ? `\n\nഅവസാന ഓർമ്മപ്പെടുത്തൽ!` : actualLang==='hi' ? `\n\nअंतिम रिमाइंडर!` : `\n\nLast reminder!`);
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else {
@@ -521,7 +547,7 @@ const T={
     haveInstalled24:`നിങ്ങൾ ഞങ്ങളുടെ ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്തോ?\n\nനിങ്ങളുടെ അവസരം അവസാനിക്കാൻ പോകുന്നു, ഇവിടെ റൈഡുകളിൽ ഓഫറുകൾ സജീവമാക്കാം`,
     yesActivate:'അതെ, സജീവമാക്കുക', noLater:'അല്ല, പിന്നീട് ചെയ്യാം',
     activated:`നന്നായി, ഞങ്ങൾ നിങ്ങളുടെ ആപ്പ് ലോഗിനിൽ നിങ്ങളുടെ ഓഫർ സജീവമാക്കുന്നു, ഇപ്പോൾ ഞങ്ങളുടെ ആപ്പിൽ ലോഗിൻ ചെയ്ത് ആദ്യ യാത്ര പൂർത്തിയാക്കി നിങ്ങളുടെ ഓഫറുകൾ പരിശോധിക്കുക`,
-    helpAdmin:`സഹായം ${HELP_ADMIN}`, helpMarketing:`സഹायം ${HELP_MARKETING}`,
+    helpAdmin:`സഹായം ${HELP_ADMIN}`, helpMarketing:`സഹായം ${HELP_MARKETING}`,
     bizDirSelected:`നിങ്ങൾ "ബിസിനസ് ഡയറക്ടറി" തിരഞ്ഞെടുത്തു, നന്നായി\nനിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് ഇന്ത്യ മുഴുവൻ ഉപഭോക്താക്കളെ നേടൂ. 10 ലക്ഷത്തിലധികം പ്രാദേശിക ബിസിനസ്സുകൾ ഇതിനകം ലിസ്റ്റ് ചെയ്തിട്ടുണ്ട്.\nതാഴെ നിന്ന് ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
     bizDirButtons:[{id:'BIZ_REGISTER',title:'ബിസിനസ് രജിസ്റ്റർ ചെയ്യുക'},{id:'BIZ_ADS',title:'പരസ്യം തുടങ്ങുക'}],
     bizRegister:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് കൂടുതൽ ഉപഭോക്താക്കളെയും ലീഡുകളെയും ബുക്കിംഗുകളെയും നേടാൻ തുടങ്ങൂ.\n\nതാഴെ വെബ്സൈറ്റിൽ ക്ലിക്ക് ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
@@ -568,7 +594,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V116 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -748,4 +774,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V116 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V117 FULL ESCALATING ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
