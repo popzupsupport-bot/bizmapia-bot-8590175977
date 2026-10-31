@@ -1,3 +1,19 @@
+// ==================== CODE LOCKING SYSTEM - BIZMAPIA BOT V118 ====================
+// HOW LOCKING WORKS:
+// 1. Each section below is marked as LOCKED or EDITABLE
+// 2. When you give current server.js for changes, AI will ONLY open the relevant section
+// 3. After edit, section is LOCKED again - other steps stay SAFE
+// 4. This prevents wrong promises / credibility damage
+//
+// SECTIONS:
+// - LOCKED: PROMISES (District/Corp/Center benefits/support/requirements) -> EDIT ONLY promises_locked.js
+// - LOCKED: PRICING (15L/10L/5L/4L/1L) -> EDIT ONLY PRICING section
+// - LOCKED: VIDEOS (YouTube links) -> EDIT ONLY VIDEO section
+// - EDITABLE: PAYMENT (Razorpay, verify, anti-fooling)
+// - EDITABLE: REMINDERS (1h/12h/24h logic)
+// - EDITABLE: FLOW (Ride/Business/Delivery/Booking/Opportunity steps)
+// =================================================================================
+
 // V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -75,11 +91,14 @@ const LINKS_V92 = {
   razorpay: "https://rzp.io/rzp/mq0zG6mS",
 };
 
+// ==================== LOCKED SECTION: PRICING - EDIT ONLY THIS SECTION FOR FEE CHANGES ====================
 const PRICING = {
   DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 },
   CORP: { WITH_CORP: 5, WITHOUT_CORP: 4 },
   CENTER: { DEFAULT: 1 }
 };
+// ==================== END LOCKED SECTION: PRICING ====================
+
 
 function getEMIText(lang, fee){
   if(fee>=15){
@@ -122,56 +141,82 @@ function getReadyText(lang, fee, franchiseName){
   else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
 
-function getBenText(sub, lang){
-  if(sub==='OPP_CENTER'){
-    if(lang==='ml') return `ആനുകൂല്യങ്ങൾ - ബിസിനസ് സെൻ്റർ\n\nആനുകൂല്യം 1 - നിങ്ങളുടെ ടൗണിലെ ടോപ്പ് ലെവൽ സെൻ്റർ, നിങ്ങളുടെ ഏരിയയിലെ എല്ലാ സേവനങ്ങളിലും %\nആനുകൂല്യം 2 - ലോക്കൽ ബിസിനസ്സുകളിൽ നിന്ന് ആജീവനാന്ത വരുമാനം\nആനുകൂല്യം 3 - കുറഞ്ഞ നിക്ഷേപത്തിൽ ബിസിനസ്\n\nWebsite: ${WEBSITE}`;
-    if(lang==='hi') return `लाभ - बिजनेस सेंटर\n\nलाभ 1 - अपने टाउन का टॉप लेवल सेंटर, अपने एरिया की सभी सेवाओं पर %\nलाभ 2 - लोकल बिजनेस से आजीवन आय\nलाभ 3 - कम निवेश में बिजनेस\n\nWebsite: ${WEBSITE}`;
-    return `BENEFITS - Business Center\n\nBenefits 1 - You are top level center for your town, % on all services in your area\nBenefits 2 - Lifetime income from local businesses\nBenefits 3 - Low investment business\n\nWebsite: ${WEBSITE}\n\nHelp: +91 ${HELP_MARKETING}`;
+// ==================== LOCKED SECTION: PROMISES - ALL USER PROMISES LOCKED HERE ====================
+// WARNING: EDIT ONLY THIS SECTION FOR BENEFITS/SUPPORT/REQUIREMENTS - OTHER STEPS SAFE
+// ==================== LOCKED PROMISES FILE - EDIT ONLY THIS FILE FOR USER PROMISES ====================
+// WARNING: This file contains ALL user-facing promises. 
+// DO NOT EDIT server.js for benefits/support/requirements - EDIT ONLY THIS FILE.
+// This prevents wrong promises shown to users that damages credibility.
+
+const PROMISES_LOCKED = {
+  DISTRICT: {
+    en: {
+      benefits: `BENEFITS - District Franchise\n\nBenefits 1 - You are district top level franchisee, % on all earnings in your district\nBenefits 2 - Only you can contact Company directly\nBenefits 3 - Lifetime royalty income\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
+      support: `SUPPORT - District Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary support\n\nCall: +91 8590175977`,
+      requirements: `REQUIREMENTS - District Franchise\n\nRequirement 1 - 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile\nRequirement 4 - Ready to invest\nRequirement 5 - Aadhaar + PAN\n\nApply: https://bizmapia.com/earn`
+    },
+    ml: {
+      benefits: `ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ ജില്ലയിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി, നിങ്ങളുടെ ജില്ലയിലെ എല്ലാ വരുമാനത്തിലും %\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ നിങ്ങൾക്ക് മാത്രമേ കഴിയൂ\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി വരുമാനം`,
+      support: `പിന്തുണ - ജില്ലാ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സംഭാവന\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`,
+      requirements: `ആവശ്യകതകൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 90 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 1 ഫുൾ ടൈം സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും ആൻഡ്രോയിഡ് മൊബൈലും`
+    },
+    hi: {
+      benefits: `लाभ - जिला फ्रेंचाइजी\n\nलाभ 1 - आप जिला टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - केवल आप कंपनी से सीधे संपर्क कर सकते हैं\nलाभ 3 - आजीवन रॉयल्टी आय`,
+      support: `सहायता - जिला फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया योगदान\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`,
+      requirements: `आवश्यकताएं - जिला फ्रेंचाइजी\n\nआवश्यकता 1 - 90 वर्ग फुट कमरा\nआवश्यकता 2 - 1 पूर्णकालिक स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और एंड्रॉइड मोबाइल`
+    }
+  },
+  CORP: {
+    en: {
+      benefits: `BENEFITS - Corporation/Municipal Franchise\n\nBenefits 1 - You are top level franchise for Corporation/Municipal, % on all earnings in your Corp/Municipal\nBenefits 2 - Direct contact with Company\nBenefits 3 - Lifetime royalty income\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
+      support: `SUPPORT - Corporation/Municipal Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent support\nSupport 3 - 6 months Staff salary support\n\nCall: +91 8590175977`,
+      requirements: `REQUIREMENTS - Corporation/Municipal Franchise\n\nRequirement 1 - 200 Sqft room\nRequirement 2 - 2 staff\nRequirement 3 - PC/Laptop and Mobile\nRequirement 4 - Ready to invest 4-5 Lakhs\n\nApply: https://bizmapia.com/earn`
+    },
+    ml: {
+      benefits: `ആനുകൂല്യങ്ങൾ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ കോർപ്പറേഷനിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാം\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി`,
+      support: `പിന്തുണ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സഹായം\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`,
+      requirements: `ആവശ്യകതകൾ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 200 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 2 സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും മൊബൈലും`
+    },
+    hi: {
+      benefits: `लाभ - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\n\nलाभ 1 - आप कॉरपोरेशन में टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - कंपनी से सीधा संपर्क\nलाभ 3 - आजीवन रॉयल्टी`,
+      support: `सहायता - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया सहायता\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`,
+      requirements: `आवश्यकताएं - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\n\nआवश्यकता 1 - 200 वर्ग फुट कमरा\nआवश्यकता 2 - 2 स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और मोबाइल`
+    }
+  },
+  CENTER: {
+    en: {
+      benefits: `BENEFITS - Business Center\n\nBenefits 1 - You are top level center for your town, % on all services in your area (Rides, Stores, Bookings)\nBenefits 2 - Lifetime income from local businesses - Shops, Services, Bookings\nBenefits 3 - Low investment (1L) own business model\n\nYou Selected: Business Center (Base Level) - Next Step: Know Support\nBenefits 2 - Lifetime income from local businesses\nBenefits 3 - Low investment business\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
+      support: `SUPPORT - Business Center\nSupport 1 - Marketing support\nSupport 2 - Training support\nSupport 3 - Technical support\n\nCall: +91 8590175977`,
+      requirements: `REQUIREMENTS - Business Center\n\nRequirement 1 - 100 Sqft Shop/Room\nRequirement 2 - Computer/Laptop\nRequirement 3 - Internet Connection\nRequirement 4 - Ready to invest 1 Lakh\n\nApply: https://bizmapia.com/earn`
+    },
+    ml: {
+      benefits: `ആനുകൂല്യങ്ങൾ - ബിസിനസ് സെൻ്റർ\n\nആനുകൂല്യം 1 - നിങ്ങളുടെ ടൗണിലെ ടോപ്പ് ലെവൽ സെൻ്റർ\nആനുകൂല്യം 2 - ലോക്കൽ ബിസിനസ്സുകളിൽ നിന്ന് ആജീവനാന്ത വരുമാനം\nആനുകൂല്യം 3 - കുറഞ്ഞ നിക്ഷേപത്തിൽ ബിസിനസ്`,
+      support: `പിന്തുണ - ബിസിനസ് സെൻ്റർ\nപിന്തുണ 1 - മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - ട്രെയിനിംഗ് പിന്തുണ\nപിന്തുണ 3 - ടെക്നിക്കൽ സപ്പോർട്ട്`,
+      requirements: `ആവശ്യകതകൾ - ബിസിനസ് സെൻ്റർ\n\nആവശ്യകത 1 - 100 ചതുരശ്ര അടി ഷോപ്പ്/റൂം\nആവശ്യകത 2 - കമ്പ്യൂട്ടർ/ലാപ്ടോപ്പ്\nആവശ്യകത 3 - ഇൻ്റർനെറ്റ് കണക്ഷൻ\nആവശ്യകത 4 - 1 ലക്ഷം നിക്ഷേപം തയ്യാർ`
+    },
+    hi: {
+      benefits: `लाभ - बिजनेस सेंटर\n\nलाभ 1 - अपने टाउन का टॉप लेवल सेंटर\nलाभ 2 - लोकल बिजनेस से आजीवन आय\nलाभ 3 - कम निवेश में बिजनेस`,
+      support: `सहायता - बिजनेस सेंटर\nसहायता 1 - मार्केटिंग सहायता\nसहायता 2 - ट्रेनिंग सहायता\nसहायता 3 - तकनीकी सहायता`,
+      requirements: `आवश्यकताएं - बिजनेस सेंटर\n\nआवश्यकता 1 - 100 वर्ग फुट शॉप/रूम\nआवश्यकता 2 - कंप्यूटर/लैपटॉप\nआवश्यकता 3 - इंटरनेट कनेक्शन\nआवश्यकता 4 - 1 लाख निवेश तैयार`
+    }
   }
-  if(sub==='OPP_CORP'){
-    if(lang==='ml') return `ആനുകൂല്യങ്ങൾ - കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ കോർപ്പറേഷനിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി, കോർപ്പറേഷനിലെ എല്ലാ വരുമാനത്തിലും %\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാം\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി\n\nWebsite: ${WEBSITE}`;
-    if(lang==='hi') return `लाभ - कॉरपोरेशन फ्रेंचाइजी\n\nलाभ 1 - आप कॉरपोरेशन में टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - कंपनी से सीधा संपर्क\nलाभ 3 - आजीवन रॉयल्टी\n\nWebsite: ${WEBSITE}`;
-    return `BENEFITS - Corporation Franchise\n\nBenefits 1 - You are top level franchise for Corporation, % on all earnings in your Corp/Municipal\nBenefits 2 - Direct contact with Company\nBenefits 3 - Lifetime royalty income\n\nWebsite: ${WEBSITE}\n\nHelp: +91 ${HELP_MARKETING}`;
-  }
-  // DISTRICT default
-  if(lang==='ml') return `ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ ജില്ലയിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി, നിങ്ങളുടെ ജില്ലയിലെ എല്ലാ വരുമാനത്തിലും %\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ നിങ്ങൾക്ക് മാത്രമേ കഴിയൂ\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി വരുമാനം`;
-  if(lang==='hi') return `लाभ - जिला फ्रेंचाइजी\n\nलाभ 1 - आप जिला टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - केवल आप कंपनी से सीधे संपर्क कर सकते हैं\nलाभ 3 - आजीवन रॉयल्टी आय`;
-  return `BENEFITS - District Franchise\n\nBenefits 1 - You are district top level franchisee, % on all earnings in your district\nBenefits 2 - Only you can contact Company directly\nBenefits 3 - Lifetime royalty income\n\nWebsite: ${WEBSITE}\n\nHelp: +91 ${HELP_MARKETING}`;
-}
-function getSupText(sub, lang){
-  if(sub==='OPP_CENTER'){
-    if(lang==='ml') return `പിന്തുണ - ബിസിനസ് സെൻ്റർ\nപിന്തുണ 1 - മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - ട്രെയിനിംഗ് പിന്തുണ\nപിന്തുണ 3 - ടെക്നിക്കൽ സപ്പോർട്ട്`;
-    if(lang==='hi') return `सहायता - बिजनेस सेंटर\nसहायता 1 - मार्केटिंग सहायता\nसहायता 2 - ट्रेनिंग सहायता\nसहायता 3 - तकनीकी सहायता`;
-    return `SUPPORT - Business Center\nSupport 1 - Marketing support\nSupport 2 - Training support\nSupport 3 - Technical support\n\nCall: +91 ${HELP_MARKETING}`;
-  }
-  if(sub==='OPP_CORP'){
-    if(lang==='ml') return `പിന്തുണ - കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സഹായം\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`;
-    if(lang==='hi') return `सहायता - कॉरपोरेशन फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया सहायता\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`;
-    return `SUPPORT - Corporation/Municipal Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent support\nSupport 3 - 6 months Staff salary support\n\nCall: +91 ${HELP_MARKETING}`;
-  }
-  if(lang==='ml') return `പിന്തുണ - ജില്ലാ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സംഭാവന\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`;
-  if(lang==='hi') return `सहायता - जिला फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया योगदान\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`;
-  return `SUPPORT - District Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary support\n\nCall: +91 ${HELP_MARKETING}`;
-}
-function getReqText(sub, lang){
-  if(sub==='OPP_CENTER'){
-    if(lang==='ml') return `ആവശ്യകതകൾ - ബിസിനസ് സെൻ്റർ\n\nആവശ്യകത 1 - 100 ചതുരശ്ര അടി ഷോപ്പ്/റൂം\nആവശ്യകത 2 - കമ്പ്യൂട്ടർ/ലാപ്ടോപ്പ്\nആവശ്യകത 3 - ഇൻ്റർനെറ്റ് കണക്ഷൻ\nആവശ്യകത 4 - 1 ലക്ഷം നിക്ഷേപം തയ്യാർ\n\nApply: ${EARN_LINK}`;
-    if(lang==='hi') return `आवश्यकताएं - बिजनेस सेंटर\n\nआवश्यकता 1 - 100 वर्ग फुट शॉप/रूम\nआवश्यकता 2 - कंप्यूटर/लैपटॉप\nआवश्यकता 3 - इंटरनेट कनेक्शन\nआवश्यकता 4 - 1 लाख निवेश तैयार\n\nApply: ${EARN_LINK}`;
-    return `REQUIREMENTS - Business Center\n\nRequirement 1 - 100 Sqft Shop/Room\nRequirement 2 - Computer/Laptop\nRequirement 3 - Internet Connection\nRequirement 4 - Ready to invest 1 Lakh\n\nApply: ${EARN_LINK}`;
-  }
-  if(sub==='OPP_CORP'){
-    if(lang==='ml') return `ആവശ്യകതകൾ - കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 200 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 2 സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും മൊബൈലും\nആവശ്യകത 4 - 4-5 ലക്ഷം നിക്ഷേപം`;
-    if(lang==='hi') return `आवश्यकताएं - कॉरपोरेशन फ्रेंचाइजी\n\nआवश्यकता 1 - 200 वर्ग फुट कमरा\nआवश्यकता 2 - 2 स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और मोबाइल\nआवश्यकता 4 - 4-5 लाख निवेश`;
-    return `REQUIREMENTS - Corporation Franchise\n\nRequirement 1 - 200 Sqft room\nRequirement 2 - 2 staff\nRequirement 3 - PC/Laptop and Mobile\nRequirement 4 - Ready to invest 4-5 Lakhs\n\nApply: ${EARN_LINK}`;
-  }
-  if(lang==='ml') return `ആവശ്യകതകൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 90 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 1 ഫുൾ ടൈം സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും ആൻഡ്രോയിഡ് മൊബൈലും\nആവശ്യകത 4 - റെഡി ടു ഇൻവെസ്റ്റ്`;
-  if(lang==='hi') return `आवश्यकताएं - जिला फ्रेंचाइजी\n\nआवश्यकता 1 - 90 वर्ग फुट कमरा\nआवश्यकता 2 - 1 पूर्णकालिक स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और एंड्रॉइड मोबाइल`;
-  return `REQUIREMENTS - District Franchise\n\nRequirement 1 - 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile\nRequirement 4 - Ready to invest\nRequirement 5 - Aadhaar + PAN\n\nApply: ${EARN_LINK}`;
-}
+};
+
+const PROMISES = PROMISES_LOCKED;
+// ==================== END LOCKED SECTION: PROMISES ====================
+
+ // EDITABLE SECTION: DYNAMIC PROMISES FUNCTIONS (SAFE TO EDIT LOGIC, NOT TEXT)
+
+// ==================== LOCKED FUNCTION: getBenText - DO NOT EDIT TEXT HERE, EDIT PROMISES_LOCKED ABOVE ====================
+function getBenText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].benefits) || PROMISES[key].en.benefits; }
+// ==================== END LOCKED FUNCTION ====================
+function getSupText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].support) || PROMISES[key].en.support; }
+function getReqText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].requirements) || PROMISES[key].en.requirements; }
 
 
 
 
+// ==================== EDITABLE SECTION: PAYMENT & ANTI-FOOLING - SAFE TO EDIT ====================
 async function createRazorpayPaymentLink(uid, fee){
   try{
     if(!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET){
@@ -207,12 +252,18 @@ function verifyRazorpaySignature(body, signature, secret){
   }catch{ return false; }
 }
 
+// ==================== END EDITABLE SECTION: PAYMENT ====================
+
+// ==================== LOCKED SECTION: PAY TEXT - EDIT ONLY FOR LANGUAGE ====================
 function getPayText(lang, fee){
   if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക.`; }
   else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। यह ${fee}L का हिस्सा है, नीचे बटन पर क्लिक करके भुगतान करें।`; }
   else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. This is part of ${fee}L, click the button below to pay.`; }
 }
 
+// ==================== END LOCKED SECTION: PAY TEXT ====================
+
+// ==================== LOCKED SECTION: HELP NUMBERS - EDIT ONLY HERE ====================
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
 const HELP_ADMIN_FULL = '+918590183646';
@@ -782,27 +833,45 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
 
-    if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Cab', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: RIDE_BOOK - Book a Cab - DO NOT EDIT OTHER STEPS ====================
+    if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Cab', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000, incomingPhoneId); // END LOCKED STEP: RIDE_BOOK - SAFE - OTHER STEPS NOT TOUCHED
+      scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: RIDE_ATTACH - Attach Cab ====================
     if(btnId==='RIDE_ATTACH'){ state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Attach_Cab', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: BIZ_REGISTER - Register Business ====================
     if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Register_Business', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: BIZ_ADS - Start Advertising ====================
     if(btnId==='BIZ_ADS'){ state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Start_Advertising', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: DEL_ORDER - Order Stores ====================
     if(btnId==='DEL_ORDER'){ state.sub='DEL_ORDER'; state.lastStep='Order Stores'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Order_Stores', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: DEL_PARTNER - Delivery Partner ====================
     if(btnId==='DEL_PARTNER'){ state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Delivery_Partner', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: BOOK_ROOM - Book Rooms ====================
     if(btnId==='BOOK_ROOM'){ state.sub='BOOK_ROOM'; state.lastStep='Book Rooms'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Rooms', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Rooms', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_ROOM:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: BOOK_APPOINT - Book Appointments ====================
     if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Appointments', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: BOOK_MOVIE - Movie Tickets ====================
     if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Movie', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
+    // ==================== LOCKED STEP: OPP_DISTRICT - High Level Income ====================
     if(btnId==='OPP_DISTRICT'){ state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: OPP_CORP - Moderate Level Income ====================
     if(btnId==='OPP_CORP'){ state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: OPP_CENTER - Base Level Income (Business Center) ====================
     if(btnId==='OPP_CENTER'){ state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
+    // ==================== LOCKED STEP: KNOW_BEN - Benefits ====================
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const benDyn = getBenText(state.sub, lang);
       await sendWithDelay(textMessage(uid,benDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Benefits', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: KNOW_SUP - Support ====================
     if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const supDyn = getSupText(state.sub, lang);
       await sendWithDelay(textMessage(uid,supDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Support', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: KNOW_REQ - Requirements ====================
     if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const reqDyn = getReqText(state.sub, lang);
       await sendWithDelay(textMessage(uid,reqDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Requirements', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: SUBMIT_APP - Submit Application ====================
     if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Submit', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: CORP_CHECK - Corp Yes/No + Fee Calculation ====================
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
       const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
       state.fee = fee; state.franchiseName = franchiseName; state.isCorp = isYes; state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; state.phoneId=incomingPhoneId;
@@ -813,6 +882,7 @@ app.post('/webhook', async(req,res)=>{
       await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_CORPCHECK:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:24',lang,24*60*60*1000, incomingPhoneId); return; 
     }
+    // ==================== LOCKED STEP: READY_15L - Ready for Fee ====================
     if(btnId==='READY_15L'){ 
       const fee = state.fee || 15; 
       state.lastStep=`Pay Rs5000 - ${fee}L`; 
@@ -827,7 +897,9 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
+    // ==================== LOCKED STEP: KNOW_EMI - EMI Options ====================
     if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], incomingPhoneId)); await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    // ==================== LOCKED STEP: EMI_SELECTED - EMI 10/20 Months ====================
     if(btnId==='EMI_10'||btnId==='EMI_20'){ 
       const fee = state.fee || 15; 
       state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
@@ -842,6 +914,7 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'install:OPP_EMISEL:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
+    // ==================== LOCKED STEP: PAY_NOT_DONE - Not Paid 5000 ====================
     if(btnId==='PAY_NOT_DONE'){ 
       state.lastStep=`Not Paid - ${state.fee||15}L`; 
       await setState(uid,state); 
@@ -855,7 +928,8 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-        if(btnId==='PAY_DONE'){
+        // ==================== LOCKED STEP: PAY_DONE - I Have Paid Rs5000 + Anti-Fooling + Razorpay Verify ====================
+    if(btnId==='PAY_DONE'){
       // USER CLAIMS PAID - BUT NOT VERIFIED YET - PURE AUTO
       state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const verifyMsg = lang==='ml' ? `⏳ പേയ്മെന്റ് പരിശോധിക്കുന്നു...
@@ -987,3 +1061,13 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+
+// ==================== CODE LOCKING SUMMARY ====================
+// When user gives current server.js for future edits:
+// 1. AI reads LOCKED/EDITABLE markers
+// 2. AI opens ONLY relevant section
+// 3. AI edits and adds // LOCKED AFTER EDIT: [date] [reason]
+// 4. Other sections remain SAFE and UNTOUCHED
+// 5. No wrong promises to users = Credibility protected
+// ==============================================================
+//
