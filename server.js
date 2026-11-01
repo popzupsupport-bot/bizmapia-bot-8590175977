@@ -1,32 +1,4 @@
-// V119 - 8 SHEETS CONSOLIDATED VERSION
-// Old sheets data SAFE - not deleted, new data goes to 8 sheets only:
-// 1. Master_Leads - Final lead name/district/mobile/occupation/date/fee
-// 2. Franchise_Funnel - All opportunity journey (District/Corp/Center/Benefits/Support/Requirements/Submit/CorpCheck/Ready/EMI)
-// 3. Payments - Unverified/Verified/Failed/NotPaid
-// 4. Ride_Hailing - Book Cab, Attach Cab
-// 5. Business_Directory - Register Business, Start Ads
-// 6. Delivery - Order Stores, Delivery Partner
-// 7. Booking - Book Rooms/Appointments/Movie
-// 8. System_Logs - No Language, HI Reset, Service clicks, App Install
-// =============================================================
-
-// ==================== CODE LOCKING SYSTEM - BIZMAPIA BOT V118 ====================
-// HOW LOCKING WORKS:
-// 1. Each section below is marked as LOCKED or EDITABLE
-// 2. When you give current server.js for changes, AI will ONLY open the relevant section
-// 3. After edit, section is LOCKED again - other steps stay SAFE
-// 4. This prevents wrong promises / credibility damage
-//
-// SECTIONS:
-// - LOCKED: PROMISES (District/Corp/Center benefits/support/requirements) -> EDIT ONLY promises_locked.js
-// - LOCKED: PRICING (15L/10L/5L/4L/1L) -> EDIT ONLY PRICING section
-// - LOCKED: VIDEOS (YouTube links) -> EDIT ONLY VIDEO section
-// - EDITABLE: PAYMENT (Razorpay, verify, anti-fooling)
-// - EDITABLE: REMINDERS (1h/12h/24h logic)
-// - EDITABLE: FLOW (Ride/Business/Delivery/Booking/Opportunity steps)
-// =================================================================================
-
-// V120 FINAL ALL CHATS VERIFIED 8 SHEETS CONSOLIDATED - EVERY STEP LOCKED - SENSIBLE REMINDERS + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
+// V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -103,14 +75,11 @@ const LINKS_V92 = {
   razorpay: "https://rzp.io/rzp/mq0zG6mS",
 };
 
-// ==================== LOCKED SECTION: PRICING - EDIT ONLY THIS SECTION FOR FEE CHANGES ====================
 const PRICING = {
   DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 },
   CORP: { WITH_CORP: 5, WITHOUT_CORP: 4 },
   CENTER: { DEFAULT: 1 }
 };
-// ==================== END LOCKED SECTION: PRICING ====================
-
 
 function getEMIText(lang, fee){
   if(fee>=15){
@@ -153,82 +122,6 @@ function getReadyText(lang, fee, franchiseName){
   else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
 
-// ==================== LOCKED SECTION: PROMISES - ALL USER PROMISES LOCKED HERE ====================
-// WARNING: EDIT ONLY THIS SECTION FOR BENEFITS/SUPPORT/REQUIREMENTS - OTHER STEPS SAFE
-// ==================== LOCKED PROMISES FILE - EDIT ONLY THIS FILE FOR USER PROMISES ====================
-// WARNING: This file contains ALL user-facing promises. 
-// DO NOT EDIT server.js for benefits/support/requirements - EDIT ONLY THIS FILE.
-// This prevents wrong promises shown to users that damages credibility.
-
-const PROMISES_LOCKED = {
-  DISTRICT: {
-    en: {
-      benefits: `BENEFITS - District Franchise\n\nBenefits 1 - You are district top level franchisee, % on all earnings in your district\nBenefits 2 - Only you can contact Company directly\nBenefits 3 - Lifetime royalty income\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
-      support: `SUPPORT - District Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary support\n\nCall: +91 8590175977`,
-      requirements: `REQUIREMENTS - District Franchise\n\nRequirement 1 - 90 Sqft room\nRequirement 2 - 1 full time staff\nRequirement 3 - PC/Laptop and Android Mobile\nRequirement 4 - Ready to invest\nRequirement 5 - Aadhaar + PAN\n\nApply: https://bizmapia.com/earn`
-    },
-    ml: {
-      benefits: `ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ ജില്ലയിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി, നിങ്ങളുടെ ജില്ലയിലെ എല്ലാ വരുമാനത്തിലും %\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ നിങ്ങൾക്ക് മാത്രമേ കഴിയൂ\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി വരുമാനം`,
-      support: `പിന്തുണ - ജില്ലാ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സംഭാവന\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`,
-      requirements: `ആവശ്യകതകൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 90 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 1 ഫുൾ ടൈം സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും ആൻഡ്രോയിഡ് മൊബൈലും`
-    },
-    hi: {
-      benefits: `लाभ - जिला फ्रेंचाइजी\n\nलाभ 1 - आप जिला टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - केवल आप कंपनी से सीधे संपर्क कर सकते हैं\nलाभ 3 - आजीवन रॉयल्टी आय`,
-      support: `सहायता - जिला फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया योगदान\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`,
-      requirements: `आवश्यकताएं - जिला फ्रेंचाइजी\n\nआवश्यकता 1 - 90 वर्ग फुट कमरा\nआवश्यकता 2 - 1 पूर्णकालिक स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और एंड्रॉइड मोबाइल`
-    }
-  },
-  CORP: {
-    en: {
-      benefits: `BENEFITS - Corporation/Municipal Franchise\n\nBenefits 1 - You are top level franchise for Corporation/Municipal, % on all earnings in your Corp/Municipal\nBenefits 2 - Direct contact with Company\nBenefits 3 - Lifetime royalty income\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
-      support: `SUPPORT - Corporation/Municipal Franchise\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent support\nSupport 3 - 6 months Staff salary support\n\nCall: +91 8590175977`,
-      requirements: `REQUIREMENTS - Corporation/Municipal Franchise\n\nRequirement 1 - 200 Sqft room\nRequirement 2 - 2 staff\nRequirement 3 - PC/Laptop and Mobile\nRequirement 4 - Ready to invest 4-5 Lakhs\n\nApply: https://bizmapia.com/earn`
-    },
-    ml: {
-      benefits: `ആനുകൂല്യങ്ങൾ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ കോർപ്പറേഷനിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസി\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാം\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി`,
-      support: `പിന്തുണ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സഹായം\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`,
-      requirements: `ആവശ്യകതകൾ - കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി\n\nആവശ്യകത 1 - 200 ചതുരശ്ര അടി മുറി\nആവശ്യകത 2 - 2 സ്റ്റാഫ്\nആവശ്യകത 3 - പിസി/ലാപ്ടോപ്പും മൊബൈലും`
-    },
-    hi: {
-      benefits: `लाभ - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\n\nलाभ 1 - आप कॉरपोरेशन में टॉप लेवल फ्रेंचाइजी हैं\nलाभ 2 - कंपनी से सीधा संपर्क\nलाभ 3 - आजीवन रॉयल्टी`,
-      support: `सहायता - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया सहायता\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`,
-      requirements: `आवश्यकताएं - कॉरपोरेशन/म्युनिसिपल फ्रेंचाइजी\n\nआवश्यकता 1 - 200 वर्ग फुट कमरा\nआवश्यकता 2 - 2 स्टाफ\nआवश्यकता 3 - पीसी/लैपटॉप और मोबाइल`
-    }
-  },
-  CENTER: {
-    en: {
-      benefits: `BENEFITS - Business Center\n\nBenefits 1 - You are top level center for your town, % on all services in your area (Rides, Stores, Bookings)\nBenefits 2 - Lifetime income from local businesses - Shops, Services, Bookings\nBenefits 3 - Low investment (1L) own business model\n\nYou Selected: Business Center (Base Level) - Next Step: Know Support\nBenefits 2 - Lifetime income from local businesses\nBenefits 3 - Low investment business\n\nWebsite: https://bizmapia.com/\n\nHelp: +91 8590175977`,
-      support: `SUPPORT - Business Center\nSupport 1 - Marketing support\nSupport 2 - Training support\nSupport 3 - Technical support\n\nCall: +91 8590175977`,
-      requirements: `REQUIREMENTS - Business Center\n\nRequirement 1 - 100 Sqft Shop/Room\nRequirement 2 - Computer/Laptop\nRequirement 3 - Internet Connection\nRequirement 4 - Ready to invest 1 Lakh\n\nApply: https://bizmapia.com/earn`
-    },
-    ml: {
-      benefits: `ആനുകൂല്യങ്ങൾ - ബിസിനസ് സെൻ്റർ\n\nആനുകൂല്യം 1 - നിങ്ങളുടെ ടൗണിലെ ടോപ്പ് ലെവൽ സെൻ്റർ\nആനുകൂല്യം 2 - ലോക്കൽ ബിസിനസ്സുകളിൽ നിന്ന് ആജീവനാന്ത വരുമാനം\nആനുകൂല്യം 3 - കുറഞ്ഞ നിക്ഷേപത്തിൽ ബിസിനസ്`,
-      support: `പിന്തുണ - ബിസിനസ് സെൻ്റർ\nപിന്തുണ 1 - മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - ട്രെയിനിംഗ് പിന്തുണ\nപിന്തുണ 3 - ടെക്നിക്കൽ സപ്പോർട്ട്`,
-      requirements: `ആവശ്യകതകൾ - ബിസിനസ് സെൻ്റർ\n\nആവശ്യകത 1 - 100 ചതുരശ്ര അടി ഷോപ്പ്/റൂം\nആവശ്യകത 2 - കമ്പ്യൂട്ടർ/ലാപ്ടോപ്പ്\nആവശ്യകത 3 - ഇൻ്റർനെറ്റ് കണക്ഷൻ\nആവശ്യകത 4 - 1 ലക്ഷം നിക്ഷേപം തയ്യാർ`
-    },
-    hi: {
-      benefits: `लाभ - बिजनेस सेंटर\n\nलाभ 1 - अपने टाउन का टॉप लेवल सेंटर\nलाभ 2 - लोकल बिजनेस से आजीवन आय\nलाभ 3 - कम निवेश में बिजनेस`,
-      support: `सहायता - बिजनेस सेंटर\nसहायता 1 - मार्केटिंग सहायता\nसहायता 2 - ट्रेनिंग सहायता\nसहायता 3 - तकनीकी सहायता`,
-      requirements: `आवश्यकताएं - बिजनेस सेंटर\n\nआवश्यकता 1 - 100 वर्ग फुट शॉप/रूम\nआवश्यकता 2 - कंप्यूटर/लैपटॉप\nआवश्यकता 3 - इंटरनेट कनेक्शन\nआवश्यकता 4 - 1 लाख निवेश तैयार`
-    }
-  }
-};
-
-const PROMISES = PROMISES_LOCKED;
-// ==================== END LOCKED SECTION: PROMISES ====================
-
- // EDITABLE SECTION: DYNAMIC PROMISES FUNCTIONS (SAFE TO EDIT LOGIC, NOT TEXT)
-
-// ==================== LOCKED FUNCTION: getBenText - DO NOT EDIT TEXT HERE, EDIT PROMISES_LOCKED ABOVE ====================
-function getBenText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].benefits) || PROMISES[key].en.benefits; }
-// ==================== END LOCKED FUNCTION ====================
-function getSupText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].support) || PROMISES[key].en.support; }
-function getReqText(sub, lang){ const key = sub==='OPP_DISTRICT'?'DISTRICT':sub==='OPP_CORP'?'CORP':'CENTER'; return (PROMISES[key] && PROMISES[key][lang] && PROMISES[key][lang].requirements) || PROMISES[key].en.requirements; }
-
-
-
-
-// ==================== EDITABLE SECTION: PAYMENT & ANTI-FOOLING - SAFE TO EDIT ====================
 async function createRazorpayPaymentLink(uid, fee){
   try{
     if(!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET){
@@ -264,18 +157,12 @@ function verifyRazorpaySignature(body, signature, secret){
   }catch{ return false; }
 }
 
-// ==================== END EDITABLE SECTION: PAYMENT ====================
-
-// ==================== LOCKED SECTION: PAY TEXT - EDIT ONLY FOR LANGUAGE ====================
 function getPayText(lang, fee){
   if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക.`; }
   else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। यह ${fee}L का हिस्सा है, नीचे बटन पर क्लिक करके भुगतान करें।`; }
   else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. This is part of ${fee}L, click the button below to pay.`; }
 }
 
-// ==================== END LOCKED SECTION: PAY TEXT ====================
-
-// ==================== LOCKED SECTION: HELP NUMBERS - EDIT ONLY HERE ====================
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
 const HELP_ADMIN_FULL = '+918590183646';
@@ -369,23 +256,11 @@ function interactiveButton(to,body,buttons, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
 }
 function ctaButtons(to,body,ctaList, phoneId){
-  const firstUrl = ctaList.find(c=>c.type==='url');
-  const phoneObj = ctaList.find(c=>c.type==='phone');
-  let enhancedBody = body;
-  if(phoneObj){ enhancedBody += "\n\n📞 Call: " + phoneObj.phone.replace('+91',''); }
-  if(ctaList.length>1){
-    for(let c of ctaList){
-      if(c!==firstUrl){
-        if(c.type==='url'){ enhancedBody += "\n🔗 " + c.title + ": " + c.url; }
-      }
-    }
-  }
-  enhancedBody = enhancedBody.substring(0,1024);
-  if(firstUrl){
-    return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:enhancedBody}, action:{ name:'cta_url', parameters:{ display_text: firstUrl.title.substring(0,20), url: firstUrl.url } } }, _phoneId: phoneId };
-  } else {
-    return { messaging_product:'whatsapp', to, type:'text', text:{body:enhancedBody}, _phoneId: phoneId };
-  }
+  const buttons = ctaList.slice(0,3).map(c=>{
+    if(c.type==='url'){ return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url }; }
+    else { return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone }; }
+  });
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:body.substring(0,1024)}, action:{buttons: buttons} }, _phoneId: phoneId };
 }
 function singleCta(to,body,btn, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
@@ -438,9 +313,9 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('District')){ await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(last==='Benefits'){ const benForRepeat = getBenText(sub, lang); const escalatedBen = getEscalatedGeneralText(lang, benForRepeat, level, 'Benefits'); await sendWithDelay(textMessage(uid,escalatedBen, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
-  if(last==='Support'){ const supForRepeat = getSupText(sub, lang); const escalatedSup = getEscalatedGeneralText(lang, supForRepeat, level, 'Support'); await sendWithDelay(textMessage(uid,escalatedSup, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
-  if(last==='Requirements'){ const reqForRepeat = getReqText(sub, lang); const escalatedReq = getEscalatedGeneralText(lang, reqForRepeat, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
+  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); await sendWithDelay(textMessage(uid,escalatedBen, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
+  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); await sendWithDelay(textMessage(uid,escalatedSup, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
+  if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
@@ -578,7 +453,18 @@ setInterval(async()=>{
 
 const T={
   en:{
-    welcome:`Welcome to Bizmapia\nYou are in Indias first 4 in 1 service app platform\nPlease select your preferred language from below:-`,
+    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+
+Welcome to Bizmapia!
+You are in India's first 4-in-1 service app platform.
+
+बिज़मैपिया में आपका स्वागत है!
+आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+
+ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
+
+Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     mainMenu:`Please click any one service from below to help you further:-`,
     moreServices:`More services:-`,
     services:[{id:'SVC_RIDE',title:'Ride Hailing'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'},{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}],
@@ -638,7 +524,18 @@ const T={
     noProblem:`No problem! Take your time. When you are ready, click below to install.\n\nClick below:`,
   },
   hi:{
-    welcome:`Bizmapia में आपका स्वागत है\nआप भारत के पहले 4 इन 1 सर्विस ऐप प्लेटफॉर्म पर हैं\nकृपया नीचे से अपनी पसंदीदा भाषा चुनें:-`,
+    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+
+Welcome to Bizmapia!
+You are in India's first 4-in-1 service app platform.
+
+बिज़मैपिया में आपका स्वागत है!
+आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+
+ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
+
+Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     mainMenu:`कृपया आगे सहायता के लिए नीचे से कोई एक सेवा चुनें:-`,
     moreServices:`और सेवाएं:-`,
     services:[{id:'SVC_RIDE',title:'राइड हेलिंग'},{id:'SVC_BIZDIR',title:'बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'ऑनलाइन बुकिंग'},{id:'SVC_OPP',title:'बिजनेस अवसर'}],
@@ -698,7 +595,18 @@ const T={
     noProblem:`कोई बात नहीं! अपना समय लें। जब आप तैयार हों, तो नीचे क्लिक करके इंस्टॉल करें।`,
   },
   ml:{
-    welcome:`Bizmapia-യിലേക്ക് സ്വാഗതം\nനിങ്ങൾ ഇന്ത്യയിലെ ആദ്യത്തെ 4 ഇൻ 1 സർവീസ് ആപ്പ് പ്ലാറ്റ്ഫോമിലാണ്\nതാഴെ നിന്ന് നിങ്ങളുടെ ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+
+Welcome to Bizmapia!
+You are in India's first 4-in-1 service app platform.
+
+बिज़मैपिया में आपका स्वागत है!
+आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+
+ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
+
+Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     mainMenu:`കൂടുതൽ സഹായത്തിനായി താഴെ നിന്ന് ഏതെങ്കിലും ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
     services:[{id:'SVC_RIDE',title:'റൈഡ് ഹെയ്ലിംഗ്'},{id:'SVC_BIZDIR',title:'ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'ബിസിനസ് അവസരം'}],
@@ -759,7 +667,7 @@ const T={
   }
 };
 
-app.get('/',(req,res)=>res.send(`V120 FINAL ALL CHATS VERIFIED 8 SHEETS CONSOLIDATED - EVERY STEP LOCKED - SENSIBLE REMINDERS + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
+app.get('/',(req,res)=>res.send(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -790,7 +698,7 @@ app.post('/webhook', async(req,res)=>{
       await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), incomingPhoneId));
       await delay(300);
       await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5), incomingPhoneId));
-      await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language '+lang, ''], false);
+      await saveToSheet('Leads', [nowIso, uid, lang, 'Language Selected '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language '+lang, ''], false);
       scheduleReminder(uid,'noService:'+Date.now(),lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noService2:'+Date.now(),lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noService3:'+Date.now(),lang,24*60*60*1000, incomingPhoneId);
@@ -803,7 +711,7 @@ app.post('/webhook', async(req,res)=>{
       const rawInput = txt || msgType;
       await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
-      await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
+      await saveToSheet('No_Language', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
       clearReminders(uid);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
@@ -811,20 +719,11 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi){
-      if(state.lang && state.lastStep && state.lastStep!=='Completed'){
-        // User typed Hi but is already in a flow - remind current step and repeat
-        const L=T[lang]||T.en;
-        const reminder = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ ഈ ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി ഈ ഘട്ടം പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी इस चरण में हैं: ${state.lastStep}\nकृपया इस चरण को पूरा करें।` : `🔔 You are currently in this step: ${state.lastStep}\nPlease finalize this step.`;
-        await sendWithDelay(textMessage(uid, reminder, incomingPhoneId));
-        await delay(400);
-        await repeatLastStep(uid, state, lang, incomingPhoneId);
-        return;
-      }
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
       await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], incomingPhoneId));
-      await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Hi Received '+incomingPhoneId, 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
+      await saveToSheet('HI_Reset', [nowIso, uid, 'none', 'Hi Received '+incomingPhoneId, 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000, incomingPhoneId);
@@ -832,15 +731,6 @@ app.post('/webhook', async(req,res)=>{
     }
 
     const L=T[lang]||T.en;
-
-    // FIX: Don't reset on Hai/Hi if user is in Pay/Verifying stage - repeat pay instead
-    if(isHi && state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('Verifying') || state.lastStep.includes('CLAIMED') || state.lastStep.includes('Not Paid') || state.lastStep.includes('EMI Selected'))){
-      // Treat Hai as repeat pay, not reset
-      const payText = getPayText(lang, state.fee||15);
-      const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
-      return;
-    }
 
     if(btnId.startsWith('SVC_')){
       state.service=btnId; state.lastStep=btnId; state.phoneId=incomingPhoneId; await setState(uid,state);
@@ -850,52 +740,31 @@ app.post('/webhook', async(req,res)=>{
       else if(btnId==='SVC_DELIVERY'){ await sendWithDelay(interactiveButton(uid, L.deliverySelected, L.deliveryButtons, incomingPhoneId)); }
       else if(btnId==='SVC_BOOKING'){ await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons, incomingPhoneId)); }
       else if(btnId==='SVC_OPP'){ await sendWithDelay(interactiveButton(uid, L.oppSelected, L.oppButtons, incomingPhoneId)); }
-      await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
+      await saveToSheet('Leads', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
       scheduleReminder(uid, `install:${btnId}:1`, lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, `install:${btnId}:12`, lang, 12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, `install:${btnId}:24`, lang, 24*60*60*1000, incomingPhoneId);
       return;
     }
 
-    // ==================== LOCKED STEP: RIDE_BOOK - Book a Cab - DO NOT EDIT OTHER STEPS ====================
-    if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000, incomingPhoneId); // END LOCKED STEP: RIDE_BOOK - SAFE - OTHER STEPS NOT TOUCHED
-      scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: RIDE_ATTACH - Attach Cab ====================
-    if(btnId==='RIDE_ATTACH'){ state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: BIZ_REGISTER - Register Business ====================
-    if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Business_Directory', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: BIZ_ADS - Start Advertising ====================
-    if(btnId==='BIZ_ADS'){ state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Business_Directory', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: DEL_ORDER - Order Stores ====================
-    if(btnId==='DEL_ORDER'){ state.sub='DEL_ORDER'; state.lastStep='Order Stores'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Delivery', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: DEL_PARTNER - Delivery Partner ====================
-    if(btnId==='DEL_PARTNER'){ state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Delivery', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: BOOK_ROOM - Book Rooms ====================
-    if(btnId==='BOOK_ROOM'){ state.sub='BOOK_ROOM'; state.lastStep='Book Rooms'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Rooms', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_ROOM:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: BOOK_APPOINT - Book Appointments ====================
-    if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: BOOK_MOVIE - Movie Tickets ====================
-    if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Cab', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='RIDE_ATTACH'){ state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Attach_Cab', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Register_Business', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BIZ_ADS'){ state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Start_Advertising', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='DEL_ORDER'){ state.sub='DEL_ORDER'; state.lastStep='Order Stores'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Order_Stores', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='DEL_PARTNER'){ state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Delivery_Partner', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BOOK_ROOM'){ state.sub='BOOK_ROOM'; state.lastStep='Book Rooms'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Rooms', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Rooms', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_ROOM:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_ROOM:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Appointments', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Movie', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
-    // ==================== LOCKED STEP: OPP_DISTRICT - High Level Income ====================
-    if(btnId==='OPP_DISTRICT'){ state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: OPP_CORP - Moderate Level Income ====================
-    if(btnId==='OPP_CORP'){ state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: OPP_CENTER - Base Level Income (Business Center) ====================
-    if(btnId==='OPP_CENTER'){ state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='OPP_DISTRICT'){ state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='OPP_CORP'){ state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='OPP_CENTER'){ state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
-    // ==================== LOCKED STEP: KNOW_BEN - Benefits ====================
-    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const benDyn = getBenText(state.sub, lang);
-      await sendWithDelay(textMessage(uid,benDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: KNOW_SUP - Support ====================
-    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const supDyn = getSupText(state.sub, lang);
-      await sendWithDelay(textMessage(uid,supDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: KNOW_REQ - Requirements ====================
-    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const reqDyn = getReqText(state.sub, lang);
-      await sendWithDelay(textMessage(uid,reqDyn, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: SUBMIT_APP - Submit Application ====================
-    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: CORP_CHECK - Corp Yes/No + Fee Calculation ====================
+    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.benText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Benefits', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Support', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Requirements', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Submit', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
       const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
       state.fee = fee; state.franchiseName = franchiseName; state.isCorp = isYes; state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; state.phoneId=incomingPhoneId;
@@ -903,10 +772,9 @@ app.post('/webhook', async(req,res)=>{
       const readyText = getReadyText(lang, fee, franchiseName);
       const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`;
       await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], incomingPhoneId)); 
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      await saveToSheet('Franchise_CorpCheck', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_CORPCHECK:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:24',lang,24*60*60*1000, incomingPhoneId); return; 
     }
-    // ==================== LOCKED STEP: READY_15L - Ready for Fee ====================
     if(btnId==='READY_15L'){ 
       const fee = state.fee || 15; 
       state.lastStep=`Pay Rs5000 - ${fee}L`; 
@@ -914,16 +782,14 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, fee);
       const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await saveToSheet('Franchise_Ready15L', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-    // ==================== LOCKED STEP: KNOW_EMI - EMI Options ====================
-    if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    // ==================== LOCKED STEP: EMI_SELECTED - EMI 10/20 Months ====================
+    if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], incomingPhoneId)); await saveToSheet('Franchise_EMI', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='EMI_10'||btnId==='EMI_20'){ 
       const fee = state.fee || 15; 
       state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
@@ -931,92 +797,57 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid); 
       const payText = getPayText(lang, fee); 
       const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await saveToSheet('Franchise_EMI_Selected', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-    // ==================== LOCKED STEP: PAY_NOT_DONE - Not Paid 5000 ====================
     if(btnId==='PAY_NOT_DONE'){ 
       state.lastStep=`Not Paid - ${state.fee||15}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
-      await saveToSheet('Payments', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await saveToSheet('Franchise_NotPaid', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-        // ==================== LOCKED STEP: PAY_DONE - I Have Paid Rs5000 + Anti-Fooling + Razorpay Verify ====================
     if(btnId==='PAY_DONE'){
-      // USER CLAIMS PAID - BUT NOT VERIFIED YET - PURE AUTO
+      // USER CLAIMS PAID - BUT NOT VERIFIED YET
       state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const verifyMsg = lang==='ml' ? `⏳ പേയ്മെന്റ് പരിശോധിക്കുന്നു...
+      const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
 
-ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി സ്ഥിരീകരിക്കുന്നു. ✅ ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ അടുത്ത സ്റ്റെപ്പ് ഓട്ടോമാറ്റിക്കായി വരും.` : lang==='hi' ? `⏳ भुगतान सत्यापित हो रहा है...
-
-हम Razorpay से ऑटो-वेरिफाई कर रहे हैं। ✅ सही होने पर 2 मिनट में अगला स्टेप ऑटोमैटिक आएगा।` : `⏳ Verifying your payment...
-
-We are auto-checking with Razorpay. ✅ If genuine, next step will come automatically in 2 mins.`;
+ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
       await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
-      await saveToSheet('Payments', [nowIso, uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
+      await saveToSheet('Unverified_Payments', [nowIso, uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:VERIFY:1',lang,5*60*1000, incomingPhoneId);
-      // Auto-fail after 10 mins if still not verified
-      setTimeout(async()=>{
-        try{
-          const cur = await getState(uid);
-          if(cur && cur.lastStep && cur.lastStep.includes('Verifying') && !cur.verified){
-            const failMsg = cur.lang==='ml' ? `❌ പേയ്മെന്റ് കണ്ടെത്തിയില്ല.
-
-ദയവായി യഥാർത്ഥ പേയ്മെന്റ് പൂർത്തിയാക്കി വീണ്ടും ശ്രമിക്കുക.` : cur.lang==='hi' ? `❌ भुगतान नहीं मिला।
-
-कृपया वास्तविक भुगतान पूरा करें और फिर से प्रयास करें।` : `❌ Payment not found in Razorpay.
-
-Please complete real payment to unlock your area.`;
-            const dynamicLink2 = await createRazorpayPaymentLink(uid, cur.fee||15);
-            const L2 = T[cur.lang]||T.en;
-            await sendWithDelay(textMessage(uid, failMsg, cur.phoneId||incomingPhoneId));
-            await delay(300);
-            await sendWithDelay(singleCta(uid, getPayText(cur.lang, cur.fee||15), {type:'url', title:L2.payFeeNow, url:dynamicLink2}, cur.phoneId||incomingPhoneId));
-            await saveToSheet('Payments', [new Date().toISOString(), uid, cur.lang||'en', `FAILED ${cur.fee||15}L`, 'No payment found', 'FAILED', HELP_MARKETING, 'Payment not found', ''], true);
-          }
-        }catch(e){ console.log('verify fail check error', e.message); }
-      }, 10*60*1000);
       return;
     }
 
-    if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.tenderLink, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
+    if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Franchise_Occupation', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.tenderLink, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Franchise_Date', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
 
-    if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('System_Logs', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
-    if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendWithDelay(ctaButtons(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}], incomingPhoneId)); await saveToSheet('System_Logs', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('App_Install', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
+    if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendWithDelay(ctaButtons(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}], incomingPhoneId)); await saveToSheet('App_Install', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'){ await sendWithDelay(textMessage(uid,`📞 Customer Care: ${HELP_ADMIN}\n\nTap to call: +91 ${HELP_ADMIN}\n\ntel:+91${HELP_ADMIN}`, incomingPhoneId)); return; }
     if(btnId==='CALL_MARKETING'||btnId==='HELP_MARKETING'){ await sendWithDelay(textMessage(uid,`📞 Franchise Team: ${HELP_MARKETING}\n\nTap to call: +91 ${HELP_MARKETING}\n\ntel:+91${HELP_MARKETING}`, incomingPhoneId)); return; }
 
-    if(state.flow==='LEAD' && txt){ state.leadData=txt; state.lastStep='Lead Typed'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Lead Data', txt, HELP_MARKETING, state.lastStep, txt], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(state.flow==='LEAD' && txt){ state.leadData=txt; state.lastStep='Lead Typed'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], incomingPhoneId)); await saveToSheet('Franchise_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Lead Data', txt, HELP_MARKETING, state.lastStep, txt], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
 
     const msgType = msg.type||'text';
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
-    if((isRandomText || isMedia) && state.lang && state.lastStep && state.lastStep!=='Completed'){
-      // ANY random letters, special chars, sentences, emoji -> remind current step
-      if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('Verifying') || state.lastStep.includes('CLAIMED') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
-        const reminderPay = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ പേയ്മെന്റ് ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി പേയ്മെന്റ് പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी भुगतान चरण में हैं: ${state.lastStep}\nकृपया भुगतान पूरा करें।` : `🔔 You are in payment step: ${state.lastStep}\nPlease complete this payment step.`;
-        await sendWithDelay(textMessage(uid, reminderPay, incomingPhoneId));
-        await delay(300);
+    if((isRandomText || isMedia) && state.lang){
+      if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
         const payText = getPayText(lang, state.fee||15);
-        const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-        await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}, incomingPhoneId));
         return;
       }
-      const reminderAny = lang==='ml' ? `🔔 നിങ്ങൾ ഇപ്പോൾ ഈ ഘട്ടത്തിലാണ്: ${state.lastStep}\nദയവായി ഈ ഘട്ടം പൂർത്തിയാക്കുക.` : lang==='hi' ? `🔔 आप अभी इस चरण में हैं: ${state.lastStep}\nकृपया इस चरण को पूरा करें।` : `🔔 You are currently in this step: ${state.lastStep}\nPlease finalize this step to continue.`;
-      await sendWithDelay(textMessage(uid, reminderAny, incomingPhoneId));
-      await delay(400);
       await repeatLastStep(uid, state, lang, incomingPhoneId); 
       return; 
     }
@@ -1057,8 +888,8 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:`, phoneId));
         await delay(300);
         await sendWithDelay(textMessage(cleanUid, L.leadAsk, phoneId));
-        await saveToSheet('Payments', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
-        await saveToSheet('Franchise_Funnel', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
+        await saveToSheet('Franchise_PayDone_VERIFIED', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
+        await saveToSheet('OPP_Center', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
       }
     }
     res.sendStatus(200);
@@ -1084,14 +915,4 @@ app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V120 FINAL ALL CHATS VERIFIED 8 SHEETS CONSOLIDATED - EVERY STEP LOCKED - SENSIBLE REMINDERS + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
-
-// ==================== CODE LOCKING SUMMARY ====================
-// When user gives current server.js for future edits:
-// 1. AI reads LOCKED/EDITABLE markers
-// 2. AI opens ONLY relevant section
-// 3. AI edits and adds // LOCKED AFTER EDIT: [date] [reason]
-// 4. Other sections remain SAFE and UNTOUCHED
-// 5. No wrong promises to users = Credibility protected
-// ==============================================================
-//
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
