@@ -1196,7 +1196,7 @@ app.get('/replay-last-4-days', async(req,res)=>{
         else if(lastStep.includes('Occupation') || lastStep.includes('Date') || lastStep.includes('Lead Typed')) tab = 'Master_Leads';
         else if(lastStep.includes('Payment') || lastStep.includes('VERIFIED') || lastStep.includes('Pay Done')) tab = 'Payments';
         
-        const row = [nowIso, uid, lang, `${sub} (REPLAY 4 DAYS)`, lastStep, 'Recovered from Render', state.phoneId?.includes('13926') ? HELP_MARKETING : HELP_ADMIN, lastStep, fee ? `Fee:${fee}L Occupation:${state.occupation||''} Date:${state.date||''}` : `Flow:${state.flow||''} Occ:${state.occupation||''} Date:${state.date||''} Lead:${state.leadData||''}` ];
+        const row = [nowIso, uid, lang, `${sub} (REPLAY 4 DAYS)`, lastStep, 'Recovered from Render', (state.service==='SVC_OPP' || state.sub?.startsWith('OPP_') || sub?.startsWith('OPP_') || lastStep.includes('Business Opportunity') || lastStep.includes('High level') || lastStep.includes('Moderate level') || lastStep.includes('Base level') ? HELP_MARKETING : HELP_ADMIN), lastStep, fee ? `Fee:${fee}L Occupation:${state.occupation||''} Date:${state.date||''}` : `Flow:${state.flow||''} Occ:${state.occupation||''} Date:${state.date||''} Lead:${state.leadData||''}` ];
         await saveToSheet(tab, row, true);
         saved++;
         await new Promise(r=>setTimeout(r,150));
@@ -1399,7 +1399,7 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V131 FINAL PRODUCTION - 7 DAYS REPLAY - CTA FIXED - 8 SHEETS LOCKED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V132 FINAL - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V130 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
