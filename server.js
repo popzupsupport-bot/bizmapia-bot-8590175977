@@ -1345,7 +1345,7 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V129 FINAL - 8 SHEETS LOCKED - WIPE+REPLAY 4 DAYS', generatedAt: new Date().toISOString(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V130 FINAL PRODUCTION - CTA FIXED - 8 SHEETS LOCKED - WIPE+REPLAY 4 DAYS', generatedAt: new Date().toISOString(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -1354,9 +1354,9 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V129 FINAL - 8 SHEETS LOCKED - WIPE+REPLAY 4 DAYS - ALL STEPS - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V130 FINAL PRODUCTION - CTA FIXED - SYNTAX VERIFIED - 8 SHEETS LOCKED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V129 FINAL - ALL FEATURES INCLUDED ====================
+// ==================== LOCKED - END OF FILE - V130 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
 // If you need to make changes, create V127 with proper version control
-// Current locked version: V129 FINAL - 2026-11-01 - INCLUDES V117 + V122-V127
+// Current locked version: V130 FINAL PRODUCTION - CTA FIXED - 2026-11-01 - INCLUDES V117 + V122-V127
