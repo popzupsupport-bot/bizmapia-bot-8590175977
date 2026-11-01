@@ -1,3 +1,18 @@
+// =================================================================================
+// 🔒 V126 FINAL LOCKED - DO NOT MODIFY - EVERY STEP LOCKED - ALL CODES LOCKED
+// Date: 2026-11-01
+// Features Locked:
+// 1. Trilingual Compact Welcome (En/Hi/Ml) - No Headings
+// 2. Malayalam Only Know Company Video: https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ
+// 3. All Business Opportunity (District/Corp/Center) - Confirmation Flow
+//    Video -> Watched -> Benefit -> Understood -> Support -> Understood -> Requirement -> Understood -> Submit
+// 4. Greeting + Instruction in EVERY step after language selection
+// 5. Click to watch (was See the Video) + Must Watch Warning
+// 6. 8 Sheets Consolidated, Razorpay Auto-Verify, 1h/12h/24h Reminders, EMI, Pricing Locked
+// 7. Dual WhatsApp Numbers Support
+// STATUS: FINAL LOCKED - ANY CHANGE REQUIRES NEW VERSION V127+
+// =================================================================================
+
 // V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI NUMBER - Supports 2 WhatsApp numbers + Exact Step Reminders + Sheet Write - FIXED OPP_Center auto-create
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -499,6 +514,15 @@ Please select your preferred language / अपनी भाषा चुने�
     baseIntroSingle:`Great you are selected our Base level income earning opportunity\n\nLets find details about our Business Center opportunity\nBase earning model for your town, study details and decide.`,
     reminderFranchise:`You were checking our franchise opportunity. Continue to know more?`,
     seeVideo:'See the Video',
+    clickWatch:'Click to watch',
+    mustWatch:'⚠️ IMPORTANT STEP: You MUST watch this video fully before proceeding!',
+    watchedBtn:'Watched Video',
+    understoodBen:'Understood Benefit',
+    benAgain:'Know Benefit Again',
+    understoodSup:'Understood Support',
+    supAgain:'Know Support Again',
+    understoodReq:'Understood Requirement',
+    reqAgain:'Know Requirement Again',
     benBtn:'Know Benefits', supBtn:'Know Support', reqBtn:'Requirements', submitBtn:'Submit Application', videoBtn:'Video Link', emiBtn:'EMI options',
     benText:`BENEFITS - District Franchise\n\nBenefits 1 - You are district top level franchisee, % on all earnings in your district\nBenefits 2 - Only you can contact Company directly\nBenefits 3 - Lifetime royalty income\n\nWebsite: ${WEBSITE}\n\nHelp: +91 ${HELP_MARKETING}`,
     supText:`SUPPORT - Company will provide\nSupport 1 - 12 months marketing support\nSupport 2 - 6 months Rent contribution\nSupport 3 - 6 months Staff salary support\n\nCall: +91 ${HELP_MARKETING}`,
@@ -570,6 +594,15 @@ Please select your preferred language / अपनी भाषा चुने�
     baseIntroSingle:`बहुत बढ़िया आपने हमारी बेस लेवल आय अवसर का चयन किया\n\nआइए हमारे बिजनेस सेंटर अवसर के बारे में जानें`,
     reminderFranchise:`आप हमारी फ्रेंचाइजी अवसर की जाँच कर रहे थे। अधिक जानने के लिए जारी रखें?`,
     seeVideo:'वीडियो देखें',
+    clickWatch:'देखने के लिए क्लिक करें',
+    mustWatch:'⚠️ महत्वपूर्ण चरण: अगले चरण पर जाने से पहले आपको यह वीडियो पूरा देखना होगा!',
+    watchedBtn:'वीडियो देखा',
+    understoodBen:'लाभ समझा',
+    benAgain:'लाभ फिर से जानें',
+    understoodSup:'सहायता समझी',
+    supAgain:'सहायता फिर से जानें',
+    understoodReq:'आवश्यकता समझी',
+    reqAgain:'आवश्यकता फिर से जानें',
     benBtn:'लाभ जानें', supBtn:'सहायता जानें', reqBtn:'आवश्यकताएं', submitBtn:'आवेदन जमा करें', videoBtn:'वीडियो लिंक', emiBtn:'EMI विकल्प',
     benText:`लाभ - जिला फ्रेंचाइजी\n\nलाभ 1 - आप जिला टॉप लेवल फ्रेंचाइजी हैं, आपके जिले की सभी कमाई पर %\nलाभ 2 - केवल आप कंपनी से सीधे संपर्क कर सकते हैं\nलाभ 3 - आजीवन रॉयल्टी आय`,
     supText:`सहायता - कंपनी प्रदान करेगी\nसहायता 1 - 12 महीने मार्केटिंग सहायता\nसहायता 2 - 6 महीने किराया योगदान\nसहायता 3 - 6 महीने स्टाफ वेतन सहायता`,
@@ -607,7 +640,7 @@ You are in India's first 4-in-1 service app platform.
 ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
 
 Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`കൂടുതൽ സഹായത്തിനായി താഴെ നിന്ന് ഏതെങ്കിലും ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
+    mainMenu:`👋 ഹലോ! ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!\n\nഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലാണ് നിങ്ങൾ.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് ഏതെങ്കിലും ഒരു സേവനം തിരഞ്ഞെടുക്കുക:-`,
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
     services:[{id:'SVC_RIDE',title:'റൈഡ് ഹെയ്ലിംഗ്'},{id:'SVC_BIZDIR',title:'ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'ബിസിനസ് അവസരം'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
@@ -634,13 +667,22 @@ Please select your preferred language / अपनी भाषा चुने�
     bookRoom:`ഇന്ത്യയിൽ എവിടെയും മികച്ച നിരക്കിൽ ഹോട്ടലുകൾ, റൂമുകൾ, റിസോർട്ടുകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookAppoint:`അപ്പോയിന്റ്മെന്റുകൾ ബുക്ക് ചെയ്യുക - ഡോക്ടർ, സലൂൺ, സേവനങ്ങൾ - നിങ്ങൾക്ക് സമീപം തൽക്ഷണ ബുക്കിംഗ്.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookMovie:`നിങ്ങൾക്ക് സമീപമുള്ള മൂവി ടിക്കറ്റുകൾ, ഇവന്റുകൾ, ഷോകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
-    oppSelected:`നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു, നന്നായി\nഞങ്ങളുടെ സർവീസ് പോയിന്റായി മാറി വരുമാനം നേടാൻ തുടങ്ങൂ. വരുമാനത്തിന്റെ 3 തലങ്ങൾ.\nഇന്ത്യയിൽ എവിടെ നിന്നും Bizmapia-യിൽ നിന്ന് വരുമാന അവസരത്തിനായി നിങ്ങളുടെ സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു. നിങ്ങൾ ഏത് തരം അവസരമാണ് തിരയുന്നത്?\nതാഴെ നിന്ന് ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
+    oppSelected:`👋 നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-`,
     oppButtons:[{id:'OPP_DISTRICT',title:'ഉയർന്ന തല വരുമാനം'},{id:'OPP_CORP',title:'മിതമായ തല വരുമാനം'},{id:'OPP_CENTER',title:'അടിസ്ഥാന തല വരുമാനം'}],
-    highIntroSingle:`നിങ്ങൾ ഞങ്ങളുടെ ഉയർന്ന തലത്തിലുള്ള വരുമാന അവസരം തിരഞ്ഞെടുത്തു, നന്നായി\n\nനമുക്ക് ഞങ്ങളുടെ ജില്ലാ ഫ്രാഞ്ചൈസി അവസരത്തെക്കുറിച്ചുള്ള വിശദാംശങ്ങൾ കണ്ടെത്താം\nഓർക്കുക ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രമേ അംഗീകരിക്കൂ, അതിനാൽ മുഴുവൻ വിശദാംശങ്ങളും പഠിച്ച് ഈ ചാറ്റിലൂടെ തീരുമാനമെടുക്കുക.`,
-    moderateIntroSingle:`നിങ്ങൾ ഞങ്ങളുടെ മിതമായ തലത്തിലുള്ള വരുമാന അവസരം തിരഞ്ഞെടുത്തു\n\nനമുക്ക് കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി അവസരത്തെക്കുറിച്ച് കണ്ടെത്താം`,
-    baseIntroSingle:`നിങ്ങൾ ഞങ്ങളുടെ അടിസ്ഥാന തലത്തിലുള്ള വരുമാന അവസരം തിരഞ്ഞെടുത്തു\n\nനമുക്ക് ബിസിനസ് സെന്റർ അവസരത്തെക്കുറിച്ച് കണ്ടെത്താം`,
+    highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ഉയർന്ന തല വരുമാനം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    baseIntroSingle:`👋 ഹലോ! നിങ്ങൾ അടിസ്ഥാന തല വരുമാനം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.\n\nബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     reminderFranchise:`നിങ്ങൾ ഞങ്ങളുടെ ഫ്രാഞ്ചൈസി അവസരം പരിശോധിക്കുകയായിരുന്നു. കൂടുതൽ അറിയാൻ തുടരണോ?`,
     seeVideo:'വീഡിയോ കാണുക',
+    clickWatch:'കാണാൻ ക്ലിക്ക് ചെയ്യുക',
+    mustWatch:'⚠️ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!',
+    watchedBtn:'വീഡിയോ കണ്ടു',
+    understoodBen:'ആനുകൂല്യം മനസ്സിലായി',
+    benAgain:'ആനുകൂല്യം വീണ്ടും അറിയുക',
+    understoodSup:'പിന്തുണ മനസ്സിലായി',
+    supAgain:'പിന്തുണ വീണ്ടും അറിയുക',
+    understoodReq:'ആവശ്യകത മനസ്സിലായി',
+    reqAgain:'ആവശ്യകത വീണ്ടും അറിയുക',
     benBtn:'ആനുകൂല്യങ്ങൾ അറിയുക', supBtn:'പിന്തുണ അറിയുക', reqBtn:'ആവശ്യകതകൾ', submitBtn:'അപേക്ഷ സമർപ്പിക്കുക', videoBtn:'വീഡിയോ ലിങ്ക്', emiBtn:'EMI ഓപ്ഷനുകൾ',
     benText:`ആനുകൂല്യങ്ങൾ - ജില്ലാ ഫ്രാഞ്ചൈസി\n\nആനുകൂല്യം 1 - നിങ്ങൾ ജില്ലയിലെ ടോപ്പ് ലെവൽ ഫ്രാഞ്ചൈസിയാണ്, നിങ്ങളുടെ ജില്ലയിലെ എല്ലാ വരുമാനത്തിലും %\nആനുകൂല്യം 2 - കമ്പനിയുമായി നേരിട്ട് ബന്ധപ്പെടാൻ നിങ്ങൾക്ക് മാത്രമേ കഴിയൂ\nആനുകൂല്യം 3 - ആജീവനാന്ത റോയൽറ്റി വരുമാനം`,
     supText:`പിന്തുണ - കമ്പനി നൽകും\nപിന്തുണ 1 - 12 മാസത്തെ മാർക്കറ്റിംഗ് പിന്തുണ\nപിന്തുണ 2 - 6 മാസത്തെ വാടക സംഭാവന\nപിന്തുണ 3 - 6 മാസത്തെ സ്റ്റാഫ് ശമ്പള പിന്തുണ`,
@@ -757,9 +799,114 @@ app.post('/webhook', async(req,res)=>{
     if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Appointments', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(ctaButtons(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId)); await saveToSheet('Book_Movie', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
-    if(btnId==='OPP_DISTRICT'){ state.sub='OPP_DISTRICT'; state.lastStep='High level Income - District'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='OPP_CORP'){ state.sub='OPP_CORP'; state.lastStep='Moderate level Income - Corp'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='OPP_CENTER'){ state.sub='OPP_CENTER'; state.lastStep='Base level Income - Center'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, incomingPhoneId)); await delay(500); await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='OPP_DISTRICT'){
+      state.sub='OPP_DISTRICT'; state.lastStep='High level Income - DISTRICT - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      await setState(uid,state); clearReminders(uid);
+      if(lang==='ml'){
+        await sendWithDelay(singleCta(uid, `📽️ കമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:`, {type:'url', title:'Know Company', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
+        await delay(600);
+      }
+      const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
+      await sendWithDelay(singleCta(uid, L.highIntroSingle + "\n\n" + L.mustWatch, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      await delay(800);
+      const watchedQ = lang==='ml' ? `👋 ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `👋 नमस्ते! क्या आपने वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `👋 Hello! Did you watch the video?\n\n👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+      await sendWithDelay(interactiveButton(uid, watchedQ, [{id:'VIDEO_WATCHED',title:L.watchedBtn}], incomingPhoneId));
+      await saveToSheet('OPP_District', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='OPP_CORP'){
+      state.sub='OPP_CORP'; state.lastStep='Moderate level Income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      await setState(uid,state); clearReminders(uid);
+      if(lang==='ml'){
+        await sendWithDelay(singleCta(uid, `📽️ കമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:`, {type:'url', title:'Know Company', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
+        await delay(600);
+      }
+      const videoUrl = getVideoUrl('OPP_CORP', lang);
+      await sendWithDelay(singleCta(uid, L.moderateIntroSingle + "\n\n" + L.mustWatch, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      await delay(800);
+      const watchedQ = lang==='ml' ? `👋 ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `👋 नमस्ते! क्या आपने वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `👋 Hello! Did you watch the video?\n\n👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+      await sendWithDelay(interactiveButton(uid, watchedQ, [{id:'VIDEO_WATCHED',title:L.watchedBtn}], incomingPhoneId));
+      await saveToSheet('OPP_Corp', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='OPP_CENTER'){
+      state.sub='OPP_CENTER'; state.lastStep='Base level Income - CENTER - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      await setState(uid,state); clearReminders(uid);
+      if(lang==='ml'){
+        await sendWithDelay(singleCta(uid, `📽️ കമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:`, {type:'url', title:'Know Company', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
+        await delay(600);
+      }
+      const videoUrl = getVideoUrl('OPP_CENTER', lang);
+      await sendWithDelay(singleCta(uid, L.baseIntroSingle + "\n\n" + L.mustWatch, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      await delay(800);
+      const watchedQ = lang==='ml' ? `👋 ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `👋 नमस्ते! क्या आपने वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `👋 Hello! Did you watch the video?\n\n👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+      await sendWithDelay(interactiveButton(uid, watchedQ, [{id:'VIDEO_WATCHED',title:L.watchedBtn}], incomingPhoneId));
+      await saveToSheet('OPP_Center', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId);
+      return;
+    }
+    // ==================== V125 CONFIRMATION FLOW - ALL LANGUAGES ====================
+    if(btnId==='VIDEO_WATCHED'){
+      state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const benDyn = getBenText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,benDyn, incomingPhoneId));
+      await delay(400);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👋 लाभ पढ़े? समझ में आया?\n\n👉 अब क्या करें: समझ आया तो "लाभ समझा" पर क्लिक करें, नहीं तो "फिर से जानें" पर क्लिक करें:` : `👋 Did you read Benefits? Understood?\n\n👉 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='KNOW_BEN_AGAIN'){
+      const benDyn = getBenText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,benDyn, incomingPhoneId));
+      await delay(300);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `ഇപ്പോൾ മനസ്സിലായോ?` : lang==='hi' ? `अब समझ में आया?` : `Now understood?`, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='UNDERSTOOD_BEN'){
+      state.lastStep='Support - After Understood Benefit'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const supDyn = getSupText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,supDyn, incomingPhoneId));
+      await delay(400);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `👋 പിന്തുണ വായിച്ചോ? മനസ്സിലായോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "പിന്തുണ മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👋 सहायता पढ़ी? समझ में आई?\n\n👉 अब क्या करें: समझ आई तो "सहायता समझी" पर क्लिक करें:` : `👋 Did you read Support? Understood?\n\n👉 What to do now: If understood, click "Understood Support" below:`, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='KNOW_SUP_AGAIN'){
+      const supDyn = getSupText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,supDyn, incomingPhoneId));
+      await delay(300);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `ഇപ്പോൾ മനസ്സിലായോ?` : lang==='hi' ? `अब समझ में आया?` : `Now understood?`, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='UNDERSTOOD_SUP'){
+      state.lastStep='Requirements - After Understood Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const reqDyn = getReqText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,reqDyn, incomingPhoneId));
+      await delay(400);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `👋 ആവശ്യകതകൾ വായിച്ചോ? മനസ്സിലായോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അപേക്ഷ സമർപ്പിക്കാൻ:` : lang==='hi' ? `👋 आवश्यकताएं पढ़ीं? समझ में आईं?\n\n👉 अब क्या करें: समझ आई तो "आवश्यकता समझी" पर क्लिक करें, आवेदन जमा करें:` : `👋 Did you read Requirements? Understood?\n\n👉 What to do now: If understood, click "Understood Requirement" below to submit application:`, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='KNOW_REQ_AGAIN'){
+      const reqDyn = getReqText(state.sub, lang);
+      await sendWithDelay(textMessage(uid,reqDyn, incomingPhoneId));
+      await delay(300);
+      await sendWithDelay(interactiveButton(uid, lang==='ml' ? `ഇപ്പോൾ മനസ്സിലായോ?` : lang==='hi' ? `अब समझ में आया?` : `Now understood?`, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='UNDERSTOOD_REQ'){
+      state.lastStep='Requirements Understood - Ready to Submit'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const submitMsg = lang==='ml' ? `✅ എല്ലാം മനസ്സിലായി! ഇപ്പോൾ അപേക്ഷ സമർപ്പിക്കാം.` : lang==='hi' ? `✅ सब समझ में आ गया! अब आवेदन जमा करते हैं।` : `✅ All understood! Now submit application.`;
+      await sendWithDelay(textMessage(uid,submitMsg, incomingPhoneId));
+      await delay(400);
+      await sendWithDelay(interactiveButton(uid, L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
+      return;
+    }
 
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.benText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Benefits', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Support', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
@@ -916,3 +1063,8 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V118 FULL ESCALATING + RAZORPAY AUTO-VERIFY ALL STEPS 1h/12h/24h 95623 24130 - Sheet + Reminders + EMI - Sheet + Reminders + EMI listening on ${PORT} - FIXED - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW}`); await getSheets(); });
+
+
+// ==================== LOCKED - END OF FILE - V126 FINAL LOCKED ====================
+// If you need to make changes, create V127 with proper version control
+// Current locked version: V126 FINAL LOCKED - 2026-11-01
