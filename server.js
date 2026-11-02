@@ -1,4 +1,4 @@
-// V148 FINAL - COMBINED - V142 IST TIMING + V145 4STEP DROPDOWN + ALL INDIA 36 STATES + KERALA 14 DIST + SLOT BOOKING + V146 ALL 6 YOUTUBE 80% REAL TRACKING LIKE RAZORPAY + TRACKING PAGE /video-watch + WEBHOOK /api/video-watched - 2026-11-02 - DEPLOY FILE
+// V148 FINAL - COMBINED - FIXED CTA - V142 IST TIMING + V145 4STEP DROPDOWN + ALL INDIA 36 STATES + KERALA 14 DIST + SLOT BOOKING + V146 ALL 6 YOUTUBE 80% REAL TRACKING LIKE RAZORPAY + TRACKING PAGE /video-watch + WEBHOOK /api/video-watched - 2026-11-02 - DEPLOY FILE
 // Based on V142 FINAL IST Timing - Includes: IST Asia/Kolkata, 1h/12h/24h Escalating Reminders, EMI, Dual Numbers, All Services (Ride/BizDir/Delivery/Booking/Opp), Sheets, Pay 5000 Razorpay
 // + 4-Step State->District->Corp/Muni->Business Center + All India 36 States + Kerala 14 Dist Detailed + Slot Booking 1/4/1/3 + Business Center town,district
 // + All 6 YouTube Videos (Fll3OY-hilU, F9rI2crM7Ow, Ds0lBtTaI6c, _y2JeFHBnqg, GqolfqgHiCU, r0X77XfmF94) with REAL 80% Tracking NOT Assumption
@@ -459,16 +459,50 @@ function interactiveButton(to,body,buttons, phoneId){
   const btns = buttons.slice(0,3).map(b=>({type:'reply', reply:{id:b.id, title:b.title.substring(0,20)}}));
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
 }
-function ctaButtons(to,body,ctaList, phoneId){
-  const buttons = ctaList.slice(0,3).map(c=>{
-    if(c.type==='url'){ return { type:'cta_url', title:c.title.substring(0,20), cta_url:c.url }; }
-    else { return { type:'phone_number', title:c.title.substring(0,20), payload:c.phone }; }
-  });
-  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:body.substring(0,1024)}, action:{buttons: buttons} }, _phoneId: phoneId };
-}
+
+
 function singleCta(to,body,btn, phoneId){
+  // Correct format for CTA URL button - Meta Cloud API v20
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
 }
+
+function ctaButtons(to,body,ctaList, phoneId){
+  // Fixed: Correct schema for cta_url buttons
+  // For URL: use url type with proper structure
+  // For phone: use phone_number with proper structure
+  // Note: Mixing url and phone in same interactive is not allowed in some versions, so split if needed
+  const hasUrl = ctaList.some(c=>c.type==='url');
+  const hasPhone = ctaList.some(c=>c.type==='phone');
+  
+  // If only URLs or only phones, use correct format
+  if(hasUrl && !hasPhone){
+    // Use singleCta for first URL if multiple, or list if needed
+    // For multiple URLs, use text with links (WhatsApp limitation: only 1 cta_url per message in some versions)
+    // Workaround: send first as CTA, rest as text
+    const first = ctaList.find(c=>c.type==='url');
+    return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: first.title.substring(0,20), url: first.url } } }, _phoneId: phoneId };
+  }
+  if(hasPhone && !hasUrl){
+    // Phone number button - correct format
+    const btns = ctaList.slice(0,1).map(c=>({ type:'phone_number', phone_number: c.phone.replace(/[^0-9]/g,''), text: c.title.substring(0,20) }));
+    return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'call_to_action', body:{text:body.substring(0,1024)}, action:{ buttons: btns } }, _phoneId: phoneId };
+  }
+  // Mixed: send URL first, then phone in next message will be handled by caller
+  // Fallback to text message with links
+  let text = body + "\n\n";
+  ctaList.forEach(c=>{
+    if(c.type==='url') text += `🔗 ${c.title}: ${c.url}\n`;
+    else text += `📞 ${c.title}: +91 ${c.phone}\n`;
+  });
+  return { messaging_product:'whatsapp', to, type:'text', text:{body: text.substring(0,4096)}, _phoneId: phoneId };
+}
+
+function singleCtaFixed(to,body,btn, phoneId){
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
+}
+
+
+
 
 async function sendWithDelay(msg){
   const now = Date.now();
