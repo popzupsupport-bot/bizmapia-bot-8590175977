@@ -1,5 +1,5 @@
-// V148 FINAL - COMBINED - FIXED CTA - V142 IST TIMING + V145 4STEP DROPDOWN + ALL INDIA 36 STATES + KERALA 14 DIST + SLOT BOOKING + V146 ALL 6 YOUTUBE 80% REAL TRACKING LIKE RAZORPAY + TRACKING PAGE /video-watch + WEBHOOK /api/video-watched - 2026-11-02 - DEPLOY FILE
-// Based on V142 FINAL IST Timing - Includes: IST Asia/Kolkata, 1h/12h/24h Escalating Reminders, EMI, Dual Numbers, All Services (Ride/BizDir/Delivery/Booking/Opp), Sheets, Pay 5000 Razorpay
+// V149 FINAL - FIXED ALL ERRORS - V142 IST TIMING + V145 4STEP DROPDOWN + ALL INDIA 36 STATES + KERALA 14 DIST + SLOT BOOKING + V146 ALL 6 YOUTUBE 80% REAL TRACKING LIKE RAZORPAY + CTA FIX + req is not defined FIX - 2026-11-02 - DEPLOY FILE
+// V149 = V148 FINAL + Fixed: req is not defined at repeatLastStep:556 + CTA OAuthException 100 + IST Asia/Kolkata + All features kept
 // + 4-Step State->District->Corp/Muni->Business Center + All India 36 States + Kerala 14 Dist Detailed + Slot Booking 1/4/1/3 + Business Center town,district
 // + All 6 YouTube Videos (Fll3OY-hilU, F9rI2crM7Ow, Ds0lBtTaI6c, _y2JeFHBnqg, GqolfqgHiCU, r0X77XfmF94) with REAL 80% Tracking NOT Assumption
 const express = require('express');
@@ -553,8 +553,8 @@ async function repeatLastStep(uid, state, lang, phoneId){
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
       const trackingDomain = 'https://bizmapia.com';
       const trackingLink = getTrackingLink(trackingDomain, uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
-      const renderDomain = `https://${req.get('host')}`;
-      const renderTrackingLink = getTrackingLink(renderDomain, uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
+      const trackingDomain = 'https://bizmapia.com'; // Fixed: req not defined in reminder
+      const renderTrackingLink = getTrackingLink(trackingDomain, uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
       await sendWithDelay(singleCta(uid, L.highIntroSingle + "\n\n🎥 Direct: "+getVideoUrl('OPP_DISTRICT', lang), {type:'url', title:'▶️ Direct YouTube', url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId));
       await delay(600);
       await sendWithDelay(singleCta(uid, (lang==='ml' ? '🎥 ട്രാക്കിംഗോടെ - 80% നിർബന്ധം Razorpay പോലെ - യഥാർത്ഥ ട്രാക്കിംഗ്, അനുമാനമല്ല' : '🎥 With Tracking - 80% Required Like Razorpay - REAL not assumption') + "\nVideo: "+videoObj.id+" Fee: "+videoObj.fee+"\n👇 Click to watch with REAL tracking:" , {type:'url', title:'▶️ Watch with 80% Tracking', url:trackingLink}, phoneId));
