@@ -551,24 +551,24 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('District')){ 
       // V147 REAL TRACKING - All videos with tracking link like Razorpay
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
-      const trackingDomain = 'https://bizmapia.com';
-      const trackingLink = getTrackingLink(trackingDomain, uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
-      const trackingDomain = 'https://bizmapia.com'; // Fixed: req not defined in reminder
-      const renderTrackingLink = getTrackingLink(trackingDomain, uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
+  // REMOVED:   // FIXED: Removed duplicate TRK_DOMAIN declaration - using direct domain - Fixed duplicate
+      // const tra - removedckingLink = getTrackingLink('https://bizmapia.com', uid, lang, 'OPP_DISTRICT', videoObj, 'Idukki');
+      
+      const renderTrackingLink = 'https://bizmapia.com/video-watch?phone='+uid+'&lang='+lang+'&type=district&videoId='+videoObj.id;
       await sendWithDelay(singleCta(uid, L.highIntroSingle + "\n\n🎥 Direct: "+getVideoUrl('OPP_DISTRICT', lang), {type:'url', title:'▶️ Direct YouTube', url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId));
       await delay(600);
       await sendWithDelay(singleCta(uid, (lang==='ml' ? '🎥 ട്രാക്കിംഗോടെ - 80% നിർബന്ധം Razorpay പോലെ - യഥാർത്ഥ ട്രാക്കിംഗ്, അനുമാനമല്ല' : '🎥 With Tracking - 80% Required Like Razorpay - REAL not assumption') + "\nVideo: "+videoObj.id+" Fee: "+videoObj.fee+"\n👇 Click to watch with REAL tracking:" , {type:'url', title:'▶️ Watch with 80% Tracking', url:trackingLink}, phoneId));
  await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ 
       const videoObjCorp = getVideoObj('OPP_CORP', lang);
-      const trackingLinkCorp = getTrackingLink('https://bizmapia.com', uid, lang, 'OPP_CORP', videoObjCorp, 'Idukki');
+      // const tra - removedckingLinkCorp = getTrackingLink('https://bizmapia.com', uid, lang, 'OPP_CORP', videoObjCorp, 'Idukki');
       await sendWithDelay(singleCta(uid, L.moderateIntroSingle + "\nDirect: "+getVideoUrl('OPP_CORP', lang), {type:'url', title:'▶️ Direct YouTube', url:getVideoUrl('OPP_CORP', lang)}, phoneId));
       await delay(600);
       await sendWithDelay(singleCta(uid, (lang==='ml' ? '🎥 ട്രാക്കിംഗോടെ - 80% യഥാർത്ഥം' : '🎥 With Tracking - 80% REAL') + " Video: "+videoObjCorp.id+" Fee: "+videoObjCorp.fee, {type:'url', title:'▶️ Watch with 80% Tracking', url:trackingLinkCorp}, phoneId));
  await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ 
       const videoObjCenter = getVideoObj('OPP_CENTER', lang);
-      const trackingLinkCenter = getTrackingLink('https://bizmapia.com', uid, lang, 'OPP_CENTER', videoObjCenter, 'Idukki');
+      // const tra - removedckingLinkCenter = getTrackingLink('https://bizmapia.com', uid, lang, 'OPP_CENTER', videoObjCenter, 'Idukki');
       await sendWithDelay(singleCta(uid, L.baseIntroSingle + "\nDirect: "+getVideoUrl('OPP_CENTER', lang), {type:'url', title:'▶️ Direct YouTube', url:getVideoUrl('OPP_CENTER', lang)}, phoneId));
       await delay(600);
       await sendWithDelay(singleCta(uid, (lang==='ml' ? '🎥 ട്രാക്കിംഗോടെ - 80% യഥാർത്ഥം' : '🎥 With Tracking - 80% REAL') + " Video: "+videoObjCenter.id+" Fee: "+videoObjCenter.fee, {type:'url', title:'▶️ Watch with 80% Tracking', url:trackingLinkCenter}, phoneId));
