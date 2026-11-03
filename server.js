@@ -1,4 +1,4 @@
-// V161 FINAL DEPLOY FIX - NO 5000 - REG FEE 250/150/100 - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - MAYA WELCOME
+// V165 FINAL SAFE - NO IMAGES TO AVOID RISK - WELCOME MAYA FIXED + OTHER STEPS APPRECIATIVE GREETING - WHAT TO DO - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - MAYA WELCOME
 // 8 SHEETS LOCKED - ALL STEPS - NO SEND FAIL
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -765,9 +765,11 @@ I'm here to give you real-time assistance and reminders to find your correct nee
 Welcome to Bizmapia!
 
 Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia.
+    mainMenu:`Thank you for selecting English! 🙏 Excellent choice!
 
-Please select a service from below and I'll guide you step-by-step:-`,
+I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia.
+
+👇 What to do now: Please select a service from below and I'll guide you step-by-step what to do next:-`,
     moreServices:`More services:-`,
     services:[{id:'SVC_RIDE',title:'Ride Hailing'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'},{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}],
     noLang:`Sorry, You are not selected any Language.\n\nPlease select your preferred language from below:-`,
@@ -796,9 +798,9 @@ Please select a service from below and I'll guide you step-by-step:-`,
     bookMovie:`Book Movie Tickets, Events, Shows near you.\n\nClick below to install app or call us:`,
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
     oppButtons:[{id:'OPP_DISTRICT',title:'High level Income'},{id:'OPP_CORP',title:'Moderate level Income'},{id:'OPP_CENTER',title:'Base level Income'}],
-    highIntroSingle:`Great you are selected our Higher level income earning opportunity\n\nLets find details about our District franchise opportunity\nRemember only one application is approved for a district, so study the whole details and make a decision with this chat.`,
-    moderateIntroSingle:`Great you are selected our Moderate level income earning opportunity\n\nLets find details about our Corporation franchise opportunity\nRemember limited slots for corporation, so study whole details and make decision with this chat.`,
-    baseIntroSingle:`Great you are selected our Base level income earning opportunity\n\nLets find details about our Business Center opportunity\nBase earning model for your town, study details and decide.`,
+    highIntroSingle:`Excellent choice! 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
+    moderateIntroSingle:`Excellent choice! 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for corporation!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
+    baseIntroSingle:`Excellent choice! 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
     reminderFranchise:`You were checking our franchise opportunity. Continue to know more?`,
     seeVideo:'See the Video',
     clickWatch:'Click to watch',
@@ -844,9 +846,11 @@ I'm here to give you real-time assistance and reminders to find your correct nee
 Welcome to Bizmapia!
 
 Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`मैं माया हूँ 🤖 — मैं आपको Bizmapia के साथ आपकी सही जरूरतों के लिए रियल-टाइम सहायता और रिमाइंडर दूंगी।
+    mainMenu:`हिंदी चुनने के लिए धन्यवाद! 🙏 बहुत बढ़िया चयन!
 
-कृपया नीचे से सेवा चुनें:-`,
+मैं माया हूँ 🤖 — मैं आपको Bizmapia के साथ आपकी सही जरूरतों के लिए रियल-टाइम सहायता और रिमाइंडर दूंगी।
+
+👇 अब क्या करना है: कृपया नीचे से सेवा चुनें और मैं आपको स्टेप-बाय-स्टेप गाइड करूंगी:-`,
     moreServices:`और सेवाएं:-`,
     services:[{id:'SVC_RIDE',title:'राइड हेलिंग'},{id:'SVC_BIZDIR',title:'बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'ऑनलाइन बुकिंग'},{id:'SVC_OPP',title:'बिजनेस अवसर'}],
     noLang:`क्षमा करें, आपने कोई भाषा नहीं चुनी।\n\nकृपया नीचे से अपनी पसंदीदा भाषा चुनें:-`,
@@ -923,9 +927,11 @@ I'm here to give you real-time assistance and reminders to find your correct nee
 Welcome to Bizmapia!
 
 Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`ഞാൻ മായ ആണ് 🤖 — Bizmapia-യിൽ നിങ്ങളുടെ ശരിയായ ആവശ്യങ്ങൾക്ക് റിയൽ-ടൈം സഹായവും റിമൈൻഡറുകളും നൽകാൻ ഞാൻ ഇവിടെയുണ്ട്.
+    mainMenu:`മലയാളം തിരഞ്ഞെടുത്തതിന് നന്ദി! 🙏 മികച്ച തിരഞ്ഞെടുപ്പ്!
 
-താഴെ നിന്ന് സേവനം തിരഞ്ഞെടുക്കുക:-`,
+ഞാൻ മായ ആണ് 🤖 — Bizmapia-യിൽ നിങ്ങളുടെ ശരിയായ ആവശ്യങ്ങൾക്ക് റിയൽ-ടൈം സഹായവും റിമൈൻഡറുകളും നൽകാൻ ഞാൻ ഇവിടെയുണ്ട്.
+
+👇 ഇപ്പോൾ എന്ത് ചെയ്യണം: താഴെ നിന്ന് സേവനം തിരഞ്ഞെടുത്ത് ഞാൻ നിങ്ങളെ സ്റ്റെപ്പായി ഗൈഡ് ചെയ്യാം:-`,
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
     services:[{id:'SVC_RIDE',title:'റൈഡ് ഹെയ്ലിംഗ്'},{id:'SVC_BIZDIR',title:'ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'ബിസിനസ് അവസരം'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
@@ -1789,7 +1795,7 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V161 FINAL DEPLOY FIX - NO 5000 - REG FEE 250/150/100 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V165 FINAL SAFE NO IMAGES - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V155 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
