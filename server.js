@@ -1,4 +1,4 @@
-// V150 FINAL - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED
+// V155 FINAL - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED
 // 8 SHEETS LOCKED - ALL STEPS - NO SEND FAIL
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -68,7 +68,7 @@ function getVideoUrl(sub, lang){
 
 
 
-// === V149 V150 NEW: 4-STEP DROPDOWN + ALL INDIA + SLOT BOOKING + 6 YOUTUBE TRACKING ===
+// === V149 V155 NEW: 4-STEP DROPDOWN + ALL INDIA + SLOT BOOKING + 6 YOUTUBE TRACKING ===
 const KERALA_DATA = {
   districts: [
     { name: "Thiruvananthapuram", code: "TVM", corporation: ["Thiruvananthapuram Corporation"], municipalities: ["Neyyattinkara", "Nedumangad", "Attingal", "Varkala"] },
@@ -268,13 +268,30 @@ function imageMessage(to, imageUrl, caption, phoneId){
 
 
 const LINKS_V92 = {
-  website: WEBSITE,
-  driverApp: PLAY_STORE,
-  tenderDistrict: "https://bizmapia.com/tender/district.pdf",
-  businessLink: "https://bizmapia.com/business",
-  earnLink: EARN_LINK,
-  razorpay: "https://rzp.io/rzp/mq0zG6mS",
+  razorpay: 'https://rzp.io/rzp/BZ9D9rT', // fallback District
+  razorpay_250: 'https://rzp.io/rzp/BZ9D9rT', // District Rs250
+  razorpay_150: 'https://rzp.io/rzp/ptj9OGpr', // Corp/Municipal Rs150
+  razorpay_100: 'https://rzp.io/rzp/lAguvzEt', // Business Center Rs100
+  form: 'https://forms.gle/your-form',
+  playStore: 'https://play.google.com/store/apps/details?id=com.bizmapia.app'
 };
+
+function getRegistrationFee(sub){
+  if(sub==='OPP_DISTRICT') return 250;
+  if(sub==='OPP_CORP') return 150;
+  if(sub==='OPP_CENTER') return 100;
+  return 250;
+}
+function getRazorpayLinkForSub(sub){
+  if(sub==='OPP_DISTRICT') return 'https://rzp.io/rzp/BZ9D9rT';
+  if(sub==='OPP_CORP') return 'https://rzp.io/rzp/ptj9OGpr';
+  if(sub==='OPP_CENTER') return 'https://rzp.io/rzp/lAguvzEt';
+  return 'https://rzp.io/rzp/BZ9D9rT';
+}
+
+function getRegistrationFeeTab(){
+  return 'Registration_Fee';
+}
 
 const PRICING = {
   DISTRICT: { WITH_CORP: 15, WITHOUT_CORP: 10 },
@@ -311,6 +328,40 @@ function getFee(sub, corpYes){
   else if(sub==='OPP_CENTER'){ return PRICING.CENTER.DEFAULT; }
   return 15;
 }
+
+function getTokenFee(sub){
+  if(sub==='OPP_DISTRICT') return 250;
+  if(sub==='OPP_CORP') return 150;
+  if(sub==='OPP_CENTER') return 100;
+  return 250;
+}
+function saveRegistrationFee(phone, sub, fee){
+  try{
+    const regFee = getTokenFee(sub);
+    const link = getRazorpayLinkForSub(sub);
+    const data = {
+      phone: phone,
+      franchise_type: sub,
+      registration_fee: regFee,
+      full_fee: fee+'L',
+      razorpay_link: link,
+      timestamp: new Date().toISOString(),
+      date_ist: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
+    };
+    saveToSheet('Registration_Fee', data).catch(()=>{});
+    saveToSheet(getRegistrationFeeTab(), data).catch(()=>{});
+  }catch(e){ console.log('REG FEE SAVE FAIL', e.message); }
+}
+function getRegistrationFeeForSheet(sub){ return getTokenFee(sub); }
+function getTokenFeeText(sub){
+  const fee = getTokenFee(sub);
+  if(sub==='OPP_DISTRICT') return `District Franchise - Registration Fee Rs${fee} (Part of 10L/15L)`;
+  if(sub==='OPP_CORP') return `Corp/Municipal Franchise - Registration Fee Rs${fee} (Part of 4L/5L)`;
+  if(sub==='OPP_CENTER') return `Business Center - Registration Fee Rs${fee} (Part of 1L)`;
+  return `Registration Fee Rs${fee}`;
+}
+
+
 function getFranchiseName(sub, corpYes){
   if(sub==='OPP_DISTRICT'){ return corpYes ? 'District with Corporation' : 'District without Corporation'; }
   else if(sub==='OPP_CORP'){ return corpYes ? 'Corporation Franchise' : 'Municipal Franchise'; }
@@ -323,31 +374,16 @@ function getReadyText(lang, fee, franchiseName){
   else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
 }
 
-async function createRazorpayPaymentLink(uid, fee){
+async function createRazorpayPaymentLink(uid, sub, fee){
   try{
-    if(!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET){
-      console.log('RAZORPAY keys missing, using static link');
-      return LINKS_V92.razorpay;
-    }
-    const cleanPhone = uid.replace(/[^0-9]/g,'').slice(-10);
-    const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
-    const res = await httpClient.post('https://api.razorpay.com/v1/payment_links', {
-      amount: 5000*100, // Rs5000 in paise
-      currency: 'INR',
-      accept_partial: false,
-      description: `Bizmapia ${fee}L Registration - ${uid}`,
-      customer: { contact: '+91'+cleanPhone },
-      notes: { whatsapp: uid, fee: String(fee), bot: 'bizmapia-bot-8590175977' },
-      notify: { sms: false, email: false },
-      reminder_enable: true,
-      callback_url: WEBSITE,
-      callback_method: 'get'
-    }, { headers: { Authorization: `Basic ${auth}`, 'Content-Type':'application/json' } });
-    console.log(`RAZORPAY LINK CREATED for ${uid} - ${res.data.short_url}`);
-    return res.data.short_url;
+    if(sub==='OPP_DISTRICT') return 'https://rzp.io/rzp/BZ9D9rT';
+    if(sub==='OPP_CORP') return 'https://rzp.io/rzp/ptj9OGpr';
+    if(sub==='OPP_CENTER') return 'https://rzp.io/rzp/lAguvzEt';
+    if(fee===1) return 'https://rzp.io/rzp/lAguvzEt';
+    if(fee===4 || fee===5) return 'https://rzp.io/rzp/ptj9OGpr';
+    return 'https://rzp.io/rzp/BZ9D9rT';
   }catch(e){
-    console.log('RAZORPAY LINK FAIL', e.response?.data || e.message);
-    return LINKS_V92.razorpay; // fallback
+    return 'https://rzp.io/rzp/BZ9D9rT';
   }
 }
 
@@ -358,10 +394,11 @@ function verifyRazorpaySignature(body, signature, secret){
   }catch{ return false; }
 }
 
-function getPayText(lang, fee){
-  if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക.`; }
-  else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। यह ${fee}L का हिस्सा है, नीचे बटन पर क्लिक करके भुगतान करें।`; }
-  else { return `Great you confirmed ready for ${fee}L. Please pay Rs5000 as registration fee to lock your area. This is part of ${fee}L, click the button below to pay.`; }
+function getPayText(lang, fee, sub){
+  const token = getTokenFee(sub||'OPP_DISTRICT');
+  if(lang==='ml'){ return `നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ Rs${token} അടയ്ക്കുക. ഇത് ${fee}L-ന്റെ ഭാഗമാണ്, ബാക്കി തുക വെരിഫിക്കേഷന് ശേഷം. താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് അടയ്ക്കുക. (${getTokenFeeText(sub)})`; }
+  else if(lang==='hi'){ return `बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए रजिस्ट्रेशन फी Rs${token} का भुगतान करें। यह ${fee}L का हिस्सा है, बाकी वेरिफिकेशन के बाद। नीचे बटन पर क्लिक करके भुगतान करें। (${getTokenFeeText(sub)})`; }
+  else { return `Great you confirmed ready for ${fee}L. Please pay Registration Fee Rs${token} to lock your area. This is part of ${fee}L, remaining after verification. Click the button below to pay. (${getTokenFeeText(sub)})`; }
 }
 
 const HELP_ADMIN = '8590183646';
@@ -401,7 +438,7 @@ async function getSheets(){
       const spreadsheetId = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
       const meta = await sheetsClient.spreadsheets.get({spreadsheetId});
       const existingTitles = meta.data.sheets.map(s=>s.properties.title);
-      const required8 = ['System_Logs','Master_Leads','Franchise_Funnel','Payments','Ride_Hailing','Business_Directory','Delivery','Booking'];
+      const required8 = ['System_Logs','Master_Leads','Franchise_Funnel','Payments','Ride_Hailing','Business_Directory','Delivery','Booking','Registration_Fee'];
       const missing = required8.filter(t=>!existingTitles.includes(t));
       if(missing.length>0){
         console.log('Creating missing 8 sheets:', missing.join(','));
@@ -415,7 +452,7 @@ async function getSheets(){
 }
 
 
-const ALLOWED_SHEETS = ['System_Logs','Master_Leads','Franchise_Funnel','Payments','Ride_Hailing','Business_Directory','Delivery','Booking'];
+const ALLOWED_SHEETS = ['System_Logs','Master_Leads','Franchise_Funnel','Payments','Ride_Hailing','Business_Directory','Delivery','Booking','Registration_Fee'];
 const OLD_TABS_MAP = {
   'Leads':'System_Logs','No_Language':'System_Logs','HI_Reset':'System_Logs','Franchise_Leads':'Master_Leads','Franchise_Submit':'Franchise_Funnel','Franchise_Benefits':'Franchise_Funnel','Franchise_Support':'Franchise_Funnel','Franchise_Requirements':'Franchise_Funnel','Franchise_CorpCheck':'Franchise_Funnel','Franchise_EMI':'Franchise_Funnel','Franchise_EMI_Selected':'Franchise_Funnel','Franchise_NotPaid':'Franchise_Funnel','Franchise_Ready15L':'Franchise_Funnel','Franchise_Occupation':'Master_Leads','Franchise_Date':'Master_Leads','Franchise_PayDone':'Payments','Franchise_PayDone_VERIFIED':'Payments','Payment_Failed':'Payments','Unverified_Payments':'Payments','OPP_District':'Franchise_Funnel','OPP_Corp':'Franchise_Funnel','OPP_Center':'Franchise_Funnel','App_Install':'System_Logs','Attach_Cab':'Ride_Hailing','Book_Cab':'Ride_Hailing','Book_Rooms':'Booking','Book_Appointments':'Booking','Book_Movie':'Booking','Order_Stores':'Delivery','Delivery_Partner':'Delivery','Register_Business':'Business_Directory','Start_Advertising':'Business_Directory','Book_Apartments':'Booking'
 };
@@ -517,7 +554,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(sub==='BOOK_APPOINT' || last==='Book Appointments'){ return await sendCtaSequence(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='BOOK_MOVIE' || last==='Movie Tickets'){ return await sendCtaSequence(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('District')){ 
-  // V150 FIX: tracking link defined correctly
+  // V155 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
   await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
@@ -565,22 +602,22 @@ function clearReminders(uid){
   for(let key of reminders.keys()){ if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); } }
   deleteReminderFromRedis(uid, '');
 }
-function getEscalatedPayText(lang, fee, level){
+function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(sub||'OPP_DISTRICT');
   // level: 1=1h, 12=12h, 24=24h
   if(lang==='ml'){
-    if(level===1) return `പണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
-    if(level===12) return `⚠ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ചെയ്തിട്ടില്ല - പണമടച്ചോ?\n\nപണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
-    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ - നിങ്ങളുടെ ${fee}L ഏരിയ മറ്റൊരാൾക്ക് പോകുന്നതിന് മുൻപ് പണമടയ്ക്കൂ!\n\nപണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
+    if(level===1) return `രജിസ്ട്രേഷൻ ഫീ Rs${token} അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
+    if(level===12) return `⚠ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ചെയ്തിട്ടില്ല - പണമടച്ചോ?\n\nരജിസ്ട്രേഷൻ ഫീ Rs${token} അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
+    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ - നിങ്ങളുടെ ${fee}L ഏരിയ മറ്റൊരാൾക്ക് പോകുന്നതിന് മുൻപ് പണമടയ്ക്കൂ!\n\nരജിസ്ട്രേഷൻ ഫീ Rs${token} അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
   } else if(lang==='hi'){
-    if(level===1) return `भुगतान के बाद, कृपया चुनें:-`;
-    if(level===12) return `⚠ आपका ${fee}L एरिया अभी भी लॉक नहीं है - क्या आपने भुगतान किया?\n\nभुगतान के बाद, कृपया चुनें:-`;
-    if(level===24) return `⏰ अंतिम रिमाइंडर - आपका ${fee}L एरिया किसी और को जाने से पहले भुगतान करें!\n\nभुगतान के बाद, कृपया चुनें:-`;
+    if(level===1) return `रजिस्ट्रेशन फी Rs${token} भुगतान के बाद, कृपया चुनें:-`;
+    if(level===12) return `⚠ आपका ${fee}L एरिया अभी भी लॉक नहीं है - क्या आपने भुगतान किया?\n\nरजिस्ट्रेशन फी Rs${token} भुगतान के बाद, कृपया चुनें:-`;
+    if(level===24) return `⏰ अंतिम रिमाइंडर - आपका ${fee}L एरिया किसी और को जाने से पहले भुगतान करें!\n\nरजिस्ट्रेशन फी Rs${token} भुगतान के बाद, कृपया चुनें:-`;
   } else {
-    if(level===1) return `After payment, please select:-`;
-    if(level===12) return `⚠ Your ${fee}L area is still not locked - have you paid?\n\nAfter payment, please select:-`;
-    if(level===24) return `⏰ Last reminder - Pay before your ${fee}L area goes to someone else!\n\nAfter payment, please select:-`;
+    if(level===1) return `After Registration Fee Rs${token} payment, please select:-`;
+    if(level===12) return `⚠ Your ${fee}L area is still not locked - have you paid?\n\nAfter Registration Fee Rs${token} payment, please select:-`;
+    if(level===24) return `⏰ Last reminder - Pay before your ${fee}L area goes to someone else!\n\nAfter Registration Fee Rs${token} payment, please select:-`;
   }
-  return `After payment, please select:-`;
+  return `After Registration Fee Rs${token} payment, please select:-`;
 }
 
 function getEscalatedGeneralText(lang, originalText, level, stepName){
@@ -786,7 +823,7 @@ Please select your preferred language / अपनी भाषा चुने�
     payBtn:'I Have Paid Rs5000',
     payFeeNow:'Pay fee now',
     notPaid:'Not paid 5000',
-    payAfter:'After payment, please select:-',
+    payAfter:'After Registration Fee Rs${token} payment, please select:-',
     emiOpt:`EMI options available:\nEMI 10 Months\nEMI 20 Months\nPlease select any one from below:-`,
     emi10:'EMI 10 Months', emi20:'EMI 20 Months',
     leadAsk:`Great! Please type your full name, district and mobile number (e.g. Ajo, Thodupuzha, 9567742507)`,
@@ -866,7 +903,7 @@ Please select your preferred language / अपनी भाषा चुने�
     payBtn:'मैंने 5000 भुगतान किया',
     payFeeNow:'अभी भुगतान करें',
     notPaid:'भुगतान नहीं किया',
-    payAfter:'भुगतान के बाद, कृपया चुनें:-',
+    payAfter:'रजिस्ट्रेशन फी Rs${token} भुगतान के बाद, कृपया चुनें:-',
     emiOpt:`EMI विकल्प उपलब्ध हैं:\nEMI 10 महीने\nEMI 20 महीने`,
     emi10:'EMI 10 महीने', emi20:'EMI 20 महीने',
     leadAsk:`बहुत बढ़िया! कृपया अपना पूरा नाम, जिला और मोबाइल नंबर टाइप करें`,
@@ -946,7 +983,7 @@ Please select your preferred language / अपनी भाषा चुने�
     payBtn:'ഞാൻ 5000 അടച്ചു',
     payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
     notPaid:'അടച്ചില്ല',
-    payAfter:'പണമടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-',
+    payAfter:'രജിസ്ട്രേഷൻ ഫീ Rs${token} അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-',
     emiOpt:`EMI ഓപ്ഷനുകൾ ലഭ്യമാണ്:\nEMI 10 മാസം\nEMI 20 മാസം`,
     emi10:'EMI 10 മാസം', emi20:'EMI 20 മാസം',
     leadAsk:`മികച്ചത്! ദയവായി നിങ്ങളുടെ പൂർണ്ണ നാമം, ജില്ല, മൊബൈൽ നമ്പർ ടൈപ്പ് ചെയ്യുക`,
@@ -960,7 +997,7 @@ Please select your preferred language / अपनी भाषा चुने�
   }
 };
 
-app.get('/',(req,res)=>res.send(`V150 FINAL - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL TRACKING + SLOT BOOKING 1/4/1/3 + ALL-CHATS + CTA FIXED - 95623 24130 - Sheet + Reminders + EMI - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`));
+app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN Pay Registration Fee - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -1059,7 +1096,7 @@ app.post('/webhook', async(req,res)=>{
       }
       const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
       
-  // V150 FIX: tracking link defined correctly
+  // V155 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
   await sendWithDelay(singleCta(uid, L.highIntroSingle + "\n\n" + L.mustWatch, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
@@ -1182,9 +1219,10 @@ app.post('/webhook', async(req,res)=>{
       state.lastStep=`Pay Rs5000 - ${fee}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
-      const payText = getPayText(lang, fee);
-      const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      const payText = getPayText(lang, fee, state.sub);
+  try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){}
+      const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1197,9 +1235,10 @@ app.post('/webhook', async(req,res)=>{
       state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
-      const payText = getPayText(lang, fee); 
-      const dynamicLink = await createRazorpayPaymentLink(uid, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      const payText = getPayText(lang, fee, state.sub);
+  try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){} 
+      const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1210,9 +1249,9 @@ app.post('/webhook', async(req,res)=>{
       state.lastStep=`Not Paid - ${state.fee||15}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
-      const payText = getPayText(lang, state.fee||15);
+      const payText = getPayText(lang, state.fee||15, state.sub);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:dynamicLink}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1246,8 +1285,8 @@ app.post('/webhook', async(req,res)=>{
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
       if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
-        const payText = getPayText(lang, state.fee||15);
-        await sendWithDelay(singleCta(uid, payText, {type:'url', title:L.payFeeNow, url:LINKS_V92.razorpay}, incomingPhoneId));
+        const payText = getPayText(lang, state.fee||15, state.sub);
+        await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
         return;
       }
       await repeatLastStep(uid, state, lang, incomingPhoneId); 
@@ -1416,7 +1455,7 @@ app.get('/replay-last-4-days', async(req,res)=>{
 
 // WIPE + REPLAY - ONE CLICK CLEAR + REWRITE LAST 4 DAYS
 
-// === FIX: Missing functions for wipe-and-replay - Added in V150 ===
+// === FIX: Missing functions for wipe-and-replay - Added in V155 ===
 async function getAllChatsFromMemory(){
   try{
     if(redisReady && redis){
@@ -1515,7 +1554,7 @@ app.get('/wipe-and-replay-4-days', async(req,res)=>{
 });
 
 
-// === FIX: Missing functions for wipe-and-replay - Added in V150 ===
+// === FIX: Missing functions for wipe-and-replay - Added in V155 ===
 async function getAllChatsFromMemory(){
   try{
     if(redisReady && redis){
@@ -1753,9 +1792,9 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V150 FINAL - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL + SLOT BOOKING + ALL-CHATS - 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V155 FINAL - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL + SLOT BOOKING + ALL-CHATS - 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V150 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
+// ==================== LOCKED - END OF FILE - V155 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
 // If you need to make changes, create V127 with proper version control
-// Current locked version: V150 FINAL PRODUCTION - CTA FIXED - 2026-11-01 - INCLUDES V117 + V122-V127
+// Current locked version: V155 FINAL PRODUCTION - CTA FIXED - 2026-11-01 - INCLUDES V117 + V122-V127
