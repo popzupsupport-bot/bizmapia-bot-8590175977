@@ -1,4 +1,4 @@
-// V159 FINAL MAYA - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - MAYA WELCOME
+// V161 FINAL DEPLOY FIX - NO 5000 - REG FEE 250/150/100 - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - MAYA WELCOME
 // 8 SHEETS LOCKED - ALL STEPS - NO SEND FAIL
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -818,7 +818,7 @@ Please select a service from below and I'll guide you step-by-step:-`,
     yesCorp:'Yes Corp', noCorp:'No Corp',
     ready15:`You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.`,
     readyBtn:'Yes Ready - 15L',
-    payReg:`Great you confirmed ready for ${fee}L. Please pay Registration Fee Rs${getTokenFee(sub)} to lock your area. Click Pay Registration Fee button below. - Part of ${fee}L`,
+    payReg:`Great you confirmed ready. Please pay Registration Fee to lock your area. Click Pay Registration Fee button below.`,
     payBtn:'I Have Paid Registration Fee',
     payFeeNow:'Pay fee now',
     notPaid:'Not Paid - Will Pay',
@@ -897,7 +897,7 @@ Please select your preferred language from below / अपनी भाषा न
     yesCorp:'हाँ कॉर्प', noCorp:'नहीं कॉर्प',
     ready15:`आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप जिला फ्रेंचाइजी शुल्क के रूप में 15 लाख रुपये का भुगतान करने के लिए तैयार हैं।`,
     readyBtn:'हाँ तैयार - 15L',
-    payReg:`बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए रजिस्ट्रेशन फी Rs${getTokenFee(sub)} का भुगतान करें। नीचे Pay Registration Fee बटन पर क्लिक करें। - Part of ${fee}L`,
+    payReg:`बहुत बढ़िया आपने तैयारी की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए रजिस्ट्रेशन फी का भुगतान करें। नीचे Pay Registration Fee बटन पर क्लिक करें।`,
     payBtn:'मैंने रजिस्ट्रेशन फी भुगतान किया',
     payFeeNow:'अभी भुगतान करें',
     notPaid:'भुगतान नहीं किया - करूंगा',
@@ -976,7 +976,7 @@ Please select your preferred language from below / अपनी भाषा न
     yesCorp:'അതെ കോർപ്പ്', noCorp:'അല്ല കോർപ്പ്',
     ready15:`നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസായി 15 ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`,
     readyBtn:'അതെ തയ്യാർ - 15L',
-    payReg:`നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ Rs${getTokenFee(sub)} അടയ്ക്കുക। താഴെ Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക। - Part of ${fee}L`,
+    payReg:`നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക. താഴെ Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.`,
     payBtn:'ഞാൻ രജിസ്ട്രേഷൻ ഫീ അടച്ചു',
     payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
     notPaid:'അടച്ചില്ല - അടയ്ക്കാം',
@@ -1789,7 +1789,7 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V160 FINAL MAYA - REG FEE FIXED - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL + SLOT BOOKING + ALL-CHATS - 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V161 FINAL DEPLOY FIX - NO 5000 - REG FEE 250/150/100 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V155 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
