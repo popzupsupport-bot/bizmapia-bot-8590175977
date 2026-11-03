@@ -1,4 +1,4 @@
-// V155 FINAL - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED
+// V159 FINAL MAYA - HELP NUMBERS FIXED - 7 DAYS REPLAY - CTA FIXED - MAYA WELCOME
 // 8 SHEETS LOCKED - ALL STEPS - NO SEND FAIL
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -538,7 +538,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   console.log(`REPEAT LAST STEP for ${uid} via ${phoneId} - last:${last} sub:${sub} lang:${lang}`);
   const level = state.reminderLevel || 1;
   // PAY STEP - TOP PRIORITY FOR REMINDERS - Handled in scheduleReminder for escalated text, but keep fallback
-  if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
+  if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
     const fee = state.fee||15;
     const escalatedText = getEscalatedPayText(lang, fee, level);
     console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
@@ -565,7 +565,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
-    if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
+    if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
     // Reminder flow: Yes paid / Not paid / Call
     return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}])); 
   }
@@ -660,7 +660,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
-        if(last.includes('Pay Rs5000') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
+        if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
           const escalatedText = getEscalatedPayText(actualLang, fee, level);
@@ -756,19 +756,18 @@ function getReqText(sub, lang){
 
 const T={
   en:{
-    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
+
+You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
+
+I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
 
 Welcome to Bizmapia!
-You are in India's first 4-in-1 service app platform.
 
-बिज़मैपिया में आपका स्वागत है!
-आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    mainMenu:`I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia.
 
-ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
-ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
-
-Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`Please click any one service from below to help you further:-`,
+Please select a service from below and I'll guide you step-by-step:-`,
     moreServices:`More services:-`,
     services:[{id:'SVC_RIDE',title:'Ride Hailing'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'},{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}],
     noLang:`Sorry, You are not selected any Language.\n\nPlease select your preferred language from below:-`,
@@ -819,10 +818,10 @@ Please select your preferred language / अपनी भाषा चुने�
     yesCorp:'Yes Corp', noCorp:'No Corp',
     ready15:`You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.`,
     readyBtn:'Yes Ready - 15L',
-    payReg:`Great you confirmed ready for 15L. Please pay Rs5000 as registration fee to lock your district. Link: ${LINKS_V92.razorpay} - Part of 15L`,
-    payBtn:'I Have Paid Rs5000',
+    payReg:`Great you confirmed ready for ${fee}L. Please pay Registration Fee Rs${getTokenFee(sub)} to lock your area. Click Pay Registration Fee button below. - Part of ${fee}L`,
+    payBtn:'I Have Paid Registration Fee',
     payFeeNow:'Pay fee now',
-    notPaid:'Not paid 5000',
+    notPaid:'Not Paid - Will Pay',
     payAfter:'After Registration Fee Rs${token} payment, please select:-',
     emiOpt:`EMI options available:\nEMI 10 Months\nEMI 20 Months\nPlease select any one from below:-`,
     emi10:'EMI 10 Months', emi20:'EMI 20 Months',
@@ -836,19 +835,18 @@ Please select your preferred language / अपनी भाषा चुने�
     noProblem:`No problem! Take your time. When you are ready, click below to install.\n\nClick below:`,
   },
   hi:{
-    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
+
+You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
+
+I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
 
 Welcome to Bizmapia!
-You are in India's first 4-in-1 service app platform.
 
-बिज़मैपिया में आपका स्वागत है!
-आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    mainMenu:`मैं माया हूँ 🤖 — मैं आपको Bizmapia के साथ आपकी सही जरूरतों के लिए रियल-टाइम सहायता और रिमाइंडर दूंगी।
 
-ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
-ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
-
-Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`कृपया आगे सहायता के लिए नीचे से कोई एक सेवा चुनें:-`,
+कृपया नीचे से सेवा चुनें:-`,
     moreServices:`और सेवाएं:-`,
     services:[{id:'SVC_RIDE',title:'राइड हेलिंग'},{id:'SVC_BIZDIR',title:'बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'ऑनलाइन बुकिंग'},{id:'SVC_OPP',title:'बिजनेस अवसर'}],
     noLang:`क्षमा करें, आपने कोई भाषा नहीं चुनी।\n\nकृपया नीचे से अपनी पसंदीदा भाषा चुनें:-`,
@@ -899,10 +897,10 @@ Please select your preferred language / अपनी भाषा चुने�
     yesCorp:'हाँ कॉर्प', noCorp:'नहीं कॉर्प',
     ready15:`आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप जिला फ्रेंचाइजी शुल्क के रूप में 15 लाख रुपये का भुगतान करने के लिए तैयार हैं।`,
     readyBtn:'हाँ तैयार - 15L',
-    payReg:`बहुत बढ़िया आपने 15L के लिए तैयार होने की पुष्टि की। कृपया अपने जिले को लॉक करने के लिए पंजीकरण शुल्क के रूप में 5000 रुपये का भुगतान करें। Link: ${LINKS_V92.razorpay}`,
-    payBtn:'मैंने 5000 भुगतान किया',
+    payReg:`बहुत बढ़िया आपने ${fee}L के लिए तैयार होने की पुष्टि की। कृपया अपने एरिया को लॉक करने के लिए रजिस्ट्रेशन फी Rs${getTokenFee(sub)} का भुगतान करें। नीचे Pay Registration Fee बटन पर क्लिक करें। - Part of ${fee}L`,
+    payBtn:'मैंने रजिस्ट्रेशन फी भुगतान किया',
     payFeeNow:'अभी भुगतान करें',
-    notPaid:'भुगतान नहीं किया',
+    notPaid:'भुगतान नहीं किया - करूंगा',
     payAfter:'रजिस्ट्रेशन फी Rs${token} भुगतान के बाद, कृपया चुनें:-',
     emiOpt:`EMI विकल्प उपलब्ध हैं:\nEMI 10 महीने\nEMI 20 महीने`,
     emi10:'EMI 10 महीने', emi20:'EMI 20 महीने',
@@ -916,19 +914,18 @@ Please select your preferred language / अपनी भाषा चुने�
     noProblem:`कोई बात नहीं! अपना समय लें। जब आप तैयार हों, तो नीचे क्लिक करके इंस्टॉल करें।`,
   },
   ml:{
-    welcome:`Welcome to Bizmapia - बिज़मैपिया में आपका स्वागत है - ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
+    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
+
+You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
+
+I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
 
 Welcome to Bizmapia!
-You are in India's first 4-in-1 service app platform.
 
-बिज़मैपिया में आपका स्वागत है!
-आप भारत के पहले 4-in-1 सर्विस ऐप प्लेटफॉर्म पर हैं।
+Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    mainMenu:`ഞാൻ മായ ആണ് 🤖 — Bizmapia-യിൽ നിങ്ങളുടെ ശരിയായ ആവശ്യങ്ങൾക്ക് റിയൽ-ടൈം സഹായവും റിമൈൻഡറുകളും നൽകാൻ ഞാൻ ഇവിടെയുണ്ട്.
 
-ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!
-ഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലേക്ക് സ്വാഗതം.
-
-Please select your preferred language / अपनी भाषा चुनें / ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`👋 ഹലോ! ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം!\n\nഇന്ത്യയിലെ ആദ്യത്തെ 4-in-1 സേവന ആപ്പ് പ്ലാറ്റ്ഫോമിലാണ് നിങ്ങൾ.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് ഏതെങ്കിലും ഒരു സേവനം തിരഞ്ഞെടുക്കുക:-`,
+താഴെ നിന്ന് സേവനം തിരഞ്ഞെടുക്കുക:-`,
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
     services:[{id:'SVC_RIDE',title:'റൈഡ് ഹെയ്ലിംഗ്'},{id:'SVC_BIZDIR',title:'ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'ബിസിനസ് അവസരം'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
@@ -979,10 +976,10 @@ Please select your preferred language / अपनी भाषा चुने�
     yesCorp:'അതെ കോർപ്പ്', noCorp:'അല്ല കോർപ്പ്',
     ready15:`നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസായി 15 ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`,
     readyBtn:'അതെ തയ്യാർ - 15L',
-    payReg:`നിങ്ങൾ 15L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ജില്ല ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീസായി 5000 രൂപ അടയ്ക്കുക. Link: ${LINKS_V92.razorpay}`,
-    payBtn:'ഞാൻ 5000 അടച്ചു',
+    payReg:`നിങ്ങൾ ${fee}L-ന് തയ്യാറാണെന്ന് സ്ഥിരീകരിച്ചു. നിങ്ങളുടെ ഏരിയ ലോക്ക് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ Rs${getTokenFee(sub)} അടയ്ക്കുക। താഴെ Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക। - Part of ${fee}L`,
+    payBtn:'ഞാൻ രജിസ്ട്രേഷൻ ഫീ അടച്ചു',
     payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
-    notPaid:'അടച്ചില്ല',
+    notPaid:'അടച്ചില്ല - അടയ്ക്കാം',
     payAfter:'രജിസ്ട്രേഷൻ ഫീ Rs${token} അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-',
     emiOpt:`EMI ഓപ്ഷനുകൾ ലഭ്യമാണ്:\nEMI 10 മാസം\nEMI 20 മാസം`,
     emi10:'EMI 10 മാസം', emi20:'EMI 20 മാസം',
@@ -1216,7 +1213,7 @@ app.post('/webhook', async(req,res)=>{
     }
     if(btnId==='READY_15L'){ 
       const fee = state.fee || 15; 
-      state.lastStep=`Pay Rs5000 - ${fee}L`; 
+      state.lastStep=`Pay Reg Fee Rs${getTokenFee(state.sub)} - ${fee}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, fee, state.sub);
@@ -1284,7 +1281,7 @@ app.post('/webhook', async(req,res)=>{
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
-      if(state.lastStep && (state.lastStep.includes('Pay Rs5000') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
+      if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
         const payText = getPayText(lang, state.fee||15, state.sub);
         await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
         return;
@@ -1792,7 +1789,7 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V155 FINAL - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL + SLOT BOOKING + ALL-CHATS - 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V160 FINAL MAYA - REG FEE FIXED - 36 STATES + KERALA 14 DIST + 6 YOUTUBE 80% REAL + SLOT BOOKING + ALL-CHATS - 95623 24130 - Sheet + Reminders + EMI listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V155 FINAL PRODUCTION - CTA FIXED - ALL FEATURES INCLUDED ====================
