@@ -49,6 +49,14 @@ const VIDEO_HI_MUNICIPAL = VIDEO_EN_MUNICIPAL;
 const VIDEO_HI_CENTER = VIDEO_EN_CENTER;
 
 function getTenderPdfLink(sub, lang){
+  // Returns 2 PDFs per opportunity - Main + Annexure - Total 8 PDFs
+  if(sub==='OPP_DISTRICT') return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure };
+  if(sub==='OPP_CORP') return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure };
+  if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure };
+  if(sub==='OPP_CENTER') return { main: LINKS_V92.tenderBusinessCenter, annexure: LINKS_V92.tenderBusinessCenterAnnexure };
+  return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure };
+}
+function OLD_getTenderPdfLink_TEMP(sub, lang){
   // Returns downloadable PDF per business opportunity instead of only district tender
   if(sub==='OPP_DISTRICT') return LINKS_V92.tenderDistrict;
   if(sub==='OPP_CORP') return LINKS_V92.tenderCorporation;
@@ -58,77 +66,78 @@ function getTenderPdfLink(sub, lang){
 }
 
 function getTenderGreeting(sub, lang){
-  const pdf = getTenderPdfLink(sub, lang);
+  const pdfs = getTenderPdfLink(sub, lang);
+  const main = pdfs.main;
+  const annex = pdfs.annexure;
   if(lang==='ml'){
-    if(sub==='OPP_DISTRICT') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ജില്ലാ ഫ്രാഞ്ചൈസി - 10-15L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - ജില്ലാ ഫ്രാഞ്ചൈസി:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: ലിങ്കിൽ ക്ലിക്ക് ചെയ്ത് PDF ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക. ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും.`;
-    if(sub==='OPP_CORP') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി - 4L/5L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - കോർപ്പറേഷൻ/മുനിസിപ്പൽ:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: PDF ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക.`;
-    return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ബിസിനസ് സെന്റർ - 1L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - ബിസിനസ് സെന്റർ:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: PDF ഡൗൺലോഡ് ചെയ്ത് വായിക്കുക.`;
+    if(sub==='OPP_DISTRICT') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ജില്ലാ ഫ്രാഞ്ചൈസി - 10-15L തിരഞ്ഞെടുത്തതിന് നന്ദി!
+
+📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന 2 PDF - ജില്ലാ ഫ്രാഞ്ചൈസി:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure File: ${annex}
+
+👇 എന്ത് ചെയ്യണം: രണ്ട് PDF-കളും ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക. ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും.`;
+    if(sub==='OPP_CORP') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി - 4L/5L തിരഞ്ഞെടുത്തതിന് നന്ദി!
+
+📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന 2 PDF:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure: ${annex}
+
+👇 എന്ത് ചെയ്യണം: രണ്ട് PDF-കളും ഡൗൺലോഡ് ചെയ്ത് വായിക്കുക.`;
+    return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ബിസിനസ് സെന്റർ - 1L തിരഞ്ഞെടുത്തതിന് നന്ദി!
+
+📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന 2 PDF:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure: ${annex}
+
+👇 എന്ത് ചെയ്യണം: PDF-കൾ ഡൗൺലോഡ് ചെയ്ത് വായിക്കുക.`;
   }
   if(lang==='hi'){
-    if(sub==='OPP_DISTRICT') return `👏 बेहतरीन चयन! जिला फ्रेंचाइजी - 10-15L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - जिला फ्रेंचाइजी:\n${pdf}\n\n👇 क्या करना है: लिंक पर क्लिक करके PDF डाउनलोड करें और पढ़ें।`;
-    if(sub==='OPP_CORP') return `👏 बेहतरीन चयन! कॉर्पोरेशन/म्युनिसिपैलिटी फ्रेंचाइजी - 4L/5L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - कॉर्पोरेशन/म्युनिसिपैलिटी:\n${pdf}\n\n👇 क्या करना है: PDF डाउनलोड करें और पढ़ें।`;
-    return `👏 बेहतरीन चयन! बिजनेस सेंटर - 1L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - बिजनेस सेंटर:\n${pdf}\n\n👇 क्या करना है: PDF डाउनलोड करें।`;
+    if(sub==='OPP_DISTRICT') return `👏 बेहतरीन चयन! जिला फ्रेंचाइजी - 10-15L चुनने के लिए धन्यवाद!
+
+📄 डाउनलोड करने योग्य 2 PDF - जिला फ्रेंचाइजी:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure File: ${annex}
+
+👇 क्या करना है: दोनों PDF डाउनलोड करें और पढ़ें।`;
+    if(sub==='OPP_CORP') return `👏 बेहतरीन चयन! कॉर्पोरेशन/म्युनिसिपैलिटी फ्रेंचाइजी - 4L/5L चुनने के लिए धन्यवाद!
+
+📄 डाउनलोड करने योग्य 2 PDF:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure: ${annex}
+
+👇 क्या करना है: दोनों PDF डाउनलोड करें और पढ़ें।`;
+    return `👏 बेहतरीन चयन! बिजनेस सेंटर - 1L चुनने के लिए धन्यवाद!
+
+📄 डाउनलोड करने योग्य 2 PDF:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure: ${annex}
+
+👇 क्या करना है: PDF डाउनलोड करें।`;
   }
-  if(sub==='OPP_DISTRICT') return `👏 Excellent choice! Thank you for selecting District Franchisee - 10-15L - MOST PREMIUM!\n\n📄 Downloadable PDF for District Franchise:\n${pdf}\n\n👇 What to do: Click the link above to download your District tender document PDF, read complete terms, and keep it safe. Our team will call you within 24 hours.`;
-  if(sub==='OPP_CORP') return `👏 Excellent choice! Thank you for selecting Corporation/Municipal Franchisee - 4L/5L!\n\n📄 Downloadable PDF for Corporation/Municipal Franchise:\n${pdf}\n\n👇 What to do: Click to download your Corporation/Municipal tender PDF and read complete terms.`;
-  return `👏 Excellent choice! Thank you for selecting Business Center - 1L - Easy Start!\n\n📄 Downloadable PDF for Business Center:\n${pdf}\n\n👇 What to do: Click to download your Business Center tender PDF and read it.`;
+  if(sub==='OPP_DISTRICT') return `👏 Excellent choice! Thank you for selecting District Franchisee - 10-15L - MOST PREMIUM!
+
+📄 Downloadable 2 PDFs for District Franchise:
+1️⃣ Main Tender Document: ${main}
+2️⃣ Annexure File: ${annex}
+
+👇 What to do: Click both links above to download your District tender + annexure PDFs, read complete terms, and keep them safe. Our team will call you within 24 hours.`;
+  if(sub==='OPP_CORP') return `👏 Excellent choice! Thank you for selecting Corporation/Municipal Franchisee - 4L/5L!
+
+📄 Downloadable 2 PDFs for Corporation/Municipal:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure File: ${annex}
+
+👇 What to do: Download both tender + annexure PDFs and read complete terms.`;
+  return `👏 Excellent choice! Thank you for selecting Business Center - 1L - Easy Start!
+
+📄 Downloadable 2 PDFs for Business Center:
+1️⃣ Main Tender: ${main}
+2️⃣ Annexure: ${annex}
+
+👇 What to do: Download both PDFs and read them.`;
 }
-
-function getVideoUrl(sub, lang){
-  if(lang==='ml'){
-    if(sub==='OPP_DISTRICT') return VIDEO_ML_DISTRICT;
-    if(sub==='OPP_CORP') return VIDEO_ML_CORP;
-    if(sub==='OPP_CENTER') return VIDEO_ML_CENTER;
-  }
-  if(lang==='hi'){
-    if(sub==='OPP_DISTRICT') return VIDEO_HI_DISTRICT;
-    if(sub==='OPP_CORP') return VIDEO_HI_CORP;
-    if(sub==='OPP_CENTER') return VIDEO_HI_CENTER;
-  }
-  // en default
-  if(sub==='OPP_DISTRICT') return VIDEO_EN_DISTRICT;
-  if(sub==='OPP_CORP') return VIDEO_EN_CORP;
-  if(sub==='OPP_CENTER') return VIDEO_EN_CENTER;
-  return VIDEO_EN_DISTRICT;
-}
-
-
-
-// === V149 V155 NEW: 4-STEP DROPDOWN + ALL INDIA + SLOT BOOKING + 6 YOUTUBE TRACKING ===
-const KERALA_DATA = {
-  districts: [
-    { name: "Thiruvananthapuram", code: "TVM", corporation: ["Thiruvananthapuram Corporation"], municipalities: ["Neyyattinkara", "Nedumangad", "Attingal", "Varkala"] },
-    { name: "Kollam", code: "KLM", corporation: ["Kollam Corporation"], municipalities: ["Paravur", "Karunagapally", "Punalur", "Kottarakkara"] },
-    { name: "Pathanamthitta", code: "PTA", corporation: [], municipalities: ["Adoor", "Pathanamthitta", "Tiruvalla", "Pandalam"] },
-    { name: "Alappuzha", code: "ALP", corporation: [], municipalities: ["Alappuzha", "Kayamkulam", "Cherthala", "Mavelikkara", "Chengannur", "Haripad"] },
-    { name: "Kottayam", code: "KTM", corporation: [], municipalities: ["Changanacherry", "Kottayam", "Vaikom", "Palai", "Ettumanoor", "Erattupetta"] },
-    { name: "Idukki", code: "IDK", corporation: [], municipalities: ["Thodupuzha", "Kattappana"] },
-    { name: "Ernakulam", code: "EKM", corporation: ["Kochi Corporation"], municipalities: ["Kothamangalam", "Muvattupuzha", "Perumbavoor", "Maradu", "Thripunithura", "Thrikkakara", "Kalamassery", "Eloor", "North Paravoor", "Aluva", "Angamaly", "Piravom", "Koothattukulam"] },
-    { name: "Thrissur", code: "TSR", corporation: ["Thrissur Corporation"], municipalities: ["Chalakkudy", "Irinjalakuda", "Kodungallur", "Kunnamkulam", "Guruvayoor", "Chavakkad", "Wadakkancheri"] },
-    { name: "Palakkad", code: "PKD", corporation: [], municipalities: ["Chittur-Tattamangalam", "Palakkad", "Ottappalam", "Shornur", "Mannarkkad", "Pattambi", "Cherpulassery"] },
-    { name: "Malappuram", code: "MLP", corporation: [], municipalities: ["Malappuram", "Manjeri", "Ponnani", "Tirur", "Perinthalmanna", "Kottakkal", "Nilambur", "Kondotty", "Valanchery", "Tanur", "Parappanangadi", "Tirurangadi"] },
-    { name: "Kozhikode", code: "KKD", corporation: ["Kozhikode Corporation"], municipalities: ["Vatakara", "Koyilandy", "Ramanattukara", "Feroke", "Payyoli", "Koduvally", "Mukkam"] },
-    { name: "Wayanad", code: "WYD", corporation: [], municipalities: ["Kalpetta", "Mananthavadi", "Sultan Bathery"] },
-    { name: "Kannur", code: "KNR", corporation: ["Kannur Corporation"], municipalities: ["Thalassery", "Thaliparamba", "Payyannur", "Mattannur", "Koothuparamba", "Anthoor", "Iritty", "Panoor", "Sreekandapuram"] },
-    { name: "Kasaragod", code: "KSD", corporation: [], municipalities: ["Kanhangad", "Kasaragod", "Nileshwaram"] }
-  ]
-};
-
-const ALL_STATES = [
-  "Kerala", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
-  "Jharkhand", "Karnataka", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
-  "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Jammu and Kashmir", "Ladakh", "Delhi", "Puducherry", "Chandigarh", "Lakshadweep", "Dadra and Nagar Haveli and Daman and Diu", "Andaman and Nicobar Islands"
-];
-
-const YOUTUBE_VIDEOS_ALL = {
-  ML_DISTRICT: { id: 'Fll3OY-hilU', fee: '10-15L', title: 'District ML' },
-  ML_CORP: { id: 'F9rI2crM7Ow', fee: '4-5L', title: 'Corp ML' },
-  ML_CENTER: { id: 'Ds0lBtTaI6c', fee: '1L', title: 'Center ML' },
-  EN_DISTRICT: { id: '_y2JeFHBnqg', fee: '10-15L', title: 'District EN' },
-  EN_CORP: { id: 'GqolfqgHiCU', fee: '4-5L', title: 'Corp EN' },
-  EN_CENTER: { id: 'r0X77XfmF94', fee: '1L', title: 'Center EN' }
-};
+;
 
 function getVideoObj(sub, lang){
   if(lang==='ml'){
@@ -296,12 +305,15 @@ function imageMessage(to, imageUrl, caption, phoneId){
 const LINKS_V92 = {
   website: WEBSITE,
   driverApp: PLAY_STORE,
+  // 8 PDFs Total - 2 District, 2 Municipal+Corp, 4 Business Center
   tenderDistrict: "https://bizmapia.com/tender/district.pdf",
+  tenderDistrictAnnexure: "https://bizmapia.com/tender/district_annexure.pdf",
   tenderCorporation: "https://bizmapia.com/tender/corporation.pdf",
-  tenderMunicipal: "https://bizmapia.com/tender/municipal.pdf",
+  tenderCorporationAnnexure: "https://bizmapia.com/tender/corporation_annexure.pdf",
   tenderBusinessCenter: "https://bizmapia.com/tender/business_center.pdf",
-  tenderDistrict_ML: "https://bizmapia.com/tender/district_ml.pdf",
-  tenderCorporation_ML: "https://bizmapia.com/tender/corporation_ml.pdf",
+  tenderBusinessCenterAnnexure: "https://bizmapia.com/tender/business_center_annexure.pdf",
+  tenderBusinessCenterAgreement: "https://bizmapia.com/tender/business_center_agreement.pdf",
+  tenderBusinessCenterBrochure: "https://bizmapia.com/tender/business_center_brochure.pdf",
   businessLink: "https://bizmapia.com/business",
   earnLink: EARN_LINK,
   razorpay: "https://rzp.io/rzp/BZ9D9rT",
@@ -1844,10 +1856,10 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V167 FINAL TENDER PDF PER BUSINESS OPPORTUNITY - DOWNLOADABLE PDF GREETING WHAT TO DO - WELCOME MAYA FIXED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V169 FINAL 8 PDF - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DOWNLOADABLE PDF GREETING WHAT TO DO - WELCOME MAYA FIXED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V167 FINAL TENDER PDF PER OPPORTUNITY - DOWNLOADABLE PDF - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - LOCKED TILL VERIFICATION ====================
+// ==================== LOCKED - END OF FILE - V169 FINAL 8 PDF - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DOWNLOADABLE PDF - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - LOCKED TILL VERIFICATION ====================
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
 // If verification needed, create V168 with proper version control after verification
-// Current locked version: V167 FINAL - 2026-11-03 - TENDER PDF PER BUSINESS OPPORTUNITY - DISTRICT/CORP/CENTER DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V166 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - https://bizmapia.com/tender/district.pdf https://bizmapia.com/tender/corporation.pdf https://bizmapia.com/tender/business_center.pdf
+// Current locked version: V168 FINAL - 2026-11-03 - 8 PDF TENDER + ANNEXURE - 4 MAIN + 4 ANNEXURE PER BUSINESS OPPORTUNITY - DISTRICT/CORP/MUNI/CENTER EACH WITH MAIN + ANNEXURE - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V167 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf municipal.pdf municipal_annexure.pdf business_center.pdf business_center_annexure.pdf
