@@ -48,6 +48,32 @@ const VIDEO_HI_CORP = VIDEO_EN_CORP;
 const VIDEO_HI_MUNICIPAL = VIDEO_EN_MUNICIPAL;
 const VIDEO_HI_CENTER = VIDEO_EN_CENTER;
 
+function getTenderPdfLink(sub, lang){
+  // Returns downloadable PDF per business opportunity instead of only district tender
+  if(sub==='OPP_DISTRICT') return LINKS_V92.tenderDistrict;
+  if(sub==='OPP_CORP') return LINKS_V92.tenderCorporation;
+  if(sub==='OPP_MUNI') return LINKS_V92.tenderMunicipal;
+  if(sub==='OPP_CENTER') return LINKS_V92.tenderBusinessCenter;
+  return LINKS_V92.tenderDistrict;
+}
+
+function getTenderGreeting(sub, lang){
+  const pdf = getTenderPdfLink(sub, lang);
+  if(lang==='ml'){
+    if(sub==='OPP_DISTRICT') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ജില്ലാ ഫ്രാഞ്ചൈസി - 10-15L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - ജില്ലാ ഫ്രാഞ്ചൈസി:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: ലിങ്കിൽ ക്ലിക്ക് ചെയ്ത് PDF ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക. ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും.`;
+    if(sub==='OPP_CORP') return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! കോർപ്പറേഷൻ/മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി - 4L/5L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - കോർപ്പറേഷൻ/മുനിസിപ്പൽ:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: PDF ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക.`;
+    return `👏 മികച്ച തിരഞ്ഞെടുപ്പ്! ബിസിനസ് സെന്റർ - 1L തിരഞ്ഞെടുത്തതിന് നന്ദി!\n\n📄 ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF - ബിസിനസ് സെന്റർ:\n${pdf}\n\n👇 എന്ത് ചെയ്യണം: PDF ഡൗൺലോഡ് ചെയ്ത് വായിക്കുക.`;
+  }
+  if(lang==='hi'){
+    if(sub==='OPP_DISTRICT') return `👏 बेहतरीन चयन! जिला फ्रेंचाइजी - 10-15L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - जिला फ्रेंचाइजी:\n${pdf}\n\n👇 क्या करना है: लिंक पर क्लिक करके PDF डाउनलोड करें और पढ़ें।`;
+    if(sub==='OPP_CORP') return `👏 बेहतरीन चयन! कॉर्पोरेशन/म्युनिसिपैलिटी फ्रेंचाइजी - 4L/5L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - कॉर्पोरेशन/म्युनिसिपैलिटी:\n${pdf}\n\n👇 क्या करना है: PDF डाउनलोड करें और पढ़ें।`;
+    return `👏 बेहतरीन चयन! बिजनेस सेंटर - 1L चुनने के लिए धन्यवाद!\n\n📄 डाउनलोड करने योग्य PDF - बिजनेस सेंटर:\n${pdf}\n\n👇 क्या करना है: PDF डाउनलोड करें।`;
+  }
+  if(sub==='OPP_DISTRICT') return `👏 Excellent choice! Thank you for selecting District Franchisee - 10-15L - MOST PREMIUM!\n\n📄 Downloadable PDF for District Franchise:\n${pdf}\n\n👇 What to do: Click the link above to download your District tender document PDF, read complete terms, and keep it safe. Our team will call you within 24 hours.`;
+  if(sub==='OPP_CORP') return `👏 Excellent choice! Thank you for selecting Corporation/Municipal Franchisee - 4L/5L!\n\n📄 Downloadable PDF for Corporation/Municipal Franchise:\n${pdf}\n\n👇 What to do: Click to download your Corporation/Municipal tender PDF and read complete terms.`;
+  return `👏 Excellent choice! Thank you for selecting Business Center - 1L - Easy Start!\n\n📄 Downloadable PDF for Business Center:\n${pdf}\n\n👇 What to do: Click to download your Business Center tender PDF and read it.`;
+}
+
 function getVideoUrl(sub, lang){
   if(lang==='ml'){
     if(sub==='OPP_DISTRICT') return VIDEO_ML_DISTRICT;
@@ -268,12 +294,19 @@ function imageMessage(to, imageUrl, caption, phoneId){
 
 
 const LINKS_V92 = {
-  razorpay: 'https://rzp.io/rzp/BZ9D9rT', // fallback District
-  razorpay_250: 'https://rzp.io/rzp/BZ9D9rT', // District Rs250
-  razorpay_150: 'https://rzp.io/rzp/ptj9OGpr', // Corp/Municipal Rs150
-  razorpay_100: 'https://rzp.io/rzp/lAguvzEt', // Business Center Rs100
-  form: 'https://forms.gle/your-form',
-  playStore: 'https://play.google.com/store/apps/details?id=com.bizmapia.app'
+  website: WEBSITE,
+  driverApp: PLAY_STORE,
+  tenderDistrict: "https://bizmapia.com/tender/district.pdf",
+  tenderCorporation: "https://bizmapia.com/tender/corporation.pdf",
+  tenderMunicipal: "https://bizmapia.com/tender/municipal.pdf",
+  tenderBusinessCenter: "https://bizmapia.com/tender/business_center.pdf",
+  tenderDistrict_ML: "https://bizmapia.com/tender/district_ml.pdf",
+  tenderCorporation_ML: "https://bizmapia.com/tender/corporation_ml.pdf",
+  businessLink: "https://bizmapia.com/business",
+  earnLink: EARN_LINK,
+  razorpay: "https://rzp.io/rzp/BZ9D9rT",
+  razorpayCorp: "https://rzp.io/rzp/ptj9OGpr",
+  razorpayCenter: "https://rzp.io/rzp/lAguvzEt"
 };
 
 function getRegistrationFee(sub){
@@ -832,7 +865,12 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bus:'Business', house:'Housewife', emp:'Employee',
     dateQ:`When you can visit our head office?`,
     today:'Today', tomorrow:'Tomorrow',
-    tenderLink:`Tender document for District Franchise: ${LINKS_V92.tenderDistrict}`,
+    tenderLink:`Excellent choice! 👏 Thank you for selecting District Franchise!
+
+📄 Downloadable PDF for District Franchise - 10-15L - MOST PREMIUM:
+${LINKS_V92.tenderDistrict}
+
+👇 What to do: Click the link above to download your District franchise tender document PDF, read complete terms, and keep it safe for your records. Our team will call you within 24 hours.`,
     thanks:`Thanks for submitting your details. Our franchise team will call you within 24 hours.\n\nCall: +91 ${HELP_MARKETING}`,
     noProblem:`No problem! Take your time. When you are ready, click below to install.\n\nClick below:`,
   },
@@ -913,7 +951,12 @@ Please select your preferred language from below / अपनी भाषा न
     bus:'व्यवसाय', house:'गृहिणी', emp:'कर्मचारी',
     dateQ:`आप हमारे हेड ऑफिस कब आ सकते हैं?`,
     today:'आज', tomorrow:'कल',
-    tenderLink:`जिला फ्रेंचाइजी के लिए टेंडर दस्तावेज: ${LINKS_V92.tenderDistrict}`,
+    tenderLink:`बेहतरीन चयन! 👏 जिला फ्रेंचाइजी चुनने के लिए धन्यवाद!
+
+📄 जिला फ्रेंचाइजी - 10-15L के लिए डाउनलोड करने योग्य PDF:
+${LINKS_V92.tenderDistrict}
+
+👇 क्या करना है: ऊपर दिए लिंक पर क्लिक करके अपना टेंडर डॉक्यूमेंट PDF डाउनलोड करें, पूरा पढ़ें और सुरक्षित रखें। हमारी टीम 24 घंटे में कॉल करेगी।`,
     thanks:`विवरण जमा करने के लिए धन्यवाद। हमारी फ्रेंचाइजी टीम 24 घंटे के भीतर आपको कॉल करेगी।`,
     noProblem:`कोई बात नहीं! अपना समय लें। जब आप तैयार हों, तो नीचे क्लिक करके इंस्टॉल करें।`,
   },
@@ -994,7 +1037,12 @@ Please select your preferred language from below / अपनी भाषा न
     bus:'ബിസിനസ്', house:'ഹൗസ്വൈഫ്', emp:'ജീവനക്കാരൻ',
     dateQ:`നിങ്ങൾക്ക് ഞങ്ങളുടെ ഹെഡ് ഓഫീസിൽ എപ്പോൾ വരാൻ കഴിയും?`,
     today:'ഇന്ന്', tomorrow:'നാളെ',
-    tenderLink:`ജില്ലാ ഫ്രാഞ്ചൈസിക്കുള്ള ടെൻഡർ ഡോക്യുമെന്റ്: ${LINKS_V92.tenderDistrict}`,
+    tenderLink:`മികച്ച തിരഞ്ഞെടുപ്പ്! 👏 ജില്ലാ ഫ്രാഞ്ചൈസി തിരഞ്ഞെടുത്തതിന് നന്ദി!
+
+📄 ജില്ലാ ഫ്രാഞ്ചൈസി - 10-15L-ന് ഡൗൺലോഡ് ചെയ്യാവുന്ന PDF:
+${LINKS_V92.tenderDistrict}
+
+👇 എന്ത് ചെയ്യണം: മുകളിലെ ലിങ്കിൽ ക്ലിക്ക് ചെയ്ത് നിങ്ങളുടെ ടെൻഡർ ഡോക്യുമെന്റ് PDF ഡൗൺലോഡ് ചെയ്ത് വായിച്ച് സൂക്ഷിക്കുക. ഞങ്ങളുടെ ടീം 24 മണിക്കൂറിനുള്ളിൽ വിളിക്കും.`,
     thanks:`വിശദാംശങ്ങൾ സമർപ്പിച്ചതിന് നന്ദി. ഞങ്ങളുടെ ഫ്രാഞ്ചൈസി ടീം 24 മണിക്കൂറിനുള്ളിൽ നിങ്ങളെ വിളിക്കും.`,
     noProblem:`പ്രശ്നമില്ല! സമയമെടുക്കൂ. നിങ്ങൾ തയ്യാറാകുമ്പോൾ താഴെ ക്ലിക്ക് ചെയ്ത് ഇൻസ്റ്റാൾ ചെയ്യുക.`,
   }
@@ -1274,7 +1322,8 @@ app.post('/webhook', async(req,res)=>{
     }
 
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.tenderLink, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
+    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang);
+      await sendWithDelay(textMessage(uid,tenderMsg, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
     if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendCtaSequence(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}], incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
@@ -1795,10 +1844,10 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V166 FINAL LOCKED TILL VERIFICATION - SAFE NO IMAGES - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V167 FINAL TENDER PDF PER BUSINESS OPPORTUNITY - DOWNLOADABLE PDF GREETING WHAT TO DO - WELCOME MAYA FIXED - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V166 FINAL LOCKED TILL VERIFICATION - SAFE NO IMAGES - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS ====================
-// DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED
-// If verification needed, create V167 with proper version control after verification
-// Current locked version: V166 FINAL LOCKED TILL VERIFICATION - 2026-11-03 - SAFE NO IMAGES - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V165 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY
+// ==================== LOCKED - END OF FILE - V167 FINAL TENDER PDF PER OPPORTUNITY - DOWNLOADABLE PDF - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - LOCKED TILL VERIFICATION ====================
+// DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
+// If verification needed, create V168 with proper version control after verification
+// Current locked version: V167 FINAL - 2026-11-03 - TENDER PDF PER BUSINESS OPPORTUNITY - DISTRICT/CORP/CENTER DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V166 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - https://bizmapia.com/tender/district.pdf https://bizmapia.com/tender/corporation.pdf https://bizmapia.com/tender/business_center.pdf
