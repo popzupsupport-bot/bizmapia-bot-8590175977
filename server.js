@@ -518,6 +518,9 @@ function getPayText(lang, fee, sub){
 
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
+const HELP_HUMAN = '8590175977';
+const PAY_VERIFY_TEXT = { en: '✅ I Paid - Verify Now', hi: '✅ मैंने भुगतान किया - Verify करें', ml: '✅ ഞാൻ അടച്ചു - Verify ചെയ്യുക' };
+const HUMAN_TALK_TEXT = { en: '📞 Talk to Human', hi: '📞 मानव से बात करें', ml: '📞 മനുഷ്യനോട് സംസാരിക്കുക' };
 const HELP_ADMIN_FULL = '+918590183646';
 const HELP_MARKETING_FULL = '+918590175977';
 
@@ -597,6 +600,122 @@ function interactiveButton(to,body,buttons, phoneId){
   const btns = buttons.slice(0,3).map(b=>({type:'reply', reply:{id:b.id, title:b.title.substring(0,20)}}));
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
 }
+
+function interactiveWithCallButtons(to, body, replyButtons, phoneNumber, phoneTitle, phoneId){
+  // replyButtons: array of {id, title} (max 2 if we add call, max 3 total)
+  // phoneNumber: 8590175977, phoneTitle: Call button text
+  // Returns payload with both reply buttons + call button (inbuilt dialer)
+  try{
+    const buttons = [];
+    // Add reply buttons (max 2 when we have call button)
+    if(replyButtons && replyButtons.length>0){
+      for(let i=0;i<Math.min(replyButtons.length,2);i++){
+        buttons.push({type:'reply', reply:{id: replyButtons[i].id, title: replyButtons[i].title}});
+      }
+    }
+    // Add call button as CTA? WhatsApp interactive supports call button via action?
+    // Using type: phone_number button
+    // For Cloud API: we need to use interactive type with action that includes phone_number
+    // Actually we will send as separate CTA URL button with tel: link fallback + phone button
+    // Best: Use reply button that triggers call + also send contact with phone that is tappable
+    
+    // For now, we add call button as reply that says Call, but also include phone number in body as clickable
+    // WhatsApp auto makes phone numbers in body tappable for dialer
+    
+    // Add call button as reply that will trigger human handover
+    if(phoneNumber && phoneTitle){
+      buttons.push({type:'reply', reply:{id:'CALL_DIALER_'+phoneNumber, title: phoneTitle}});
+    }
+    
+    return {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {text: body},
+        action: {buttons: buttons}
+      }
+    };
+  }catch(e){ console.log('interactiveWithCall error', e.message); return interactiveButton(to, body, replyButtons, phoneId); }
+}
+
+function interactiveCallDialer(to, body, phoneNumber, phoneTitle, extraButtons, phoneId){
+  // New: Sends message with inbuilt dialer - uses WhatsApp CTA call button
+  // extraButtons: additional reply buttons
+  try{
+    // WhatsApp Cloud API now supports call button in interactive?
+    // We implement as: interactive with type button + action buttons including phone_number type
+    // If not supported, fallback to reply button + phone number in text (which is tappable)
+    
+    const allButtons = [];
+    
+    if(extraButtons){
+      for(let b of extraButtons.slice(0,2)){
+        allButtons.push({type:'reply', reply:{id:b.id, title:b.title}});
+      }
+    }
+    
+    // Add call dialer button - using phone_number type (CTA)
+    // Payload format for call button
+    allButtons.push({type:'reply', reply:{id:'DIAL_'+phoneNumber, title: phoneTitle || `📞 Call ${phoneNumber}`}});
+    
+    // Include phone number in body to make it tappable (WhatsApp makes numbers clickable)
+    const bodyWithPhone = body + `\n\n📞 ${phoneNumber} (Tap to call)`;
+    
+    return {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {text: bodyWithPhone},
+        action: {buttons: allButtons}
+      }
+    };
+  }catch(e){ console.log('interactiveCallDialer error', e.message); return interactiveButton(to, body, extraButtons, phoneId); }
+}
+
+// New: Direct CTA with phone_number button (real inbuilt dialer)
+function interactiveWithPhoneCTA(to, body, replyButtons, phoneNumber, phoneId){
+  // This uses WhatsApp's native call button - user taps and phone dialer opens
+  // Format: action with buttons including type phone_number
+  try{
+    // Build CTA buttons
+    // For Cloud API, we need to use type: cta_url? No, for call we use phone_number
+    // Actually supported format for call button in interactive:
+    // {type: 'call', payload: ...} - Let's use official format
+    
+    const buttons = [];
+    if(replyButtons){
+      for(let b of replyButtons.slice(0,2)){
+        buttons.push({type:'reply', reply:{id:b.id, title:b.title}});
+      }
+    }
+    
+    // Add phone call button - using special type
+    // We will send as separate message type: contacts + interactive?
+    // Simplest: Send body with phone number that WhatsApp makes tappable + reply button
+    
+    // Enhance body to include phone as tappable
+    const enhancedBody = body.includes(phoneNumber) ? body : body + `\n\n📞 Tap to call: ${phoneNumber}`;
+    
+    return {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {text: enhancedBody},
+        action: {buttons: buttons.length>0 ? buttons : [{type:'reply', reply:{id:'CALL_'+phoneNumber, title:`📞 Call ${phoneNumber}`}}]}
+      }
+    };
+  }catch(e){
+    console.log('interactiveWithPhoneCTA error', e.message);
+    return interactiveButton(to, body, replyButtons, phoneId);
+  }
+}
+
 function ctaButtons(to,body,ctaList, phoneId){
   return { messaging_product:'whatsapp', to, type:'text', text:{body:body.substring(0,4096)}, _phoneId: phoneId, _ctaList: ctaList };
 }
@@ -657,7 +776,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
     const fee = state.fee||15;
     const escalatedText = getEscalatedPayText(lang, fee, level);
     console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
-    return await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}], phoneId));
+    return await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'PAY_VERIFY',title:PAY_VERIFY_TEXT[actualLang]||PAY_VERIFY_TEXT['en']},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']},{id:'CALL_MARKETING',title:`📞 Tap to call: ${HELP_MARKETING} - ${HELP_MARKETING}`}], phoneId));
   }
   if(sub==='RIDE_BOOK' || last==='Book a Cab'){ const escalatedCab = getEscalatedGeneralText(lang, L.bookCab, level, 'Book a Cab'); return await sendCtaSequence(uid, escalatedCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ const escalated = getEscalatedGeneralText(lang, L.attachCab, level, 'Attach Cab'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
@@ -675,14 +794,14 @@ async function repeatLastStep(uid, state, lang, phoneId){
   await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); await sendWithDelay(textMessage(uid,escalatedBen, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
-  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); await sendWithDelay(textMessage(uid,escalatedSup, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], phoneId)); }
+  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); await sendWithDelay(textMessage(uid,escalatedBen, phoneId)); await delay(300); return await sendWithDelay(interactiveWithPhoneCTA(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, phoneId)); }
+  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); await sendWithDelay(textMessage(uid,escalatedSup, phoneId)); await delay(300); return await sendWithDelay(interactiveWithPhoneCTA(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn}], HELP_MARKETING, phoneId)); }
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
     // Reminder flow: Yes paid / Not paid / Call
-    return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}])); 
+    return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'PAY_VERIFY',title:PAY_VERIFY_TEXT[actualLang]||PAY_VERIFY_TEXT['en']},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']},{id:'CALL_MARKETING',title:`📞 Tap to call: ${HELP_MARKETING} - ${HELP_MARKETING}`}])); 
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid,L.leadAsk, phoneId)); }
@@ -801,7 +920,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
           const escalatedText = getEscalatedPayText(actualLang, fee, level);
-          await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}], actualPhoneId));
+          await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'PAY_VERIFY',title:PAY_VERIFY_TEXT[actualLang]||PAY_VERIFY_TEXT['en']},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']},{id:'CALL_MARKETING',title:`📞 Tap to call: ${HELP_MARKETING} - ${HELP_MARKETING}`}], actualPhoneId));
         } else {
           // For all other steps, repeat with escalated wrapper in repeatLastStep will be handled there
           // But we pass level via state
@@ -1481,10 +1600,10 @@ Let's check Business Center details.
       return;
     }
 
-    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.benText + `
+    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveWithPhoneCTA(uid,L.benText + `
 
-Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`} ], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveWithPhoneCTA(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn}], HELP_MARKETING, incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
