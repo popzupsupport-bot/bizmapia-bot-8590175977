@@ -769,8 +769,30 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       if(type.startsWith('noLang')||type.startsWith('noService')){
         const L = T[actualLang]||T.en;
         let welcomeText = L.welcome;
-        if(level===12) welcomeText = (actualLang==='ml' ? `⚠ ` : actualLang==='hi' ? `⚠ ` : `⚠ `) + welcomeText + (actualLang==='ml' ? `\n\nനിങ്ങൾ ഇതുവരെ ഭാഷ തിരഞ്ഞെടുത്തില്ല!` : actualLang==='hi' ? `\n\nआपने अभी तक भाषा नहीं चुनी!` : `\n\nYou haven't selected language yet!`);
-        if(level===24) welcomeText = `⏰ ` + L.welcome + (actualLang==='ml' ? `\n\nഅവസാന ഓർമ്മപ്പെടുത്തൽ!` : actualLang==='hi' ? `\n\nअंतिम रिमाइंडर!` : `\n\nLast reminder!`);
+        // FOMO for welcome - short + urgent
+        if(level===1){
+          // 1h: Keep original welcome (already sent, this is reminder)
+          welcomeText = L.welcome;
+        }
+        if(level===12){
+          // 12h: Short FOMO version - don't repeat long welcome
+          if(actualLang==='ml'){
+            welcomeText = `⚠️ നിങ്ങൾ ഇതുവരെ ഭാഷ തിരഞ്ഞെടുത്തില്ല!\n\n🔥 നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം! ഇന്ന് 3 പേർ ബിസിനസ് അവസരം നോക്കി.\n\n👇 ഇപ്പോൾ ഭാഷ തിരഞ്ഞെടുത്ത് തുടരൂ:`;
+          } else if(actualLang==='hi'){
+            welcomeText = `⚠️ आपने अभी तक भाषा नहीं चुनी!\n\n🔥 आपके जिले में स्लॉट लिमिटेड! आज 3 लोगों ने बिजनेस अवसर देखा।\n\n👇 अभी भाषा चुनकर जारी रखें:`;
+          } else {
+            welcomeText = `⚠️ You haven't selected language yet!\n\n🔥 Slots in your district are limited! 3 people checked Business Opportunity today.\n\n👇 Select language now to continue:`;
+          }
+        }
+        if(level===24){
+          if(actualLang==='ml'){
+            welcomeText = `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ സ്ലോട്ട് നാളെ മറ്റൊരാൾക്ക് പോകും!\n\n🚨 ഇന്ന് ഭാഷ തിരഞ്ഞെടുത്തില്ലെങ്കിൽ നിങ്ങളുടെ ഏരിയ queue-ൽ നിന്ന് നീക്കം ചെയ്യപ്പെടും!\n\n👇 ഇപ്പോൾ തന്നെ ഭാഷ തിരഞ്ഞെടുക്കൂ:`;
+          } else if(actualLang==='hi'){
+            welcomeText = `⏰ अंतिम रिमाइंडर! आपका स्लॉट कल दूसरे को चला जाएगा!\n\n🚨 आज भाषा नहीं चुनी तो आपका एरिया queue से हट जाएगा!\n\n👇 अभी भाषा चुनें:`;
+          } else {
+            welcomeText = `⏰ FINAL Reminder! Your slot goes to someone else tomorrow!\n\n🚨 If you don't select language today, your area will be removed from queue!\n\n👇 Select language NOW:`;
+          }
+        }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else {
         // Check if Pay step - use escalated pay text
