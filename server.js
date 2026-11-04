@@ -137,21 +137,21 @@ function getTenderGreeting(sub, lang){
 
 👇 क्या करना है: PDF डाउनलोड करें।`;
   }
-  if(sub==='OPP_DISTRICT') return `👏 Excellent choice! Thank you for selecting District Franchisee - 10-15L - MOST PREMIUM!
+  if(sub==='OPP_DISTRICT') return `👏 Excellent choice! 👏 🙏 Thank you for selecting District Franchisee - 10-15L - MOST PREMIUM!
 
 📄 Downloadable 2 PDFs for District Franchise:
 1️⃣ Main Tender Document: ${main}
 2️⃣ Annexure File: ${annex}
 
 👇 What to do: Click both links above to download your District tender + annexure PDFs, read complete terms, and keep them safe. Our team will call you within 24 hours.`;
-  if(sub==='OPP_CORP') return `👏 Excellent choice! Thank you for selecting Corporation/Municipal Franchisee - 4L/5L!
+  if(sub==='OPP_CORP') return `👏 Excellent choice! 👏 🙏 Thank you for selecting Corporation/Municipal Franchisee - 4L/5L!
 
 📄 Downloadable 2 PDFs for Corporation/Municipal:
 1️⃣ Main Tender: ${main}
 2️⃣ Annexure File: ${annex}
 
 👇 What to do: Download both tender + annexure PDFs and read complete terms.`;
-  return `👏 Excellent choice! Thank you for selecting Business Center - 1L - Easy Start!
+  return `👏 Excellent choice! 👏 🙏 Thank you for selecting Business Center - 1L - Easy Start!
 
 📄 Downloadable 2 PDFs for Business Center:
 1️⃣ Main Tender: ${main}
@@ -506,13 +506,13 @@ function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
   // ALL franchise types: Registration fee is NOT part of business opportunity fee, Not refundable
   if(lang==='ml'){ 
-    return `✅ നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ Tender Document + വരുമാനം മനസ്സിലാക്കുന്ന Annexure-B ലഭിക്കും.\n\n👇 ഇപ്പോൾത്തന്നെ അടയ്ക്കുക: (${getTokenFeeText(sub)})`; 
+    return `✅ നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ Tender Document + വരുമാനം മനസ്സിലാക്കുന്ന Annexure-B ലഭിക്കും.\n\n👇 💳 ഇപ്പോൾത്തന്നെ അടയ്ക്കുക: (${getTokenFeeText(sub)})`; 
   }
   else if(lang==='hi'){ 
-    return `✅ आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} भुगतान पर Tender Document + आय समझने वाला Annexure-B मिलेगा।\n\n👇 अभी भुगतान करें: (${getTokenFeeText(sub)})`; 
+    return `✅ आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} भुगतान पर Tender Document + आय समझने वाला Annexure-B मिलेगा।\n\n👇 💳 अभी भुगतान करें: (${getTokenFeeText(sub)})`; 
   }
   else { 
-    return `✅ You confirmed ready for ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get Tender Document + Income Annexure-B.\n\n👇 Pay now: (${getTokenFeeText(sub)})`; 
+    return `✅ You confirmed ready for ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get 📄 Tender Document + Income Annexure-B.\n\n👇 💳 Pay now: (${getTokenFeeText(sub)})`; 
   }
 }
 
@@ -653,7 +653,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   console.log(`REPEAT LAST STEP for ${uid} via ${phoneId} - last:${last} sub:${sub} lang:${lang}`);
   const level = state.reminderLevel || 1;
   // PAY STEP - TOP PRIORITY FOR REMINDERS - Handled in scheduleReminder for escalated text, but keep fallback
-  if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
+  if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
     const fee = state.fee||15;
     const escalatedText = getEscalatedPayText(lang, fee, level);
     console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
@@ -680,7 +680,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
-    if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid')){ 
+    if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
     // Reminder flow: Yes paid / Not paid / Call
     return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'CALL_MARKETING',title:`Call ${HELP_MARKETING}`}])); 
   }
@@ -720,19 +720,19 @@ function clearReminders(uid){
 function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(sub||'OPP_DISTRICT');
   // FOMO + Social Proof + Scarcity - V182
   if(lang==='ml'){
-    if(level===1) return `👋 ഓർമ്മപ്പെടുത്തൽ: നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ Tender + Annexure-B ഉടൻ ലഭിക്കും.\n\n👇 ഇപ്പോൾ അടയ്ക്കൂ, സ്ലോട്ട് നഷ്ടപ്പെടാതിരിക്കാൻ:`;
-    if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ആയിട്ടില്ല!\n\n🔥 ഇന്ന് ${fee}L-ന് 3 പേർ അന്വേഷിച്ചു. നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം!\n\nRs${token} (Not refundable, ${fee}L-ന്റെ ഭാഗമല്ല) അടച്ചാൽ Tender + Annexure-B + Priority Verification ലഭിക്കും.\n\n👇 ഇപ്പോൾ ലോക്ക് ചെയ്യൂ:`;
-    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ ${fee}L ഏരിയ അടുത്ത ആളിന് പോകാൻ പോകുന്നു!\n\n🚨 നാളെ മുതൽ പുതിയ അപേക്ഷകർ queue-ൽ. ഇന്ന് Rs${token} (Not refundable) അടച്ചില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും!\n\nTender + Annexure-B ഇപ്പോൾ തന്നെ ലഭിക്കാൻ 👇 Pay ചെയ്യൂ അല്ലെങ്കിൽ Call ${'${HELP_MARKETING}'}:`;
+    if(level===1) return `👋 ഓർമ്മപ്പെടുത്തൽ: നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ 📄 Tender + Annexure-B ഉടൻ ലഭിക്കും.\n\n👇 ഇപ്പോൾ അടയ്ക്കൂ, സ്ലോട്ട് നഷ്ടപ്പെടാതിരിക്കാൻ:`;
+    if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ആയിട്ടില്ല!\n\n🔥 ഇന്ന് ${fee}L-ന് 3 പേർ അന്വേഷിച്ചു. നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം!\n\nRs${token} (Not refundable, ${fee}L-ന്റെ ഭാഗമല്ല) അടച്ചാൽ 📄 Tender + Annexure-B + ⭐ Priority Verification ലഭിക്കും.\n\n👇 ഇപ്പോൾ ലോക്ക് ചെയ്യൂ:`;
+    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ ${fee}L ഏരിയ അടുത്ത ആളിന് പോകാൻ പോകുന്നു!\n\n🚨 നാളെ മുതൽ പുതിയ അപേക്ഷകർ queue-ൽ. ഇന്ന് Rs${token} (Not refundable) അടച്ചില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും!\n\n📄 Tender + Annexure-B ഇപ്പോൾ തന്നെ ലഭിക്കാൻ 👇 Pay ചെയ്യൂ അല്ലെങ്കിൽ Call ${'${HELP_MARKETING}'}:`;
   } else if(lang==='hi'){
-    if(level===1) return `👋 रिमाइंडर: आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} पर Tender + Annexure-B तुरंत मिलेगा।\n\n👇 अभी पे करें, स्लॉट न खोएं:`;
-    if(level===12) return `⚠️ आपका ${fee}L एरिया अभी भी लॉक नहीं!\n\n🔥 आज ${fee}L के लिए 3 लोगों ने पूछा। आपके जिले में स्लॉट लिमिटेड!\n\nRs${token} (Not refundable, ${fee}L का हिस्सा नहीं) पर Tender + Annexure-B + Priority Verification मिलेगा।\n\n👇 अभी लॉक करें:`;
-    if(level===24) return `⏰ अंतिम रिमाइंडर! आपका ${fee}L एरिया अगले व्यक्ति को जाने वाला है!\n\n🚨 कल से नए आवेदक queue में। आज Rs${token} (Not refundable) नहीं भरा तो स्लॉट चला जाएगा!\n\nTender + Annexure-B अभी पाने के लिए 👇 Pay करें या Call ${'${HELP_MARKETING}'}:`;
+    if(level===1) return `👋 रिमाइंडर: आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} पर 📄 Tender + Annexure-B तुरंत मिलेगा।\n\n👇 अभी पे करें, स्लॉट न खोएं:`;
+    if(level===12) return `⚠️ आपका ${fee}L एरिया अभी भी लॉक नहीं!\n\n🔥 आज ${fee}L के लिए 3 लोगों ने पूछा। आपके जिले में स्लॉट लिमिटेड!\n\nRs${token} (Not refundable, ${fee}L का हिस्सा नहीं) पर 📄 Tender + Annexure-B + ⭐ Priority Verification मिलेगा।\n\n👇 अभी लॉक करें:`;
+    if(level===24) return `⏰ अंतिम रिमाइंडर! आपका ${fee}L एरिया अगले व्यक्ति को जाने वाला है!\n\n🚨 कल से नए आवेदक queue में। आज Rs${token} (Not refundable) नहीं भरा तो स्लॉट चला जाएगा!\n\n📄 Tender + Annexure-B अभी पाने के लिए 👇 Pay करें या Call ${'${HELP_MARKETING}'}:`;
   } else {
-    if(level===1) return `👋 Reminder: You confirmed ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get Tender + Annexure-B instantly.\n\n👇 Pay now to secure your slot:`;
-    if(level===12) return `⚠️ Your ${fee}L area is still NOT locked!\n\n🔥 3 people enquired for ${fee}L today. Slots in your district are limited!\n\nPay Rs${token} (Not refundable, NOT part of ${fee}L) to get Tender + Annexure-B + Priority Verification.\n\n👇 Lock it now:`;
-    if(level===24) return `⏰ FINAL Reminder! Your ${fee}L area is about to go to next person!\n\n🚨 New applicants in queue from tomorrow. If you don't pay Rs${token} (Not refundable) today, you'll lose your slot!\n\nGet Tender + Annexure-B now 👇 Pay or Call ${'${HELP_MARKETING}'}:`;
+    if(level===1) return `👋 Reminder: You confirmed ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get 📄 Tender + Annexure-B instantly.\n\n👇 Pay now to secure your slot:`;
+    if(level===12) return `⚠️ Your ${fee}L area is still NOT locked!\n\n🔥 🔥 3 people enquired for ${fee}L today. ⚠️ Slots in your district are limited!\n\nPay Rs${token} (Not refundable, NOT part of ${fee}L) to get 📄 Tender + Annexure-B + ⭐ Priority Verification.\n\n👇 Lock it now:`;
+    if(level===24) return `⏰ FINAL Reminder! Your ${fee}L area is about to go to next person!\n\n🚨 🚨 New applicants in queue from tomorrow. If you don't pay Rs${token} (Not refundable) today, you'll lose your slot!\n\nGet 📄 Tender + Annexure-B now 👇 Pay or Call ${'${HELP_MARKETING}'}:`;
   }
-  return `After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
+  return `💳 After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
 }
 
 function getEscalatedGeneralText(lang, originalText, level, stepName){
@@ -781,7 +781,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
           } else if(actualLang==='hi'){
             welcomeText = `⚠️ आपने अभी तक भाषा नहीं चुनी!\n\n🔥 आपके जिले में स्लॉट लिमिटेड! आज 3 लोगों ने बिजनेस अवसर देखा।\n\n👇 अभी भाषा चुनकर जारी रखें:`;
           } else {
-            welcomeText = `⚠️ You haven't selected language yet!\n\n🔥 Slots in your district are limited! 3 people checked Business Opportunity today.\n\n👇 Select language now to continue:`;
+            welcomeText = `⚠️ You haven't selected language yet!\n\n🔥 ⚠️ Slots in your district are limited! 3 people checked Business Opportunity today.\n\n👇 Select language now to continue:`;
           }
         }
         if(level===24){
@@ -797,7 +797,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
-        if(last.includes('Pay Reg') || last.includes('EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
+        if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
           const escalatedText = getEscalatedPayText(actualLang, fee, level);
@@ -893,20 +893,12 @@ function getReqText(sub, lang){
 
 const T={
   en:{
-    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
-
-You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
-
-I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
-
-Welcome to Bizmapia!
-
-Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
-    mainMenu:`Thank you for selecting English! 🙏 Excellent choice!
+    welcome:`Hi, I am Maya here to chat with you! 👋\n\nWelcome to Bizmapia! 🙏\n🇮🇳 India's Largest Online Platform - First 4-in-1 App in India\n\n🌐 Please select your preferred language from below:-`,
+    mainMenu:`🙏 Thank you for selecting English! 🙏 Excellent choice! 👏
 
 I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia.
 
-👇 What to do now: Please select a service from below and I'll guide you step-by-step what to do next:-`,
+👇 👇 What to do now: Please select a service from below and I'll guide you step-by-step what to do next:-`,
     moreServices:`More services:-`,
     services:[{id:'SVC_RIDE',title:'Ride Hailing'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'},{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}],
     noLang:`Sorry, You are not selected any Language.\n\nPlease select your preferred language from below:-`,
@@ -934,10 +926,10 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bookAppoint:`Book Appointments - Doctor, Salon, Services - Instant booking near you.\n\nClick below to install app or call us:`,
     bookMovie:`Book Movie Tickets, Events, Shows near you.\n\nClick below to install app or call us:`,
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'High level Income'},{id:'OPP_CORP',title:'Moderate level Income'},{id:'OPP_CENTER',title:'Base level Income'}],
-    highIntroSingle:`Excellent choice! 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
-    moderateIntroSingle:`Excellent choice! 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for corporation!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
-    baseIntroSingle:`Excellent choice! 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
+    oppButtons:[{id:'OPP_DISTRICT',title:'💰 High level Income'},{id:'OPP_CORP',title:'💼 Moderate level Income'},{id:'OPP_CENTER',title:'🚀 Base level Income'}],
+    highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
+    moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for corporation!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
+    baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
     reminderFranchise:`You were checking our franchise opportunity. Continue to know more?`,
     seeVideo:'See the Video',
     clickWatch:'Click to watch',
@@ -957,11 +949,11 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     yesCorp:'Yes Corp', noCorp:'No Corp',
     ready15:`You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.`,
     readyBtn:'Yes Ready - 15L',
-    payReg:`Great you confirmed ready. Please pay Registration Fee (Not refundable, NOT part of fee). Pay to get Tender + Annexure-B. Click Pay Registration Fee button below.`,
+    payReg:`Great you confirmed ready. Please pay Registration Fee (Not refundable, NOT part of fee). Pay to get 📄 Tender + Annexure-B. Click 💳 Pay Registration Fee button below.`,
     payBtn:'I Have Paid Registration Fee',
     payFeeNow:'Pay fee now',
     notPaid:'Not Paid - Will Pay',
-    payAfter:'After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-',
+    payAfter:'💳 After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-',
     emiOpt:`EMI options available:\nEMI 5 Months\nEMI 9 Months\nPlease select any one from below:-`,
     emi10:'EMI 5 Months', emi20:'EMI 9 Months',
     leadAsk:`Great! Please type your full name, district and mobile number (e.g. Ajo, Thodupuzha, 9567742507)`,
@@ -969,7 +961,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bus:'Business', house:'Housewife', emp:'Employee',
     dateQ:`When you can visit our head office?`,
     today:'Today', tomorrow:'Tomorrow',
-    tenderLink:`Excellent choice! 👏 Thank you for selecting District Franchise!
+    tenderLink:`Excellent choice! 👏 👏 🙏 Thank you for selecting District Franchise!
 
 📄 Downloadable PDF for District Franchise - 10-15L - MOST PREMIUM:
 ${LINKS_V92.tenderDistrict}
@@ -979,15 +971,7 @@ ${LINKS_V92.tenderDistrict}
     noProblem:`No problem! Take your time. When you are ready, click below to install.\n\nClick below:`,
   },
   hi:{
-    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
-
-You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
-
-I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
-
-Welcome to Bizmapia!
-
-Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    welcome:`Hi, I am Maya here to chat with you! 👋\n\nWelcome to Bizmapia! 🙏\n🇮🇳 India's Largest Online Platform - First 4-in-1 App in India\n\n🌐 अपनी भाषा नीचे से चुनें:-`,
     mainMenu:`हिंदी चुनने के लिए धन्यवाद! 🙏 बहुत बढ़िया चयन!
 
 मैं माया हूँ 🤖 — मैं आपको Bizmapia के साथ आपकी सही जरूरतों के लिए रियल-टाइम सहायता और रिमाइंडर दूंगी।
@@ -1043,7 +1027,7 @@ Please select your preferred language from below / अपनी भाषा न
     yesCorp:'हाँ कॉर्प', noCorp:'नहीं कॉर्प',
     ready15:`आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप जिला फ्रेंचाइजी शुल्क के रूप में 15 लाख रुपये का भुगतान करने के लिए तैयार हैं।`,
     readyBtn:'हाँ तैयार - 15L',
-    payReg:`बहुत बढ़िया! रजिस्ट्रेशन फी (Not refundable, फी का हिस्सा नहीं) - Tender + Annexure-B के लिए भुगतान करें। नीचे Pay Registration Fee बटन पर क्लिक करें।`,
+    payReg:`बहुत बढ़िया! रजिस्ट्रेशन फी (Not refundable, फी का हिस्सा नहीं) - 📄 Tender + Annexure-B के लिए भुगतान करें। नीचे 💳 Pay Registration Fee बटन पर क्लिक करें।`,
     payBtn:'मैंने रजिस्ट्रेशन फी भुगतान किया',
     payFeeNow:'अभी भुगतान करें',
     notPaid:'भुगतान नहीं किया - करूंगा',
@@ -1067,15 +1051,7 @@ ${LINKS_V92.tenderDistrict}
     noProblem:`कोई बात नहीं! अपना समय लें। जब आप तैयार हों, तो नीचे क्लिक करके इंस्टॉल करें।`,
   },
   ml:{
-    welcome:`👋 Hi! I'm Maya 🤖, your Bizmapia assistant bot.
-
-You're about to experience India's largest online service platform — India's first 4-in-1 app (Ride Hailing, Business Directory, Online Delivery, Online Booking + Business Opportunity)
-
-I'm here to give you real-time assistance and reminders to find your correct needs with Bizmapia. I'll guide you step-by-step for complete clarity. Please read and understand every step given by Maya bot.
-
-Welcome to Bizmapia!
-
-Please select your preferred language from below / अपनी भाषा नीचे से चुनें / താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
+    welcome:`Hi, I am Maya here to chat with you! 👋\n\nWelcome to Bizmapia! 🙏\n🇮🇳 India's Largest Online Platform - First 4-in-1 App in India\n\n🌐 താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     mainMenu:`മലയാളം തിരഞ്ഞെടുത്തതിന് നന്ദി! 🙏 മികച്ച തിരഞ്ഞെടുപ്പ്!
 
 ഞാൻ മായ ആണ് 🤖 — Bizmapia-യിൽ നിങ്ങളുടെ ശരിയായ ആവശ്യങ്ങൾക്ക് റിയൽ-ടൈം സഹായവും റിമൈൻഡറുകളും നൽകാൻ ഞാൻ ഇവിടെയുണ്ട്.
@@ -1131,7 +1107,7 @@ Please select your preferred language from below / अपनी भाषा न
     yesCorp:'അതെ കോർപ്പ്', noCorp:'അല്ല കോർപ്പ്',
     ready15:`നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസായി 15 ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`,
     readyBtn:'അതെ തയ്യാർ - 15L',
-    payReg:`നിങ്ങൾ തയ്യാറായി സ്ഥിരീകരിച്ചു. രജിസ്ട്രേഷൻ ഫീ (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) - Tender + Annexure-B ലഭിക്കാൻ അടയ്ക്കുക. താഴെ Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.`,
+    payReg:`നിങ്ങൾ തയ്യാറായി സ്ഥിരീകരിച്ചു. രജിസ്ട്രേഷൻ ഫീ (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) - 📄 Tender + Annexure-B ലഭിക്കാൻ അടയ്ക്കുക. താഴെ 💳 Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.`,
     payBtn:'ഞാൻ രജിസ്ട്രേഷൻ ഫീ അടച്ചു',
     payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
     notPaid:'അടച്ചില്ല - അടയ്ക്കാം',
@@ -1156,7 +1132,7 @@ ${LINKS_V92.tenderDistrict}
   }
 };
 
-app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN Pay Registration Fee - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Registration Fee - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -1233,7 +1209,7 @@ app.post('/webhook', async(req,res)=>{
         const companyVideo = lang==='ml' ? `നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `बहुत बढ़िया! आपने "बिजनेस अवसर" चुना।\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:` : `Excellent! You selected "Business Opportunity".\n\nWatch this video to know about the company:`;
         await sendWithDelay(singleCta(uid, companyVideo, {type:'url', title: lang==='ml' ? 'കമ്പനി വീഡിയോ കാണുക' : lang==='hi' ? 'कंपनी वीडियो देखें' : 'Watch Company Video', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
         await delay(600);
-        const incomeMsg = lang==='ml' ? `നിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `आप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `You are going to book an income slot from Bizmapia.\n\n👉 What to do now: Select income level from below - High / Moderate / Base level:-`;
+        const incomeMsg = lang==='ml' ? `നിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `आप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `You are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select income level from below - High / Moderate / Base level:-`;
         await sendWithDelay(interactiveButton(uid, incomeMsg, L.oppButtons, incomingPhoneId));
       }
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
@@ -1255,7 +1231,7 @@ app.post('/webhook', async(req,res)=>{
     if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
     if(btnId==='OPP_DISTRICT'){
-      state.sub='OPP_DISTRICT'; state.lastStep='High level Income - DISTRICT - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      state.sub='OPP_DISTRICT'; state.lastStep='💰 High level Income - DISTRICT - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
@@ -1276,7 +1252,7 @@ app.post('/webhook', async(req,res)=>{
 
 Let's check District Franchise details.
 
-👉 What to do now: 1) Watch video. 2) Click "Watched Video".
+👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
@@ -1287,16 +1263,16 @@ Let's check District Franchise details.
 
 👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
 
-👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
       await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_DISTRICT:24', lang, 24*60*60*1000, incomingPhoneId);
       return;
     }
     if(btnId==='OPP_CORP'){
-      state.sub='OPP_CORP'; state.lastStep='Moderate level Income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      state.sub='OPP_CORP'; state.lastStep='💼 Moderate level Income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CORP', lang);
       const videoObj = getVideoObj('OPP_CORP', lang);
@@ -1316,7 +1292,7 @@ Let's check District Franchise details.
 
 Let's check Corporation Franchise details.
 
-👉 What to do now: 1) Watch video. 2) Click "Watched Video".
+👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
@@ -1327,16 +1303,16 @@ Let's check Corporation Franchise details.
 
 👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
 
-👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
       await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId);
       return;
     }
     if(btnId==='OPP_CENTER'){
-      state.sub='OPP_CENTER'; state.lastStep='Base level Income - CENTER - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      state.sub='OPP_CENTER'; state.lastStep='🚀 Base level Income - CENTER - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CENTER', lang);
       const videoObj = getVideoObj('OPP_CENTER', lang);
@@ -1356,7 +1332,7 @@ Let's check Corporation Franchise details.
 
 Let's check Business Center details.
 
-👉 What to do now: 1) Watch video. 2) Click "Watched Video".
+👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
@@ -1367,9 +1343,9 @@ Let's check Business Center details.
 
 👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
 
-👉 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
       await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId);
@@ -1391,7 +1367,7 @@ Let's check Business Center details.
 
 👋 Did you read Benefits? Understood?
 
-👉 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
       const combinedMsg = benDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
       return;
@@ -1411,7 +1387,7 @@ Let's check Business Center details.
 
 👋 Did you read Benefits? Understood?
 
-👉 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
       const combinedMsg = benDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
       return;
@@ -1431,7 +1407,7 @@ Let's check Business Center details.
 
 👋 Did you read Support? Understood?
 
-👉 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
       const combinedMsg = supDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
       return;
@@ -1451,7 +1427,7 @@ Let's check Business Center details.
 
 👋 Did you read Support? Understood?
 
-👉 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
       const combinedMsg = supDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
       return;
@@ -1471,7 +1447,7 @@ Let's check Business Center details.
 
 👋 Did you read Requirements? Understood?
 
-👉 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
       const combinedMsg = reqDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
       return;
@@ -1491,7 +1467,7 @@ Let's check Business Center details.
 
 👋 Did you read Requirements? Understood?
 
-👉 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
       const combinedMsg = reqDyn + qText;
       await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
       return;
@@ -1529,14 +1505,14 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_M
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){}
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
-    if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); 
+    if(btnId==='KNOW_EMI'){ const fee = state.fee || 15; state.lastStep=`💳 EMI Options - ${fee}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const emiText = getEMIText(lang, fee); 
       // Business Center (1L) uses 5 and 9 months, others use 10 and 20 as before but titles now show 5/9 for BC
       let emiButtons = [{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}];
       if(fee===1){
@@ -1545,13 +1521,13 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_M
       await sendWithDelay(interactiveButton(uid,emiText + "\n\nPlease select any one from below:-",emiButtons, incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI Options Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true); scheduleReminder(uid,'install:OPP_EMI:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_EMI:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='EMI_10'||btnId==='EMI_20'||btnId==='EMI_5'||btnId==='EMI_9'){ 
       const fee = state.fee || 15; 
-      state.lastStep='EMI Selected '+btnId+` - ${fee}L`; 
+      state.lastStep='✅ EMI Selected '+btnId+` - ${fee}L`; 
       await setState(uid,state); 
       clearReminders(uid); 
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){} 
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1564,7 +1540,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_M
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15, state.sub);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1598,9 +1574,9 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'CALL_MARKETING',title:`Call ${HELP_M
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
-      if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
+      if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
         const payText = getPayText(lang, state.fee||15, state.sub);
-        await sendWithDelay(singleCta(uid, payText, {type:'url', title: `Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
         return;
       }
       await repeatLastStep(uid, state, lang, incomingPhoneId); 
