@@ -715,22 +715,22 @@ async function deleteReminderFromRedis(uid, typePattern){
 }
 function clearReminders(uid){
   for(let key of reminders.keys()){ if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); } }
-  deleteReminderFromRedis(uid, '');
+  deleteReminderFromRedis(uid, '').catch(e=>console.log('clearReminders redis error', e.message));
 }
 function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(sub||'OPP_DISTRICT');
-  // level: 1=1h, 12=12h, 24=24h
+  // FOMO + Social Proof + Scarcity - V182
   if(lang==='ml'){
-    if(level===1) return `രജിസ്ട്രേഷൻ ഫീ Rs${token} (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
-    if(level===12) return `⚠ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ചെയ്തിട്ടില്ല - പണമടച്ചോ?\n\nരജിസ്ട്രേഷൻ ഫീ Rs${token} (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
-    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ - നിങ്ങളുടെ ${fee}L ഏരിയ മറ്റൊരാൾക്ക് പോകുന്നതിന് മുൻപ് പണമടയ്ക്കൂ!\n\nരജിസ്ട്രേഷൻ ഫീ Rs${token} (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-`;
+    if(level===1) return `👋 ഓർമ്മപ്പെടുത്തൽ: നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ Tender + Annexure-B ഉടൻ ലഭിക്കും.\n\n👇 ഇപ്പോൾ അടയ്ക്കൂ, സ്ലോട്ട് നഷ്ടപ്പെടാതിരിക്കാൻ:`;
+    if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ആയിട്ടില്ല!\n\n🔥 ഇന്ന് ${fee}L-ന് 3 പേർ അന്വേഷിച്ചു. നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം!\n\nRs${token} (Not refundable, ${fee}L-ന്റെ ഭാഗമല്ല) അടച്ചാൽ Tender + Annexure-B + Priority Verification ലഭിക്കും.\n\n👇 ഇപ്പോൾ ലോക്ക് ചെയ്യൂ:`;
+    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ ${fee}L ഏരിയ അടുത്ത ആളിന് പോകാൻ പോകുന്നു!\n\n🚨 നാളെ മുതൽ പുതിയ അപേക്ഷകർ queue-ൽ. ഇന്ന് Rs${token} (Not refundable) അടച്ചില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും!\n\nTender + Annexure-B ഇപ്പോൾ തന്നെ ലഭിക്കാൻ 👇 Pay ചെയ്യൂ അല്ലെങ്കിൽ Call ${'${HELP_MARKETING}'}:`;
   } else if(lang==='hi'){
-    if(level===1) return `रजिस्ट्रेशन फी Rs${token} (Not refundable, फी का हिस्सा नहीं) भुगतान के बाद, कृपया चुनें:-`;
-    if(level===12) return `⚠ आपका ${fee}L एरिया अभी भी लॉक नहीं है - क्या आपने भुगतान किया?\n\nरजिस्ट्रेशन फी Rs${token} (Not refundable, फी का हिस्सा नहीं) भुगतान के बाद, कृपया चुनें:-`;
-    if(level===24) return `⏰ अंतिम रिमाइंडर - आपका ${fee}L एरिया किसी और को जाने से पहले भुगतान करें!\n\nरजिस्ट्रेशन फी Rs${token} (Not refundable, फी का हिस्सा नहीं) भुगतान के बाद, कृपया चुनें:-`;
+    if(level===1) return `👋 रिमाइंडर: आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} पर Tender + Annexure-B तुरंत मिलेगा।\n\n👇 अभी पे करें, स्लॉट न खोएं:`;
+    if(level===12) return `⚠️ आपका ${fee}L एरिया अभी भी लॉक नहीं!\n\n🔥 आज ${fee}L के लिए 3 लोगों ने पूछा। आपके जिले में स्लॉट लिमिटेड!\n\nRs${token} (Not refundable, ${fee}L का हिस्सा नहीं) पर Tender + Annexure-B + Priority Verification मिलेगा।\n\n👇 अभी लॉक करें:`;
+    if(level===24) return `⏰ अंतिम रिमाइंडर! आपका ${fee}L एरिया अगले व्यक्ति को जाने वाला है!\n\n🚨 कल से नए आवेदक queue में। आज Rs${token} (Not refundable) नहीं भरा तो स्लॉट चला जाएगा!\n\nTender + Annexure-B अभी पाने के लिए 👇 Pay करें या Call ${'${HELP_MARKETING}'}:`;
   } else {
-    if(level===1) return `After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
-    if(level===12) return `⚠ Your ${fee}L area is still not locked - have you paid?\n\nAfter Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
-    if(level===24) return `⏰ Last reminder - Pay before your ${fee}L area goes to someone else!\n\nAfter Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
+    if(level===1) return `👋 Reminder: You confirmed ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get Tender + Annexure-B instantly.\n\n👇 Pay now to secure your slot:`;
+    if(level===12) return `⚠️ Your ${fee}L area is still NOT locked!\n\n🔥 3 people enquired for ${fee}L today. Slots in your district are limited!\n\nPay Rs${token} (Not refundable, NOT part of ${fee}L) to get Tender + Annexure-B + Priority Verification.\n\n👇 Lock it now:`;
+    if(level===24) return `⏰ FINAL Reminder! Your ${fee}L area is about to go to next person!\n\n🚨 New applicants in queue from tomorrow. If you don't pay Rs${token} (Not refundable) today, you'll lose your slot!\n\nGet Tender + Annexure-B now 👇 Pay or Call ${'${HELP_MARKETING}'}:`;
   }
   return `After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
 }
@@ -738,14 +738,14 @@ function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(s
 function getEscalatedGeneralText(lang, originalText, level, stepName){
   if(level===1) return originalText;
   if(level===12){
-    if(lang==='ml') return `⚠ ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\nനിങ്ങളുടെ സ്ലോട്ട് ഇപ്പോഴും ഓപ്പൺ ആണ്!`;
-    if(lang==='hi') return `⚠ रिमाइंडर: ${originalText}\n\nआपका स्लॉट अभी भी खुला है!`;
-    return `⚠ Reminder: ${originalText}\n\nYour slot is still open!`;
+    if(lang==='ml') return `⚠ ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\n🔥 നിങ്ങളുടെ സ്ലോട്ട് ഇപ്പോഴും ഓപ്പൺ ആണ്! ഇന്ന് 3 പേർ ${stepName} നോക്കി. തുടരാൻ താഴെ ക്ലിക്ക് ചെയ്യൂ!`;
+    if(lang==='hi') return `⚠ रिमाइंडर: ${originalText}\n\n🔥 आपका स्लॉट अभी भी ओपन है! आज 3 लोगों ने ${stepName} देखा। जारी रखने के लिए नीचे क्लिक करें!`;
+    return `⚠ Reminder: ${originalText}\n\n🔥 Your slot is still open! 3 people checked ${stepName} today. Click below to continue!`;
   }
   if(level===24){
-    if(lang==='ml') return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\nഇത് അവസാന അവസരമാണ്!`;
-    if(lang==='hi') return `⏰ अंतिम रिमाइंडर: ${originalText}\n\nयह आखिरी मौका है!`;
-    return `⏰ Last reminder: ${originalText}\n\nThis is your last chance!`;
+    if(lang==='ml') return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ: ${originalText}\n\n🚨 നാളെ മുതൽ പുതിയ ആളുകൾ queue-ൽ! ഇന്ന് പൂർത്തിയാക്കിയില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും. 👇 ഇപ്പോൾ തുടരൂ!`;
+    if(lang==='hi') return `⏰ अंतिम रिमाइंडर: ${originalText}\n\n🚨 कल से नए लोग queue में! आज पूरा नहीं किया तो स्लॉट चला जाएगा। 👇 अभी जारी रखें!`;
+    return `⏰ FINAL Reminder: ${originalText}\n\n🚨 New people in queue from tomorrow! If not completed today, you'll lose slot. 👇 Continue now!`;
   }
   return originalText;
 }
