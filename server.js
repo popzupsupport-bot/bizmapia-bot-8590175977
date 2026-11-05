@@ -1,5 +1,15 @@
-// V180 FINAL FIX - REGISTRATION FEE NOT REFUNDABLE IN ALL PLACES ALL LANGUAGES - NOT PART OF ANY FEE - TENDER + ANNEXURE B - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DOWNLOADABLE PDF GREETING WHAT TO DO - WELCOME MAYA FIXED - LOCKED TILL VERIFICATION - D250/C150/B100 - NO 5000 - 8 SHEETS LOCKED - REDIS READY
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V170 FINAL FIX 2026-11-04
+// V192 FINAL - INDIAN TIME IST FIX - ONLY TIME CODES CHANGED FROM WORKING FILE - ALL OTHER CODES SAME AS RENDER WORKING FILE
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V190 ====================
+// V190 FINAL FIX - ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER
+// LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
+// FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
+// 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
+// 8 SHEETS LOCKED: System_Logs, Master_Leads, Franchise_Funnel, Payments, Ride_Hailing, Business_Directory, Delivery, Booking, Registration_Fee
+// REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
+// =========================================================================================
+
+// V190 FINAL FIX - ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DOWNLOADABLE PDF GREETING WHAT TO DO - WELCOME MAYA FIXED - LOCKED TILL VERIFICATION - D250/C150/B100 - NO 5000 - 8 SHEETS LOCKED - REDIS READY - INBUILT DIALER
+// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V190 FINAL FIX 2026-11-04 - ALL CALL BUTTONS INBUILT DIALER
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -28,6 +38,52 @@ const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.panditprog
 const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
+
+// ===== INDIAN TIME (IST) FIX - ADDED V192 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+function getISTTime() {
+  const now = new Date();
+  const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const year = istTime.getFullYear();
+  const month = String(istTime.getMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getDate()).padStart(2, '0');
+  const hours = String(istTime.getHours()).padStart(2, '0');
+  const minutes = String(istTime.getMinutes()).padStart(2, '0');
+  const seconds = String(istTime.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} IST`;
+}
+
+function getISTISOString() {
+  const now = new Date();
+  const istString = now.toLocaleString('en-CA', { 
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  const iso = istString.replace(', ', 'T') + '+05:30';
+  return iso;
+}
+
+function getISTTimestamp() {
+  const now = new Date();
+  return now.toLocaleString('en-IN', { 
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }) + ' IST';
+}
+// ===== END INDIAN TIME FIX - ONLY THIS ADDED, ALL OTHER CODES SAME =====
+
+
 const EARN_LINK = 'https://bizmapia.com/earn';
 // VIDEO LINKS - ALL LANGUAGES
 // ENGLISH
@@ -453,7 +509,7 @@ function saveRegistrationFee(phone, sub, fee){
       registration_fee: regFee,
       full_fee: fee+'L',
       razorpay_link: link,
-      timestamp: new Date().toISOString(),
+      timestamp: getISTTime(),
       date_ist: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
     };
     saveToSheet('Registration_Fee', data).catch(()=>{});
@@ -1267,7 +1323,7 @@ app.post('/webhook', async(req,res)=>{
     const txt = msg.text?.body||'';
     const btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
     const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
-    const nowIso = new Date().toISOString();
+    const nowIso = getISTTime();
     let state = await getState(uid);
     // save which number user contacted
     state.phoneId = incomingPhoneId;
@@ -1738,8 +1794,8 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:`, phoneId));
         await delay(300);
         await sendWithDelay(textMessage(cleanUid, L.leadAsk, phoneId));
-        await saveToSheet('Payments', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
-        await saveToSheet('Franchise_Funnel', [new Date().toISOString(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
+        await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
+        await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
       }
     }
     res.sendStatus(200);
@@ -1836,7 +1892,7 @@ app.get('/replay-last-4-days', async(req,res)=>{
       return res.send(`❌ No chats found in last 4 days in Render memory/Redis.<br>Reason: Render restarts clear memory. But Redis should have 7 days if connected.<br>Check /all-chats to see what's available.<br>Redis connected: ${redisReady}`);
     }
     let saved = 0;
-    const nowIso = new Date().toISOString();
+    const nowIso = getISTTime();
     for(let {uid, state} of allStates){
       try{
         const lang = state.lang || 'en';
@@ -1890,7 +1946,7 @@ async function getAllChatsFromMemory(){
   }catch(e){ console.log('getAllChats error', e.message); return []; }
 }
 function chatToSheetRow(chat){
-  const nowIso = new Date().toISOString();
+  const nowIso = getISTTime();
   const state = chat.state || {};
   const phone = chat.phone || '';
   const lang = chat.lang || state.lang || 'en';
@@ -1989,7 +2045,7 @@ async function getAllChatsFromMemory(){
   }catch(e){ console.log('getAllChats error', e.message); return []; }
 }
 function chatToSheetRow(chat){
-  const nowIso = new Date().toISOString();
+  const nowIso = getISTTime();
   const state = chat.state || {};
   const phone = chat.phone || '';
   const lang = chat.lang || state.lang || 'en';
@@ -2129,7 +2185,7 @@ app.get('/all-chats', async(req,res)=>{
     }
     all.sort((a,b)=> (a.ageHours||0) - (b.ageHours||0));
     const last4Days = all.filter(c=> (c.ageHours||0) <= 96);
-    res.json({countTotal: all.length, countLast4Days: last4Days.length, generatedAt: new Date().toISOString(), redisReady, last4Days, all});
+    res.json({countTotal: all.length, countLast4Days: last4Days.length, generatedAt: getISTTime(), redisReady, last4Days, all});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -2166,10 +2222,10 @@ app.get('/export-chats', async(req,res)=>{
         csv += row + '\n';
       }
       res.setHeader('Content-Type','text/csv');
-      res.setHeader('Content-Disposition','attachment; filename=bizmapia_last_'+days+'days_'+new Date().toISOString().slice(0,10)+'.csv');
+      res.setHeader('Content-Disposition','attachment; filename=bizmapia_last_'+days+'days_'+getISTTime().slice(0,10)+'.csv');
       return res.send(csv);
     }
-    res.json({count: chats.length, days, generatedAt: new Date().toISOString(), data: chats});
+    res.json({count: chats.length, days, generatedAt: getISTTime(), data: chats});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -2192,7 +2248,7 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V170 FINAL FIX - getVideoUrl REFERENCEERROR FIXED - 8 PDF 2+2+4 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: new Date().toISOString(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V170 FINAL FIX - getVideoUrl REFERENCEERROR FIXED - 8 PDF 2+2+4 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -2201,10 +2257,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V180 FINAL FIX - REGISTRATION FEE NOT REFUNDABLE IN ALL PLACES ALL LANGUAGES - NOT PART OF ANY FEE - TENDER + ANNEXURE B - 8 PDF 2+2+4 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V190 FINAL FIX - ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - V192 INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V180 FINAL FIX REG FEE NOT REFUNDABLE ALL PLACES - 8 PDF 2+2+4 - DOWNLOADABLE PDF - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - LOCKED TILL VERIFICATION ====================
+// ==================== LOCKED - END OF FILE - V190 FINAL FIX REG FEE NOT REFUNDABLE ALL PLACES - 8 PDF 2+2+4 - DOWNLOADABLE PDF - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - LOCKED TILL VERIFICATION ====================
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
 // If verification needed, create V171 with proper version control after verification
 // Current locked version: V170 FINAL FIX - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V190 FINAL LOCKED - DO NOT EDIT ====================
+// V190 FINAL LOCKED ON 2026-11-04 - ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED
+// THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V191 - DO NOT EDIT THIS LOCKED FILE
+// ================================================================================================
