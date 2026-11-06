@@ -1,6 +1,6 @@
-// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V200 ====================
-// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V201 ====================
+// V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -8,8 +8,8 @@
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -39,7 +39,7 @@ const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 
-// ===== INDIAN TIME (IST) FIX - ADDED V200 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+// ===== INDIAN TIME (IST) FIX - ADDED V201 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
 function getISTTime() {
   const now = new Date();
   const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -590,7 +590,7 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V200 + STANDARD EMOJIS + SPACING
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V201 + STANDARD EMOJIS + SPACING
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
@@ -1012,7 +1012,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else if(type.includes('VIDEO_2MIN')){
-        // V200: Video 2nd message as 2-min reminder - NOT immediate
+        // V201: Video 2nd message as 2-min reminder - NOT immediate
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
         const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
         const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
@@ -1083,15 +1083,15 @@ function getSupText(sub, lang){
   const isCorp = sub==='OPP_CORP';
   if(lang==='ml'){
     if(isDistrict) return `പിന്തുണ - ജില്ലാ ഫ്രാഞ്ചൈസി:\n\n🏢 കമ്പനി നൽകുന്ന പിന്തുണ:\n✅ 12 മാസം മാർക്കറ്റിംഗ് സപ്പോർട്ട്\n✅ ജില്ലാ തലത്തിൽ പരസ്യം - കമ്പനി ചെലവിൽ\n✅ ആപ്പ് + വെബ്സൈറ്റ് + ട്രെയിനിംഗ് പൂർണ്ണ സപ്പോർട്ട്\n✅ ജില്ലയിലെ എല്ലാ Business Center സെറ്റപ്പ് സപ്പോർട്ട്\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
-    if(isCorp) return `പിന്തുണ - കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി:\n\n🏢 കമ്പനി നൽകുന്ന പിന്തുണ:\n✅ 12 മാസം മാർക്കറ്റിംഗ് സപ്പോർട്ട്\n✅ 6 മാസം വാടക സപ്പോർട്ട് + 6 മാസം സ്റ്റാഫ് ശമ്പള സപ്പോർട്ട്\n✅ കോർപ്പറേഷൻ തലത്തിൽ പരസ്യം\n✅ ആപ്പ് + വെബ്സൈറ്റ് + ട്രെയിനിംഗ്\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
+    if(isCorp) return `പിന്തുണ - കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി:\n\n🏢 കമ്പനി നൽകുന്ന പിന്തുണ:\n✅ 12 മാസം മാർക്കറ്റിംഗ് സപ്പോർട്ട്\n✅ 6 മാസം വാടക സപ്പോർട്ട് + 6 മാസം സ്റ്റാഫ് ശമ്പള സപ്പോർട്ട്\n✅ കോർപ്പറേഷൻ / മുനിസിപ്പൽ തലത്തിൽ പരസ്യം\n✅ ആപ്പ് + വെബ്സൈറ്റ് + ട്രെയിനിംഗ്\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
     return `പിന്തുണ - ബിസിനസ് സെന്റർ:\n\n🏢 കമ്പനി നൽകുന്ന പിന്തുണ:\n✅ ആപ്പ് + വെബ്സൈറ്റ് + ട്രെയിനിംഗ് പൂർണ്ണ സപ്പോർട്ട്\n✅ നിങ്ങളുടെ പട്ടണത്തിൽ മാർക്കറ്റിംഗ് സപ്പോർട്ട്\n✅ ലോക്കൽ ബിസിനസ്സ് ലിസ്റ്റിംഗ് സപ്പോർട്ട്\n\n💰 ആവശ്യകത: 100 Sqft Shop/Room + Computer + Internet + 1 Lakh\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
   } else if(lang==='hi'){
     if(isDistrict) return `सपोर्ट - जिला फ्रेंचाइजी:\n\n🏢 कंपनी सपोर्ट:\n✅ 12 महीने मार्केटिंग सपोर्ट\n✅ जिला स्तर पर विज्ञापन - कंपनी खर्च पर\n✅ ऐप + वेबसाइट + ट्रेनिंग पूर्ण सपोर्ट`;
-    if(isCorp) return `सपोर्ट - कॉरपोरेशन फ्रेंचाइजी:\n\n🏢 कंपनी सपोर्ट:\n✅ 12 महीने मार्केटिंग सपोर्ट\n✅ 6 महीने किराया सपोर्ट + 6 महीने स्टाफ सैलरी सपोर्ट\n✅ कॉरपोरेशन स्तर पर विज्ञापन`;
+    if(isCorp) return `सपोर्ट - कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी:\n\n🏢 कंपनी सपोर्ट:\n✅ 12 महीने मार्केटिंग सपोर्ट\n✅ 6 महीने किराया सपोर्ट + 6 महीने स्टाफ सैलरी सपोर्ट\n✅ कॉरपोरेशन / म्युनिसिपल स्तर पर विज्ञापन`;
     return `सपोर्ट - बिजनेस सेंटर:\n\n🏢 कंपनी सपोर्ट:\n✅ ऐप + वेबसाइट + ट्रेनिंग पूर्ण सपोर्ट\n✅ आपके शहर में मार्केटिंग सपोर्ट\n\n💰 आवश्यकता: 100 Sqft Shop/Room + Computer + Internet + 1 Lakh`;
   } else {
     if(isDistrict) return `Support - District Franchise:\n\n🏢 Company Support:\n✅ 12 months marketing support\n✅ District level advertisement - Company cost\n✅ App + Website + Training full support\n✅ All Business Center setup support in your District\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
-    if(isCorp) return `Support - Corporation Franchise:\n\n🏢 Company Support:\n✅ 12 months marketing support\n✅ 6 months Rent support + 6 months Staff salary support\n✅ Corporation level advertisement\n✅ App + Website + Training\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
+    if(isCorp) return `Support - Corporation / Municipal Franchise:\n\n🏢 Company Support:\n✅ 12 months marketing support\n✅ 6 months Rent support + 6 months Staff salary support\n✅ Corporation / Municipal level advertisement\n✅ App + Website + Training\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
     return `Support - Business Center:\n\n🏢 Company Support:\n✅ App + Website + Training full support\n✅ Marketing support in your town\n✅ Local business listing support\n\n💰 Requirement: 100 Sqft Shop/Room + Computer + Internet + 1 Lakh\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
   }
 }
@@ -1101,15 +1101,15 @@ function getReqText(sub, lang){
   const isCenter = sub==='OPP_CENTER';
   if(lang==='ml'){
     if(isDistrict) return `ആവശ്യകതകൾ - ജില്ലാ ഫ്രാഞ്ചൈസി:\n\n📋 ആവശ്യമായവ:\n✅ ഓഫീസ് സ്പേസ്: ജില്ലാ ഹെഡ്ക്വാർട്ടേഴ്സിൽ ഓഫീസ്\n✅ സ്റ്റാഫ്: മിനിമം 2-3 സ്റ്റാഫ്\n✅ കമ്പ്യൂട്ടർ + ഇന്റർനെറ്റ് + പ്രിന്റർ\n✅ നിക്ഷേപം: 10L / 15L (EMI ലഭ്യമാണ്)\n✅ ആധാർ + പാൻ + ബാങ്ക് അക്കൗണ്ട്\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
-    if(isCorp) return `ആവശ്യകതകൾ - കോർപ്പറേഷൻ:\n\n📋 ആവശ്യമായവ:\n✅ ഓഫീസ് സ്പേസ്: കോർപ്പറേഷൻ ഏരിയയിൽ ഓഫീസ്\n✅ സ്റ്റാഫ്: മിനിമം 1-2 സ്റ്റാഫ്\n✅ കമ്പ്യൂട്ടർ + ഇന്റർനെറ്റ്\n✅ നിക്ഷേപം: 4L / 5L (EMI ലഭ്യമാണ്)\n✅ ആധാർ + പാൻ\n\n💡 6 മാസം വാടക + 6 മാസം സ്റ്റാഫ് ശമ്പളം കമ്പനി നൽകും\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
+    if(isCorp) return `ആവശ്യകതകൾ - കോർപ്പറേഷൻ / മുനിസിപ്പൽ:\n\n📋 ആവശ്യമായവ:\n✅ ഓഫീസ് സ്പേസ്: കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഏരിയയിൽ ഓഫീസ്\n✅ സ്റ്റാഫ്: മിനിമം 1-2 സ്റ്റാഫ്\n✅ കമ്പ്യൂട്ടർ + ഇന്റർനെറ്റ്\n✅ നിക്ഷേപം: 4L / 5L (EMI ലഭ്യമാണ്)\n✅ ആധാർ + പാൻ\n\n💡 6 മാസം വാടക + 6 മാസം സ്റ്റാഫ് ശമ്പളം കമ്പനി നൽകും\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
     return `ആവശ്യകതകൾ - ബിസിനസ് സെന്റർ:\n\n📋 ആവശ്യമായവ:\n✅ 100 Sqft Shop/Room + Computer + Internet\n✅ 1 ലക്ഷം നിക്ഷേപം മാത്രം (EMI: Down 30k + 7 Months x 10k)\n✅ ആധാർ + പാൻ\n✅ സ്വന്തം പട്ടണത്തിൽ ബിസിനസ് ചെയ്യാൻ താൽപര്യം\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
   } else if(lang==='hi'){
     if(isDistrict) return `आवश्यकताएं - जिला फ्रेंचाइजी:\n\n📋 आवश्यक:\n✅ ऑफिस स्पेस: जिला मुख्यालय में ऑफिस\n✅ स्टाफ: न्यूनतम 2-3 स्टाफ\n✅ कंप्यूटर + इंटरनेट + प्रिंटर\n✅ निवेश: 10L / 15L (EMI उपलब्ध)\n✅ आधार + पैन`;
-    if(isCorp) return `आवश्यकताएं - कॉरपोरेशन:\n\n📋 आवश्यक:\n✅ ऑफिस स्पेस: कॉरपोरेशन क्षेत्र में ऑफिस\n✅ स्टाफ: न्यूनतम 1-2 स्टाफ\n✅ कंप्यूटर + इंटरनेट\n✅ निवेश: 4L / 5L (EMI उपलब्ध)\n✅ आधार + पैन\n\n💡 6 महीने किराया + 6 महीने स्टाफ सैलरी कंपनी देगी`;
+    if(isCorp) return `आवश्यकताएं - कॉरपोरेशन / म्युनिसिपल:\n\n📋 आवश्यक:\n✅ ऑफिस स्पेस: कॉरपोरेशन / म्युनिसिपल क्षेत्र में ऑफिस\n✅ स्टाफ: न्यूनतम 1-2 स्टाफ\n✅ कंप्यूटर + इंटरनेट\n✅ निवेश: 4L / 5L (EMI उपलब्ध)\n✅ आधार + पैन\n\n💡 6 महीने किराया + 6 महीने स्टाफ सैलरी कंपनी देगी`;
     return `आवश्यकताएं - बिजनेस सेंटर:\n\n📋 आवश्यक:\n✅ 100 Sqft Shop/Room + Computer + Internet\n✅ केवल 1 लाख निवेश (EMI: Down 30k + 7 Months x 10k)\n✅ आधार + पैन`;
   } else {
     if(isDistrict) return `Requirements - District Franchise:\n\n📋 Required:\n✅ Office Space: Office at District HQ\n✅ Staff: Minimum 2-3 staff\n✅ Computer + Internet + Printer\n✅ Investment: 10L / 15L (EMI Available)\n✅ Aadhaar + PAN + Bank Account`;
-    if(isCorp) return `Requirements - Corporation:\n\n📋 Required:\n✅ Office Space: Office in Corporation area\n✅ Staff: Minimum 1-2 staff\n✅ Computer + Internet\n✅ Investment: 4L / 5L (EMI Available)\n✅ Aadhaar + PAN\n\n💡 6 months Rent + 6 months Staff salary by Company\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
+    if(isCorp) return `Requirements - Corporation / Municipal:\n\n📋 Required:\n✅ Office Space: Office in Corporation / Municipal area\n✅ Staff: Minimum 1-2 staff\n✅ Computer + Internet\n✅ Investment: 4L / 5L (EMI Available)\n✅ Aadhaar + PAN\n\n💡 6 months Rent + 6 months Staff salary by Company\n\n📞 Franchise Team: +91 ${HELP_MARKETING}`;
     return `Requirements - Business Center:\n\n📋 Required:\n✅ 100 Sqft Shop/Room + Computer + Internet\n✅ Only 1 Lakh Investment (EMI: Down 30k + 7 Months x 10k)\n✅ Aadhaar + PAN\n✅ Interest to do business in own town`;
   }
 }
@@ -1152,7 +1152,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
     oppButtons:[{id:'OPP_DISTRICT',title:'💰 High level Income'},{id:'OPP_CORP',title:'💼 Moderate income'},{id:'OPP_CENTER',title:'🚀 Base level Income'}],
     highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
-    moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for corporation!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
+    moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for Corporation / Municipal!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
     baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
     reminderFranchise:`You were checking our franchise opportunity. Continue to know more?`,
     seeVideo:'See the Video',
@@ -1230,7 +1230,7 @@ ${LINKS_V92.tenderDistrict}
     oppSelected:`बहुत बढ़िया आपने "बिजनेस अवसर" चुना\nहमारा सर्विस पॉइंट बनें और कमाना शुरू करें। कमाई के 3 स्तर।\nआप भारत में कहीं से भी Bizmapia से कमाई के अवसर के लिए अपना स्लॉट बुक करने जा रहे हैं। आप किस प्रकार के अवसर की तलाश में हैं?\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
     oppButtons:[{id:'OPP_DISTRICT',title:'उच्च स्तरीय आय'},{id:'OPP_CORP',title:'मध्यम स्तरीय आय'},{id:'OPP_CENTER',title:'आधार स्तरीय आय'}],
     highIntroSingle:`बहुत बढ़िया आपने हमारी उच्च स्तरीय आय अर्जन अवसर का चयन किया है\n\nआइए हमारी जिला फ्रेंचाइजी अवसर के बारे में विवरण जानें\nयाद रखें एक जिले के लिए केवल एक ही आवेदन स्वीकृत है, इसलिए पूरी जानकारी का अध्ययन करें और इस चैट के साथ निर्णय लें।`,
-    moderateIntroSingle:`बहुत बढ़िया आपने हमारी मध्यम स्तरीय आय अवसर का चयन किया\n\nआइए हमारी कॉरपोरेशन फ्रेंचाइजी अवसर के बारे में जानें`,
+    moderateIntroSingle:`बहुत बढ़िया आपने हमारी मध्यम स्तरीय आय अवसर का चयन किया\n\nआइए हमारी कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर के बारे में जानें`,
     baseIntroSingle:`बहुत बढ़िया आपने हमारी बेस लेवल आय अवसर का चयन किया\n\nआइए हमारे बिजनेस सेंटर अवसर के बारे में जानें`,
     reminderFranchise:`आप हमारी फ्रेंचाइजी अवसर की जाँच कर रहे थे। अधिक जानने के लिए जारी रखें?`,
     seeVideo:'वीडियो देखें',
@@ -1310,7 +1310,7 @@ ${LINKS_V92.tenderDistrict}
     oppSelected:`👋 നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-`,
     oppButtons:[{id:'OPP_DISTRICT',title:'ഉയർന്ന തല വരുമാനം'},{id:'OPP_CORP',title:'മിതമായ തല വരുമാനം'},{id:'OPP_CENTER',title:'അടിസ്ഥാന തല വരുമാനം'}],
     highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ഉയർന്ന തല വരുമാനം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
-    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     baseIntroSingle:`👋 ഹലോ! നിങ്ങൾ അടിസ്ഥാന തല വരുമാനം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.\n\nബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     reminderFranchise:`നിങ്ങൾ ഞങ്ങളുടെ ഫ്രാഞ്ചൈസി അവസരം പരിശോധിക്കുകയായിരുന്നു. കൂടുതൽ അറിയാൻ തുടരണോ?`,
     seeVideo:'വീഡിയോ കാണുക',
@@ -1480,7 +1480,7 @@ Let's check District Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V201: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1489,31 +1489,31 @@ Let's check District Franchise details.
       return;
     }
     if(btnId==='OPP_CORP'){
-      state.sub='OPP_CORP'; state.lastStep='💼 Moderate income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      state.sub='OPP_CORP'; state.lastStep='💼 Moderate income - CORP/MUNI - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CORP', lang);
       const videoObj = getVideoObj('OPP_CORP', lang);
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
-കോർപ്പറേഷൻ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
+കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने मध्यम स्तरीय आय (कॉरपोरेशन फ्रेंचाइजी) चुनी।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने मध्यम स्तरीय आय (कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी) चुनी।
 
-कॉरपोरेशन फ्रेंचाइजी विवरण देखें।
+कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected Moderate Level Income (Corporation Franchise).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected Moderate Level Income (Corporation / Municipal Franchise).
 
-Let's check Corporation Franchise details.
+Let's check Corporation / Municipal Franchise details.
 
 👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V201: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1546,7 +1546,7 @@ Let's check Business Center details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V201: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -2285,15 +2285,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
 // If verification needed, create V171 with proper version control after verification
 // Current locked version: V170 FINAL FIX - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V201 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V200 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V201 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
