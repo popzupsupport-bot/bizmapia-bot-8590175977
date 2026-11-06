@@ -1,6 +1,6 @@
-// V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V202 ====================
-// V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V204 ====================
+// V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -8,8 +8,8 @@
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -39,7 +39,7 @@ const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 
-// ===== INDIAN TIME (IST) FIX - ADDED V202 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+// ===== INDIAN TIME (IST) FIX - ADDED V204 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
 function getISTTime() {
   const now = new Date();
   const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -590,7 +590,7 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V202 + STANDARD EMOJIS + SPACING
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V204 + STANDARD EMOJIS + SPACING
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
@@ -863,6 +863,50 @@ async function sendWithDelay(msg){
   }
 }
 
+function getSorryExplain(lang, lastStep, userText){
+  // V204: Sorry + Explain last step + No Human before Registration Fee
+  const safeText = (userText||'').slice(0,30);
+  const last = lastStep||'';
+  let stepName = 'this step';
+  let whatToDo = '';
+  if(lang==='ml'){
+    if(last.includes('Company Video')){ stepName='കമ്പനി വീഡിയോ'; whatToDo='വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('Moderate') || last.includes('Base level') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='ഫ്രാഞ്ചൈസി വീഡിയോ'; whatToDo='വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Benefits')){ stepName='ആനുകൂല്യങ്ങൾ'; whatToDo='ആനുകൂല്യങ്ങൾ വായിക്കുക, മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Support')){ stepName='പിന്തുണ'; whatToDo='പിന്തുണ വായിക്കുക, മനസ്സിലായെങ്കിൽ "കണ്ടു മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Requirements')){ stepName='ആവശ്യകതകൾ'; whatToDo='ആവശ്യകതകൾ വായിക്കുക, മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Ready')){ stepName='അപേക്ഷ സമർപ്പിക്കൽ'; whatToDo='തയ്യാറാണെങ്കിൽ താഴെ "അതെ തയ്യാർ" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('EMI')){ stepName='EMI ഓപ്ഷനുകൾ'; whatToDo='താഴെ നിന്ന് ഒരു EMI ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക'; }
+    else if(last.includes('Pay') || last.includes('Not Paid')){ stepName='രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കൽ'; whatToDo='രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, തുടർന്ന് "അടച്ചു" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Language')){ stepName='ഭാഷ തിരഞ്ഞെടുക്കൽ'; whatToDo='താഴെ നിന്ന് ഭാഷ തിരഞ്ഞെടുക്കുക'; }
+    else { stepName='ഈ ഘട്ടം'; whatToDo='താഴെ നൽകിയിരിക്കുന്ന ബട്ടണിൽ ക്ലിക്ക് ചെയ്യുക'; }
+    return `😔 ക്ഷമിക്കണം, നിങ്ങളുടെ "${safeText}" എന്ന മറുപടി മനസ്സിലായില്ല.\n\n📄 നിങ്ങൾ ${stepName} ഘട്ടത്തിലാണ്.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: ${whatToDo}.\n\n💡 എന്തെങ്കിലും സംശയമുണ്ടെങ്കിൽ, ആദ്യം ഈ ഘട്ടം പൂർത്തിയാക്കുക, തുടർന്ന് അടുത്ത ഘട്ടങ്ങളിൽ നിങ്ങൾക്ക് ഞങ്ങളുടെ ടീമുമായി ബന്ധപ്പെടാം.`;
+  } else if(lang==='hi'){
+    if(last.includes('Company Video')){ stepName='कंपनी वीडियो'; whatToDo='वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('Moderate') || last.includes('Base level') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='फ्रेंचाइजी वीडियो'; whatToDo='वीडियो पूरा देखें, फिर "वीडियो देखा" पर क्लिक करें'; }
+    else if(last.includes('Benefits')){ stepName='लाभ'; whatToDo='लाभ पढ़ें, समझ आईं तो "लाभ समझा" पर क्लिक करें'; }
+    else if(last.includes('Support')){ stepName='सपोर्ट'; whatToDo='सपोर्ट पढ़ें, समझ आया तो "देखा और समझा" पर क्लिक करें'; }
+    else if(last.includes('Requirements')){ stepName='आवश्यकताएं'; whatToDo='आवश्यकताएं पढ़ें, समझ आईं तो "आवश्यकता समझी" पर क्लिक करें'; }
+    else if(last.includes('Ready')){ stepName='आवेदन जमा'; whatToDo='तैयार हैं तो नीचे "हाँ तैयार" पर क्लिक करें'; }
+    else if(last.includes('EMI')){ stepName='EMI विकल्प'; whatToDo='नीचे से एक EMI विकल्प चुनें'; }
+    else if(last.includes('Pay') || last.includes('Not Paid')){ stepName='पंजीकरण शुल्क भुगतान'; whatToDo='पंजीकरण शुल्क भुगतान करें, फिर "भुगतान किया" पर क्लिक करें'; }
+    else if(last.includes('Language')){ stepName='भाषा चयन'; whatToDo='नीचे से भाषा चुनें'; }
+    else { stepName='इस चरण'; whatToDo='नीचे दिए गए बटन पर क्लिक करें'; }
+    return `😔 माफ़ कीजिए, आपका "${safeText}" जवाब समझ नहीं आया।\n\n📄 आप ${stepName} चरण में हैं।\n\n👉 अब क्या करें: ${whatToDo}।\n\n💡 कोई सवाल है तो पहले यह चरण पूरा करें, फिर अगले चरणों में आप हमारी टीम से संपर्क कर सकते हैं।`;
+  } else {
+    if(last.includes('Company Video')){ stepName='Company Video'; whatToDo='Watch video fully, then click "Watched Company Video"'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('Moderate') || last.includes('Base level') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='Franchise Video'; whatToDo='Watch video fully, then click "Watched Video"'; }
+    else if(last.includes('Benefits')){ stepName='Benefits'; whatToDo='Read Benefits, if understood click "Understood Benefit"'; }
+    else if(last.includes('Support')){ stepName='Support'; whatToDo='Read Support, if understood click "Seen and Understood"'; }
+    else if(last.includes('Requirements')){ stepName='Requirements'; whatToDo='Read Requirements, if understood click "Understood Req"'; }
+    else if(last.includes('Ready')){ stepName='Submit Application'; whatToDo='If ready, click "Yes Ready" below'; }
+    else if(last.includes('EMI')){ stepName='EMI Options'; whatToDo='Select one EMI option from below'; }
+    else if(last.includes('Pay') || last.includes('Not Paid')){ stepName='Registration Fee Payment'; whatToDo='Pay registration fee, then click "I Paid"'; }
+    else if(last.includes('Language')){ stepName='Language Selection'; whatToDo='Select language from below'; }
+    else { stepName='this step'; whatToDo='Click the button below'; }
+    return `😔 Sorry, I don't understand your reply "${safeText}".\n\n📄 You are in ${stepName} step.\n\n👉 What to do now: ${whatToDo}.\n\n💡 If you have any query, please complete this step first, then you can contact our team in next steps.`;
+  }
+}
 async function repeatLastStep(uid, state, lang, phoneId){
   const L = T[lang]||T.en;
   const last = state.lastStep||'';
@@ -1018,13 +1062,13 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else if(type.includes('COMPANY_VIDEO_2MIN')){
-        // V202: Company video - Did you watch? as 2-min reminder, then Income Level
+        // V204: Company video - Did you watch? as 2-min reminder, then Income Level
         const cMsg = actualLang==='ml' ? `ഹലോ! കമ്പനി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കാം:` : actualLang==='hi' ? `हैलो! कंपनी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "कंपनी वीडियो देखा" पर क्लिक करें, फिर आय स्तर चुनें:` : `Hello! Did you watch Company video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Company Video" below, then select Income Level:`;
         const cWatched = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video';
         const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
         await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
       } else if(type.includes('VIDEO_2MIN')){
-        // V202: Video 2nd message as 2-min reminder - NOT immediate
+        // V204: Video 2nd message as 2-min reminder - NOT immediate
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
         const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
         const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
@@ -1419,7 +1463,8 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000, incomingPhoneId);
       return;
     }
-    if(isHi){
+    if(isHi && (!state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi')){
+      // V204 FIX: Hi/Hai/Hello only resets at START. Mid-flow Hai -> falls through to Sorry + Explain -> repeatLastStep (NOT reset)
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
@@ -1445,7 +1490,7 @@ app.post('/webhook', async(req,res)=>{
         const companyVideo = lang==='ml' ? `നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `बहुत बढ़िया! आपने "बिजनेस अवसर" चुना।\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:` : `Excellent! You selected "Business Opportunity".\n\nWatch this video to know about the company:`;
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
         await sendWithDelay(singleCta(uid, companyVideo, {type:'url', title: lang==='ml' ? 'കമ്പനി വീഡിയോ കാണുക' : lang==='hi' ? 'कंपनी वीडियो देखें' : 'Watch Company Video', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
-        // V202: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
+        // V204: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
         scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       }
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
@@ -1467,14 +1512,14 @@ app.post('/webhook', async(req,res)=>{
     if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
     if(btnId==='COMPANY_WATCHED'){
-      // V202: Company video watched -> now show Income Level (next step)
+      // V204: Company video watched -> now show Income Level (next step)
       state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select income level from below - High / Moderate / Base level:-`;
       await sendWithDelay(interactiveButton(uid, incomeMsg, L.oppButtons, incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_NOT_WATCHED'){
-      // V202: Company video not watched -> resend video + reschedule 2-min reminder
+      // V204: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
       await sendWithDelay(singleCta(uid, companyVideo2, {type:'url', title: lang==='ml' ? 'കമ്പനി വീഡിയോ കാണുക' : lang==='hi' ? 'कंपनी वीडियो देखें' : 'Watch Company Video', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
@@ -1507,7 +1552,7 @@ Let's check District Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V202: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V204: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1540,7 +1585,7 @@ Let's check Corporation / Municipal Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V202: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V204: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1573,7 +1618,7 @@ Let's check Business Center details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      // V202: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V204: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1804,13 +1849,21 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
+      // V204: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
+      const sorryMsg = getSorryExplain(lang, state.lastStep||'', txt);
+      await sendWithDelay(textMessage(uid, sorryMsg, incomingPhoneId));
+      await delay(400);
       if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
+        // Pay = Registration Fee step -> Human IS allowed here
         const payText = getPayText(lang, state.fee||15, state.sub);
         await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
+        await delay(300);
+        await sendWithDelay(interactiveButton(uid, lang==='ml' ? `💡 സംശയമുണ്ടെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `💡 सवाल है तो नीचे क्लिक करें:` : `💡 If you have any query, click below:`, [{id:'HUMAN_TALK',title: lang==='ml' ? 'മനുഷ്യനോട് സംസാരിക്കുക' : lang==='hi' ? 'इंसान से बात करें' : 'Talk to Human'},{id:'PAY_VERIFY',title: lang==='ml' ? 'അടച്ചു - പരിശോധിക്കുക' : lang==='hi' ? 'भुगतान किया - जांचें' : 'I Paid - Verify Now'}], incomingPhoneId));
         return;
       }
-      await repeatLastStep(uid, state, lang, incomingPhoneId); 
-      return; 
+      // Before Pay: NO human button - only repeat last step buttons
+      await repeatLastStep(uid, state, lang, incomingPhoneId);
+      return;
     }
     if(state.lang){ await sendWithDelay(interactiveButton(uid,L.mainMenu,L.services.slice(0,3), incomingPhoneId)); }
   }catch(e){ console.log('webhook error',e.message,e.stack); }
@@ -2312,15 +2365,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
 // If verification needed, create V171 with proper version control after verification
 // Current locked version: V170 FINAL FIX - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V202 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V204 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V202 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V204 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
