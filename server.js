@@ -560,16 +560,28 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // ALL franchise types: Registration fee is NOT part of business opportunity fee, Not refundable
-  if(lang==='ml'){ 
-    return `✅ നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ Tender Document + വരുമാനം മനസ്സിലാക്കുന്ന Annexure-B ലഭിക്കും.\n\n👇 💳 ഇപ്പോൾത്തന്നെ അടയ്ക്കുക: (${getTokenFeeText(sub)})`; 
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V195
+  if(lang==='ml'){
+    let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
+    if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
+    else if(sub==='OPP_CORP') oppMl = 'കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
+    return `${oppMl} തിരഞ്ഞെടുത്തതിന് നന്ദി.\nനിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.`;
   }
-  else if(lang==='hi'){ 
-    return `✅ आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} भुगतान पर Tender Document + आय समझने वाला Annexure-B मिलेगा।\n\n👇 💳 अभी भुगतान करें: (${getTokenFeeText(sub)})`; 
+  if(lang==='hi'){
+    let oppHi = 'बिजनेस सेंटर अवसर';
+    if(sub==='OPP_DISTRICT') oppHi = 'जिला फ्रेंचाइजी अवसर';
+    else if(sub==='OPP_CORP') oppHi = 'कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
+    return `${oppHi} चुनने के लिए धन्यवाद।\nअपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए पंजीकरण शुल्क Rs.${token} अभी भुगतान करें।`;
   }
-  else { 
-    return `✅ You confirmed ready for ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get 📄 Tender Document + Income Annexure-B.\n\n👇 💳 Pay now: (${getTokenFeeText(sub)})`; 
-  }
+  let oppName = 'Business Center opportunity';
+  if(sub==='OPP_DISTRICT') oppName = 'District Franchise opportunity';
+  else if(sub==='OPP_CORP') oppName = 'Corporation / Municipal Franchise opportunity';
+  return `Thanks for choosing ${oppName}.\nPay your registration fee Rs.${token} now to download your Agreement and Income documents.`;
+}
+function getPayNowTitle(lang){
+  if(lang==='ml') return 'ഇപ്പോൾ അടയ്ക്കുക';
+  if(lang==='hi') return 'अभी भुगतान करें';
+  return 'Pay Now';
 }
 
 const HELP_ADMIN = '8590183646';
@@ -836,7 +848,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   }
   if(sub==='RIDE_BOOK' || last==='Book a Cab'){ const escalatedCab = getEscalatedGeneralText(lang, L.bookCab, level, 'Book a Cab'); return await sendCtaSequence(uid, escalatedCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ const escalated = getEscalatedGeneralText(lang, L.attachCab, level, 'Attach Cab'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
-  if(sub==='BIZ_REGISTER' || last==='Register Business'){ const escalated = getEscalatedGeneralText(lang, L.bizRegister, level, 'Register'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
+  if(sub==='BIZ_REGISTER' || last==='Register Business'){ const escalated = getEscalatedGeneralText(lang, L.bizRegister, level, 'Register'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Register', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='BIZ_ADS' || last==='Start Advertising'){ const escalated = getEscalatedGeneralText(lang, L.bizAds, level, 'Ads'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='DEL_ORDER' || last==='Order Stores'){ const escalated = getEscalatedGeneralText(lang, L.delOrder, level, 'Order'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='DEL_PARTNER' || last==='Delivery Partner'){ const escalated = getEscalatedGeneralText(lang, L.delPartner, level, 'Partner'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
@@ -1092,7 +1104,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bizRegister:`Register your business on Bizmapia and start getting more customers, leads and bookings.\n\nClick below to register on website or call us:`,
     bizAds:`Start advertising your business on Bizmapia and get 10x more customers.\n\nClick below to start advertising or call us:`,
     deliverySelected:`Great you selected "Online Delivery"\nBook anything from local stores to your door step delivery in 2 hours.\nPlease select any one option from below:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Earn as our delivery partner'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Start earning'}],
     delOrder:`Order Grocery, Food, Medicine, Anything from local stores and get delivered in 2 hours.\n\nClick below to install app or call us:`,
     delPartner:`Become our delivery partner and earn daily.\n\nClick below to install app or call us:`,
     bookingSelected:`Great you selected "Online Booking"\nBook Rooms, Appointments, Movie Tickets at affordable rates all India.\nPlease select any one option from below:-`,
@@ -1101,7 +1113,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bookAppoint:`Book Appointments - Doctor, Salon, Services - Instant booking near you.\n\nClick below to install app or call us:`,
     bookMovie:`Book Movie Tickets, Events, Shows near you.\n\nClick below to install app or call us:`,
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'💰 High level Income'},{id:'OPP_CORP',title:'💼 Moderate level Income'},{id:'OPP_CENTER',title:'🚀 Base level Income'}],
+    oppButtons:[{id:'OPP_DISTRICT',title:'💰 High level Income'},{id:'OPP_CORP',title:'💼 Moderate income'},{id:'OPP_CENTER',title:'🚀 Base level Income'}],
     highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
     moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for corporation!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
     baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
@@ -1124,9 +1136,9 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     yesCorp:'Yes Corp', noCorp:'No Corp',
     ready15:`You are going to submit application, confirming you are ready to pay 15 Lakhs as District franchise fee.`,
     readyBtn:'Yes Ready - 15L',
-    payReg:`Great you confirmed ready. Please pay Registration Fee (Not refundable, NOT part of fee). Pay to get 📄 Tender + Annexure-B. Click 💳 Pay Registration Fee button below.`,
-    payBtn:'I Have Paid Registration Fee',
-    payFeeNow:'Pay fee now',
+    payReg:`Great you confirmed ready. Please pay Registration Fee (Not refundable, NOT part of fee). Pay to get 📄 Tender + Annexure-B. Click 💳 Pay Now button below.`,
+    payBtn:'I Paid',
+    payFeeNow:'Pay Now',
     notPaid:'Not Paid - Will Pay',
     payAfter:'💳 After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-',
     emiOpt:`EMI options available:\nEMI 5 Months\nEMI 9 Months\nPlease select any one from below:-`,
@@ -1162,7 +1174,7 @@ ${LINKS_V92.tenderDistrict}
     attachCab:`बहुत बढ़िया आपने "कैब जोड़ें" चुना\nअपना Two wheeler/Auto/Car/SUV जोड़ें और Bizmapia के साथ रोज कमाना शुरू करें।\n\nनीचे क्लिक करें:`,
     haveInstalled1:`क्या आपने हमारा ऐप इंस्टॉल किया है?\n\nयहाँ आप राइड पर अपने विशेष ऑफर सक्रिय कर सकते हैं`,
     haveInstalled24:`क्या आपने हमारा ऐप इंस्टॉल किया है?\n\nआपका मौका समाप्त होने वाला है, यहाँ आप राइड पर अपने विशेष ऑफर सक्रिय कर सकते हैं`,
-    yesActivate:'हाँ, सक्रिय करें', noLater:'नहीं, बाद में करूंगा',
+    yesActivate:'हाँ, सक्रिय करें', noLater:'बाद में करूंगा',
     activated:`बहुत बढ़िया, हम आपके ऐप लॉगिन में आपका ऑफर सक्रिय कर रहे हैं, अभी हमारे ऐप में लॉगिन करें और अपनी पहली यात्रा पूरी करके अपने ऑफर देखें`,
     helpAdmin:`सहायता ${HELP_ADMIN}`, helpMarketing:`सहायता ${HELP_MARKETING}`,
     bizDirSelected:`बहुत बढ़िया आपने "बिजनेस डायरेक्टरी" चुना\nअपना व्यवसाय रजिस्टर करें और पूरे भारत से ग्राहक प्राप्त करें।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -1170,7 +1182,7 @@ ${LINKS_V92.tenderDistrict}
     bizRegister:`Bizmapia पर अपना व्यवसाय रजिस्टर करें और अधिक ग्राहक, लीड और बुकिंग प्राप्त करना शुरू करें।\n\nनीचे वेबसाइट पर क्लिक करें या कॉल करें:`,
     bizAds:`Bizmapia पर अपने व्यवसाय का विज्ञापन शुरू करें और 10 गुना अधिक ग्राहक प्राप्त करें।\n\nनीचे क्लिक करें:`,
     deliverySelected:`बहुत बढ़िया आपने "ऑनलाइन डिलीवरी" चुना\nस्थानीय स्टोर से कुछ भी 2 घंटे में आपके दरवाजे पर डिलीवरी।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी पार्टनर बनकर कमाएं'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी जॉब'}],
     delOrder:`किराना, भोजन, दवा, स्थानीय दुकानों से कुछ भी ऑर्डर करें और 2 घंटे में डिलीवरी प्राप्त करें।\n\nनीचे क्लिक करें:`,
     delPartner:`हमारे डिलीवरी पार्टनर बनें और रोज कमाएं।\n\nनीचे क्लिक करें:`,
     bookingSelected:`बहुत बढ़िया आपने "ऑनलाइन बुकिंग" चुना\nपूरे भारत में किफायती दरों पर रूम, अपॉइंटमेंट, मूवी टिकट बुक करें।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -1202,10 +1214,10 @@ ${LINKS_V92.tenderDistrict}
     yesCorp:'हाँ कॉर्प', noCorp:'नहीं कॉर्प',
     ready15:`आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप जिला फ्रेंचाइजी शुल्क के रूप में 15 लाख रुपये का भुगतान करने के लिए तैयार हैं।`,
     readyBtn:'हाँ तैयार - 15L',
-    payReg:`बहुत बढ़िया! रजिस्ट्रेशन फी (Not refundable, फी का हिस्सा नहीं) - 📄 Tender + Annexure-B के लिए भुगतान करें। नीचे 💳 Pay Registration Fee बटन पर क्लिक करें।`,
-    payBtn:'मैंने रजिस्ट्रेशन फी भुगतान किया',
+    payReg:`बहुत बढ़िया! रजिस्ट्रेशन फी (Not refundable, फी का हिस्सा नहीं) - 📄 Tender + Annexure-B के लिए भुगतान करें। नीचे 💳 Pay Now बटन पर क्लिक करें।`,
+    payBtn:'भुगतान किया',
     payFeeNow:'अभी भुगतान करें',
-    notPaid:'भुगतान नहीं किया - करूंगा',
+    notPaid:'नहीं किया',
     payAfter:'रजिस्ट्रेशन फी Rs${token} (Not refundable, फी का हिस्सा नहीं) भुगतान के बाद, कृपया चुनें:-',
     emiOpt:`EMI विकल्प उपलब्ध हैं:
 EMI 5 महीने
@@ -1237,24 +1249,24 @@ ${LINKS_V92.tenderDistrict}
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     noService:`നിങ്ങൾ ഇതുവരെ ഒരു സേവനവും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
     rideSelected:`നിങ്ങൾ "റൈഡ് ഹെയ്ലിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nBizmapia അതിർത്തിയില്ലാതെ ഇന്ത്യ മുഴുവൻ റൈഡ് ഹെയ്ലിംഗ് സേവനം നൽകുന്ന ഒരേയൊരു പ്ലാറ്റ്ഫോമാണ്.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    rideButtons:[{id:'RIDE_BOOK',title:'ക്യാബ് ബുക്ക് ചെയ്യുക'},{id:'RIDE_ATTACH',title:'ക്യാബ് അറ്റാച്ച് ചെയ്യുക'}],
-    bookCab:`മികച്ച തിരഞ്ഞെടുപ്പ്, നിങ്ങൾ "ക്യാബ് ബുക്ക് ചെയ്യുക" സേവനം ക്ലിക്ക് ചെയ്തു.\nTwo wheeler/Autorickshaw/Hatchback/Sedan/SUV/XUV/Ambulance അടുത്ത പ്രദേശങ്ങളിൽ നിന്ന് മിതമായ നിരക്കിൽ ലഭിക്കും.\n\nതാഴെ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
-    attachCab:`നിങ്ങൾ "ക്യാബ് അറ്റാച്ച് ചെയ്യുക" തിരഞ്ഞെടുത്തു\nനിങ്ങളുടെ Two wheeler/Auto/Car/SUV അറ്റാച്ച് ചെയ്ത് Bizmapia-യിലൂടെ ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
+    rideButtons:[{id:'RIDE_BOOK',title:'ക്യാബ് ബുക്കിംഗ്'},{id:'RIDE_ATTACH',title:'ക്യാബ് ചേർക്കുക'}],
+    bookCab:`മികച്ച തിരഞ്ഞെടുപ്പ്, നിങ്ങൾ "ക്യാബ് ബുക്കിംഗ്" സേവനം ക്ലിക്ക് ചെയ്തു.\nTwo wheeler/Autorickshaw/Hatchback/Sedan/SUV/XUV/Ambulance അടുത്ത പ്രദേശങ്ങളിൽ നിന്ന് മിതമായ നിരക്കിൽ ലഭിക്കും.\n\nതാഴെ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
+    attachCab:`നിങ്ങൾ "ക്യാബ് ചേർക്കുക" തിരഞ്ഞെടുത്തു\nനിങ്ങളുടെ Two wheeler/Auto/Car/SUV അറ്റാച്ച് ചെയ്ത് Bizmapia-യിലൂടെ ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     haveInstalled1:`നിങ്ങൾ ഞങ്ങളുടെ ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്തോ?\n\nഇവിടെ നിങ്ങൾക്ക് റൈഡുകളിൽ പ്രത്യേക ഓഫറുകൾ സജീവമാക്കാം`,
     haveInstalled24:`നിങ്ങൾ ഞങ്ങളുടെ ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്തോ?\n\nനിങ്ങളുടെ അവസരം അവസാനിക്കാൻ പോകുന്നു, ഇവിടെ റൈഡുകളിൽ ഓഫറുകൾ സജീവമാക്കാം`,
-    yesActivate:'അതെ, സജീവമാക്കുക', noLater:'അല്ല, പിന്നീട് ചെയ്യാം',
+    yesActivate:'അതെ, സജീവമാക്കുക', noLater:'പിന്നീട് ചെയ്യാം',
     activated:`നന്നായി, ഞങ്ങൾ നിങ്ങളുടെ ആപ്പ് ലോഗിനിൽ നിങ്ങളുടെ ഓഫർ സജീവമാക്കുന്നു, ഇപ്പോൾ ഞങ്ങളുടെ ആപ്പിൽ ലോഗിൻ ചെയ്ത് ആദ്യ യാത്ര പൂർത്തിയാക്കി നിങ്ങളുടെ ഓഫറുകൾ പരിശോധിക്കുക`,
     helpAdmin:`സഹായം ${HELP_ADMIN}`, helpMarketing:`സഹായം ${HELP_MARKETING}`,
     bizDirSelected:`നിങ്ങൾ "ബിസിനസ് ഡയറക്ടറി" തിരഞ്ഞെടുത്തു, നന്നായി\nനിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് ഇന്ത്യ മുഴുവൻ ഉപഭോക്താക്കളെ നേടൂ. 10 ലക്ഷത്തിലധികം പ്രാദേശിക ബിസിനസ്സുകൾ ഇതിനകം ലിസ്റ്റ് ചെയ്തിട്ടുണ്ട്.\nതാഴെ നിന്ന് ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    bizDirButtons:[{id:'BIZ_REGISTER',title:'ബിസിനസ് രജിസ്റ്റർ ചെയ്യുക'},{id:'BIZ_ADS',title:'പരസ്യം തുടങ്ങുക'}],
+    bizDirButtons:[{id:'BIZ_REGISTER',title:'ബിസിനസ് ചേർക്കുക'},{id:'BIZ_ADS',title:'പരസ്യം തുടങ്ങുക'}],
     bizRegister:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് കൂടുതൽ ഉപഭോക്താക്കളെയും ലീഡുകളെയും ബുക്കിംഗുകളെയും നേടാൻ തുടങ്ങൂ.\n\nതാഴെ വെബ്സൈറ്റിൽ ക്ലിക്ക് ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
     bizAds:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് പരസ്യം ചെയ്യാൻ തുടങ്ങൂ, 10 മടങ്ങ് കൂടുതൽ ഉപഭോക്താക്കളെ നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     deliverySelected:`നിങ്ങൾ "ഓൺലൈൻ ഡെലിവറി" തിരഞ്ഞെടുത്തു, നന്നായി\nപ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും 2 മണിക്കൂറിനുള്ളിൽ നിങ്ങളുടെ വാതിൽക്കൽ ഡെലിവറി.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോറുകളിൽ നിന്ന് ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി പങ്കാളിയായി സമ്പാദിക്കുക'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോർ ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി ജോലി'}],
     delOrder:`പലചരക്ക്, ഭക്ഷണം, മരുന്ന്, പ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും ഓർഡർ ചെയ്ത് 2 മണിക്കൂറിനുള്ളിൽ ഡെലിവറി നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     delPartner:`ഞങ്ങളുടെ ഡെലിവറി പങ്കാളിയായി ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookingSelected:`നിങ്ങൾ "ഓൺലൈൻ ബുക്കിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nഇന്ത്യയിലുടനീളം മിതമായ നിരക്കിൽ റൂമുകൾ, അപ്പോയിന്റ്മെന്റുകൾ, മൂവി ടിക്കറ്റുകൾ ബുക്ക് ചെയ്യുക.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    bookingButtons:[{id:'BOOK_ROOM',title:'റൂമുകൾ ബുക്ക് ചെയ്യുക'},{id:'BOOK_APPOINT',title:'അപ്പോയിന്റ്മെന്റ് ബുക്ക് ചെയ്യുക'},{id:'BOOK_MOVIE',title:'മൂവി ടിക്കറ്റുകൾ'}],
+    bookingButtons:[{id:'BOOK_ROOM',title:'റൂം ബുക്കിംഗ്'},{id:'BOOK_APPOINT',title:'അപ്പോയിന്റ്മെന്റ്'},{id:'BOOK_MOVIE',title:'മൂവി ടിക്കറ്റുകൾ'}],
     bookRoom:`ഇന്ത്യയിൽ എവിടെയും മികച്ച നിരക്കിൽ ഹോട്ടലുകൾ, റൂമുകൾ, റിസോർട്ടുകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookAppoint:`അപ്പോയിന്റ്മെന്റുകൾ ബുക്ക് ചെയ്യുക - ഡോക്ടർ, സലൂൺ, സേവനങ്ങൾ - നിങ്ങൾക്ക് സമീപം തൽക്ഷണ ബുക്കിംഗ്.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookMovie:`നിങ്ങൾക്ക് സമീപമുള്ള മൂവി ടിക്കറ്റുകൾ, ഇവന്റുകൾ, ഷോകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
@@ -1282,10 +1294,10 @@ ${LINKS_V92.tenderDistrict}
     yesCorp:'അതെ കോർപ്പ്', noCorp:'അല്ല കോർപ്പ്',
     ready15:`നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ജില്ലാ ഫ്രാഞ്ചൈസി ഫീസായി 15 ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`,
     readyBtn:'അതെ തയ്യാർ - 15L',
-    payReg:`നിങ്ങൾ തയ്യാറായി സ്ഥിരീകരിച്ചു. രജിസ്ട്രേഷൻ ഫീ (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) - 📄 Tender + Annexure-B ലഭിക്കാൻ അടയ്ക്കുക. താഴെ 💳 Pay Registration Fee ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.`,
-    payBtn:'ഞാൻ രജിസ്ട്രേഷൻ ഫീ അടച്ചു',
-    payFeeNow:'ഫീസ് ഇപ്പോൾ അടയ്ക്കുക',
-    notPaid:'അടച്ചില്ല - അടയ്ക്കാം',
+    payReg:`നിങ്ങൾ തയ്യാറായി സ്ഥിരീകരിച്ചു. രജിസ്ട്രേഷൻ ഫീ (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) - 📄 Tender + Annexure-B ലഭിക്കാൻ അടയ്ക്കുക. താഴെ 💳 Pay Now ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.`,
+    payBtn:'അടച്ചു',
+    payFeeNow:'ഇപ്പോൾ അടയ്ക്കുക',
+    notPaid:'അടച്ചില്ല',
     payAfter:'രജിസ്ട്രേഷൻ ഫീ Rs${token} (Not refundable, ഫീസിന്റെ ഭാഗമല്ല) അടച്ചതിന് ശേഷം തിരഞ്ഞെടുക്കുക:-',
     emiOpt:`EMI ഓപ്ഷനുകൾ ലഭ്യമാണ്:
 EMI 5 മാസം
@@ -1307,7 +1319,7 @@ ${LINKS_V92.tenderDistrict}
   }
 };
 
-app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Registration Fee - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -1397,7 +1409,7 @@ app.post('/webhook', async(req,res)=>{
 
     if(btnId==='RIDE_BOOK'){ state.sub='RIDE_BOOK'; state.lastStep='Book a Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bookCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Book a Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_BOOK:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_BOOK:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='RIDE_ATTACH'){ state.sub='RIDE_ATTACH'; state.lastStep='Attach Cab'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.attachCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, 'Ride Hailing '+incomingPhoneId, 'Attach Cab', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:RIDE_ATTACH:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:RIDE_ATTACH:24', lang, 24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bizRegister, [{type:'url', title:'Register your Business', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Business_Directory', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='BIZ_REGISTER'){ state.sub='BIZ_REGISTER'; state.lastStep='Register Business'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bizRegister, [{type:'url', title:'Register', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Business_Directory', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Register Business', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_REGISTER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_REGISTER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='BIZ_ADS'){ state.sub='BIZ_ADS'; state.lastStep='Start Advertising'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bizAds, [{type:'url', title:'Advertise Now', url:WEBSITE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Business_Directory', [nowIso, uid, lang, 'Business Directory '+incomingPhoneId, 'Start Advertising', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BIZ_ADS:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BIZ_ADS:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='DEL_ORDER'){ state.sub='DEL_ORDER'; state.lastStep='Order Stores'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.delOrder, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Delivery', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Order from Stores', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_ORDER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_ORDER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='DEL_PARTNER'){ state.sub='DEL_PARTNER'; state.lastStep='Delivery Partner'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.delPartner, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Delivery', [nowIso, uid, lang, 'Online Delivery '+incomingPhoneId, 'Delivery Partner', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:DEL_PARTNER:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:DEL_PARTNER:24', lang, 24*60*60*1000, incomingPhoneId); return; }
@@ -1447,7 +1459,7 @@ Let's check District Franchise details.
       return;
     }
     if(btnId==='OPP_CORP'){
-      state.sub='OPP_CORP'; state.lastStep='💼 Moderate level Income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
+      state.sub='OPP_CORP'; state.lastStep='💼 Moderate income - CORP - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CORP', lang);
       const videoObj = getVideoObj('OPP_CORP', lang);
@@ -1480,7 +1492,7 @@ Let's check Corporation Franchise details.
 
 👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
       await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
+      await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CORP:24', lang, 24*60*60*1000, incomingPhoneId);
@@ -1680,7 +1692,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){}
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1702,7 +1714,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){} 
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1715,7 +1727,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15, state.sub);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1751,7 +1763,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
     if((isRandomText || isMedia) && state.lang){
       if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
         const payText = getPayText(lang, state.fee||15, state.sub);
-        await sendWithDelay(singleCta(uid, payText, {type:'url', title: `💳 Pay Registration Fee Rs${getRegistrationFee(state.sub)}`, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}, incomingPhoneId));
         return;
       }
       await repeatLastStep(uid, state, lang, incomingPhoneId); 
