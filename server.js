@@ -1,6 +1,6 @@
-// V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V195 ====================
-// V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V200 ====================
+// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -8,8 +8,8 @@
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -39,7 +39,7 @@ const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 
-// ===== INDIAN TIME (IST) FIX - ADDED V195 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+// ===== INDIAN TIME (IST) FIX - ADDED V200 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
 function getISTTime() {
   const now = new Date();
   const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -464,26 +464,56 @@ const PRICING = {
 
 function getEMIText(lang, fee){
   if(fee>=15){
-    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 1L = ${fee}L\nOption 2: Down 5L + 20 മാസം x 50k = ${fee}L` :
-           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 1 लाख = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 50 हजार = ${fee} लाख` :
-           `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 1L = ${fee}L\nOption 2: Down 5L + 20 Months x 50k = ${fee}L`;
+    return lang==='ml' ? `💳 EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\n\n1️⃣ Option 1: Down 5L + 10 മാസം x 1L = ${fee}L
+
+2️⃣ Option 2: Down 5L + 20 മാസം x 50k = ${fee}L` :
+           lang==='hi' ? `💳 EMI विकल्प ${fee} लाख के लिए:\n\n1️⃣ विकल्प 1: डाउन 5 लाख + 10 महीने x 1 लाख = ${fee} लाख
+
+2️⃣ विकल्प 2: डाउन 5 लाख + 20 महीने x 50 हजार = ${fee} लाख` :
+           `💳 EMI Options for ${fee}L:\n\n1️⃣ Option 1: Down 5L + 10 Months x 1L = ${fee}L
+
+2️⃣ Option 2: Down 5L + 20 Months x 50k = ${fee}L`;
   } else if(fee>=10){
-    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 5L + 10 മാസം x 50k = ${fee}L\nOption 2: Down 5L + 20 മാസം x 25k = ${fee}L` :
-           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 5 लाख + 10 महीने x 50 हजार = ${fee} लाख\nविकल्प 2: डाउन 5 लाख + 20 महीने x 25 हजार = ${fee} लाख` :
-           `EMI Options for ${fee}L:\nOption 1: Down 5L + 10 Months x 50K = ${fee}L\nOption 2: Down 5L + 20 Months x 25K = ${fee}L`;
+    return lang==='ml' ? `💳 EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\n\n1️⃣ Option 1: Down 5L + 10 മാസം x 50k = ${fee}L
+
+2️⃣ Option 2: Down 5L + 20 മാസം x 25k = ${fee}L` :
+           lang==='hi' ? `💳 EMI विकल्प ${fee} लाख के लिए:\n\n1️⃣ विकल्प 1: डाउन 5 लाख + 10 महीने x 50 हजार = ${fee} लाख
+
+2️⃣ विकल्प 2: डाउन 5 लाख + 20 महीने x 25 हजार = ${fee} लाख` :
+           `💳 EMI Options for ${fee}L:\n\n1️⃣ Option 1: Down 5L + 10 Months x 50K = ${fee}L
+
+2️⃣ Option 2: Down 5L + 20 Months x 25K = ${fee}L`;
   } else if(fee===5){
-    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 3L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 3L + 20 മാസം x 10k = ${fee}L` :
-           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 3 लाख + 10 महीने = ${fee} लाख\nविकल्प 2: डाउन 3 लाख + 20 महीने = ${fee} लाख` :
-           `EMI Options for ${fee}L:\nOption 1: Down 3L + 10 Months x 20k = ${fee}L\nOption 2: Down 3L + 20 Months x 10k = ${fee}L`;
+    return lang==='ml' ? `💳 EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\n\n1️⃣ Option 1: Down 3L + 10 മാസം x 20k = ${fee}L
+
+2️⃣ Option 2: Down 3L + 20 മാസം x 10k = ${fee}L` :
+           lang==='hi' ? `💳 EMI विकल्प ${fee} लाख के लिए:\n\n1️⃣ विकल्प 1: डाउन 3 लाख + 10 महीने = ${fee} लाख
+
+2️⃣ विकल्प 2: डाउन 3 लाख + 20 महीने = ${fee} लाख` :
+           `💳 EMI Options for ${fee}L:\n\n1️⃣ Option 1: Down 3L + 10 Months x 20k = ${fee}L
+
+2️⃣ Option 2: Down 3L + 20 Months x 10k = ${fee}L`;
   } else if(fee===4){
-    return lang==='ml' ? `EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\nOption 1: Down 2L + 10 മാസം x 20k = ${fee}L\nOption 2: Down 2L + 20 മാസം x 10k = ${fee}L` :
-           lang==='hi' ? `EMI विकल्प ${fee} लाख के लिए:\nविकल्प 1: डाउन 2 लाख + 10 महीने x 20 हजार = ${fee} लाख\nविकल्प 2: डाउन 2 लाख + 20 महीने x 10 हजार = ${fee} लाख` :
-           `EMI Options for ${fee}L:\nOption 1: Down 2L + 10 Months x 20k = ${fee}L\nOption 2: Down 2L + 20 Months x 10k = ${fee}L`;
+    return lang==='ml' ? `💳 EMI ഓപ്ഷനുകൾ ${fee}L-ന്:\n\n1️⃣ Option 1: Down 2L + 10 മാസം x 20k = ${fee}L
+
+2️⃣ Option 2: Down 2L + 20 മാസം x 10k = ${fee}L` :
+           lang==='hi' ? `💳 EMI विकल्प ${fee} लाख के लिए:\n\n1️⃣ विकल्प 1: डाउन 2 लाख + 10 महीने x 20 हजार = ${fee} लाख
+
+2️⃣ विकल्प 2: डाउन 2 लाख + 20 महीने x 10 हजार = ${fee} लाख` :
+           `💳 EMI Options for ${fee}L:\n\n1️⃣ Option 1: Down 2L + 10 Months x 20k = ${fee}L
+
+2️⃣ Option 2: Down 2L + 20 Months x 10k = ${fee}L`;
   } else {
     // Business Center 1L: 5 months and 9 months as per requirement (not 10/20)
-    return lang==='ml' ? `Business Center ${fee}L-ന് EMI: Option 1: Down Rs.30000 + 5 മാസം x Rs.14000 = ${fee}L\nOption 2: Down Rs.30000 + 9 മാസം x Rs.7778 = ${fee}L` :
-           lang==='hi' ? `Business Center ${fee} लाख के लिए EMI: विकल्प 1: डाउन 30 हजार + 5 महीने x 14 हजार = ${fee} लाख\nविकल्प 2: डाउन 30 हजार + 9 महीने x 7778 = ${fee} लाख` :
-           `Business Center EMI for ${fee}L: Option 1: Down Rs.30000 + 5 Months x Rs.14000 = ${fee}L\nOption 2: Down Rs.30000 + 9 Months x Rs.7778 = ${fee}L`;
+    return lang==='ml' ? `Business Center ${fee}L-ന് EMI: Option 1: Down Rs.30000 + 5 മാസം x Rs.14000 = ${fee}L
+
+2️⃣ Option 2: Down Rs.30000 + 9 മാസം x Rs.7778 = ${fee}L` :
+           lang==='hi' ? `Business Center ${fee} लाख के लिए EMI: विकल्प 1: डाउन 30 हजार + 5 महीने x 14 हजार = ${fee} लाख
+
+2️⃣ विकल्प 2: डाउन 30 हजार + 9 महीने x 7778 = ${fee} लाख` :
+           `Business Center EMI for ${fee}L: Option 1: Down Rs.30000 + 5 Months x Rs.14000 = ${fee}L
+
+2️⃣ Option 2: Down Rs.30000 + 9 Months x Rs.7778 = ${fee}L`;
   }
 }
 function getFee(sub, corpYes){
@@ -533,9 +563,9 @@ function getFranchiseName(sub, corpYes){
   return 'Franchise';
 }
 function getReadyText(lang, fee, franchiseName){
-  if(lang==='ml'){ return `നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു, ${franchiseName} ഫീസായി ${fee} ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.`; }
-  else if(lang==='hi'){ return `आप आवेदन जमा करने जा रहे हैं, पुष्टि करते हुए कि आप ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं।`; }
-  else { return `You are going to submit application, confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.`; }
+  if(lang==='ml'){ return `✅ നിങ്ങൾ അപേക്ഷ സമർപ്പിക്കാൻ പോകുന്നു.\n\n🏢 ${franchiseName} ഫീസായി ${fee} ലക്ഷം രൂപ നൽകാൻ നിങ്ങൾ തയ്യാറാണെന്ന് സ്ഥിരീകരിക്കുന്നു.\n\n👉 തയ്യാറാണെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക.`; }
+  else if(lang==='hi'){ return `✅ आप आवेदन जमा करने जा रहे हैं।\n\n🏢 ${franchiseName} शुल्क के रूप में ${fee} लाख रुपये का भुगतान करने के लिए तैयार हैं, इसकी पुष्टि करें।\n\n👉 तैयार हैं तो नीचे क्लिक करें।`; }
+  else { return `✅ You are going to submit application.\n\n🏢 Confirming you are ready to pay ${fee} Lakhs as ${franchiseName} franchise fee.\n\n👉 If ready, click below.`; }
 }
 
 async function createRazorpayPaymentLink(uid, sub, fee){
@@ -560,23 +590,23 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V195
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V200 + STANDARD EMOJIS + SPACING
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
     else if(sub==='OPP_CORP') oppMl = 'കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
-    return `${oppMl} തിരഞ്ഞെടുത്തതിന് നന്ദി.\nനിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.`;
+    return `🙏 ${oppMl} തിരഞ്ഞെടുത്തതിന് നന്ദി.\n\n📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.`;
   }
   if(lang==='hi'){
     let oppHi = 'बिजनेस सेंटर अवसर';
     if(sub==='OPP_DISTRICT') oppHi = 'जिला फ्रेंचाइजी अवसर';
     else if(sub==='OPP_CORP') oppHi = 'कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
-    return `${oppHi} चुनने के लिए धन्यवाद।\nअपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए पंजीकरण शुल्क Rs.${token} अभी भुगतान करें।`;
+    return `🙏 ${oppHi} चुनने के लिए धन्यवाद।\n\n📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए\n\n💳 पंजीकरण शुल्क Rs.${token} अभी भुगतान करें।`;
   }
   let oppName = 'Business Center opportunity';
   if(sub==='OPP_DISTRICT') oppName = 'District Franchise opportunity';
   else if(sub==='OPP_CORP') oppName = 'Corporation / Municipal Franchise opportunity';
-  return `Thanks for choosing ${oppName}.\nPay your registration fee Rs.${token} now to download your Agreement and Income documents.`;
+  return `🙏 Thanks for choosing ${oppName}.\n\n📄 To download your Agreement and Income documents\n\n💳 Pay your registration fee Rs.${token} now.`;
 }
 function getPayNowTitle(lang){
   if(lang==='ml') return 'ഇപ്പോൾ അടയ്ക്കുക';
@@ -827,7 +857,7 @@ async function sendWithDelay(msg){
     const err = e.response?.data?.error;
     console.log('SEND FAIL', JSON.stringify(e.response?.data||e.message));
     if(err?.code===130429 || JSON.stringify(err).includes('too many messages')){
-      blockUntil = Date.now()+65*60*1000;
+      blockUntil = Date.now()+62*60*1000;
       console.log(`130429 DETECTED BLOCKING 65 MIN`);
     }
   }
@@ -981,6 +1011,13 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
           }
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
+      } else if(type.includes('VIDEO_2MIN')){
+        // V200: Video 2nd message as 2-min reminder - NOT immediate
+        const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
+        const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
+        const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
+        const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
+        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
@@ -1020,7 +1057,7 @@ setInterval(async()=>{
     }
     if(dueCount>0) console.log(`Fired ${dueCount} due persistent reminders`);
   }catch(e){ console.log('reminder interval error', e.message); }
-}, 5*60*1000);
+}, 2*60*1000);
 
 
 function getBenText(sub, lang){
@@ -1124,9 +1161,9 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     watchedBtn:'Watched Video',
     understoodBen:'Understood Benefit',
     benAgain:'Know Benefit Again',
-    understoodSup:'Understood Support',
+    understoodSup:'Seen and Understood',
     supAgain:'Know Support Again',
-    understoodReq:'Understood Requirement',
+    understoodReq:'Understood Req',
     reqAgain:'Know Requirement Again',
     benBtn:'Know Benefits', supBtn:'Know Support', reqBtn:'Requirements', submitBtn:'Submit Application', videoBtn:'Video Link', emiBtn:'EMI options',
     benText:`BENEFITS - District Franchise\n\nBenefits 1 - You are district top level franchisee, % on all earnings in your district\nBenefits 2 - Only you can contact Company directly\nBenefits 3 - Lifetime royalty income\n\nWebsite: ${WEBSITE}\n\nHelp: +91 ${HELP_MARKETING}`,
@@ -1202,7 +1239,7 @@ ${LINKS_V92.tenderDistrict}
     watchedBtn:'वीडियो देखा',
     understoodBen:'लाभ समझा',
     benAgain:'लाभ फिर से जानें',
-    understoodSup:'सहायता समझी',
+    understoodSup:'देखा और समझा',
     supAgain:'सहायता फिर से जानें',
     understoodReq:'आवश्यकता समझी',
     reqAgain:'आवश्यकता फिर से जानें',
@@ -1282,7 +1319,7 @@ ${LINKS_V92.tenderDistrict}
     watchedBtn:'വീഡിയോ കണ്ടു',
     understoodBen:'ആനുകൂല്യം മനസ്സിലായി',
     benAgain:'ആനുകൂല്യം വീണ്ടും അറിയുക',
-    understoodSup:'പിന്തുണ മനസ്സിലായി',
+    understoodSup:'കണ്ടു മനസ്സിലായി',
     supAgain:'പിന്തുണ വീണ്ടും അറിയുക',
     understoodReq:'ആവശ്യകത മനസ്സിലായി',
     reqAgain:'ആവശ്യകത വീണ്ടും അറിയുക',
@@ -1443,15 +1480,8 @@ Let's check District Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      await delay(800);
-      const msg2 = lang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?
-
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `हैलो! वीडियो देखा?
-
-👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
-
-👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
-      await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
+      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_DISTRICT:12', lang, 12*60*60*1000, incomingPhoneId);
@@ -1483,15 +1513,8 @@ Let's check Corporation Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      await delay(800);
-      const msg2 = lang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?
-
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `हैलो! वीडियो देखा?
-
-👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
-
-👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
-      await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
+      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CORP:12', lang, 12*60*60*1000, incomingPhoneId);
@@ -1523,15 +1546,8 @@ Let's check Business Center details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
-      await delay(800);
-      const msg2 = lang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?
-
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : lang==='hi' ? `हैलो! वीडियो देखा?
-
-👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?
-
-👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
-      await sendWithDelay(interactiveButton(uid, msg2, [{id:'VIDEO_WATCHED',title:L.watchedBtn},{id:'VIDEO_NOT_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : lang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen'}], incomingPhoneId));
+      // V200: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid, 'install:OPP_CENTER:12', lang, 12*60*60*1000, incomingPhoneId);
@@ -1546,17 +1562,17 @@ Let's check Business Center details.
 
 👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 लाभ पढ़े? समझ में आया?
 
-👉 अब क्या करें: समझ आया तो "लाभ समझा" पर क्लिक करें, नहीं तो "फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आया तो "लाभ समझा" पर क्लिक करें:` : `
 
 👋 Did you read Benefits? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_BEN_AGAIN'){
@@ -1566,17 +1582,17 @@ Let's check Business Center details.
 
 👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 लाभ पढ़े? समझ में आया?
 
-👉 अब क्या करें: समझ आया तो "लाभ समझा" पर क्लिक करें, नहीं तो "फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आया तो "लाभ समझा" पर क्लिक करें:` : `
 
 👋 Did you read Benefits? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Benefit" below, else click "Know Benefit Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'KNOW_BEN_AGAIN',title:L.benAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_BEN'){
@@ -1586,17 +1602,17 @@ Let's check Business Center details.
 
 👋 പിന്തുണ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "പിന്തുണ മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "പിന്തുണ വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "കണ്ടു മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 सपोर्ट पढ़ा? समझ में आया?
 
-👉 अब क्या करें: समझ आया तो "सपोर्ट समझा" पर क्लिक करें, नहीं तो "सपोर्ट फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आया तो "देखा और समझा" पर क्लिक करें:` : `
 
 👋 Did you read Support? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_SUP_AGAIN'){
@@ -1606,17 +1622,17 @@ Let's check Business Center details.
 
 👋 പിന്തുണ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "പിന്തുണ മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "പിന്തുണ വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "കണ്ടു മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 सपोर्ट पढ़ा? समझ में आया?
 
-👉 अब क्या करें: समझ आया तो "सपोर्ट समझा" पर क्लिक करें, नहीं तो "सपोर्ट फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आया तो "देखा और समझा" पर क्लिक करें:` : `
 
 👋 Did you read Support? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Support" below, else click "Know Support Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'KNOW_SUP_AGAIN',title:L.supAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_SUP'){
@@ -1626,17 +1642,17 @@ Let's check Business Center details.
 
 👋 ആവശ്യകതകൾ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "ആവശ്യകത വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 आवश्यकताएं पढ़ीं? समझ में आईं?
 
-👉 अब क्या करें: समझ आईं तो "आवश्यकता समझी" पर क्लिक करें, नहीं तो "आवश्यकता फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आईं तो "आवश्यकता समझी" पर क्लिक करें:` : `
 
 👋 Did you read Requirements? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_REQ_AGAIN'){
@@ -1646,17 +1662,17 @@ Let's check Business Center details.
 
 👋 ആവശ്യകതകൾ വായിച്ചോ? മനസ്സിലായോ?
 
-👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക, അല്ലെങ്കിൽ "ആവശ്യകത വീണ്ടും അറിയുക" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
+👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `
 
 👋 आवश्यकताएं पढ़ीं? समझ में आईं?
 
-👉 अब क्या करें: समझ आईं तो "आवश्यकता समझी" पर क्लिक करें, नहीं तो "आवश्यकता फिर से जानें" पर क्लिक करें:` : `
+👉 अब क्या करें: समझ आईं तो "आवश्यकता समझी" पर क्लिक करें:` : `
 
 👋 Did you read Requirements? Understood?
 
-👉 👇 What to do now: If understood, click "Understood Requirement" below, else click "Know Requirement Again" to re-read:`;
+👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'KNOW_REQ_AGAIN',title:L.reqAgain}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_REQ'){
@@ -1742,7 +1758,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], HELP_MARKETING, incomingPhoneId)); awai
 ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
       await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
       await saveToSheet('Payments', [nowIso, uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
-      scheduleReminder(uid,'install:VERIFY:1',lang,5*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
       return;
     }
 
@@ -2269,15 +2285,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
 // If verification needed, create V171 with proper version control after verification
 // Current locked version: V170 FINAL FIX - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V195 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V200 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V195 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V200 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
