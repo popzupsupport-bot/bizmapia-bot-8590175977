@@ -1,6 +1,6 @@
-// V210 FINAL - SINGLE-MESSAGE EVERY STEP + CONGRATS + WHAT-TO-DO + OPP VIDEO OR 3 CLICKS + 6 STEPS LEFT + PAY OPTION A - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V210 ====================
-// V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V211 FINAL - SINGLE-MESSAGE EVERY STEP + CONGRATS + WHAT-TO-DO + OPP VIDEO OR 3 CLICKS + 6 STEPS LEFT + PAY OPTION A - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V211 ====================
+// V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -8,8 +8,8 @@
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -20,7 +20,8 @@ try { google = require('googleapis').google; } catch(e) { console.log('googleapi
 
 const app = express();
 app.use(bodyParser.json());
-// ===== V210 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 10 FINAL PDFs =====
+
+// ===== V211 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 10 FINAL PDFs =====
 const path = require('path');
 const fs = require('fs');
 const BASE_URL = (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'https://bizmapia-bot-8590175977.onrender.com').replace(/\/$/, '');
@@ -47,7 +48,7 @@ const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 
-// ===== INDIAN TIME (IST) FIX - ADDED V210 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+// ===== INDIAN TIME (IST) FIX - ADDED V211 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
 function getISTTime() {
   const now = new Date();
   const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -135,8 +136,7 @@ function getVideoUrl(sub, lang){
 
 
 function getTenderPdfLink(sub, lang, state){
-  // V210 ONLY TENDER EDIT - EACH USER GETS THEIR OWN TENDER+ANNEXURE AS COMPLETED IN BOT
-  // District: OPP_DISTRICT -> 2 PDFs | Municipal: OPP_MUNI or OPP_CORP+CORP_NO -> 2 PDFs | Corporation: OPP_CORP+CORP_YES -> 2 PDFs | BC: OPP_CENTER -> 4 PDFs (Ride 2 + Directory 2) because V210 bot did NOT ask Ride vs Directory, so user gets BOTH to pick their one
+  // V211 ONLY TENDER EDIT - EACH USER GETS THEIR OWN TENDER+ANNEXURE
   if(sub==='OPP_DISTRICT') return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure, files: ['01_District_Tender_Full_20Pages_Rs250.pdf','02_District_Annexure_B_Full_Rs250.pdf'] };
   if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf'] };
   if(sub==='OPP_CORP'){
@@ -235,22 +235,6 @@ function getTenderGreeting(sub, lang, state){
 }
 ;
 
-// ===== V210 ONLY TENDER EDIT - SEND EACH USER THEIR OWN TENDER+ANNEXURE AS DOCUMENT (READABLE ON PHONE) =====
-async function sendTenderPdfsAfterVerification(uid, sub, lang, phoneId, state){
-  const files = getTenderFilesForSub(sub, state);
-  if(!files || !files.length) return;
-  const tenderName = sub==='OPP_DISTRICT' ? 'District Franchisee' : sub==='OPP_MUNI' ? 'Municipal Franchisee' : (sub==='OPP_CORP' && state && state.isCorp===false) ? 'Municipal Franchisee' : sub==='OPP_CORP' ? 'Corporation Franchisee' : 'Business Center';
-  const head = lang==='ml' ? `🎉 Excellent! Congratulations! 👏\n\nനിങ്ങൾ പേയ്‌മെന്റ് ഘട്ടം വിജയകരമായി പൂർത്തിയാക്കി!` : lang==='hi' ? `🎉 Excellent! Congratulations! 👏\n\nआपने भुगतान चरण सफलतापूर्वक पूरा किया!` : `🎉 Excellent! Congratulations! 👏\n\nYou have successfully completed the payment step!`;
-  const what = lang==='ml' ? `\n\n👇 ഈ ഘട്ടത്തിൽ എന്ത് ചെയ്യണം: താഴെ നിങ്ങളുടെ ${tenderName} ടെൻഡർ + Annexure B (Monthly Break Up + Bottom Verification + 7 Days Clause) - ഫോണിൽ വായിക്കാവുന്നത് - Read Only PDF:` : lang==='hi' ? `\n\n👇 इस चरण में क्या करना है: नीचे आपकी ${tenderName} टेंडर + Annexure B फाइलें - फोन में पढ़ने योग्य - Read Only PDF:` : `\n\n👇 What to do in this step: Below are YOUR ${tenderName} Tender + Annexure B (Monthly Break Up + Bottom Verification + 7 Days Clause) Files - Downloadable & Readable On Phone - Read Only PDF:`;
-  await sendWithDelay(textMessage(uid, head + what, phoneId));
-  for(let file of files){
-    const fileUrl = `${BASE_URL}/tenders/${file}`;
-    const caption = file.includes('Annexure') ? `Annexure B - Monthly Breakup - Bottom Verification - 7 Days Clause - ${file}` : `Tender - ${tenderName} - ${file} - Read Only - 7 Days Valid`;
-    try{ await sendWithDelay({messaging_product:'whatsapp',to:uid,type:'document',document:{link:fileUrl,filename:file,caption:caption.substring(0,1024)},_phoneId:phoneId}); await new Promise(r=>setTimeout(r,700)); }catch(e){ await sendWithDelay(singleCta(uid, caption, {title: file.substring(0,20), url: fileUrl}, phoneId)); }
-  }
-}
-
-
 
 // YOUTUBE_VIDEOS_ALL - FIX for ReferenceError - Defined before getVideoObj
 const YOUTUBE_VIDEOS_ALL = {
@@ -338,7 +322,7 @@ function getDistrictSections(lang, stateName){
   if(stateName!=='Kerala' && stateName!=='KERALA'){
     return [{
       title: 'Coming Soon',
-      rows: [{ id: 'DIST_COMING_SOON', title: `${stateName} - Coming Soon`, description: 'Currently Kerala only, other states soon' }]
+      rows: [{ id: 'DIST_COMING_SOON', title: `Coming Soon`, description: 'Currently Kerala only, other states soon' }]
     }];
   }
   const districts = KERALA_DATA.districts;
@@ -454,10 +438,57 @@ function imageMessage(to, imageUrl, caption, phoneId){
 
 
 
+
+// ===== V211 ONLY TENDER EDIT - SEND EACH USER THEIR OWN TENDER+ANNEXURE AS DOCUMENT =====
+async function sendTenderPdfsAfterVerification(uid, sub, lang, phoneId, state){
+  const files = getTenderFilesForSub(sub, state);
+  if(!files || !files.length) return;
+  const tenderName = sub==='OPP_DISTRICT' ? 'District Franchisee' : sub==='OPP_MUNI' ? 'Municipal Franchisee' : (sub==='OPP_CORP' && state && state.isCorp===false) ? 'Municipal Franchisee' : sub==='OPP_CORP' ? 'Corporation Franchisee' : 'Business Center';
+  const head = lang==='ml' ? `🎉 Excellent! Congratulations! 👏\n\nനിങ്ങൾ പേയ്മെന്റ് ഘട്ടം വിജയകരമായി പൂർത്തിയാക്കി!` : lang==='hi' ? `🎉 Excellent! Congratulations! 👏\n\nआपने भुगतान चरण सफलतापूर्वक पूरा किया!` : `🎉 Excellent! Congratulations! 👏\n\nYou have successfully completed the payment step!`;
+  const what = lang==='ml' ? `\n\n👇 ഈ ഘട്ടത്തിൽ എന്ത് ചെയ്യണം: താഴെ നിങ്ങളുടെ ${tenderName} ടെൻഡർ + Annexure B - ഫോണിൽ വായിക്കാവുന്നത് - Read Only PDF:` : lang==='hi' ? `\n\n👇 इस चरण में क्या करना है: नीचे आपकी ${tenderName} टेंडर + Annexure B फाइलें - फोन में पढ़ने योग्य - Read Only PDF:` : `\n\n👇 What to do in this step: Below are YOUR ${tenderName} Tender + Annexure B Files - Downloadable & Readable On Phone - Read Only PDF:`;
+  await sendWithDelay(textMessage(uid, head + what, phoneId));
+  for(let file of files){
+    const fileUrl = `${BASE_URL}/tenders/${file}`;
+    const caption = file.includes('Annexure') ? `Annexure B - Monthly Breakup - Bottom Verification - 7 Days Clause - ${file}` : `Tender - ${tenderName} - ${file} - Read Only - 7 Days Valid`;
+    try{ await sendWithDelay({messaging_product:'whatsapp',to:uid,type:'document',document:{link:fileUrl,filename:file,caption:caption.substring(0,1024)},_phoneId:phoneId}); await new Promise(r=>setTimeout(r,700)); }catch(e){ await sendWithDelay(singleCta(uid, caption, {title: file.substring(0,20), url: fileUrl}, phoneId)); }
+  }
+}
+
+
+// ===== V211 - STRUCTURED DETAILS + EXACT CALENDAR DATE - NO TODAY/TOMORROW, NO FREE-TYPE LOOPHOLE =====
+const KERALA_DISTRICTS_V211 = ['Ernakulam','Idukki','Kottayam','Alappuzha','Thrissur','Palakkad','Kozhikode','Wayanad','Kannur','Kasaragod','Kollam','Pathanamthitta','Thiruvananthapuram','Malappuram'];
+function v211_isBadName(txt){ if(!txt) return true; const s=String(txt).trim(); if(s.length<3) return true; if(/[0-9]/.test(s)) return true; const low=s.toLowerCase(); const bad=['hi','hai','hello','hey','ok','yes','how much','fee','price','details','info','video','call','when','what']; if(bad.includes(low)) return true; return false; }
+function v211_isValidMobile(txt){ const d=String(txt||'').replace(/[^0-9]/g,''); const m=d.length===12&&d.startsWith('91')?d.slice(2):d; return m.length===10 && /^[6-9]/.test(m) ? m : null; }
+function v211_next7Days(){ const out=[]; const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); for(let i=0;i<7;i++){ const d=new Date(now); d.setDate(now.getDate()+i); const y=d.getFullYear(); const mo=String(d.getMonth()+1).padStart(2,'0'); const da=String(d.getDate()).padStart(2,'0'); const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; out.push({iso:`${y}-${mo}-${da}`, label:`${days[d.getDay()]} ${da} ${months[d.getMonth()]}`, full:`${days[d.getDay()]}, ${da} ${months[d.getMonth()]} ${y}`}); } return out; }
+function v211_formatDate(iso){ const [y,m,d]=iso.split('-').map(Number); const dt=new Date(y,m-1,d); const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']; const months=['January','February','March','April','May','June','July','August','September','October','November','December']; return `${days[dt.getDay()]}, ${String(d).padStart(2,'0')} ${months[m-1]} ${y}`; }
+function v211_parseTypedDate(txt){ if(!txt) return null; const s=String(txt).trim(); const m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/); if(!m) return null; let d=parseInt(m[1],10), mo=parseInt(m[2],10), y=parseInt(m[3],10); if(y<100) y+=2000; if(mo<1||mo>12||d<1||d>31) return null; const dt=new Date(y,mo-1,d); if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d) return null; const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); today.setHours(0,0,0,0); if(dt<today) return null; const max=new Date(today); max.setDate(today.getDate()+60); if(dt>max) return null; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function v211_nameAsk(lang){ return lang==='ml' ? `👏 Congratulations! Payment claimed!\n👉 What to do now: Type your FULL NAME only:\n\nExample: Ajo Devasia` : lang==='hi' ? `👏 Congratulations! Payment claimed!\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:\n\nExample: Ajo Devasia` : `👏 Congratulations! Payment claimed!\n👉 What to do now: Type your FULL NAME only:\n\nExample: Ajo Devasia`; }
+function v211_stateAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to do now: Select your STATE below:` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: नीचे अपना STATE चुनें:` : `👏 Great!\n👉 What to do now: Select your STATE below:`; }
+function v211_districtTypeAsk(lang, stateName){ return lang==='ml' ? `👏 Great! State: ${stateName}\n👉 What to do now: Type your DISTRICT name only:\n\nExample: Coimbatore` : lang==='hi' ? `👏 बढ़िया! State: ${stateName}\n👉 What to do now: अपना DISTRICT नाम केवल टाइप करें:\n\nExample: Coimbatore` : `👏 Great! State: ${stateName}\n👉 What to do now: Type your DISTRICT name only:\n\nExample: Coimbatore`; }
+function v211_mobileAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to do now: Type your 10-digit MOBILE NUMBER only:\n\nExample: 9567742507` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: अपना 10-digit MOBILE NUMBER केवल टाइप करें:\n\nExample: 9567742507` : `👏 Great!\n👉 What to do now: Type your 10-digit MOBILE NUMBER only:\n\nExample: 9567742507`; }
+function v211_dateAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to do now: Select your EXACT VISIT DATE from calendar below - Pick one date:` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: नीचे calendar से अपनी EXACT VISIT DATE चुनें - एक date चुनें:` : `👏 Great!\n👉 What to do now: Select your EXACT VISIT DATE from calendar below - Pick one date:`; }
+function v211_dateTypeAsk(lang){ return lang==='ml' ? `👉 What to do now: Type your visit date as DD/MM/YYYY only:\n\nExample: 15/11/2026` : lang==='hi' ? `👉 What to do now: अपनी visit date DD/MM/YYYY में केवल टाइप करें:\n\nExample: 15/11/2026` : `👉 What to do now: Type your visit date as DD/MM/YYYY only:\n\nExample: 15/11/2026`; }
+async function v211_sendDateCalendar(uid, lang, phoneId){
+  const days=v211_next7Days();
+  await sendWithDelay(textMessage(uid, v211_dateAsk(lang), phoneId));
+  await sendWithDelay(interactiveButton(uid, days[0].full+' | '+days[1].full+' | '+days[2].full, [{id:'DATE_'+days[0].iso,title:days[0].label},{id:'DATE_'+days[1].iso,title:days[1].label},{id:'DATE_'+days[2].iso,title:days[2].label}], phoneId));
+  await sendWithDelay(interactiveButton(uid, days[3].full+' | '+days[4].full+' | '+days[5].full, [{id:'DATE_'+days[3].iso,title:days[3].label},{id:'DATE_'+days[4].iso,title:days[4].label},{id:'DATE_'+days[5].iso,title:days[5].label}], phoneId));
+  await sendWithDelay(interactiveButton(uid, days[6].full, [{id:'DATE_'+days[6].iso,title:days[6].label},{id:'DATE_TYPE_OTHER',title: lang==='ml' ? 'Other Date' : lang==='hi' ? 'Other Date' : 'Other Date'}], phoneId));
+}
+async function v211_sendKeralaDistricts(uid, lang, phoneId){
+  await sendWithDelay(textMessage(uid, lang==='ml' ? `👏 Great! State: Kerala\n👉 What to do now: Select your DISTRICT below:` : lang==='hi' ? `👏 बढ़िया! State: Kerala\n👉 What to do now: नीचे अपना DISTRICT चुनें:` : `👏 Great! State: Kerala\n👉 What to do now: Select your DISTRICT below:`, phoneId));
+  const D=KERALA_DISTRICTS_V211;
+  for(let i=0;i<D.length;i+=3){
+    const chunk=D.slice(i,i+3);
+    const btns=chunk.map(n=>({id:'DISTRICT_KL_'+n.toUpperCase().replace(/[^A-Z]/g,''), title:n.substring(0,20)}));
+    await sendWithDelay(interactiveButton(uid, chunk.join(' | '), btns, phoneId));
+  }
+}
+
 const LINKS_V92 = {
   website: WEBSITE,
   driverApp: PLAY_STORE,
-  // 10 FINAL PDFs - 2 District + 2 Municipal + 2 Corporation + 2 BC Ride + 2 BC Directory - ALIGNED + HEADER/FOOTER + PAGE NUMBER - V210 ONLY TENDER EDIT
+  // 10 FINAL PDFs - 2 District + 2 Municipal + 2 Corporation + 2 BC Ride + 2 BC Directory - V211 ONLY TENDER EDIT
   tenderDistrict: "https://bizmapia-bot-8590175977.onrender.com/tenders/01_District_Tender_Full_20Pages_Rs250.pdf",
   tenderDistrictAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/02_District_Annexure_B_Full_Rs250.pdf",
   tenderMunicipal: "https://bizmapia-bot-8590175977.onrender.com/tenders/03_Municipal_Tender_Full_20Pages_Rs150.pdf",
@@ -630,7 +661,7 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V210 + STANDARD EMOJIS + SPACING
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V211 + STANDARD EMOJIS + SPACING
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
@@ -796,7 +827,7 @@ function interactiveCallDialer(to, body, phoneNumber, phoneTitle, extraButtons, 
     
     // Add call dialer button - using phone_number type (CTA)
     // Payload format for call button
-    allButtons.push({type:'reply', reply:{id:'DIAL_'+phoneNumber, title: phoneTitle || `📞 Call ${phoneNumber}`}});
+    allButtons.push({type:'reply', reply:{id:'DIAL_'+phoneNumber, title: phoneTitle || `📞 Call Now`}});
     
     // Include phone number in body to make it tappable (WhatsApp makes numbers clickable)
     const bodyWithPhone = body + `\n\n📞 ${phoneNumber} (Tap to call)`;
@@ -845,7 +876,7 @@ function interactiveWithPhoneCTA(to, body, replyButtons, phoneNumber, phoneId){
       interactive: {
         type: 'button',
         body: {text: enhancedBody},
-        action: {buttons: buttons.length>0 ? buttons : [{type:'reply', reply:{id:'CALL_'+phoneNumber, title:`📞 Call ${phoneNumber}`}}]}
+        action: {buttons: buttons.length>0 ? buttons : [{type:'reply', reply:{id:'CALL_'+phoneNumber, title:`📞 Call Now`}}]}
       }
     };
   }catch(e){
@@ -860,7 +891,7 @@ function ctaButtons(to,body,ctaList, phoneId){
 function singleCta(to,body,btn, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
 }
-// V210 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
+// V211 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
 function realDialerCta(to, bodyText, phoneFull, phoneId){
   const clean = String(phoneFull).replace(/[^0-9]/g,'');
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:String(bodyText).substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text:'📞 Call Now', url:'tel:+'+clean } } }, _phoneId: phoneId };
@@ -879,7 +910,7 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
         await sendWithDelay(singleCta(to, c.title+': Tap below', {title:c.title.substring(0,20), url:c.url}, phoneId));
         await delay(600);
       } else if(c.type==='phone'){
-        // V210 REAL DIALER: CTA URL button with tel: URL - 1 tap opens dialer (same tech as Android/iOS buttons, but tel: instead of https:)
+        // V211 REAL DIALER: CTA URL button with tel: URL - 1 tap opens dialer (same tech as Android/iOS buttons, but tel: instead of https:)
         const phoneClean = c.phone.replace(/[^0-9]/g,'');
         const dialText = lang0 => lang0; // keep simple
         await sendWithDelay(singleCta(to, 'Tap below to call now:', {title:'📞 Call Now', url:'tel:+'+phoneClean}, phoneId));
@@ -912,7 +943,7 @@ async function sendWithDelay(msg){
 }
 
 function getSorryExplain(lang, lastStep, userText){
-  // V210: Sorry + Explain last step + No Human before Registration Fee
+  // V211: Sorry + Explain last step + No Human before Registration Fee
   const safeText = (userText||'').slice(0,30);
   const last = lastStep||'';
   let stepName = 'this step';
@@ -956,7 +987,7 @@ function getSorryExplain(lang, lastStep, userText){
   }
 }
 
-// ===== V210 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
+// ===== V211 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
 // 1 step = 1 message. Every opp message = Congrats (prev step done) + What to do now + Steps Left, all in SAME message.
 function oppProgress(lang, step){
   const left = 6 - step;
@@ -1050,7 +1081,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid, oppProgress(lang,6)+'\n\n'+oppCongrats(lang,6)+'\n\n'+L.leadAsk, phoneId)); }
   if(last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], phoneId)); }
-  if(last.includes('Date')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], phoneId)); }
+  if(last.includes('Date')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_CALENDAR',title:'Pick Date'}], phoneId)); }
   if(state.service){
     if(state.service==='SVC_RIDE') return await sendWithDelay(interactiveButton(uid, L.rideSelected, L.rideButtons, phoneId));
     if(state.service==='SVC_BIZDIR') return await sendWithDelay(interactiveButton(uid, L.bizDirSelected, L.bizDirButtons, phoneId));
@@ -1135,23 +1166,23 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
       console.log(`REMINDER FIRING ${type} level=${level} to ${uid} via ${actualPhoneId} last=${state?.lastStep} - escalated`);
-      // V210 FIX: Stale reminder guard - Never show Language/Main Menu reminder if user already past that step (e.g. in Pay step)
+      // V211 FIX: Stale reminder guard - Never show Language/Main Menu reminder if user already past that step (e.g. in Pay step)
       // Your 8:30 screenshot: Pay at 8:24, then Main Menu (Malayalam thanks + services) at 8:30 = old noLang/noService reminder firing late
       if((type.startsWith('noLang')||type.startsWith('noService')||type.includes('noLang')||type.includes('noService'))){
         const pastStart = state.lang && state.lastStep && !['First Message','HI - Reset','Language en','Language ml','Language hi','Language'].includes(state.lastStep);
         if(pastStart){
-          console.log(`V210 SKIP stale noLang/noService reminder - user already in ${state.lastStep}, not at start`);
+          console.log(`V211 SKIP stale noLang/noService reminder - user already in ${state.lastStep}, not at start`);
           return;
         }
       }
-      // V210: Company Video 2-min guard - if user already past Company Video, skip
+      // V211: Company Video 2-min guard - if user already past Company Video, skip
       if(type.includes('COMPANY_VIDEO_2MIN') && state.lastStep && !state.lastStep.includes('Company Video')){
-        console.log(`V210 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
+        console.log(`V211 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
         return;
       }
-      // V210: Franchise Video 2-min guard - if user already past Video, skip
+      // V211: Franchise Video 2-min guard - if user already past Video, skip
       if(type.includes('VIDEO_2MIN') && !type.includes('COMPANY') && state.lastStep && !state.lastStep.includes('Video')){
-        console.log(`V210 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
+        console.log(`V211 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
         return;
       }
       if(type.startsWith('noLang')||type.startsWith('noService')){
@@ -1183,13 +1214,13 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else if(type.includes('COMPANY_VIDEO_2MIN')){
-        // V210: Company video - Did you watch? as 2-min reminder, then Income Level
+        // V211: Company video - Did you watch? as 2-min reminder, then Income Level
         const cMsg = actualLang==='ml' ? `ഹലോ! കമ്പനി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കാം:` : actualLang==='hi' ? `हैलो! कंपनी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "कंपनी वीडियो देखा" पर क्लिक करें, फिर आय स्तर चुनें:` : `Hello! Did you watch Company video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Company Video" below, then select Income Level:`;
         const cWatched = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video';
         const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
         await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
       } else if(type.includes('VIDEO_2MIN')){
-        // V210: Video 2nd message as 2-min reminder - NOT immediate
+        // V211: Video 2nd message as 2-min reminder - NOT immediate
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
         const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
         const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
@@ -1357,7 +1388,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     payAfter:'💳 After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-',
     emiOpt:`EMI options available:\nEMI 5 Months\nEMI 9 Months\nPlease select any one from below:-`,
     emi10:'EMI 5 Months', emi20:'EMI 9 Months',
-    leadAsk:`Great! Please type your full name, district and mobile number (e.g. Ajo, Thodupuzha, 9567742507)`,
+    leadAsk:`👏 Congratulations! Payment claimed!\n👉 What to do now: Type your FULL NAME only:\n\nExample: Ajo Devasia`,
     occQ:`What is your occupation?`,
     bus:'Business', house:'Housewife', emp:'Employee',
     dateQ:`When you can visit our head office?`,
@@ -1437,7 +1468,10 @@ ${LINKS_V92.tenderDistrict}
 EMI 5 महीने
 EMI 9 महीने`,
     emi10:'EMI 5 महीने', emi20:'EMI 9 महीने',
-    leadAsk:`बहुत बढ़िया! कृपया अपना पूरा नाम, जिला और मोबाइल नंबर टाइप करें`,
+    leadAsk:`👏 Congratulations! Payment claimed!
+👉 What to do now: अपना पूरा नाम केवल टाइप करें:
+
+Example: Ajo Devasia`,
     occQ:`आपका व्यवसाय क्या है?`,
     bus:'व्यवसाय', house:'गृहिणी', emp:'कर्मचारी',
     dateQ:`आप हमारे हेड ऑफिस कब आ सकते हैं?`,
@@ -1517,7 +1551,10 @@ ${LINKS_V92.tenderDistrict}
 EMI 5 മാസം
 EMI 9 മാസം`,
     emi10:'EMI 5 മാസം', emi20:'EMI 9 മാസം',
-    leadAsk:`മികച്ചത്! ദയവായി നിങ്ങളുടെ പൂർണ്ണ നാമം, ജില്ല, മൊബൈൽ നമ്പർ ടൈപ്പ് ചെയ്യുക`,
+    leadAsk:`👏 Congratulations! Payment claimed!
+👉 What to do now: നിങ്ങളുടെ പൂർണ്ണ നാമം മാത്രം ടൈപ്പ് ചെയ്യുക:
+
+Example: Ajo Devasia`,
     occQ:`നിങ്ങളുടെ തൊഴിൽ എന്താണ്?`,
     bus:'ബിസിനസ്', house:'ഹൗസ്വൈഫ്', emp:'ജീവനക്കാരൻ',
     dateQ:`നിങ്ങൾക്ക് ഞങ്ങളുടെ ഹെഡ് ഓഫീസിൽ എപ്പോൾ വരാൻ കഴിയും?`,
@@ -1585,7 +1622,7 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi && (!state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi')){
-      // V210 FIX: Hi/Hai/Hello only resets at START. Mid-flow Hai -> falls through to Sorry + Explain -> repeatLastStep (NOT reset)
+      // V211 FIX: Hi/Hai/Hello only resets at START. Mid-flow Hai -> falls through to Sorry + Explain -> repeatLastStep (NOT reset)
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
@@ -1610,8 +1647,8 @@ app.post('/webhook', async(req,res)=>{
         // V174: 2 messages - Company video + income level selection (user exact flow)
         const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + oppCongrats(lang,1) + (lang==='ml' ? `\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:\n🎥 https://youtu.be/8ZnDlvbgG_c` : lang==='hi' ? `\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:\n🎥 https://youtu.be/8ZnDlvbgG_c` : `\n\nWatch this video to know about the company:\n🎥 https://youtu.be/8ZnDlvbgG_c`);
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
-        await sendWithDelay(interactiveButton(uid, companyVideo, [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_NOT_WATCHED',title: lang==='ml' ? 'കണ്ടില്ല' : lang==='hi' ? 'नहीं देखा' : 'Not Seen'}], incomingPhoneId));
-        // V210: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
+        await sendWithDelay(interactiveButton(uid, companyVideo + (lang==='ml' ? `\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കാണുക OR നിങ്ങൾക്ക് Bizmapia അറിയാമെങ്കിൽ Skip ചെയ്യുക:` : lang==='hi' ? `\n\n👉 अब क्या करें: वीडियो देखें OR अगर आप Bizmapia को जानते हैं तो Skip करें:` : `\n\n👉 What to do now: Watch Video OR Skip if you already know Bizmapia:`), [{id:'COMPANY_VIDEO_WATCH',title: lang==='ml' ? 'വീഡിയോ കാണുക' : lang==='hi' ? 'वीडियो देखें' : 'Watch Video'},{id:'COMPANY_KNOW',title: lang==='ml' ? 'അറിയാം - സ്കിപ്പ്' : lang==='hi' ? 'जानता हूँ - स्किप' : 'I Know - Skip'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId));
+        // V211: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
         scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       }
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
@@ -1632,15 +1669,28 @@ app.post('/webhook', async(req,res)=>{
     if(btnId==='BOOK_APPOINT'){ state.sub='BOOK_APPOINT'; state.lastStep='Book Appointments'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Book Appointments', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_APPOINT:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_APPOINT:24', lang, 24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='BOOK_MOVIE'){ state.sub='BOOK_MOVIE'; state.lastStep='Movie Tickets'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendCtaSequence(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], incomingPhoneId); await saveToSheet('Booking', [nowIso, uid, lang, 'Online Booking '+incomingPhoneId, 'Movie Tickets', 'Clicked - Admin', HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, 'install:BOOK_MOVIE:1', lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:12', lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, 'install:BOOK_MOVIE:24', lang, 24*60*60*1000, incomingPhoneId); return; }
 
+    if(btnId==='COMPANY_VIDEO_WATCH'){
+      state.lastStep='Company Video - Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const cv = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് \"കമ്പനി വീഡിയോ കണ്ടു\" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर \"कंपनी वीडियो देखा\" पर क्लिक करें:` : `👉 Please watch Company video fully, then click \"Watched Company Video\":`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv+'\n🎥 https://youtu.be/8ZnDlvbgG_c', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId));
+      scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='COMPANY_KNOW' || btnId==='COMPANY_SKIP'){
+      state.lastStep='Company Video - Skipped - I Know Bizmapia'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const incomeMsg2 = lang==='ml' ? `✅ Bizmapia അറിയാമെന്ന് സ്ഥിരീകരിച്ചു!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക:` : lang==='hi' ? `✅ Bizmapia जानते हैं - कन्फर्म!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें:` : `✅ Confirmed - You know Bizmapia!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 What to do now: Select income level from below:`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg2, L.oppButtons, incomingPhoneId));
+      return;
+    }
     if(btnId==='COMPANY_WATCHED'){
-      // V210: Company video watched -> now show Income Level (next step)
+      // V211: Company video watched -> now show Income Level (next step)
       state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select income level from below - High / Moderate / Base level:-`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg, L.oppButtons, incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_NOT_WATCHED'){
-      // V210: Company video not watched -> resend video + reschedule 2-min reminder
+      // V211: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2+'\n🎥 https://youtu.be/8ZnDlvbgG_c', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId));
@@ -1673,7 +1723,7 @@ Let's check District Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V210: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V211: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1706,7 +1756,7 @@ Let's check Corporation / Municipal Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V210: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V211: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1739,7 +1789,7 @@ Let's check Business Center details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V210: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V211: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -1749,7 +1799,7 @@ Let's check Business Center details.
     }
     // ==================== V125 CONFIRMATION FLOW - ALL LANGUAGES ====================
 
-    // ===== V210 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
+    // ===== V211 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
     if(btnId==='OPP_LEARN_VIDEO'){
       state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
@@ -1965,13 +2015,13 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       return;
     }
     if(btnId==='PAY_NOW_CLICK'){
-      // V210: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
+      // V211: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
       const payLink2 = getRazorpayLinkForSub(state.sub);
       const payText2 = getPayText(lang, state.fee||15, state.sub);
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText2+'\n\n🔗 '+payLink2, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
       return;
     }
-    // V210 FIX: PAY_VERIFY had NO handler in V208 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
+    // V211 FIX: PAY_VERIFY had NO handler in V208 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
     if(btnId==='PAY_VERIFY'){ btnId='PAY_DONE'; }
     if(btnId==='PAY_DONE'){
       // USER CLAIMS PAID - BUT NOT VERIFIED YET
@@ -1985,18 +2035,24 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       return;
     }
 
-    if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state);
-      await sendWithDelay(textMessage(uid, tenderMsg+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
+    if(btnId==='STATE_KERALA'){ state.leadState='Kerala'; state.detailStep='DISTRICT_BUTTON'; state.lastStep='State Kerala'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendKeralaDistricts(uid, lang, incomingPhoneId); return; }
+    if(btnId==='STATE_TAMILNADU'){ state.leadState='Tamil Nadu'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Tamil Nadu'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Tamil Nadu'), incomingPhoneId)); return; }
+    if(btnId==='STATE_OTHER'){ state.leadState='Other'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Other'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Other State'), incomingPhoneId)); return; }
+    if(btnId.startsWith('DISTRICT_KL_')){ const code=btnId.replace('DISTRICT_KL_',''); const found=KERALA_DISTRICTS_V211.find(d=>d.toUpperCase().replace(/[^A-Z]/g,'')===code); const dist=found||code; state.leadDistrict=dist; state.detailStep='MOBILE'; state.lastStep='District '+dist; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return; }
+    if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); state.detailStep='DATE'; await setState(uid,state); await v211_sendDateCalendar(uid, lang, incomingPhoneId); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='DATE_TYPE_OTHER'){ state.detailStep='DATE_TYPE'; state.lastStep='Date - Type Other'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_dateTypeAsk(lang), incomingPhoneId)); return; }
+    if(btnId==='DATE_CALENDAR'){ state.detailStep='DATE'; state.lastStep='Date - Calendar'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendDateCalendar(uid, lang, incomingPhoneId); return; }
+    if(btnId.startsWith('DATE_') && /^DATE_\d{4}-\d{2}-\d{2}$/.test(btnId)){ const iso=btnId.replace('DATE_',''); state.date=iso; state.visitDate=iso; state.detailStep='DONE'; state.lastStep='Date '+iso; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state); const confirm2 = lang==='ml' ? `✅ Visit Confirmed!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n👇 Team will visit you on this exact date.` : lang==='hi' ? `✅ Visit Confirmed!\n\n📅 आपकी visit date: ${v211_formatDate(iso)}\n\n👇 Team आपसे इसी exact date पर मिलेगी।` : `✅ Visit Confirmed!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n👇 Team will visit you on this exact date.`; await sendWithDelay(textMessage(uid, confirm2+'\n\n'+tenderMsg+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+iso, 'Clicked - Exact Date', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:iso, visitDate:iso, leadName:state.leadName, leadState:state.leadState, leadDistrict:state.leadDistrict, leadMobile:state.leadMobile, phoneId: incomingPhoneId}); return; }
+    if(btnId.startsWith('DATE_') && btnId!=='DATE_TYPE_OTHER' && btnId!=='DATE_CALENDAR'){ await sendWithDelay(textMessage(uid, v211_dateTypeAsk(lang), incomingPhoneId)); return; }
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
     if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendCtaSequence(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}], incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
-    // V210 REAL DIALER: HUMAN_TALK + CALL handlers - 1 tap opens dialer, NEVER goes to Main Menu
+    // V211 REAL DIALER: HUMAN_TALK + CALL handlers - 1 tap opens dialer, NEVER goes to Main Menu
     if(btnId==='HUMAN_TALK'||btnId==='TALK_TO_TEAM'||btnId==='CONTACT_TEAM'){
-      const isOppV210 = state.service==='SVC_OPP' || (state.sub||'').startsWith('OPP_') || (state.lastStep||'').includes('Pay') || (state.lastStep||'').includes('EMI') || (state.lastStep||'').includes('Ready');
-      const dialNumV210 = isOppV210 ? HELP_MARKETING : HELP_ADMIN;
-      await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV210), dialNumV210, incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV210, state.lastStep||'', ''], true);
+      const isOppV211 = state.service==='SVC_OPP' || (state.sub||'').startsWith('OPP_') || (state.lastStep||'').includes('Pay') || (state.lastStep||'').includes('EMI') || (state.lastStep||'').includes('Ready');
+      const dialNumV211 = isOppV211 ? HELP_MARKETING : HELP_ADMIN;
+      await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV211), dialNumV211, incomingPhoneId));
+      await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV211, state.lastStep||'', ''], true);
       return;
     }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'||btnId.startsWith('CALL_'+HELP_ADMIN)){
@@ -2008,16 +2064,43 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       return;
     }
 
-    if(state.flow==='LEAD' && txt){ state.leadData=txt; state.lastStep='Lead Typed'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Lead Data', txt, HELP_MARKETING, state.lastStep, txt], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(state.flow==='LEAD' && txt){
+      // V211 STRUCTURED DETAILS - NO free-type loophole - Validate each step, do NOT save wrong details
+      const step = state.detailStep || 'NAME';
+      if(step==='NAME'){
+        if(v211_isBadName(txt)){ await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:` : lang==='hi' ? `😔 Sorry, कृपया अपना पूरा नाम केवल टाइप करें - Example: Ajo Devasia\n\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:` : `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:`), incomingPhoneId)); return; }
+        state.leadName=String(txt).trim(); state.detailStep='STATE'; state.lastStep='Name '+state.leadName; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        await sendWithDelay(interactiveButton(uid, v211_stateAsk(lang), [{id:'STATE_KERALA',title:'Kerala'},{id:'STATE_TAMILNADU',title:'Tamil Nadu'},{id:'STATE_OTHER',title:'Other State'}], incomingPhoneId)); return;
+      }
+      if(step==='DISTRICT_TEXT'){
+        if(v211_isBadName(txt)){ await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type DISTRICT name only - Example: Coimbatore` : lang==='hi' ? `😔 Sorry, कृपया DISTRICT नाम केवल टाइप करें - Example: Coimbatore` : `😔 Sorry, please type DISTRICT name only - Example: Coimbatore`), incomingPhoneId)); return; }
+        state.leadDistrict=String(txt).trim(); state.detailStep='MOBILE'; state.lastStep='District '+state.leadDistrict; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return;
+      }
+      if(step==='MOBILE'){
+        const mob=v211_isValidMobile(txt); if(!mob){ await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:` : lang==='hi' ? `😔 Sorry, कृपया 10-digit MOBILE NUMBER केवल टाइप करें - Example: 9567742507\n\n👉 What to do now: 10-digit mobile केवल टाइप करें:` : `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:`), incomingPhoneId)); return; }
+        state.leadMobile=mob; state.leadData=`${state.leadName||''}, ${state.leadDistrict||''}, ${state.leadState||''}, ${mob}`; state.detailStep='OCC'; state.lastStep='Mobile '+mob; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Lead Details Validated', state.leadData, HELP_MARKETING, state.lastStep, state.leadData], true); return;
+      }
+      if(step==='DATE_TYPE'){
+        const iso=v211_parseTypedDate(txt); if(!iso){ await sendWithDelay(textMessage(uid, v211_dateTypeAsk(lang)+'\n\n😔 Sorry, please type DD/MM/YYYY only - Example: 15/11/2026', incomingPhoneId)); return; }
+        state.date=iso; state.visitDate=iso; state.lastStep='Date '+iso; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const tenderMsg2 = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state);
+        const confirm = lang==='ml' ? `✅ Visit Confirmed!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n👇 Team will visit you on this exact date.` : lang==='hi' ? `✅ Visit Confirmed!\n\n📅 आपकी visit date: ${v211_formatDate(iso)}\n\n👇 Team आपसे इसी exact date पर मिलेगी।` : `✅ Visit Confirmed!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n👇 Team will visit you on this exact date.`;
+        await sendWithDelay(textMessage(uid, confirm+'\n\n'+tenderMsg2+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+iso, 'Clicked - Exact Date', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:iso, visitDate:iso, leadName:state.leadName, leadState:state.leadState, leadDistrict:state.leadDistrict, leadMobile:state.leadMobile, phoneId: incomingPhoneId}); return;
+      }
+      // If in STATE / DISTRICT_BUTTON / OCC / DATE_BUTTON step and user types text -> ask to click button, do NOT save text as details
+      await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please click the button below - Do not type here.\n\n👉 What to do now: Click the button for this step.` : lang==='hi' ? `😔 Sorry, कृपया नीचे button पर क्लिक करें - यहाँ टाइप न करें।\n\n👉 What to do now: इस step के लिए button पर क्लिक करें।` : `😔 Sorry, please click the button below - Do not type here.\n\n👉 What to do now: Click the button for this step.`), incomingPhoneId)); return;
+    }
 
     const msgType = msg.type||'text';
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
-      // V210: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
+      // V211: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
       const sorryMsg = getSorryExplain(lang, state.lastStep||'', txt);
       if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
-        // V210: Pay step random = 1 MESSAGE ONLY with 3 buttons. User typed = confused = needs Human in SAME message.
+        // V211: Pay step random = 1 MESSAGE ONLY with 3 buttons. User typed = confused = needs Human in SAME message.
         // WhatsApp cannot mix URL button + Reply buttons in 1 message, so Pay link is put as clickable text inside body.
         // Buttons: [Pay Now] [Verify] [Talk to Team] - all Reply buttons, all <=20 chars.
         // Malayalam fix: "ടീമിനോട് സംസാരിക്കൂ" (22 chars) was cut to "മനുഷ്യനോട് സംസാരിക്ക" in screenshot. New "ടീമിനോട് സംസാരിക്കൂ" fits, full meaning.
@@ -2034,7 +2117,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       await repeatLastStep(uid, state, lang, incomingPhoneId);
       return;
     }
-    // V210 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
+    // V211 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
     // If user is already past start, stay in same step with Sorry + Repeat. Only if truly at First Message, send FULL 5 services in 2 messages.
     if(state.lang){
       const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi';
@@ -2043,8 +2126,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await delay(400);
         await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
       } else {
-        const sorryV210 = getSorryExplain(lang, state.lastStep||'', txt);
-        await sendWithDelay(textMessage(uid, sorryV210, incomingPhoneId));
+        const sorryV211 = getSorryExplain(lang, state.lastStep||'', txt);
+        await sendWithDelay(textMessage(uid, sorryV211, incomingPhoneId));
         await delay(400);
         await repeatLastStep(uid, state, lang, incomingPhoneId);
       }
@@ -2080,10 +2163,10 @@ app.post('/razorpay-webhook', async(req,res)=>{
         const lang = state?.lang || 'en';
         const phoneId = state?.phoneId || PHONE_NUMBER_ID;
         const L = T[lang]||T.en;
-        await setState(cleanUid,{...state, flow:'LEAD', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee), phoneId});
+        await setState(cleanUid,{...state, flow:'LEAD', detailStep:'NAME', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee), phoneId});
         clearReminders(cleanUid);
         await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}`, phoneId));
-        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V210 Tender auto-send fail', e.message); }
+        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V211 Tender auto-send fail', e.message); }
         await sendWithDelay(textMessage(cleanUid, `Now please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
@@ -2101,9 +2184,10 @@ app.get('/verify/:phone', async(req,res)=>{
     const lang = state?.lang || 'en';
     const phoneId = state?.phoneId || PHONE_NUMBER_ID;
     const L = T[lang]||T.en;
-    await setState(uid,{...state, flow:'LEAD', lastStep:'Manually Verified', verified:true, phoneId});
-    try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V210 Manual tender send fail', e.message); }
-    await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!\n\n`+L.leadAsk, phoneId));
+    await setState(uid,{...state, flow:'LEAD', detailStep:'NAME', lastStep:'Manually Verified', verified:true, phoneId});
+    await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!`, phoneId));
+    try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V211 Manual tender send fail', e.message); }
+    await sendWithDelay(textMessage(uid, `Now please continue:\n\n`+L.leadAsk, phoneId));
     res.send(`✅ Manually verified ${uid}`);
   }catch(e){ res.send(`Error ${e.message}`); }
 });
@@ -2540,7 +2624,7 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V170 FINAL FIX - getVideoUrl REFERENCEERROR FIXED - 8 PDF 2+2+4 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V211 FINAL - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 10 PDFs - 8 PDF 2+2+4 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -2549,15 +2633,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V211 with proper version control after verification
-// Current locked version: V210 FINAL - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V210 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V212 with proper version control after verification
+// Current locked version: V211 FINAL - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V211 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V211 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V212 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
