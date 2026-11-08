@@ -20,6 +20,14 @@ try { google = require('googleapis').google; } catch(e) { console.log('googleapi
 
 const app = express();
 app.use(bodyParser.json());
+// ===== V210 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 10 FINAL PDFs =====
+const path = require('path');
+const fs = require('fs');
+const BASE_URL = (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'https://bizmapia-bot-8590175977.onrender.com').replace(/\/$/, '');
+const TENDER_ROOT = path.join(__dirname, 'public', 'tenders');
+try { if (!fs.existsSync(TENDER_ROOT)) fs.mkdirSync(TENDER_ROOT, { recursive: true }); } catch(e){}
+app.use('/tenders', express.static(TENDER_ROOT));
+app.use('/public/tenders', express.static(TENDER_ROOT));
 
 // DUAL NUMBERS
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || '1392695460599655' // NEW NUMBER 95623 24130;
@@ -126,14 +134,24 @@ function getVideoUrl(sub, lang){
 }
 
 
-function getTenderPdfLink(sub, lang){
-  // Returns 2 PDFs per opportunity - Main + Annexure - Total 8 PDFs
-  if(sub==='OPP_DISTRICT') return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure };
-  if(sub==='OPP_CORP') return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure };
-  if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure };
-  if(sub==='OPP_CENTER') return { main: LINKS_V92.tenderBusinessCenter, annexure: LINKS_V92.tenderBusinessCenterAnnexure };
-  return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure };
+function getTenderPdfLink(sub, lang, state){
+  // V210 ONLY TENDER EDIT - EACH USER GETS THEIR OWN TENDER+ANNEXURE AS COMPLETED IN BOT
+  // District: OPP_DISTRICT -> 2 PDFs | Municipal: OPP_MUNI or OPP_CORP+CORP_NO -> 2 PDFs | Corporation: OPP_CORP+CORP_YES -> 2 PDFs | BC: OPP_CENTER -> 4 PDFs (Ride 2 + Directory 2) because V210 bot did NOT ask Ride vs Directory, so user gets BOTH to pick their one
+  if(sub==='OPP_DISTRICT') return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure, files: ['01_District_Tender_Full_20Pages_Rs250.pdf','02_District_Annexure_B_Full_Rs250.pdf'] };
+  if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf'] };
+  if(sub==='OPP_CORP'){
+    if(state && state.isCorp === false) return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf'] };
+    if(state && state.isCorp === true) return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['05_Corporation_Tender_Full_20Pages_Rs150.pdf','06_Corporation_Annexure_B_Full_Rs150.pdf'] };
+    return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf','05_Corporation_Tender_Full_20Pages_Rs150.pdf','06_Corporation_Annexure_B_Full_Rs150.pdf'] };
+  }
+  if(sub==='OPP_CENTER'){
+    if(state && (state.bcService==='RIDE')) return { main: LINKS_V92.tenderBusinessCenterRide, annexure: LINKS_V92.tenderBusinessCenterRideAnnexure, files: ['07_BC_RideHailing_300_Tender_Full_Rs100.pdf','08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf'] };
+    if(state && (state.bcService==='DIRECTORY')) return { main: LINKS_V92.tenderBusinessCenterDirectory, annexure: LINKS_V92.tenderBusinessCenterDirectoryAnnexure, files: ['09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf','10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf'] };
+    return { main: LINKS_V92.tenderBusinessCenter, annexure: LINKS_V92.tenderBusinessCenterAnnexure, files: ['07_BC_RideHailing_300_Tender_Full_Rs100.pdf','08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf','09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf','10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf'] };
+  }
+  return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure, files: ['01_District_Tender_Full_20Pages_Rs250.pdf','02_District_Annexure_B_Full_Rs250.pdf'] };
 }
+function getTenderFilesForSub(sub, state){ const r = getTenderPdfLink(sub, 'en', state); return r.files || [r.main, r.annexure]; }
 function OLD_getTenderPdfLink_TEMP(sub, lang){
   // Returns downloadable PDF per business opportunity instead of only district tender
   if(sub==='OPP_DISTRICT') return LINKS_V92.tenderDistrict;
@@ -143,8 +161,8 @@ function OLD_getTenderPdfLink_TEMP(sub, lang){
   return LINKS_V92.tenderDistrict;
 }
 
-function getTenderGreeting(sub, lang){
-  const pdfs = getTenderPdfLink(sub, lang);
+function getTenderGreeting(sub, lang, state){
+  const pdfs = getTenderPdfLink(sub, lang, state);
   const main = pdfs.main;
   const annex = pdfs.annexure;
   if(lang==='ml'){
@@ -216,6 +234,22 @@ function getTenderGreeting(sub, lang){
 👇 What to do: Download both PDFs and read them.`;
 }
 ;
+
+// ===== V210 ONLY TENDER EDIT - SEND EACH USER THEIR OWN TENDER+ANNEXURE AS DOCUMENT (READABLE ON PHONE) =====
+async function sendTenderPdfsAfterVerification(uid, sub, lang, phoneId, state){
+  const files = getTenderFilesForSub(sub, state);
+  if(!files || !files.length) return;
+  const tenderName = sub==='OPP_DISTRICT' ? 'District Franchisee' : sub==='OPP_MUNI' ? 'Municipal Franchisee' : (sub==='OPP_CORP' && state && state.isCorp===false) ? 'Municipal Franchisee' : sub==='OPP_CORP' ? 'Corporation Franchisee' : 'Business Center';
+  const head = lang==='ml' ? `🎉 Excellent! Congratulations! 👏\n\nനിങ്ങൾ പേയ്‌മെന്റ് ഘട്ടം വിജയകരമായി പൂർത്തിയാക്കി!` : lang==='hi' ? `🎉 Excellent! Congratulations! 👏\n\nआपने भुगतान चरण सफलतापूर्वक पूरा किया!` : `🎉 Excellent! Congratulations! 👏\n\nYou have successfully completed the payment step!`;
+  const what = lang==='ml' ? `\n\n👇 ഈ ഘട്ടത്തിൽ എന്ത് ചെയ്യണം: താഴെ നിങ്ങളുടെ ${tenderName} ടെൻഡർ + Annexure B (Monthly Break Up + Bottom Verification + 7 Days Clause) - ഫോണിൽ വായിക്കാവുന്നത് - Read Only PDF:` : lang==='hi' ? `\n\n👇 इस चरण में क्या करना है: नीचे आपकी ${tenderName} टेंडर + Annexure B फाइलें - फोन में पढ़ने योग्य - Read Only PDF:` : `\n\n👇 What to do in this step: Below are YOUR ${tenderName} Tender + Annexure B (Monthly Break Up + Bottom Verification + 7 Days Clause) Files - Downloadable & Readable On Phone - Read Only PDF:`;
+  await sendWithDelay(textMessage(uid, head + what, phoneId));
+  for(let file of files){
+    const fileUrl = `${BASE_URL}/tenders/${file}`;
+    const caption = file.includes('Annexure') ? `Annexure B - Monthly Breakup - Bottom Verification - 7 Days Clause - ${file}` : `Tender - ${tenderName} - ${file} - Read Only - 7 Days Valid`;
+    try{ await sendWithDelay({messaging_product:'whatsapp',to:uid,type:'document',document:{link:fileUrl,filename:file,caption:caption.substring(0,1024)},_phoneId:phoneId}); await new Promise(r=>setTimeout(r,700)); }catch(e){ await sendWithDelay(singleCta(uid, caption, {title: file.substring(0,20), url: fileUrl}, phoneId)); }
+  }
+}
+
 
 
 // YOUTUBE_VIDEOS_ALL - FIX for ReferenceError - Defined before getVideoObj
@@ -423,15 +457,21 @@ function imageMessage(to, imageUrl, caption, phoneId){
 const LINKS_V92 = {
   website: WEBSITE,
   driverApp: PLAY_STORE,
-  // 8 PDFs Total - 2 District, 2 Municipal+Corp, 4 Business Center
-  tenderDistrict: "https://bizmapia.com/tender/district.pdf",
-  tenderDistrictAnnexure: "https://bizmapia.com/tender/district_annexure.pdf",
-  tenderCorporation: "https://bizmapia.com/tender/corporation.pdf",
-  tenderCorporationAnnexure: "https://bizmapia.com/tender/corporation_annexure.pdf",
-  tenderBusinessCenter: "https://bizmapia.com/tender/business_center.pdf",
-  tenderBusinessCenterAnnexure: "https://bizmapia.com/tender/business_center_annexure.pdf",
-  tenderBusinessCenterAgreement: "https://bizmapia.com/tender/business_center_agreement.pdf",
-  tenderBusinessCenterBrochure: "https://bizmapia.com/tender/business_center_brochure.pdf",
+  // 10 FINAL PDFs - 2 District + 2 Municipal + 2 Corporation + 2 BC Ride + 2 BC Directory - ALIGNED + HEADER/FOOTER + PAGE NUMBER - V210 ONLY TENDER EDIT
+  tenderDistrict: "https://bizmapia-bot-8590175977.onrender.com/tenders/01_District_Tender_Full_20Pages_Rs250.pdf",
+  tenderDistrictAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/02_District_Annexure_B_Full_Rs250.pdf",
+  tenderMunicipal: "https://bizmapia-bot-8590175977.onrender.com/tenders/03_Municipal_Tender_Full_20Pages_Rs150.pdf",
+  tenderMunicipalAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/04_Municipal_Annexure_B_Full_Rs150.pdf",
+  tenderCorporation: "https://bizmapia-bot-8590175977.onrender.com/tenders/05_Corporation_Tender_Full_20Pages_Rs150.pdf",
+  tenderCorporationAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/06_Corporation_Annexure_B_Full_Rs150.pdf",
+  tenderBusinessCenter: "https://bizmapia-bot-8590175977.onrender.com/tenders/07_BC_RideHailing_300_Tender_Full_Rs100.pdf",
+  tenderBusinessCenterAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf",
+  tenderBusinessCenterRide: "https://bizmapia-bot-8590175977.onrender.com/tenders/07_BC_RideHailing_300_Tender_Full_Rs100.pdf",
+  tenderBusinessCenterRideAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf",
+  tenderBusinessCenterDirectory: "https://bizmapia-bot-8590175977.onrender.com/tenders/09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf",
+  tenderBusinessCenterDirectoryAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf",
+  tenderBusinessCenterAgreement: "https://bizmapia-bot-8590175977.onrender.com/tenders/09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf",
+  tenderBusinessCenterBrochure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf",
   businessLink: "https://bizmapia.com/business",
   earnLink: EARN_LINK,
   razorpay: "https://rzp.io/rzp/BZ9D9rT",
@@ -1946,7 +1986,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     }
 
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang);
+    if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state);
       await sendWithDelay(textMessage(uid, tenderMsg+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
@@ -2042,7 +2082,9 @@ app.post('/razorpay-webhook', async(req,res)=>{
         const L = T[lang]||T.en;
         await setState(cleanUid,{...state, flow:'LEAD', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee), phoneId});
         clearReminders(cleanUid);
-        await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:\n\n`+L.leadAsk, phoneId));
+        await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}`, phoneId));
+        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V210 Tender auto-send fail', e.message); }
+        await sendWithDelay(textMessage(cleanUid, `Now please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
       }
@@ -2060,6 +2102,7 @@ app.get('/verify/:phone', async(req,res)=>{
     const phoneId = state?.phoneId || PHONE_NUMBER_ID;
     const L = T[lang]||T.en;
     await setState(uid,{...state, flow:'LEAD', lastStep:'Manually Verified', verified:true, phoneId});
+    try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V210 Manual tender send fail', e.message); }
     await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!\n\n`+L.leadAsk, phoneId));
     res.send(`✅ Manually verified ${uid}`);
   }catch(e){ res.send(`Error ${e.message}`); }
