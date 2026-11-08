@@ -1,4 +1,4 @@
-// V209 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V210 FINAL - SINGLE-MESSAGE EVERY STEP + CONGRATS + WHAT-TO-DO + OPP VIDEO OR 3 CLICKS + 6 STEPS LEFT + PAY OPTION A - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V209 ====================
 // V209 FINAL - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
@@ -915,6 +915,60 @@ function getSorryExplain(lang, lastStep, userText){
     return `😔 Sorry, I don't understand your reply "${safeText}".\n\n📄 You are in ${stepName} step.\n\n👉 What to do now: ${whatToDo}.\n\n💡 If you have any query, please complete this step first, then you can contact our team in next steps.`;
   }
 }
+
+// ===== V210 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
+// 1 step = 1 message. Every opp message = Congrats (prev step done) + What to do now + Steps Left, all in SAME message.
+function oppProgress(lang, step){
+  const left = 6 - step;
+  if(lang==='ml') return step>=6 ? `📍 Step 6 of 6 — അവസാന സ്റ്റെപ്പ്!` : `📍 Step ${step} of 6 — ${left} സ്റ്റെപ്പ് ബാക്കി`;
+  if(lang==='hi') return step>=6 ? `📍 Step 6 of 6 — आखिरी स्टेप!` : `📍 Step ${step} of 6 — ${left} स्टेप बाकी`;
+  return step>=6 ? `📍 Step 6 of 6 — Last step!` : `📍 Step ${step} of 6 — ${left} steps left`;
+}
+function oppCongrats(lang, step){
+  // step = CURRENT step. Congratulates PREVIOUS step done + tells What to do now. Pure language.
+  if(step===1){
+    if(lang==='ml') return `🎉 മികച്ച തിരഞ്ഞെടുപ്പ്!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: കമ്പനി വീഡിയോ കാണുക, തുടർന്ന് താഴെ ക്ലിക്ക് ചെയ്യുക:`;
+    if(lang==='hi') return `🎉 बेहतरीन चयन!\n👉 अब क्या करें: कंपनी वीडियो देखें, फिर नीचे क्लिक करें:`;
+    return `🎉 Excellent choice!\n👉 What to do now: Watch Company Video, then click below:`;
+  }
+  if(step===2){
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! കമ്പനി വീഡിയോ കണ്ടു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക:`;
+    if(lang==='hi') return `👏 बधाई हो! कंपनी वीडियो देखा!\n👉 अब क्या करें: नीचे से आय स्तर चुनें:`;
+    return `👏 Congratulations! Company Video watched!\n👉 What to do now: Select income level from below:`;
+  }
+  if(step===3){
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! വരുമാന തലം തിരഞ്ഞെടുത്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: ഈ അവസരം എങ്ങനെ മനസ്സിലാക്കണം എന്ന് തിരഞ്ഞെടുക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്:`;
+    if(lang==='hi') return `👏 बधाई हो! आय स्तर चुना!\n👉 अब क्या करें: इस अवसर को कैसे समझें, चुनें — वीडियो OR 3 क्लिक:`;
+    return `👏 Congratulations! Income Level selected!\n👉 What to do now: Choose how to understand this Opportunity — Video OR 3 Clicks:`;
+  }
+  if(step===4){
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! അവസരം മനസ്സിലായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: നിങ്ങളുടെ ജില്ലയിൽ കോർപ്പറേഷൻ ഉണ്ടോ എന്ന് തിരഞ്ഞെടുക്കുക:`;
+    if(lang==='hi') return `👏 बधाई हो! अवसर समझ में आ गया!\n👉 अब क्या करें: आपके जिले में कॉर्पोरेशन है या नहीं, चुनें:`;
+    return `👏 Congratulations! Opportunity understood!\n👉 What to do now: Select if your district has Corporation:`;
+  }
+  if(step===5){
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! തയ്യാറായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, തുടർന്ന് "അടച്ചു" ക്ലിക്ക് ചെയ്യുക:`;
+    if(lang==='hi') return `👏 बधाई हो! तैयार हैं!\n👉 अब क्या करें: रजिस्ट्रेशन फी भरें, फिर "भुगतान किया" पर क्लिक करें:`;
+    return `👏 Congratulations! You are Ready!\n👉 What to do now: Pay Registration Fee, then click "I Paid":`;
+  }
+  if(step===6){
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! പേയ്മെന്റ് ക്ലെയിം ചെയ്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1 മെസേജിൽ വിശദാംശങ്ങൾ ടൈപ്പ് ചെയ്യുക:`;
+    if(lang==='hi') return `👏 बधाई हो! भुगतान क्लेम किया!\n👉 अब क्या करें: 1 मैसेज में विवरण टाइप करें:`;
+    return `👏 Congratulations! Payment claimed!\n👉 What to do now: Type your details in 1 message:`;
+  }
+  return ``;
+}
+function oppRoadmap(lang){
+  if(lang==='ml') return `🎯 നിങ്ങളുടെ അവസരം — പൂർത്തിയാക്കാൻ 6 സ്റ്റെപ്പ്\n1. കമ്പനി വീഡിയോ\n2. വരുമാന തലം\n3. അവസരം മനസ്സിലാക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്\n4. തയ്യാർ + കോർപ്പ്\n5. പേയ്മെന്റ്\n6. വിശദാംശങ്ങൾ`;
+  if(lang==='hi') return `🎯 आपका अवसर — पूरा करने के लिए 6 स्टेप\n1. कंपनी वीडियो\n2. आय स्तर\n3. अवसर समझें — वीडियो OR 3 क्लिक\n4. तैयार + कॉर्प\n5. पेमेंट\n6. विवरण`;
+  return `🎯 Your Opportunity — 6 Steps to Finalize\n1. Company Video\n2. Income Level\n3. Understand Opportunity — Video OR 3 Clicks\n4. Ready + Corp\n5. Pay\n6. Your Details`;
+}
+function oppLearnQ(lang){
+  if(lang==='ml') return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 വീഡിയോ കണ്ടാൽ — വീഡിയോ കണ്ട് നേരെ Corp Check-ലേക്ക് പോകാം.\n📄 3 ക്ലിക്ക് വായിച്ചാൽ — ആനുകൂല്യം + പിന്തുണ + ആവശ്യകത വായിച്ച് മനസ്സിലാക്കാം.\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കുക:`;
+  if(lang==='hi') return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 वीडियो देखें — वीडियो देखकर सीधे Corp Check पर जाएं।\n📄 3 क्लिक पढ़ें — लाभ + सपोर्ट + आवश्यकता पढ़कर समझें।\n\n👇 एक चुनें:`;
+  return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 Watch Video — Watch video and go directly to Corp Check.\n📄 Read 3 Clicks — Read Benefits + Support + Requirements.\n\n👇 Select one:`;
+}
+
 async function repeatLastStep(uid, state, lang, phoneId){
   const L = T[lang]||T.en;
   const last = state.lastStep||'';
@@ -941,12 +995,12 @@ async function repeatLastStep(uid, state, lang, phoneId){
   // V155 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
-  await sendWithDelay(singleCta(uid, L.highIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ await sendWithDelay(singleCta(uid, L.moderateIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CORP', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ await sendWithDelay(singleCta(uid, L.baseIntroSingle, {type:'url', title:L.seeVideo, url:getVideoUrl('OPP_CENTER', lang)}, phoneId)); await delay(500); return await sendWithDelay(interactiveButton(uid, 'Next step:-', [{id:'KNOW_BEN',title:L.benBtn},{id:'KNOW_SUP',title:L.supBtn},{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); await sendWithDelay(textMessage(uid,escalatedBen, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_SUP',title:L.supBtn}], phoneId)); }
-  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); await sendWithDelay(textMessage(uid,escalatedSup, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
-  if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); await sendWithDelay(textMessage(uid,escalatedReq, phoneId)); await delay(300); return await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
+  return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn}], phoneId)); }
+  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
+  if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n'+escalatedReq, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
@@ -954,7 +1008,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
     return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']}])); 
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
-  if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid,L.leadAsk, phoneId)); }
+  if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid, oppProgress(lang,6)+'\n\n'+oppCongrats(lang,6)+'\n\n'+L.leadAsk, phoneId)); }
   if(last.includes('Occupation')){ return await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], phoneId)); }
   if(last.includes('Date')){ return await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], phoneId)); }
   if(state.service){
@@ -1514,9 +1568,9 @@ app.post('/webhook', async(req,res)=>{
       else if(btnId==='SVC_BOOKING'){ await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons, incomingPhoneId)); }
       else       if(btnId==='SVC_OPP'){ 
         // V174: 2 messages - Company video + income level selection (user exact flow)
-        const companyVideo = lang==='ml' ? `നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `बहुत बढ़िया! आपने "बिजनेस अवसर" चुना।\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:` : `Excellent! You selected "Business Opportunity".\n\nWatch this video to know about the company:`;
+        const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + oppCongrats(lang,1) + (lang==='ml' ? `\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:\n🎥 https://youtu.be/8ZnDlvbgG_c` : lang==='hi' ? `\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:\n🎥 https://youtu.be/8ZnDlvbgG_c` : `\n\nWatch this video to know about the company:\n🎥 https://youtu.be/8ZnDlvbgG_c`);
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
-        await sendWithDelay(singleCta(uid, companyVideo, {type:'url', title: lang==='ml' ? 'കമ്പനി വീഡിയോ കാണുക' : lang==='hi' ? 'कंपनी वीडियो देखें' : 'Watch Company Video', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
+        await sendWithDelay(interactiveButton(uid, companyVideo, [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_NOT_WATCHED',title: lang==='ml' ? 'കണ്ടില്ല' : lang==='hi' ? 'नहीं देखा' : 'Not Seen'}], incomingPhoneId));
         // V209: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
         scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       }
@@ -1542,14 +1596,14 @@ app.post('/webhook', async(req,res)=>{
       // V209: Company video watched -> now show Income Level (next step)
       state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select income level from below - High / Moderate / Base level:-`;
-      await sendWithDelay(interactiveButton(uid, incomeMsg, L.oppButtons, incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg, L.oppButtons, incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_NOT_WATCHED'){
       // V209: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
-      await sendWithDelay(singleCta(uid, companyVideo2, {type:'url', title: lang==='ml' ? 'കമ്പനി വീഡിയോ കാണുക' : lang==='hi' ? 'कंपनी वीडियो देखें' : 'Watch Company Video', url:'https://youtu.be/8ZnDlvbgG_c?si=_Ou0nN0nuFf0uOYZ'}, incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2+'\n🎥 https://youtu.be/8ZnDlvbgG_c', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId));
       scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       return;
     }
@@ -1578,7 +1632,7 @@ Let's check District Franchise details.
 👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V209: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 High level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -1611,7 +1665,7 @@ Let's check Corporation / Municipal Franchise details.
 👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V209: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 Moderate income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -1644,7 +1698,7 @@ Let's check Business Center details.
 👉 👇 What to do now: 1) Watch video. 2) Click "Watched Video".
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      await sendWithDelay(singleCta(uid, msg1, {type:'url', title:L.clickWatch, url:videoUrl}, incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V209: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 Base level Income', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -1654,7 +1708,30 @@ Let's check Business Center details.
       return;
     }
     // ==================== V125 CONFIRMATION FLOW - ALL LANGUAGES ====================
+
+    // ===== V210 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
+    if(btnId==='OPP_LEARN_VIDEO'){
+      state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
+      const vMsg = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\n🎥 അവസര വീഡിയോ കാണുക:\n${vUrl}\n\nവീഡിയോ കണ്ട ശേഷം താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `\n\n🎥 अवसर वीडियो देखें:\n${vUrl}\n\nवीडियो देखने के बाद नीचे क्लिक करें:` : `\n\n🎥 Watch Opportunity Video:\n${vUrl}\n\nAfter watching, click below:`);
+      await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title: lang==='ml' ? 'വീഡിയോ കണ്ടു' : lang==='hi' ? 'वीडियो देखा' : 'Watched Video'}], incomingPhoneId));
+      scheduleReminder(uid, 'install:OPP_LEARN_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='OPP_LEARN_READ'){
+      state.learnMode='read'; state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const benDyn2 = getBenText(state.sub, lang);
+      const qText2 = lang==='ml' ? `\n\n👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?\n👉 മനസ്സിലായെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `\n\n👋 लाभ पढ़े? समझ में आया?\n👉 समझ आया तो नीचे क्लिक करें:` : `\n\n👋 Did you read Benefits? Understood?\n👉 If understood, click below:`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      return;
+    }
     if(btnId==='VIDEO_WATCHED'){
+      if(state.learnMode==='video'){
+        state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const doneMsg = lang==='ml' ? `✅ വീഡിയോ കണ്ടതിന് നന്ദി! അവസരം മനസ്സിലായി.` : lang==='hi' ? `✅ वीडियो देखने के लिए धन्यवाद! अवसर समझ में आ गया।` : `✅ Thanks for watching video! Opportunity understood.`;
+        await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+doneMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
+        return;
+      }
       state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const benDyn = getBenText(state.sub, lang);
       const qText = lang==='ml' ? `
@@ -1671,7 +1748,7 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_BEN_AGAIN'){
@@ -1691,7 +1768,7 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_BEN'){
@@ -1711,7 +1788,7 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_SUP_AGAIN'){
@@ -1731,7 +1808,7 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_SUP'){
@@ -1751,7 +1828,7 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_REQ_AGAIN'){
@@ -1771,31 +1848,29 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_REQ'){
       state.lastStep='Requirements Understood - Ready to Submit'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const submitMsg = lang==='ml' ? `✅ എല്ലാം മനസ്സിലായി! ഇപ്പോൾ അപേക്ഷ സമർപ്പിക്കാം.` : lang==='hi' ? `✅ सब समझ में आ गया! अब आवेदन जमा करते हैं।` : `✅ All understood! Now submit application.`;
-      await sendWithDelay(textMessage(uid,submitMsg, incomingPhoneId));
-      await delay(400);
-      await sendWithDelay(interactiveButton(uid, L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+submitMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
       return;
     }
 
-    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.benText + `
+    if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+L.benText + `
 
 Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.supText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.reqText, incomingPhoneId)); await delay(300); await sendWithDelay(interactiveButton(uid,'Next:',[{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+L.supText, [{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+L.reqText, [{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
       const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
       state.fee = fee; state.franchiseName = franchiseName; state.isCorp = isYes; state.lastStep=`Ready ${fee}L - ${franchiseName} - Corp:`+btnId; state.phoneId=incomingPhoneId;
       await setState(uid,state); clearReminders(uid); 
       const readyText = getReadyText(lang, fee, franchiseName);
       const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`;
-      await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], incomingPhoneId)); 
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n👏 Congratulations! Corp selected!\n👉 What to do now: Click Yes Ready below:\n\n'+readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], incomingPhoneId)); 
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Corp Check ${btnId} Fee ${fee}L ${franchiseName}`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_CORPCHECK:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_CORPCHECK:24',lang,24*60*60*1000, incomingPhoneId); return; 
     }
@@ -1807,7 +1882,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){}
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1829,7 +1904,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){} 
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1842,7 +1917,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15, state.sub);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(singleCta(uid, payText, {type:'url', title: L.payFeeNow, url: getRazorpayLinkForSub(state.sub)}));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -1853,7 +1928,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       // V209: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
       const payLink2 = getRazorpayLinkForSub(state.sub);
       const payText2 = getPayText(lang, state.fee||15, state.sub);
-      await sendWithDelay(singleCta(uid, payText2, {type:'url', title: L.payFeeNow, url: payLink2}, incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText2+'\n\n🔗 '+payLink2, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
       return;
     }
     // V209 FIX: PAY_VERIFY had NO handler in V208 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
@@ -1872,7 +1947,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
 
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid,L.dateQ,[{id:'DATE_TODAY',title:L.today},{id:'DATE_TOMORROW',title:L.tomorrow}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId.startsWith('DATE_')){ const date = btnId.replace('DATE_',''); state.date=date; state.lastStep='Date '+date; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsg = getTenderGreeting(state.sub||'OPP_DISTRICT', lang);
-      await sendWithDelay(textMessage(uid,tenderMsg, incomingPhoneId)); await delay(300); await sendWithDelay(textMessage(uid,L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
+      await sendWithDelay(textMessage(uid, tenderMsg+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date '+date, 'Clicked', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:state.date, phoneId: incomingPhoneId}); return; }
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
     if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendCtaSequence(uid, L.noProblem, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:callNum}], incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
@@ -1880,21 +1955,15 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     if(btnId==='HUMAN_TALK'||btnId==='TALK_TO_TEAM'||btnId==='CONTACT_TEAM'){
       const isOppV209 = state.service==='SVC_OPP' || (state.sub||'').startsWith('OPP_') || (state.lastStep||'').includes('Pay') || (state.lastStep||'').includes('EMI') || (state.lastStep||'').includes('Ready');
       const dialNumV209 = isOppV209 ? HELP_MARKETING : HELP_ADMIN;
-      await sendWithDelay(textMessage(uid, getDialerText(lang, isOppV209), incomingPhoneId));
-      await delay(400);
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV209), dialNumV209, incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV209, state.lastStep||'', ''], true);
       return;
     }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'||btnId.startsWith('CALL_'+HELP_ADMIN)){
-      await sendWithDelay(textMessage(uid, getDialerText(lang, false), incomingPhoneId));
-      await delay(400);
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, false), HELP_ADMIN, incomingPhoneId));
       return;
     }
     if(btnId==='CALL_MARKETING'||btnId==='HELP_MARKETING'||btnId.startsWith('CALL_'+HELP_MARKETING)||btnId.startsWith('CALL_8590')||btnId.startsWith('CALL_91')){
-      await sendWithDelay(textMessage(uid, getDialerText(lang, true), incomingPhoneId));
-      await delay(400);
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, true), HELP_MARKETING, incomingPhoneId));
       return;
     }
@@ -1907,8 +1976,6 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     if((isRandomText || isMedia) && state.lang){
       // V209: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
       const sorryMsg = getSorryExplain(lang, state.lastStep||'', txt);
-      await sendWithDelay(textMessage(uid, sorryMsg, incomingPhoneId));
-      await delay(400);
       if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
         // V209: Pay step random = 1 MESSAGE ONLY with 3 buttons. User typed = confused = needs Human in SAME message.
         // WhatsApp cannot mix URL button + Reply buttons in 1 message, so Pay link is put as clickable text inside body.
@@ -1975,9 +2042,7 @@ app.post('/razorpay-webhook', async(req,res)=>{
         const L = T[lang]||T.en;
         await setState(cleanUid,{...state, flow:'LEAD', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee), phoneId});
         clearReminders(cleanUid);
-        await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:`, phoneId));
-        await delay(300);
-        await sendWithDelay(textMessage(cleanUid, L.leadAsk, phoneId));
+        await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}\n\nNow please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified', JSON.stringify(payment.notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified', ''], false);
       }
