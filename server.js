@@ -1618,7 +1618,7 @@ ${LINKS_V92.tenderDistrict}
 const TEMPLATE1_NUMBERS = ["919946402400","919846919148","918111914663","918156857714","919447805071","919495686767","919495787787","917012685283","918891917766","919847882906","919544592159","919947141555","917510242504"];
 const TEMPLATE2_NUMBERS = ["918304002279","918289991657","918891167308","918943219407","919447428830","96898759658","917902563306","919048181788"];
 async function sendTemplateMsg(to, templateName){
-  return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name: templateName, language:{code:'en'}}});
+  return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name: templateName, language:{code:'en_US'}}});
 }
 app.get('/fire-template1', async(req,res)=>{
   let out=[];
