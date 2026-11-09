@@ -1614,6 +1614,24 @@ ${LINKS_V92.tenderDistrict}
   }
 };
 
+// === HOT TEMPLATE SENDER - ADDED 9 NOV 2026 - ONLY ADDITION, NO OTHER CODE TOUCHED ===
+const TEMPLATE1_NUMBERS = ["919946402400","919846919148","918111914663","918156857714","919447805071","919495686767","919495787787","917012685283","918891917766","919847882906","919544592159","919947141555","917510242504"];
+const TEMPLATE2_NUMBERS = ["918304002279","918289991657","918891167308","918943219407","919447428830","96898759658","917902563306","919048181788"];
+async function sendTemplateMsg(to, templateName){
+  return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name: templateName, language:{code:'en'}}});
+}
+app.get('/fire-template1', async(req,res)=>{
+  let out=[];
+  for(let n of TEMPLATE1_NUMBERS){ try{ await sendTemplateMsg(n,"bizmapia_followup_busy"); out.push(n+": SENT"); }catch(e){ out.push(n+": FAIL "+e.message); } await new Promise(r=>setTimeout(r,2000)); }
+  res.send(out.join("<br>")+"<br><br>DONE Template1 - 13 numbers");
+});
+app.get('/fire-template2', async(req,res)=>{
+  let out=[];
+  for(let n of TEMPLATE2_NUMBERS){ try{ await sendTemplateMsg(n,"bizmapia_followup_soft"); out.push(n+": SENT"); }catch(e){ out.push(n+": FAIL "+e.message); } await new Promise(r=>setTimeout(r,2000)); }
+  res.send(out.join("<br>")+"<br><br>DONE Template2 - 8 numbers");
+});
+// === END HOT TEMPLATE SENDER ===
+
 app.get('/',(req,res)=>res.send(`V155 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
