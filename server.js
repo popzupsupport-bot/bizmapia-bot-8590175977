@@ -1,15 +1,15 @@
-// V212 FINAL - RAZORPAY WEBHOOK FIXED - SINGLE-MESSAGE EVERY STEP + CONGRATS + WHAT-TO-DO + OPP VIDEO OR 3 CLICKS + 6 STEPS LEFT + PAY OPTION A - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V211 ====================
-// V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - SINGLE-MESSAGE EVERY STEP + CONGRATS + WHAT-TO-DO + OPP VIDEO OR 3 CLICKS + 6 STEPS LEFT + PAY OPTION A - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V214 ====================
+// V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
-// 8 PDF: 2 DISTRICT (D250) + 2 CORP/MUNI (C150) + 4 BUSINESS CENTER (B100) - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
+// 12 PDF: 2 DISTRICT-WITH + 2 DISTRICT-ONLY + 2 MUNICIPAL + 2 CORPORATION + 2 BC-RIDE + 2 BC-DIRECTORY - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
 // 8 SHEETS LOCKED: System_Logs, Master_Leads, Franchise_Funnel, Payments, Ride_Hailing, Business_Directory, Delivery, Booking, Registration_Fee
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 8 PDF 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 12 PDF 2+2+2+2+2+2 - DISTRICT-WITH/ONLY + MUNICIPAL + CORPORATION + BC-RIDE + BC-DIRECTORY - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -21,7 +21,7 @@ try { google = require('googleapis').google; } catch(e) { console.log('googleapi
 const app = express();
 app.use(bodyParser.json({ verify: (req,res,buf)=>{ req.rawBody = buf; } }));
 
-// ===== V211 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 10 FINAL PDFs =====
+// ===== V214 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 12 FINAL PDFs - GUARANTEED AFTER PAYMENT =====
 const path = require('path');
 const fs = require('fs');
 const BASE_URL = (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'https://bizmapia-bot-8590175977.onrender.com').replace(/\/$/, '');
@@ -136,20 +136,29 @@ function getVideoUrl(sub, lang){
 
 
 function getTenderPdfLink(sub, lang, state){
-  // V211 ONLY TENDER EDIT - EACH USER GETS THEIR OWN TENDER+ANNEXURE
-  if(sub==='OPP_DISTRICT') return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure, files: ['01_District_Tender_Full_20Pages_Rs250.pdf','02_District_Annexure_B_Full_Rs250.pdf'] };
-  if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf'] };
+  // V214 GUARANTEED - AFTER REGISTRATION FEE PAYMENT, user MUST get correct PDF
+  // If choice is known -> send ONLY that pair (2 files). If choice is UNKNOWN -> send BOTH pairs (4 files) so correct PDF is always inside.
+  // District: CORP_YES = 01-02 | CORP_NO = 03-04 | UNKNOWN = 01+02+03+04
+  // Corp/Muni: CORP_YES = 07-08 | CORP_NO = 05-06 | UNKNOWN = 05+06+07+08
+  // Muni: always 05-06
+  // Business Center: RIDE = 09-10 | DIRECTORY = 11-12 | UNKNOWN (bcService never set in current flow) = 09+10+11+12 - THIS IS THE GUARANTEE
+  if(sub==='OPP_DISTRICT'){
+    if(state && state.isCorp === false) return { main: LINKS_V92.tenderDistrictOnly, annexure: LINKS_V92.tenderDistrictOnlyAnnexure, files: ['03-District-ONLY_Muni-Tender.pdf','04-District-ONLY_Muni-Annexure-B.pdf'] };
+    if(state && state.isCorp === true) return { main: LINKS_V92.tenderDistrictWith, annexure: LINKS_V92.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
+    return { main: LINKS_V92.tenderDistrictWith, annexure: LINKS_V92.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf','03-District-ONLY_Muni-Tender.pdf','04-District-ONLY_Muni-Annexure-B.pdf'] };
+  }
+  if(sub==='OPP_MUNI') return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
   if(sub==='OPP_CORP'){
-    if(state && state.isCorp === false) return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf'] };
-    if(state && state.isCorp === true) return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['05_Corporation_Tender_Full_20Pages_Rs150.pdf','06_Corporation_Annexure_B_Full_Rs150.pdf'] };
-    return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['03_Municipal_Tender_Full_20Pages_Rs150.pdf','04_Municipal_Annexure_B_Full_Rs150.pdf','05_Corporation_Tender_Full_20Pages_Rs150.pdf','06_Corporation_Annexure_B_Full_Rs150.pdf'] };
+    if(state && state.isCorp === false) return { main: LINKS_V92.tenderMunicipal, annexure: LINKS_V92.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
+    if(state && state.isCorp === true) return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
+    return { main: LINKS_V92.tenderCorporation, annexure: LINKS_V92.tenderCorporationAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf','07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
   }
   if(sub==='OPP_CENTER'){
-    if(state && (state.bcService==='RIDE')) return { main: LINKS_V92.tenderBusinessCenterRide, annexure: LINKS_V92.tenderBusinessCenterRideAnnexure, files: ['07_BC_RideHailing_300_Tender_Full_Rs100.pdf','08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf'] };
-    if(state && (state.bcService==='DIRECTORY')) return { main: LINKS_V92.tenderBusinessCenterDirectory, annexure: LINKS_V92.tenderBusinessCenterDirectoryAnnexure, files: ['09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf','10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf'] };
-    return { main: LINKS_V92.tenderBusinessCenter, annexure: LINKS_V92.tenderBusinessCenterAnnexure, files: ['07_BC_RideHailing_300_Tender_Full_Rs100.pdf','08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf','09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf','10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf'] };
+    if(state && (state.bcService==='DIRECTORY')) return { main: LINKS_V92.tenderBusinessCenterDirectory, annexure: LINKS_V92.tenderBusinessCenterDirectoryAnnexure, files: ['11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
+    if(state && (state.bcService==='RIDE')) return { main: LINKS_V92.tenderBusinessCenterRide, annexure: LINKS_V92.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf'] };
+    return { main: LINKS_V92.tenderBusinessCenterRide, annexure: LINKS_V92.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf','11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
   }
-  return { main: LINKS_V92.tenderDistrict, annexure: LINKS_V92.tenderDistrictAnnexure, files: ['01_District_Tender_Full_20Pages_Rs250.pdf','02_District_Annexure_B_Full_Rs250.pdf'] };
+  return { main: LINKS_V92.tenderDistrictWith, annexure: LINKS_V92.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
 }
 function getTenderFilesForSub(sub, state){ const r = getTenderPdfLink(sub, 'en', state); return r.files || [r.main, r.annexure]; }
 function OLD_getTenderPdfLink_TEMP(sub, lang){
@@ -532,21 +541,29 @@ async function v211_sendKeralaDistricts(uid, lang, phoneId){
 const LINKS_V92 = {
   website: WEBSITE,
   driverApp: PLAY_STORE,
-  // 10 FINAL PDFs - 2 District + 2 Municipal + 2 Corporation + 2 BC Ride + 2 BC Directory - V211 ONLY TENDER EDIT
-  tenderDistrict: "https://bizmapia-bot-8590175977.onrender.com/tenders/01_District_Tender_Full_20Pages_Rs250.pdf",
-  tenderDistrictAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/02_District_Annexure_B_Full_Rs250.pdf",
-  tenderMunicipal: "https://bizmapia-bot-8590175977.onrender.com/tenders/03_Municipal_Tender_Full_20Pages_Rs150.pdf",
-  tenderMunicipalAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/04_Municipal_Annexure_B_Full_Rs150.pdf",
-  tenderCorporation: "https://bizmapia-bot-8590175977.onrender.com/tenders/05_Corporation_Tender_Full_20Pages_Rs150.pdf",
-  tenderCorporationAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/06_Corporation_Annexure_B_Full_Rs150.pdf",
-  tenderBusinessCenter: "https://bizmapia-bot-8590175977.onrender.com/tenders/07_BC_RideHailing_300_Tender_Full_Rs100.pdf",
-  tenderBusinessCenterAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf",
-  tenderBusinessCenterRide: "https://bizmapia-bot-8590175977.onrender.com/tenders/07_BC_RideHailing_300_Tender_Full_Rs100.pdf",
-  tenderBusinessCenterRideAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/08_BC_RideHailing_300_Annexure_B_Full_Rs100.pdf",
-  tenderBusinessCenterDirectory: "https://bizmapia-bot-8590175977.onrender.com/tenders/09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf",
-  tenderBusinessCenterDirectoryAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf",
-  tenderBusinessCenterAgreement: "https://bizmapia-bot-8590175977.onrender.com/tenders/09_BC_BusinessDirectory_2000_Tender_Full_Rs100.pdf",
-  tenderBusinessCenterBrochure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10_BC_BusinessDirectory_2000_Annexure_B_Full_Rs100.pdf",
+  // V214 GUARANTEED - 12 FINAL PDFs - FILENAMES = EXACTLY THE 12 UPLOADED FILES
+  // 01-02: District WITH Corp+Muni - 15L - CORP_YES | 03-04: District ONLY - 10L - CORP_NO
+  // 05-06: Municipal - Rs.150 | 07-08: Corporation - Rs.150
+  // 09-10: BC RIDE-HAILING ONLY - Rs.100 | 11-12: BC BUSINESS DIRECTORY ONLY - Rs.100
+  // GUARANTEE RULE: if user paid but choice (isCorp / bcService) is UNKNOWN, send BOTH pairs (4 files) so correct PDF is ALWAYS included
+  tenderDistrictWith: "https://bizmapia-bot-8590175977.onrender.com/tenders/01-District-WITH-Corp-Muni-Tender.pdf",
+  tenderDistrictWithAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/02-District-WITH-Corp-Muni-Annexure-B.pdf",
+  tenderDistrictOnly: "https://bizmapia-bot-8590175977.onrender.com/tenders/03-District-ONLY_Muni-Tender.pdf",
+  tenderDistrictOnlyAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/04-District-ONLY_Muni-Annexure-B.pdf",
+  tenderDistrict: "https://bizmapia-bot-8590175977.onrender.com/tenders/01-District-WITH-Corp-Muni-Tender.pdf",
+  tenderDistrictAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/02-District-WITH-Corp-Muni-Annexure-B.pdf",
+  tenderMunicipal: "https://bizmapia-bot-8590175977.onrender.com/tenders/05-Municipal-Tender.pdf",
+  tenderMunicipalAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/06-Municipal-Annexure-B.pdf",
+  tenderCorporation: "https://bizmapia-bot-8590175977.onrender.com/tenders/07-Corporation-Tender.pdf",
+  tenderCorporationAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/08-Corporation-Annexure-B.pdf",
+  tenderBusinessCenter: "https://bizmapia-bot-8590175977.onrender.com/tenders/09-BC-RideHailing-Tender.pdf",
+  tenderBusinessCenterAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10-BC-RideHailing-Annexure-B.pdf",
+  tenderBusinessCenterRide: "https://bizmapia-bot-8590175977.onrender.com/tenders/09-BC-RideHailing-Tender.pdf",
+  tenderBusinessCenterRideAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/10-BC-RideHailing-Annexure-B.pdf",
+  tenderBusinessCenterDirectory: "https://bizmapia-bot-8590175977.onrender.com/tenders/11-BC-BusinessDirectory-Tender.pdf",
+  tenderBusinessCenterDirectoryAnnexure: "https://bizmapia-bot-8590175977.onrender.com/tenders/12-BC-BusinessDirectory-Annexure-B.pdf",
+  tenderBusinessCenterAgreement: "https://bizmapia-bot-8590175977.onrender.com/tenders/11-BC-BusinessDirectory-Tender.pdf",
+  tenderBusinessCenterBrochure: "https://bizmapia-bot-8590175977.onrender.com/tenders/12-BC-BusinessDirectory-Annexure-B.pdf",
   businessLink: "https://bizmapia.com/business",
   earnLink: EARN_LINK,
   razorpay: "https://rzp.io/rzp/BZ9D9rT",
@@ -2240,7 +2257,7 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await setState(cleanUid,{...state, flow:'LEAD', detailStep:'NAME', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee)||15, phoneId});
         clearReminders(cleanUid);
         await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}`, phoneId));
-        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V212 Tender auto-send fail', e.message); }
+        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V214 Tender auto-send fail', e.message); }
         await sendWithDelay(textMessage(cleanUid, `Now please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified - Webhook '+event, JSON.stringify(notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified - Webhook '+event, ''], false);
@@ -2698,7 +2715,7 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V212 FINAL - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 10 PDFs - 8 PDF 2+2+4 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 12 PDFs - 12 PDF 2+2+2+2+2+2 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
@@ -2707,15 +2724,15 @@ app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys
 app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
 
 
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 8 PDF 2+2+4 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 12 PDF 2+2+2+2+2+2 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V212 with proper version control after verification
-// Current locked version: V212 FINAL - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 8 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 8 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V212 FINAL - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V214 with proper version control after verification
+// Current locked version: V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V155 + V161-V169 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V214 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V212 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V214 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
