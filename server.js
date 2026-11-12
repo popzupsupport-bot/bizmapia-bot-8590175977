@@ -1162,14 +1162,14 @@ function oppCongrats(lang, step){
     return `🎉 Excellent choice!\n👉 What to do now: Watch Company Video, then click below:`;
   }
   if(step===2){
-    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! കമ്പനി വീഡിയോ കണ്ടു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക:`;
-    if(lang==='hi') return `👏 बधाई हो! कंपनी वीडियो देखा!\n👉 अब क्या करें: नीचे से आय स्तर चुनें:`;
-    return `👏 Congratulations! Company Video watched!\n👉 What to do now: Select income level from below:`;
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! കമ്പനി വീഡിയോ കണ്ടു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:`;
+    if(lang==='hi') return `👏 बधाई हो! कंपनी वीडियो देखा!\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:`;
+    return `👏 Congratulations! Company Video watched!\n👉 What to do now: Select investing capacity from below:`;
   }
   if(step===3){
-    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! വരുമാന തലം തിരഞ്ഞെടുത്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: ഈ അവസരം എങ്ങനെ മനസ്സിലാക്കണം എന്ന് തിരഞ്ഞെടുക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്:`;
-    if(lang==='hi') return `👏 बधाई हो! आय स्तर चुना!\n👉 अब क्या करें: इस अवसर को कैसे समझें, चुनें — वीडियो OR 3 क्लिक:`;
-    return `👏 Congratulations! Income Level selected!\n👉 What to do now: Choose how to understand this Opportunity — Video OR 3 Clicks:`;
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! നിക്ഷേപ ശേഷി തിരഞ്ഞെടുത്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: ഈ അവസരം എങ്ങനെ മനസ്സിലാക്കണം എന്ന് തിരഞ്ഞെടുക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്:`;
+    if(lang==='hi') return `👏 बधाई हो! निवेश क्षमता चुनी!\n👉 अब क्या करें: इस अवसर को कैसे समझें, चुनें — वीडियो OR 3 क्लिक:`;
+    return `👏 Congratulations! Investing Capacity selected!\n👉 What to do now: Choose how to understand this Opportunity — Video OR 3 Clicks:`;
   }
   if(step===4){
     if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! അവസരം മനസ്സിലായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: നിങ്ങളുടെ ജില്ലയിൽ കോർപ്പറേഷൻ ഉണ്ടോ എന്ന് തിരഞ്ഞെടുക്കുക:`;
@@ -1189,9 +1189,9 @@ function oppCongrats(lang, step){
   return ``;
 }
 function oppRoadmap(lang){
-  if(lang==='ml') return `🎯 നിങ്ങളുടെ അവസരം — പൂർത്തിയാക്കാൻ 6 സ്റ്റെപ്പ്\n1. കമ്പനി വീഡിയോ\n2. വരുമാന തലം\n3. അവസരം മനസ്സിലാക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്\n4. തയ്യാർ + കോർപ്പ്\n5. പേയ്മെന്റ്\n6. വിശദാംശങ്ങൾ`;
-  if(lang==='hi') return `🎯 आपका अवसर — पूरा करने के लिए 6 स्टेप\n1. कंपनी वीडियो\n2. आय स्तर\n3. अवसर समझें — वीडियो OR 3 क्लिक\n4. तैयार + कॉर्प\n5. पेमेंट\n6. विवरण`;
-  return `🎯 Your Opportunity — 6 Steps to Finalize\n1. Company Video\n2. Income Level\n3. Understand Opportunity — Video OR 3 Clicks\n4. Ready + Corp\n5. Pay\n6. Your Details`;
+  if(lang==='ml') return `🎯 നിങ്ങളുടെ അവസരം — പൂർത്തിയാക്കാൻ 6 സ്റ്റെപ്പ്\n1. കമ്പനി വീഡിയോ\n2. നിക്ഷേപ ശേഷി\n3. അവസരം മനസ്സിലാക്കുക — വീഡിയോ OR 3 ക്ലിക്ക്\n4. തയ്യാർ + കോർപ്പ്\n5. പേയ്മെന്റ്\n6. വിശദാംശങ്ങൾ`;
+  if(lang==='hi') return `🎯 आपका अवसर — पूरा करने के लिए 6 स्टेप\n1. कंपनी वीडियो\n2. निवेश क्षमता\n3. अवसर समझें — वीडियो OR 3 क्लिक\n4. तैयार + कॉर्प\n5. पेमेंट\n6. विवरण`;
+  return `🎯 Your Opportunity — 6 Steps to Finalize\n1. Company Video\n2. Investing Capacity\n3. Understand Opportunity — Video OR 3 Clicks\n4. Ready + Corp\n5. Pay\n6. Your Details`;
 }
 function oppLearnQ(lang){
   if(lang==='ml') return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 വീഡിയോ കണ്ടാൽ — വീഡിയോ കണ്ട് നേരെ Corp Check-ലേക്ക് പോകാം.\n📄 3 ക്ലിക്ക് വായിച്ചാൽ — ആനുകൂല്യം + പിന്തുണ + ആവശ്യകത വായിച്ച് മനസ്സിലാക്കാം.\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കുക:`;
@@ -1518,7 +1518,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bookAppoint:`Book Appointments - Doctor, Salon, Services - Instant booking near you.\n\nClick below to install app or call us:`,
     bookMovie:`Book Movie Tickets, Events, Shows near you.\n\nClick below to install app or call us:`,
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'💰 High level Income'},{id:'OPP_CORP',title:'💼 Moderate income'},{id:'OPP_CENTER',title:'🚀 Base level Income'}],
+    oppButtons:[{id:'OPP_DISTRICT',title:'💰 ₹10L-₹15L Invest'},{id:'OPP_CORP',title:'💼 ₹4L-₹5L Invest'},{id:'OPP_CENTER',title:'🚀 ₹30K-₹1L Invest'}],
     highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
     moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for Corporation / Municipal!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
     baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
@@ -1596,7 +1596,7 @@ ${LINKS_V92.tenderDistrict}
     bookAppoint:`अपॉइंटमेंट बुक करें - डॉक्टर, सैलून, सेवाएं - आपके पास तत्काल बुकिंग।\n\nनीचे क्लिक करें:`,
     bookMovie:`आपके पास मूवी टिकट, इवेंट, शो बुक करें।\n\nनीचे क्लिक करें:`,
     oppSelected:`बहुत बढ़िया आपने "बिजनेस अवसर" चुना\nहमारा सर्विस पॉइंट बनें और कमाना शुरू करें। कमाई के 3 स्तर।\nआप भारत में कहीं से भी Bizmapia से कमाई के अवसर के लिए अपना स्लॉट बुक करने जा रहे हैं। आप किस प्रकार के अवसर की तलाश में हैं?\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'उच्च स्तरीय आय'},{id:'OPP_CORP',title:'मध्यम स्तरीय आय'},{id:'OPP_CENTER',title:'आधार स्तरीय आय'}],
+    oppButtons:[{id:'OPP_DISTRICT',title:'₹10L-₹15L निवेश'},{id:'OPP_CORP',title:'₹4L-₹5L निवेश'},{id:'OPP_CENTER',title:'₹30K-₹1L निवेश'}],
     highIntroSingle:`बहुत बढ़िया आपने हमारी उच्च स्तरीय आय अर्जन अवसर का चयन किया है\n\nआइए हमारी जिला फ्रेंचाइजी अवसर के बारे में विवरण जानें\nयाद रखें एक जिले के लिए केवल एक ही आवेदन स्वीकृत है, इसलिए पूरी जानकारी का अध्ययन करें और इस चैट के साथ निर्णय लें।`,
     moderateIntroSingle:`बहुत बढ़िया आपने हमारी मध्यम स्तरीय आय अवसर का चयन किया\n\nआइए हमारी कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर के बारे में जानें`,
     baseIntroSingle:`बहुत बढ़िया आपने हमारी बेस लेवल आय अवसर का चयन किया\n\nआइए हमारे बिजनेस सेंटर अवसर के बारे में जानें`,
@@ -1678,11 +1678,11 @@ ${LINKS_V92.tenderDistrict}
     bookRoom:`ഇന്ത്യയിൽ എവിടെയും മികച്ച നിരക്കിൽ ഹോട്ടലുകൾ, റൂമുകൾ, റിസോർട്ടുകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookAppoint:`അപ്പോയിന്റ്മെന്റുകൾ ബുക്ക് ചെയ്യുക - ഡോക്ടർ, സലൂൺ, സേവനങ്ങൾ - നിങ്ങൾക്ക് സമീപം തൽക്ഷണ ബുക്കിംഗ്.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookMovie:`നിങ്ങൾക്ക് സമീപമുള്ള മൂവി ടിക്കറ്റുകൾ, ഇവന്റുകൾ, ഷോകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
-    oppSelected:`👋 നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'ഉയർന്ന തല വരുമാനം'},{id:'OPP_CORP',title:'മിതമായ തല വരുമാനം'},{id:'OPP_CENTER',title:'അടിസ്ഥാന തല വരുമാനം'}],
-    highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ഉയർന്ന തല വരുമാനം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
-    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
-    baseIntroSingle:`👋 ഹലോ! നിങ്ങൾ അടിസ്ഥാന തല വരുമാനം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.\n\nബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    oppSelected:`👋 നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-`,
+    oppButtons:[{id:'OPP_DISTRICT',title:'₹10L-₹15L നിക്ഷേപം'},{id:'OPP_CORP',title:'₹4L-₹5L നിക്ഷേപം'},{id:'OPP_CENTER',title:'₹30K-₹1L നിക്ഷേപം'}],
+    highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹10L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹4L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    baseIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹30K-₹1L നിക്ഷേപം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.\n\nബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     reminderFranchise:`നിങ്ങൾ ഞങ്ങളുടെ ഫ്രാഞ്ചൈസി അവസരം പരിശോധിക്കുകയായിരുന്നു. കൂടുതൽ അറിയാൻ തുടരണോ?`,
     seeVideo:'വീഡിയോ കാണുക',
     clickWatch:'കാണാൻ ക്ലിക്ക് ചെയ്യുക',
@@ -1886,14 +1886,14 @@ app.post('/webhook', async(req,res)=>{
     }
     if(btnId==='COMPANY_KNOW' || btnId==='COMPANY_SKIP'){
       state.lastStep='Company Video - Skipped - I Know Bizmapia'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const incomeMsg2 = lang==='ml' ? `✅ Bizmapia അറിയാമെന്ന് സ്ഥിരീകരിച്ചു!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക:` : lang==='hi' ? `✅ Bizmapia जानते हैं - कन्फर्म!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें:` : `✅ Confirmed - You know Bizmapia!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 What to do now: Select income level from below:`;
+      const incomeMsg2 = lang==='ml' ? `✅ Bizmapia അറിയാമെന്ന് സ്ഥിരീകരിച്ചു!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:` : lang==='hi' ? `✅ Bizmapia जानते हैं - कन्फर्म!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:` : `✅ Confirmed - You know Bizmapia!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 What to do now: Select investing capacity from below:`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg2, L.oppButtons, incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_WATCHED'){
       // V211: Company video watched -> now show Income Level (next step)
       state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കുക - ഉയർന്ന / മിതമായ / അടിസ്ഥാന തലം:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से आय स्तर चुनें - उच्च / मध्यम / आधार स्तर:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select income level from below - High / Moderate / Base level:-`;
+      const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select investing capacity from below:-`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg, L.oppButtons, incomingPhoneId));
       return;
     }
@@ -1911,19 +1911,19 @@ app.post('/webhook', async(req,res)=>{
       const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
       // V174: 2 messages - Video + watched confirmation (user exact flow)
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ഉയർന്ന തല വരുമാനം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹10L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
 ജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने उच्च स्तरीय आय (जिला फ्रेंचाइजी) चुनी।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹10L-₹15L निवेश (जिला फ्रेंचाइजी) चुना।
 
 जिला फ्रेंचाइजी विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected High Level Income (District Franchise).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹10L-₹15L Investing (District Franchise).
 
 Let's check District Franchise details.
 
@@ -1944,19 +1944,19 @@ Let's check District Franchise details.
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CORP', lang);
       const videoObj = getVideoObj('OPP_CORP', lang);
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ മിതമായ തല വരുമാനം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹4L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
 കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने मध्यम स्तरीय आय (कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी) चुनी।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹4L-₹5L निवेश (कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी) चुना।
 
 कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected Moderate Level Income (Corporation / Municipal Franchise).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹4L-₹5L Investing (Corporation / Municipal Franchise).
 
 Let's check Corporation / Municipal Franchise details.
 
@@ -1977,19 +1977,19 @@ Let's check Corporation / Municipal Franchise details.
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CENTER', lang);
       const videoObj = getVideoObj('OPP_CENTER', lang);
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ അടിസ്ഥാന തല വരുമാനം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹30K-₹1L നിക്ഷേപം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.
 
 ബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने आधार स्तरीय आय (बिजनेस सेंटर) चुनी।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹30K-₹1L निवेश (बिजनेस सेंटर) चुना।
 
 बिजनेस सेंटर विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected Base Level Income (Business Center).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹30K-₹1L Investing (Business Center).
 
 Let's check Business Center details.
 
