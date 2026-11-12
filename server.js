@@ -2520,14 +2520,14 @@ app.get('/replay-last-4-days', async(req,res)=>{
 async function getAllChatsFromMemory(){
   try{
     if(redisReady && redis){
-      const keys = await redis.keys('wa_state:*');
+      const keys = await redis.keys('state:*');
       const chats = [];
       for(const k of keys.slice(0,500)){
         try{
           const v = await redis.get(k);
           if(v){
             const state = JSON.parse(v);
-            const phone = k.replace('wa_state:','');
+            const phone = k.replace('state:','');
             chats.push({phone, state, lastStep: state.lastStep||'', lang: state.lang||'en', flow: state.flow||'', sub: state.sub||'', service: state.service||'', lastActive: state.lastActive||Date.now()});
           }
         }catch(e){}
@@ -2554,49 +2554,20 @@ function chatToSheetRow(chat){
 }
 async function wipeAllSheets(){
   try{
-    const sheets = ALLOWED_SHEETS || ['Master_Leads','Franchise_Funnel','Payments','Payment_Receipts','Ride_Hailing','Business_Directory','Delivery','Booking','System_Logs'];
-    for(const sheetName of sheets){
-      try{
-        const sheet = await getSheet(sheetName);
-        if(sheet){
-          const rows = await sheet.getRows();
-          for(let i=rows.length-1; i>=0; i--){
-            try{ await rows[i].delete(); }catch(e){}
-          }
-        }
-      }catch(e){}
+    const sheets = await getSheets();
+    if(!sheets) return false;
+    for(const sheetName of ALLOWED_SHEETS){
+      try{ await sheets.spreadsheets.values.clear({spreadsheetId: SHEET_ID, range: `'${sheetName}'!A2:Z10000`}); }catch(e){}
     }
     return true;
   }catch(e){ return false; }
-}
-async function getSheet(sheetName){
-  try{
-    if(!googleSheetsReady || !sheetsClient) return null;
-    const doc = await getGoogleSheetDoc();
-    if(!doc) return null;
-    let sheet = doc.sheetsByTitle[sheetName];
-    if(!sheet){
-      sheet = await doc.addSheet({title: sheetName, headerValues: ['Timestamp','Phone','Lang','Service','Step','Fee','Help','LastStep','Status']});
-    }
-    return sheet;
-  }catch(e){ return null; }
-}
-async function getGoogleSheetDoc(){
-  try{
-    if(!sheetsClient) return null;
-    return global._sheetDoc || null;
-  }catch(e){ return null; }
 }
 
 app.get('/wipe-and-replay-4-days', async(req,res)=>{
   if(req.query.key!=='95677') return res.status(403).json({error:'Invalid key'});
   try{
-    const chats = getAllChatsFromMemory();
-    const last4 = chats.filter(c=>{
-      const d = new Date(c.timestamp||c.time||Date.now());
-      const diff = (Date.now()-d.getTime())/(1000*60*60*24);
-      return diff<=4;
-    });
+    const chats = await getAllChatsFromMemory();
+    const last4 = chats.filter(c=>{ const age = c.state?.lastActive ? (Date.now()-c.state.lastActive) : 0; return age <= 4*24*60*60*1000; });
     console.log(`WIPE+REPLAY 4 DAYS: ${last4.length} chats`);
     await wipeAllSheets();
     await delay(1000);
@@ -2605,7 +2576,7 @@ app.get('/wipe-and-replay-4-days', async(req,res)=>{
       try{
         const row = chatToSheetRow(chat);
         if(row){
-          await saveToSheet(row.sheet, row.data, false);
+          await saveToSheet('System_Logs', row, false);
           count++;
         }
       }catch(e){ console.log('Replay error', e.message); }
@@ -2615,87 +2586,11 @@ app.get('/wipe-and-replay-4-days', async(req,res)=>{
 });
 
 
-// === FIX: Missing functions for wipe-and-replay - Added in V155 ===
-async function getAllChatsFromMemory(){
-  try{
-    if(redisReady && redis){
-      const keys = await redis.keys('wa_state:*');
-      const chats = [];
-      for(const k of keys.slice(0,500)){
-        try{
-          const v = await redis.get(k);
-          if(v){
-            const state = JSON.parse(v);
-            const phone = k.replace('wa_state:','');
-            chats.push({phone, state, lastStep: state.lastStep||'', lang: state.lang||'en', flow: state.flow||'', sub: state.sub||'', service: state.service||'', lastActive: state.lastActive||Date.now()});
-          }
-        }catch(e){}
-      }
-      return chats;
-    }
-    const chats = [];
-    for(const [phone, state] of memoryStore.entries()){
-      chats.push({phone, state, lastStep: state.lastStep||'', lang: state.lang||'en', flow: state.flow||'', sub: state.sub||'', service: state.service||'', lastActive: state.lastActive||Date.now()});
-    }
-    return chats;
-  }catch(e){ console.log('getAllChats error', e.message); return []; }
-}
-function chatToSheetRow(chat){
-  const nowIso = getISTTime();
-  const state = chat.state || {};
-  const phone = chat.phone || '';
-  const lang = chat.lang || state.lang || 'en';
-  const fee = state.fee || 15;
-  const service = state.service || chat.service || 'UNKNOWN';
-  const sub = state.sub || chat.sub || '';
-  const lastStep = state.lastStep || chat.lastStep || '';
-  return [nowIso, phone, lang, service+' '+sub, lastStep, fee+'L', HELP_MARKETING, lastStep, 'REPLAY'];
-}
-async function wipeAllSheets(){
-  try{
-    const sheets = ALLOWED_SHEETS || ['Master_Leads','Franchise_Funnel','Payments','Payment_Receipts','Ride_Hailing','Business_Directory','Delivery','Booking','System_Logs'];
-    for(const sheetName of sheets){
-      try{
-        const sheet = await getSheet(sheetName);
-        if(sheet){
-          const rows = await sheet.getRows();
-          for(let i=rows.length-1; i>=0; i--){
-            try{ await rows[i].delete(); }catch(e){}
-          }
-        }
-      }catch(e){}
-    }
-    return true;
-  }catch(e){ return false; }
-}
-async function getSheet(sheetName){
-  try{
-    if(!googleSheetsReady || !sheetsClient) return null;
-    const doc = await getGoogleSheetDoc();
-    if(!doc) return null;
-    let sheet = doc.sheetsByTitle[sheetName];
-    if(!sheet){
-      sheet = await doc.addSheet({title: sheetName, headerValues: ['Timestamp','Phone','Lang','Service','Step','Fee','Help','LastStep','Status']});
-    }
-    return sheet;
-  }catch(e){ return null; }
-}
-async function getGoogleSheetDoc(){
-  try{
-    if(!sheetsClient) return null;
-    return global._sheetDoc || null;
-  }catch(e){ return null; }
-}
-
 app.get('/wipe-and-replay-7-days', async(req,res)=>{
   if(req.query.key!=='95677') return res.status(403).json({error:'Invalid key'});
   try{
-    const chats = getAllChatsFromMemory();
-    const last7 = chats.filter(c=>{
-      const d = new Date(c.timestamp||c.time||Date.now());
-      const diff = (Date.now()-d.getTime())/(1000*60*60*24);
-      return diff<=7;
-    });
+    const chats = await getAllChatsFromMemory();
+    const last7 = chats.filter(c=>{ const age = c.state?.lastActive ? (Date.now()-c.state.lastActive) : 0; return age <= 7*24*60*60*1000; });
     console.log(`WIPE+REPLAY 7 DAYS: ${last7.length} chats from ${chats.length} total`);
     await wipeAllSheets();
     await delay(1500);
@@ -2704,7 +2599,7 @@ app.get('/wipe-and-replay-7-days', async(req,res)=>{
       try{
         const row = chatToSheetRow(chat);
         if(row){
-          await saveToSheet(row.sheet, row.data, false);
+          await saveToSheet('System_Logs', row, false);
           count++;
           await delay(50);
         }
@@ -2718,19 +2613,15 @@ app.get('/replay-7-days', async(req,res)=>{
   // Non-wipe version - adds 7 days to existing sheets
   if(req.query.key!=='95677') return res.status(403).json({error:'Invalid key'});
   try{
-    const chats = getAllChatsFromMemory();
-    const last7 = chats.filter(c=>{
-      const d = new Date(c.timestamp||c.time||Date.now());
-      const diff = (Date.now()-d.getTime())/(1000*60*60*24);
-      return diff<=7;
-    });
+    const chats = await getAllChatsFromMemory();
+    const last7 = chats.filter(c=>{ const age = c.state?.lastActive ? (Date.now()-c.state.lastActive) : 0; return age <= 7*24*60*60*1000; });
     console.log(`REPLAY 7 DAYS (no wipe): ${last7.length} chats`);
     let count=0;
     for(let chat of last7){
       try{
         const row = chatToSheetRow(chat);
         if(row){
-          await saveToSheet(row.sheet, row.data, false);
+          await saveToSheet('System_Logs', row, false);
           count++;
           await delay(50);
         }
@@ -2742,7 +2633,7 @@ app.get('/replay-7-days', async(req,res)=>{
 
 app.get('/all-chats-debug', async(req,res)=>{
   try{
-    const chats = getAllChatsFromMemory();
+    const chats = await getAllChatsFromMemory();
     const now = Date.now();
     const stats = {
       total: chats.length,
@@ -2847,11 +2738,6 @@ app.get('/render-stats', async(req,res)=>{
     res.json({version: 'V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 12 PDFs - 12 PDF 2+2+2+2+2+2 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
-
-app.get('/clear/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; if(redisReady && redis){ await redis.del(`state:${uid}`); } memoryStore.delete(uid); res.send(`✅ Cleared user ${uid}`); }catch(e){ res.send(`Error: ${e.message}`); } });
-app.get('/clear-all', async(req,res)=>{ try{ if(redisReady && redis){ const keys = await redis.keys('state:*'); if(keys.length>0) await redis.del(...keys); res.send(`✅ Cleared all ${keys.length} users from Redis`); } else { memoryStore.clear(); res.send(`✅ Cleared memoryStore`); } }catch(e){ res.send(`Error: ${e.message}`); } });
-app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.replace(/[^0-9]/g,''); if(uid.length===10) uid='91'+uid; const state = await getState(uid); res.json({uid, state, redisReady, memoryHas: memoryStore.has(uid)}); }catch(e){ res.send(`Error: ${e.message}`); } });
-
 
 app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V222', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V222','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V222', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
