@@ -1,6 +1,6 @@
 // V222 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
 // ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V222
-// V222 FINAL - ONLY CHANGE vs V221: Sheet write retry (clear cached client + retry once on failure) + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
+// V222 FINAL - ONLY CHANGE vs V221: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V220: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V218: Fired_Loser_List gate on first HI + YES/STOP + auto-fire after 3rd reminder. NO Tamil/Kannada/Telugu. NO other code change. ====================
 // V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
@@ -796,17 +796,21 @@ const memoryStore = new Map();
 const reminders = new Map();
 
 let sheetsClient = null;
+let sheetsClientAt = 0;
+let lastSheetError = '';
 async function getSheets(){
   if(!google) { console.log('googleapis not installed'); return null; }
   const creds = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_CREDENTIALS_JSON;
   if(!creds){ console.log('GOOGLE_CREDENTIALS missing - sheet will only console.log'); return null; }
   try{
-    if(sheetsClient) return sheetsClient;
+    if(sheetsClient && Date.now()-sheetsClientAt < 45*60*1000) return sheetsClient;
+    sheetsClient = null; // V222: force fresh auth
     let credentials;
     try{ credentials = JSON.parse(creds); } catch{ credentials = JSON.parse(Buffer.from(creds, 'base64').toString()); }
     const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
     const client = await auth.getClient();
     sheetsClient = google.sheets({version:'v4', auth: client});
+    sheetsClientAt = Date.now();
     console.log('Google Sheets client ready');
     // Auto-ensure 8 sheets exist
     try{
@@ -823,7 +827,7 @@ async function getSheets(){
       }
     }catch(e){ console.log('8 sheets check error', e.message); }
     return sheetsClient;
-  }catch(e){ console.log('getSheets error', e.message); return null; }
+  }catch(e){ console.log('getSheets error', e.message); lastSheetError = e.message; sheetsClient = null; sheetsClientAt = 0; return null; }
 }
 
 
@@ -838,7 +842,7 @@ async function saveToSheet(tab, row, isNew){
     console.log(`⚠ BLOCKED old tab ${cleanTab} -> Redirecting to ${redirected}`);
     cleanTab = redirected;
   }
-  for(let attempt=1; attempt<=2; attempt++){
+  for(let attempt=0; attempt<2; attempt++){
     try{
       const sheets = await getSheets();
       if(!sheets){ console.log(`SHEET ${cleanTab}`, row); return; }
@@ -846,12 +850,7 @@ async function saveToSheet(tab, row, isNew){
       await sheets.spreadsheets.values.append({spreadsheetId: SHEET_ID, range: range, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
       console.log(`SHEET SAVED ${cleanTab} -> ${row[1]||''} : ${row[3]||''}`);
       return;
-    }catch(e){
-      console.log(`SHEET FAIL ${cleanTab} attempt ${attempt}`, e.message, e.code||'', row);
-      sheetsClient = null;
-      if(attempt===2) return;
-      await delay(1000);
-    }
+    }catch(e){ lastSheetError = e.message; console.log(`SHEET FAIL ${cleanTab} attempt ${attempt+1}`, e.message, row); sheetsClient = null; sheetsClientAt = 0; if(attempt===1) return; }
   }
 }
 
@@ -890,13 +889,16 @@ async function getFiredList(force){
 }
 async function isFiredPhone(uid){ const set = await getFiredList(false); for(const v of firedVariants(uid)){ if(set.has(v)) return true; } return false; }
 async function saveFiredRow(row){
+  for(let attempt=0; attempt<2; attempt++){
   try{
     const sheets = await getSheets();
     if(!sheets){ console.log('SHEET Fired_Loser_List', row); return; }
     await sheets.spreadsheets.values.append({spreadsheetId: SHEET_ID, range: `'Fired_Loser_List'!A:G`, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
     firedVariants(row[0]).forEach(v=>firedCache.set.add(v)); firedCache.at = Date.now();
     console.log('SHEET SAVED Fired_Loser_List ->', row[0], row[4]||'');
-  }catch(e){ console.log('SHEET FAIL Fired_Loser_List', e.message, row); }
+    return;
+  }catch(e){ lastSheetError = e.message; console.log('SHEET FAIL Fired_Loser_List attempt '+(attempt+1), e.message, row); sheetsClient = null; sheetsClientAt = 0; if(attempt===1) return; }
+  }
 }
 async function autoFireLoser(uid, reason){
   try{
@@ -2852,8 +2854,8 @@ app.get('/check/:phone', async(req,res)=>{ try{ let uid = req.params.phone.repla
 
 
 app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V222', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(), '919999999999', 'en', 'SHEET TEST V222', 'Test write from /sheet-test', 'Clicked', '8590175977', 'Sheet Test', '']; await saveToSheet('System_Logs', row, false); const sheets=await getSheets(); let readBack='not-checked'; try{ const r=await sheets.spreadsheets.values.get({spreadsheetId: SHEET_ID, range: `'System_Logs'!A:A`}); readBack='rows:'+((r.data.values||[]).length); }catch(e){ readBack='read-fail:'+e.message; } res.json({ok:true, version:'V222', sheetId: SHEET_ID, readBack, note:'Check System_Logs bottom for SHEET TEST V222 row'}); }catch(e){ res.status(500).json({ok:false, version:'V222', error:e.message}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets=await getSheets(); if(!sheets) return res.json({ok:false, version:'V222', error:'getSheets returned null - GOOGLE_CREDENTIALS missing or googleapis not installed'}); const meta=await sheets.spreadsheets.get({spreadsheetId: SHEET_ID}); res.json({ok:true, version:'V222', tabs: meta.data.sheets.map(s=>s.properties.title)}); }catch(e){ res.status(500).json({ok:false, version:'V222', error:e.message, code:e.code||''}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V222','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V222', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V222', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V222', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 12 PDF 2+2+2+2+2+2 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
