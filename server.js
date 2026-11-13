@@ -146,7 +146,7 @@ function getVideoUrl(sub, lang){
     if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Fll3OY-hilU";
     if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=F9rI2crM7Ow";
     if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=Ds0lBtTaI6c";
-    return "https://www.youtube.com/watch?v=8ZnDlvbgG_c";
+    return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
   }
   if(lang==='hi'){
     if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
@@ -158,7 +158,7 @@ function getVideoUrl(sub, lang){
   if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
   if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=GqolfqgHiCU";
   if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=r0X77XfmF94";
-  return "https://www.youtube.com/watch?v=8ZnDlvbgG_c";
+  return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
 }
 
 
@@ -289,21 +289,21 @@ const YOUTUBE_VIDEOS_ALL = {
     corp: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
     muni: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
     center: "https://www.youtube.com/watch?v=Ds0lBtTaI6c",
-    knowCompany: "https://www.youtube.com/watch?v=8ZnDlvbgG_c"
+    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
   },
   en: {
     district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
     corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=8ZnDlvbgG_c"
+    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
   },
   hi: {
     district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
     corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=8ZnDlvbgG_c"
+    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
   }
 };
 
@@ -1518,7 +1518,7 @@ I'm Maya 🤖 — I'm here to give you real-time assistance and reminders to fin
     bookAppoint:`Book Appointments - Doctor, Salon, Services - Instant booking near you.\n\nClick below to install app or call us:`,
     bookMovie:`Book Movie Tickets, Events, Shows near you.\n\nClick below to install app or call us:`,
     oppSelected:`Great you selected "Business Opportunity"\nBecome our service point and start earning. 3 levels of earning.\nYou are going to book your slot for earning opportunity from Bizmapia anywhere from India. What type of opportunity you are looking?\nPlease select any one option from below:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'💰 ₹10L-₹15L Invest'},{id:'OPP_CORP',title:'💼 ₹4L-₹5L Invest'},{id:'OPP_CENTER',title:'🚀 ₹30K-₹1L Invest'}],
+    oppButtons:[{id:'OPP_DISTRICT',title:'💰 ₹5L-₹15L Invest'},{id:'OPP_CORP',title:'💼 ₹2L-₹5L Invest'},{id:'OPP_CENTER',title:'🚀 ₹30K-₹1L Invest'}],
     highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
     moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for Corporation / Municipal!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
     baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
@@ -1596,7 +1596,7 @@ ${LINKS_V92.tenderDistrict}
     bookAppoint:`अपॉइंटमेंट बुक करें - डॉक्टर, सैलून, सेवाएं - आपके पास तत्काल बुकिंग।\n\nनीचे क्लिक करें:`,
     bookMovie:`आपके पास मूवी टिकट, इवेंट, शो बुक करें।\n\nनीचे क्लिक करें:`,
     oppSelected:`बहुत बढ़िया आपने "बिजनेस अवसर" चुना\nहमारा सर्विस पॉइंट बनें और कमाना शुरू करें। कमाई के 3 स्तर।\nआप भारत में कहीं से भी Bizmapia से कमाई के अवसर के लिए अपना स्लॉट बुक करने जा रहे हैं। आप किस प्रकार के अवसर की तलाश में हैं?\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'₹10L-₹15L निवेश'},{id:'OPP_CORP',title:'₹4L-₹5L निवेश'},{id:'OPP_CENTER',title:'₹30K-₹1L निवेश'}],
+    oppButtons:[{id:'OPP_DISTRICT',title:'₹5L-₹15L निवेश'},{id:'OPP_CORP',title:'₹2L-₹5L निवेश'},{id:'OPP_CENTER',title:'₹30K-₹1L निवेश'}],
     highIntroSingle:`बहुत बढ़िया आपने हमारी उच्च स्तरीय आय अर्जन अवसर का चयन किया है\n\nआइए हमारी जिला फ्रेंचाइजी अवसर के बारे में विवरण जानें\nयाद रखें एक जिले के लिए केवल एक ही आवेदन स्वीकृत है, इसलिए पूरी जानकारी का अध्ययन करें और इस चैट के साथ निर्णय लें।`,
     moderateIntroSingle:`बहुत बढ़िया आपने हमारी मध्यम स्तरीय आय अवसर का चयन किया\n\nआइए हमारी कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर के बारे में जानें`,
     baseIntroSingle:`बहुत बढ़िया आपने हमारी बेस लेवल आय अवसर का चयन किया\n\nआइए हमारे बिजनेस सेंटर अवसर के बारे में जानें`,
@@ -1679,9 +1679,9 @@ ${LINKS_V92.tenderDistrict}
     bookAppoint:`അപ്പോയിന്റ്മെന്റുകൾ ബുക്ക് ചെയ്യുക - ഡോക്ടർ, സലൂൺ, സേവനങ്ങൾ - നിങ്ങൾക്ക് സമീപം തൽക്ഷണ ബുക്കിംഗ്.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookMovie:`നിങ്ങൾക്ക് സമീപമുള്ള മൂവി ടിക്കറ്റുകൾ, ഇവന്റുകൾ, ഷോകൾ ബുക്ക് ചെയ്യുക.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     oppSelected:`👋 നന്നായി! നിങ്ങൾ "ബിസിനസ് അവസരം" തിരഞ്ഞെടുത്തു.\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-`,
-    oppButtons:[{id:'OPP_DISTRICT',title:'₹10L-₹15L നിക്ഷേപം'},{id:'OPP_CORP',title:'₹4L-₹5L നിക്ഷേപം'},{id:'OPP_CENTER',title:'₹30K-₹1L നിക്ഷേപം'}],
-    highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹10L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
-    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹4L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    oppButtons:[{id:'OPP_DISTRICT',title:'₹5L-₹15L നിക്ഷേപം'},{id:'OPP_CORP',title:'₹2L-₹5L നിക്ഷേപം'},{id:'OPP_CENTER',title:'₹30K-₹1L നിക്ഷേപം'}],
+    highIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹5L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം. ഒരു ജില്ലയ്ക്ക് ഒരു അപേക്ഷ മാത്രം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) താഴെ "കാണാൻ ക്ലിക്ക് ചെയ്യുക" വഴി മുഴുവൻ വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
+    moderateIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹2L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.\n\nകോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     baseIntroSingle:`👋 ഹലോ! നിങ്ങൾ ₹30K-₹1L നിക്ഷേപം (ബിസിനസ് സെന്റർ) തിരഞ്ഞെടുത്തു.\n\nബിസിനസ് സെന്റർ വിശദാംശങ്ങൾ നോക്കാം.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.`,
     reminderFranchise:`നിങ്ങൾ ഞങ്ങളുടെ ഫ്രാഞ്ചൈസി അവസരം പരിശോധിക്കുകയായിരുന്നു. കൂടുതൽ അറിയാൻ തുടരണോ?`,
     seeVideo:'വീഡിയോ കാണുക',
@@ -1853,7 +1853,7 @@ app.post('/webhook', async(req,res)=>{
       else if(btnId==='SVC_BOOKING'){ await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons, incomingPhoneId)); }
       else       if(btnId==='SVC_OPP'){ 
         // V174: 2 messages - Company video + income level selection (user exact flow)
-        const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + oppCongrats(lang,1) + (lang==='ml' ? `\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:\n🎥 https://youtu.be/8ZnDlvbgG_c` : lang==='hi' ? `\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:\n🎥 https://youtu.be/8ZnDlvbgG_c` : `\n\nWatch this video to know about the company:\n🎥 https://youtu.be/8ZnDlvbgG_c`);
+        const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + oppCongrats(lang,1) + (lang==='ml' ? `\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:\n🎥 https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b` : lang==='hi' ? `\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:\n🎥 https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b` : `\n\nWatch this video to know about the company:\n🎥 https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b`);
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
         await sendWithDelay(interactiveButton(uid, companyVideo + (lang==='ml' ? `\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കാണുക OR നിങ്ങൾക്ക് Bizmapia അറിയാമെങ്കിൽ Skip ചെയ്യുക:` : lang==='hi' ? `\n\n👉 अब क्या करें: वीडियो देखें OR अगर आप Bizmapia को जानते हैं तो Skip करें:` : `\n\n👉 What to do now: Watch Video OR Skip if you already know Bizmapia:`), [{id:'COMPANY_VIDEO_WATCH',title: lang==='ml' ? 'വീഡിയോ കാണുക' : lang==='hi' ? 'वीडियो देखें' : 'Watch Video'},{id:'COMPANY_KNOW',title: lang==='ml' ? 'അറിയാം - സ്കിപ്പ്' : lang==='hi' ? 'जानता हूँ - स्किप' : 'I Know - Skip'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId));
         // V211: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
@@ -1880,7 +1880,7 @@ app.post('/webhook', async(req,res)=>{
     if(btnId==='COMPANY_VIDEO_WATCH'){
       state.lastStep='Company Video - Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const cv = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് \"കമ്പനി വീഡിയോ കണ്ടു\" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर \"कंपनी वीडियो देखा\" पर क्लिक करें:` : `👉 Please watch Company video fully, then click \"Watched Company Video\":`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv+'\n🎥 https://youtu.be/8ZnDlvbgG_c', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv+'\n🎥 https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId));
       scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       return;
     }
@@ -1901,7 +1901,7 @@ app.post('/webhook', async(req,res)=>{
       // V211: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2+'\n🎥 https://youtu.be/8ZnDlvbgG_c', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2+'\n🎥 https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId));
       scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       return;
     }
@@ -1911,19 +1911,19 @@ app.post('/webhook', async(req,res)=>{
       const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
       // V174: 2 messages - Video + watched confirmation (user exact flow)
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹10L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹5L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
 ജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹10L-₹15L निवेश (जिला फ्रेंचाइजी) चुना।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹5L-₹15L निवेश (जिला फ्रेंचाइजी) चुना।
 
 जिला फ्रेंचाइजी विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹10L-₹15L Investing (District Franchise).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹5L-₹15L Investing (District Franchise).
 
 Let's check District Franchise details.
 
@@ -1944,19 +1944,19 @@ Let's check District Franchise details.
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_CORP', lang);
       const videoObj = getVideoObj('OPP_CORP', lang);
-      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹4L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
+      const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹2L-₹5L നിക്ഷേപം (കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
 കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
 
 👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1) വീഡിയോ കാണുക. 2) "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക.
 
-⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹4L-₹5L निवेश (कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी) चुना।
+⚠ പ്രധാന ഘട്ടം: അടുത്ത ഘട്ടത്തിലേക്ക് പോകുന്നതിന് മുൻപ് നിങ്ങൾ ഈ വീഡിയോ പൂർണ്ണമായി കാണണം!` : lang==='hi' ? `हैलो! आपने ₹2L-₹5L निवेश (कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी) चुना।
 
 कॉरपोरेशन / म्युनिसिपल फ्रेंचाइजी विवरण देखें।
 
 👉 अब क्या करें: 1) वीडियो देखें। 2) "वीडियो देखा" पर क्लिक करें।
 
-⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹4L-₹5L Investing (Corporation / Municipal Franchise).
+⚠ महत्वपूर्ण चरण: अगले चरण में जाने से पहले आपको यह वीडियो पूरा देखना होगा!` : `Hello! You selected ₹2L-₹5L Investing (Corporation / Municipal Franchise).
 
 Let's check Corporation / Municipal Franchise details.
 
