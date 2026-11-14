@@ -1769,6 +1769,17 @@ app.post('/webhook', async(req,res)=>{
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
+    // ===== ONLY CHANGE vs V224: 1988 TEST RESET - type 1988 anytime to go back to Welcome. NOTHING ELSE CHANGED. =====
+    if(String(txt||'').trim()==='1988'){
+      clearReminders(uid);
+      await setState(uid,{first:true, lastStep:'1988 - Reset', lang:null, phoneId: incomingPhoneId, firedGate:null, stopConfirmPending:false});
+      await sendWithDelay(interactiveButton(uid, T.en.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], incomingPhoneId));
+      await saveToSheet('System_Logs', [nowIso, uid, 'none', '1988 Reset '+incomingPhoneId, '1988 - Back to Welcome', 'Clicked', HELP_ADMIN, '1988 Reset', ''], false);
+      scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
+      scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000, incomingPhoneId);
+      return;
+    }
 // ===== V222 FIRED GATE - button replies =====
     if(btnId==='FIRED_YES'){
       await setState(uid,{...state, firedGate:'ALLOWED', lastStep:'Fired YES - Allowed Again', lang:null, phoneId: incomingPhoneId});
