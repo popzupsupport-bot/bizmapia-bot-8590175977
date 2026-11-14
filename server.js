@@ -773,20 +773,25 @@ function getPayNowTitle(lang){
   return 'Pay Now';
 }
 // ===== V230 PAY-NOW-ONLY STEP 5: WhatsApp reply buttons CANNOT open a URL, so 'Paid / Not Paid' buttons made users skip Razorpay. Step 5 now sends: body + REAL CTA URL button [Pay Now -> Razorpay link] + REAL CTA tel: button [Call -> dialer] + one reply button [I Paid - Verify]. No PAY_DONE / PAY_NOT_DONE on Step 5 entry. =====
+// V234 REMINDER ONLY - EXACT sequence, no over-smart additions:
+// 1) textMessage = exact reminder body ONLY (NO raw link, NO extra line)
+// 2) singleCta = "👇 താഴെ Pay Now ക്ലിക്ക് ചെയ്യൂ - Razorpay തുറക്കും" + [Pay now] -> Razorpay
+// 3) realDialerCta = "സംശയമുണ്ടെങ്കിൽ 👇 Call Now ക്ലിക്ക് ചെയ്യൂ - ഡയലർ തുറക്കും" + [Call now] -> dialer
+// NO Verify button, NO "ഇതിനകം അടച്ചോ?", NO "ഇപ്പോൾ അടയ്ക്കുക" button, NO 🔗 link in body.
 async function sendPayNowStep(uid,lang,fee,sub,phoneId,body,schedule5=true){
   try{
     const link=getRazorpayLinkForSub(sub);
-    const token=getTokenFee(sub||'OPP_DISTRICT');
-    const payTitle=lang==='ml'?'💳 ഇപ്പോൾ അടയ്ക്കുക':lang==='hi'?'💳 अभी भुगतान करें':'💳 Pay Now';
-    const verifyTitle=lang==='ml'?'അടച്ചു - പരിശോധിക്കൂ':lang==='hi'?'भुगतान किया - जांचें':'I Paid - Verify';
-    const fullBody=String(body||'').includes('🔗') ? String(body||'') : String(body||'')+'\n🔗 '+link; // V231: exact body already ends with Rs. fee line - do NOT duplicate it, only add link backup
-    await sendWithDelay(textMessage(uid,fullBody,phoneId));
+    const payLine = lang==='ml' ? '👇 താഴെ Pay Now ക്ലിക്ക് ചെയ്യൂ - Razorpay തുറക്കും'
+      : lang==='hi' ? '👇 नीचे Pay Now क्लिक करें - Razorpay खुलेगा'
+      : '👇 Tap Pay Now below - Razorpay will open';
+    const callLine = lang==='ml' ? 'സംശയമുണ്ടെങ്കിൽ 👇 Call Now ക്ലിക്ക് ചെയ്യൂ - ഡയലർ തുറക്കും'
+      : lang==='hi' ? 'कोई doubt हो तो 👇 Call Now क्लिक करें - डायलर खुलेगा'
+      : 'Any doubt? 👇 Tap Call Now - dialer will open';
+    await sendWithDelay(textMessage(uid,String(body||''),phoneId));
     await delay(400);
-    await sendWithDelay(singleCta(uid, lang==='ml'?'👇 താഴെ Pay Now ക്ലിക്ക് ചെയ്യൂ - Razorpay തുറക്കും:':lang==='hi'?'👇 नीचे Pay Now क्लिक करें - Razorpay खुलेगा:':'👇 Tap Pay Now below - Razorpay will open:', {title:payTitle.substring(0,20), url:link}, phoneId));
+    await sendWithDelay(singleCta(uid, payLine, {title:'Pay now', url:link}, phoneId));
     await delay(400);
-    await sendWithDelay(realDialerCta(uid, lang==='ml'?'സംശയമുണ്ടെങ്കിൽ 👇 Call Now ക്ലിക്ക് ചെയ്യൂ - ഡയലർ തുറക്കും:':lang==='hi'?'कोई doubt हो तो 👇 Call Now क्लिक करें - डायलर खुलेगा:':'Any doubt to pay online? 👇 Tap Call Now - dialer will open:', HELP_MARKETING_FULL, phoneId));
-    await delay(400);
-    await sendWithDelay(interactiveButton(uid, lang==='ml'?'✅ ഇതിനകം അടച്ചോ? താഴെ ക്ലിക്ക് ചെയ്യൂ:':lang==='hi'?'✅ पहले से भुगतान किया? नीचे क्लिक करें:':'✅ Already paid? Tap below:', [{id:'PAY_VERIFY',title:verifyTitle}], phoneId));
+    await sendWithDelay(realDialerCta(uid, callLine, HELP_MARKETING_FULL, phoneId));
     if(schedule5){ try{scheduleReminder(uid,'install:PAY5MIN:5',lang,5*60*1000,phoneId);}catch(e){} }
   }catch(e){ console.log('sendPayNowStep fail',e.message); }
 }
@@ -2385,7 +2390,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         // Malayalam fix: "ടീമിനോട് സംസാരിക്കൂ" (22 chars) was cut to "മനുഷ്യനോട് സംസാരിക്ക" in screenshot. New "ടീമിനോട് സംസാരിക്കൂ" fits, full meaning.
         const payText = getPayText(lang, state.fee||15, state.sub);
         const payLink = getRazorpayLinkForSub(state.sub);
-        const oneMsgBody = sorryMsg + `\n\n➖➖➖➖➖\n\n` + payText + `\n\n🔗 ${payLink}`;
+        const oneMsgBody = sorryMsg + `\n\n➖➖➖➖➖\n\n` + payText; // V234: NO raw 🔗 link - Pay now button carries the link
         const btnPay = lang==='ml' ? 'ഇപ്പോൾ അടയ്ക്കുക' : lang==='hi' ? 'अभी भुगतान करें' : 'Pay Now';
         const btnVerify = lang==='ml' ? 'അടച്ചു - പരിശോധിക്കൂ' : lang==='hi' ? 'भुगतान किया - जांचें' : 'I Paid - Verify';
         const btnHuman = lang==='ml' ? 'ടീമിനോട് സംസാരിക്കൂ' : lang==='hi' ? 'टीम से बात करें' : 'Talk to Team';
@@ -2802,14 +2807,14 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 12 PDFs - 12 PDF 2+2+2+2+2+2 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V234 REMINDER-EXACT - STEP5 PAYNOW ONLY + REMINDER EXACT BODY + PAYNOW + CALLNOW ONLY - NO VERIFY - NO RAW LINK - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
 app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V222', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V222','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V222', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V222', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V222', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 12 PDF 2+2+2+2+2+2 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V234 REMINDER-EXACT - STEP5 PAYNOW ONLY + REMINDER EXACT BODY + PAYNOW + CALLNOW ONLY - NO VERIFY - NO RAW LINK - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
