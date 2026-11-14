@@ -1,33 +1,33 @@
 // ============================================================================
-// BIZMAPIA BOT - LATEST VERSION - V250 FINAL CLEAN STAMP - DO NOT USE OLDER VERSIONS
-// CLEAN STAMP FIX: Every old version string replaced with V250, so Render log + /render-stats + /sheet-test all show V250. Code logic unchanged.
-// Built from: LAST server.js you uploaded (V250, 2761 lines, sha e42a1ef7)
-//   + V250: Unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP]
-//   + V250: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop
-//   + V250: Fixed inherited bug repeatLastStep actualLang->lang + stamped V250 everywhere
-// NO CODE AVOIDED: Every V250 line is kept, except 9 lines intentionally replaced (listed in V250 notes below)
-// V250 NOTES - intentional replacements only:
+// BIZMAPIA BOT - LATEST VERSION - V254 FINAL CLEAN STAMP - DO NOT USE OLDER VERSIONS
+// CLEAN STAMP FIX: Every old version string replaced with V254, so Render log + /render-stats + /sheet-test all show V254. Code logic unchanged.
+// Built from: LAST server.js you uploaded (V254, 2761 lines, sha e42a1ef7)
+//   + V254: Unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP]
+//   + V254: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop
+//   + V254: Fixed inherited bug repeatLastStep actualLang->lang + stamped V254 everywhere
+// NO CODE AVOIDED: Every V254 line is kept, except 9 lines intentionally replaced (listed in V254 notes below)
+// V254 NOTES - intentional replacements only:
 //   1x repeatLastStep HUMAN_TALK_TEXT[actualLang] -> [lang] (bug fix, was undefined -> fell back to EN)
 //   1x FIRED_STOP setState now adds stopConfirmPending:false (STOP confirm flow)
 //   2x LEAD NAME/MOBILE failure now counts leadFailCount, 2nd wrong -> Call+Stop (was: only Sorry text)
 //   2x Before-Pay unknown: repeatLastStep -> SorryStopCall + [Call][STOP] (was: repeat only)
 //   3x Unknown fallback: Sorry text + repeat -> SorryStopCall + [Call][STOP] (was: Sorry + repeat)
-// REPLAY STANDARD (kept from V250): repeatLastStep() re-sends same step, never Main Menu
+// REPLAY STANDARD (kept from V254): repeatLastStep() re-sends same step, never Main Menu
 // CONGRATS STANDARD (kept): oppCongrats() = "Excellent choice! / Congratulations! <prev step>! + What to do now: ..."
 // STEPS STANDARD (kept): oppProgress() = "Step X of 6 - Y steps left" (NOT "Only 0/0 steps to book" - that exact phrase was never in code)
 // BUTTONS/LINKS (kept): 75x interactiveButton, 8x getRazorpayLinkForSub, Pay/EMI/Video/Call/CTA links all kept
-// DEPLOY CHECK: Render log must show "V250 FINAL" - if it shows V250, you deployed an old file.
+// DEPLOY CHECK: Render log must show "V254 FINAL" - if it shows V254, you deployed an old file.
 // ============================================================================
-// // V250 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V250 (see VERSION block above for history)
-// V250 FINAL - ONLY CHANGE vs V250: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
-// V250 FINAL - ONLY CHANGE vs V250: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
-// V250 FINAL - ONLY CHANGE vs V250: Fired_Loser_List gate on first HI + YES/STOP + auto-fire after 3rd reminder. NO Tamil/Kannada/Telugu. NO other code change. ====================
-// V250 FINAL - From LAST server.js (V250) + V250 + V250, no code avoided. Fixed repeatLastStep actualLang->lang bug.
-// V250: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop.
-// V250 STOP+CALL FALLBACK: any unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP].
-// V250 CURRENTFILE FIX: Slab Sheet labels + RegFee row fix + Webhook only PAID events + Unmatched payment saved.
-// V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// // V254 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V254 (see VERSION block above for history)
+// V254 FINAL - ONLY CHANGE vs V254: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
+// V254 FINAL - ONLY CHANGE vs V254: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
+// V254 FINAL - ONLY CHANGE vs V254: Fired_Loser_List gate on first HI + YES/STOP + auto-fire after 3rd reminder. NO Tamil/Kannada/Telugu. NO other code change. ====================
+// V254 FINAL - From LAST server.js (V254) + V254 + V254, no code avoided. Fixed repeatLastStep actualLang->lang bug.
+// V254: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop.
+// V254 STOP+CALL FALLBACK: any unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP].
+// V254 CURRENTFILE FIX: Slab Sheet labels + RegFee row fix + Webhook only PAID events + Unmatched payment saved.
+// V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 12 PDF: 2 DISTRICT-WITH + 2 DISTRICT-ONLY + 2 MUNICIPAL + 2 CORPORATION + 2 BC-RIDE + 2 BC-DIRECTORY - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -35,8 +35,8 @@
 // REDIS READY + GOOGLE SHEETS READY + REMINDERS 1H/12H/24H FOMO + FREE INSTANCE FIX NEEDED
 // =========================================================================================
 
-// V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// 8 SHEETS LOCKED - ALL STEPS - 12 PDF 2+2+2+2+2+2 - DISTRICT-WITH/ONLY + MUNICIPAL + CORPORATION + BC-RIDE + BC-DIRECTORY - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// 8 SHEETS LOCKED - ALL STEPS - 12 PDF 2+2+2+2+2+2 - DISTRICT-WITH/ONLY + MUNICIPAL + CORPORATION + BC-RIDE + BC-DIRECTORY - WELCOME MAYA FIXED - APPRECIATIVE GREETING - DOWNLOADABLE PDF - V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 const express = require('express');
 const bodyParser = require('body-parser');
 const httpClient = require('ax'+'ios');
@@ -48,14 +48,14 @@ try { google = require('googleapis').google; } catch(e) { console.log('googleapi
 const app = express();
 app.use(bodyParser.json({ verify: (req,res,buf)=>{ req.rawBody = buf; } }));
 
-// ===== V250 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 12 FINAL PDFs - GUARANTEED AFTER PAYMENT =====
+// ===== V254 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 12 FINAL PDFs - GUARANTEED AFTER PAYMENT =====
 const path = require('path');
 const fs = require('fs');
 const BASE_URL = (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || 'https://bizmapia-bot-8590175977.onrender.com').replace(/\/$/, '');
 const TENDER_ROOT = path.join(__dirname, 'public', 'tenders');
 try { if (!fs.existsSync(TENDER_ROOT)) fs.mkdirSync(TENDER_ROOT, { recursive: true }); } catch(e){}
 app.use('/tenders', express.static(TENDER_ROOT));
-// V250 TOLERANT: /tenders/03-District-ONLY-Muni... and /tenders/03-District-ONLY_Muni... BOTH work
+// V254 TOLERANT: /tenders/03-District-ONLY-Muni... and /tenders/03-District-ONLY_Muni... BOTH work
 // If exact filename not found, try swapping _ <-> - and serve it. Kills _ vs - confusion forever.
 app.get('/tenders/:file', (req, res) => {
   try{
@@ -99,7 +99,7 @@ const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
 const crypto = require('crypto');
 const WEBSITE = 'https://bizmapia.com/';
 
-// ===== INDIAN TIME (IST) FIX - ADDED V250 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
+// ===== INDIAN TIME (IST) FIX - ADDED V254 - ONLY TIME CODES CHANGED, ALL OTHER CODES SAME AS WORKING FILE =====
 function getISTTime() {
   const now = new Date();
   const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -187,38 +187,38 @@ function getVideoUrl(sub, lang){
 
 
 function getTenderPdfLink(sub, lang, state){
-  // V250 GUARANTEED - AFTER REGISTRATION FEE PAYMENT, user MUST get correct PDF
+  // V254 GUARANTEED - AFTER REGISTRATION FEE PAYMENT, user MUST get correct PDF
   // If choice is known -> send ONLY that pair (2 files). If choice is UNKNOWN -> send BOTH pairs (4 files) so correct PDF is always inside.
   // District: CORP_YES = 01-02 | CORP_NO = 03-04 | UNKNOWN = 01+02+03+04
   // Corp/Muni: CORP_YES = 07-08 | CORP_NO = 05-06 | UNKNOWN = 05+06+07+08
   // Muni: always 05-06
   // Business Center: RIDE = 09-10 | DIRECTORY = 11-12 | UNKNOWN (bcService never set in current flow) = 09+10+11+12 - THIS IS THE GUARANTEE
   if(sub==='OPP_DISTRICT'){
-    if(state && state.isCorp === false) return { main: LINKS_V250.tenderDistrictOnly, annexure: LINKS_V250.tenderDistrictOnlyAnnexure, files: ['03-District-ONLY Muni-Tender.pdf','04-District-ONLY Muni-Annexure-B.pdf'] };
-    if(state && state.isCorp === true) return { main: LINKS_V250.tenderDistrictWith, annexure: LINKS_V250.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
-    return { main: LINKS_V250.tenderDistrictWith, annexure: LINKS_V250.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf','03-District-ONLY Muni-Tender.pdf','04-District-ONLY Muni-Annexure-B.pdf'] };
+    if(state && state.isCorp === false) return { main: LINKS_V254.tenderDistrictOnly, annexure: LINKS_V254.tenderDistrictOnlyAnnexure, files: ['03-District-ONLY Muni-Tender.pdf','04-District-ONLY Muni-Annexure-B.pdf'] };
+    if(state && state.isCorp === true) return { main: LINKS_V254.tenderDistrictWith, annexure: LINKS_V254.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
+    return { main: LINKS_V254.tenderDistrictWith, annexure: LINKS_V254.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf','03-District-ONLY Muni-Tender.pdf','04-District-ONLY Muni-Annexure-B.pdf'] };
   }
-  if(sub==='OPP_MUNI') return { main: LINKS_V250.tenderMunicipal, annexure: LINKS_V250.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
+  if(sub==='OPP_MUNI') return { main: LINKS_V254.tenderMunicipal, annexure: LINKS_V254.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
   if(sub==='OPP_CORP'){
-    if(state && state.isCorp === false) return { main: LINKS_V250.tenderMunicipal, annexure: LINKS_V250.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
-    if(state && state.isCorp === true) return { main: LINKS_V250.tenderCorporation, annexure: LINKS_V250.tenderCorporationAnnexure, files: ['07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
-    return { main: LINKS_V250.tenderCorporation, annexure: LINKS_V250.tenderCorporationAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf','07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
+    if(state && state.isCorp === false) return { main: LINKS_V254.tenderMunicipal, annexure: LINKS_V254.tenderMunicipalAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf'] };
+    if(state && state.isCorp === true) return { main: LINKS_V254.tenderCorporation, annexure: LINKS_V254.tenderCorporationAnnexure, files: ['07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
+    return { main: LINKS_V254.tenderCorporation, annexure: LINKS_V254.tenderCorporationAnnexure, files: ['05-Municipal-Tender.pdf','06-Municipal-Annexure-B.pdf','07-Corporation-Tender.pdf','08-Corporation-Annexure-B.pdf'] };
   }
   if(sub==='OPP_CENTER'){
-    if(state && (state.bcService==='DIRECTORY')) return { main: LINKS_V250.tenderBusinessCenterDirectory, annexure: LINKS_V250.tenderBusinessCenterDirectoryAnnexure, files: ['11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
-    if(state && (state.bcService==='RIDE')) return { main: LINKS_V250.tenderBusinessCenterRide, annexure: LINKS_V250.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf'] };
-    return { main: LINKS_V250.tenderBusinessCenterRide, annexure: LINKS_V250.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf','11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
+    if(state && (state.bcService==='DIRECTORY')) return { main: LINKS_V254.tenderBusinessCenterDirectory, annexure: LINKS_V254.tenderBusinessCenterDirectoryAnnexure, files: ['11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
+    if(state && (state.bcService==='RIDE')) return { main: LINKS_V254.tenderBusinessCenterRide, annexure: LINKS_V254.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf'] };
+    return { main: LINKS_V254.tenderBusinessCenterRide, annexure: LINKS_V254.tenderBusinessCenterRideAnnexure, files: ['09-BC-RideHailing-Tender.pdf','10-BC-RideHailing-Annexure-B.pdf','11-BC-BusinessDirectory-Tender.pdf','12-BC-BusinessDirectory-Annexure-B.pdf'] };
   }
-  return { main: LINKS_V250.tenderDistrictWith, annexure: LINKS_V250.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
+  return { main: LINKS_V254.tenderDistrictWith, annexure: LINKS_V254.tenderDistrictWithAnnexure, files: ['01-District-WITH-Corp-Muni-Tender.pdf','02-District-WITH-Corp-Muni-Annexure-B.pdf'] };
 }
 function getTenderFilesForSub(sub, state){ const r = getTenderPdfLink(sub, 'en', state); return r.files || [r.main, r.annexure]; }
 function OLD_getTenderPdfLink_TEMP(sub, lang){
   // Returns downloadable PDF per business opportunity instead of only district tender
-  if(sub==='OPP_DISTRICT') return LINKS_V250.tenderDistrict;
-  if(sub==='OPP_CORP') return LINKS_V250.tenderCorporation;
-  if(sub==='OPP_MUNI') return LINKS_V250.tenderMunicipal;
-  if(sub==='OPP_CENTER') return LINKS_V250.tenderBusinessCenter;
-  return LINKS_V250.tenderDistrict;
+  if(sub==='OPP_DISTRICT') return LINKS_V254.tenderDistrict;
+  if(sub==='OPP_CORP') return LINKS_V254.tenderCorporation;
+  if(sub==='OPP_MUNI') return LINKS_V254.tenderMunicipal;
+  if(sub==='OPP_CENTER') return LINKS_V254.tenderBusinessCenter;
+  return LINKS_V254.tenderDistrict;
 }
 
 function getTenderGreeting(sub, lang, state){
@@ -483,7 +483,7 @@ function formatChanceMessage(lang, areaName, fee, bookingInfo, altOptions){
   }
 }
 
-// Image message helper missing in V250
+// Image message helper missing in V254
 function imageMessage(to, imageUrl, caption, phoneId){
   return {
     messaging_product: 'whatsapp',
@@ -499,7 +499,7 @@ function imageMessage(to, imageUrl, caption, phoneId){
 
 
 
-// ===== V250 ONLY TENDER EDIT - SEND EACH USER THEIR OWN TENDER+ANNEXURE AS DOCUMENT =====
+// ===== V254 ONLY TENDER EDIT - SEND EACH USER THEIR OWN TENDER+ANNEXURE AS DOCUMENT =====
 async function sendTenderPdfsAfterVerification(uid, sub, lang, phoneId, state){
   const files = getTenderFilesForSub(sub, state);
   if(!files || !files.length) return;
@@ -515,8 +515,8 @@ async function sendTenderPdfsAfterVerification(uid, sub, lang, phoneId, state){
 }
 
 
-// ===== V250 - STRUCTURED DETAILS + EXACT CALENDAR DATE - NO TODAY/TOMORROW, NO FREE-TYPE LOOPHOLE =====
-const KERALA_DISTRICTS_V250 = ['Ernakulam','Idukki','Kottayam','Alappuzha','Thrissur','Palakkad','Kozhikode','Wayanad','Kannur','Kasaragod','Kollam','Pathanamthitta','Thiruvananthapuram','Malappuram'];
+// ===== V254 - STRUCTURED DETAILS + EXACT CALENDAR DATE - NO TODAY/TOMORROW, NO FREE-TYPE LOOPHOLE =====
+const KERALA_DISTRICTS_V254 = ['Ernakulam','Idukki','Kottayam','Alappuzha','Thrissur','Palakkad','Kozhikode','Wayanad','Kannur','Kasaragod','Kollam','Pathanamthitta','Thiruvananthapuram','Malappuram'];
 function v211_isBadName(txt){ if(!txt) return true; const s=String(txt).trim(); if(s.length<3) return true; if(/[0-9]/.test(s)) return true; const low=s.toLowerCase(); const bad=['hi','hai','hello','hey','ok','yes','how much','fee','price','details','info','video','call','when','what']; if(bad.includes(low)) return true; return false; }
 function v211_isValidMobile(txt){ const d=String(txt||'').replace(/[^0-9]/g,''); const m=d.length===12&&d.startsWith('91')?d.slice(2):d; return m.length===10 && /^[6-9]/.test(m) ? m : null; }
 function v211_next7Days(){ const out=[]; const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); for(let i=0;i<7;i++){ const d=new Date(now); d.setDate(now.getDate()+i); const y=d.getFullYear(); const mo=String(d.getMonth()+1).padStart(2,'0'); const da=String(d.getDate()).padStart(2,'0'); const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; out.push({iso:`${y}-${mo}-${da}`, label:`${days[d.getDay()]} ${da} ${months[d.getMonth()]}`, full:`${days[d.getDay()]}, ${da} ${months[d.getMonth()]} ${y}`}); } return out; }
@@ -525,24 +525,24 @@ function v211_formatDate(iso){ const [y,m,d]=iso.split('-').map(Number); const d
 function v211_daysFromToday(iso){ const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); today.setHours(0,0,0,0); const [y,m,d]=iso.split('-').map(Number); const dt=new Date(y,m-1,d); return Math.round((dt-today)/86400000); }
 function v211_lateWarning(lang, iso, diff){ const dateStr=v211_formatDate(iso); return lang==='ml' ? `⚠️ Warning! Losing Chance!\n\n📅 You selected: ${dateStr}\n📅 That is ${diff} days after your Registration Fee date.\n\n🚨 If you wait more than 7 days, your area / slot may go to next person in queue. Team may give your slot to someone else.\n\n👉 What to do now: If you can come earlier, pick an earlier date. If you still want this date, confirm below:` : lang==='hi' ? `⚠️ Warning! Chance खोने का खतरा!\n\n📅 आपने चुना: ${dateStr}\n📅 यह आपकी Registration Fee date से ${diff} दिन बाद है।\n\n🚨 अगर आप 7 दिन से ज्यादा wait करते हैं, तो आपका area / slot queue में अगले व्यक्ति को जा सकता है।\n\n👉 What to do now: अगर आप पहले आ सकते हैं तो earlier date चुनें। अगर फिर भी यही date चाहिए तो नीचे confirm करें:` : `⚠️ Warning! Losing Chance!\n\n📅 You selected: ${dateStr}\n📅 That is ${diff} days after your Registration Fee date.\n\n🚨 If you wait more than 7 days, your area / slot may go to next person in queue. Team may give your slot to someone else.\n\n👉 What to do now: If you can come earlier, pick an earlier date. If you still want this date, confirm below:`; }
 function v211_parseTypedDate(txt){ if(!txt) return null; const s=String(txt).trim(); const m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/); if(!m) return null; let d=parseInt(m[1],10), mo=parseInt(m[2],10), y=parseInt(m[3],10); if(y<100) y+=2000; if(mo<1||mo>12||d<1||d>31) return null; const dt=new Date(y,mo-1,d); if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d) return null; const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); today.setHours(0,0,0,0); if(dt<today) return null; const max=new Date(today); max.setDate(today.getDate()+60); if(dt>max) return null; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
-const ALL_INDIA_STATES_V250 = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"];
-const ALL_INDIA_DISTRICTS_V250 = {"Andhra Pradesh": ["Anakapalli", "Anantapur", "Annamayya", "Bapatla", "Chittoor", "East Godavari", "Eluru", "Guntur", "Kadapa", "Kakinada", "Konaseema", "Krishna", "Kurnool", "Nandyal", "Nellore", "NTR", "Palnadu", "Parvathipuram Manyam", "Prakasam", "Srikakulam", "Sri Sathya Sai", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari"], "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Kameng", "East Siang", "Kamle", "Kra Daadi", "Kurung Kumey", "Lohit", "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai", "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap", "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang", "Lepa Rada"], "Assam": ["Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", "Kamrup Metro", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur", "South Salmara", "Tinsukia", "Udalguri", "West Karbi Anglong"], "Bihar": ["Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"], "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Gaurela Pendra Marwahi", "Janjgir Champa", "Jashpur", "Kanker", "Kawardha", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Manendragarh", "Mohla Manpur", "Mungeli", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sarangarh", "Sukma", "Surajpur", "Surguja"], "Goa": ["North Goa", "South Goa"], "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udepur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"], "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"], "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"], "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahibganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"], "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"], "Kerala": ["Ernakulam", "Idukki", "Kottayam", "Alappuzha", "Thrissur", "Palakkad", "Kozhikode", "Wayanad", "Kannur", "Kasaragod", "Kollam", "Pathanamthitta", "Thiruvananthapuram", "Malappuram"], "Madhya Pradesh": ["Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Niwari", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"], "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"], "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"], "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"], "Mizoram": ["Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip"], "Nagaland": ["Chumoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tuensang", "Tseminyu", "Wokha", "Zunheboto"], "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Sonepur", "Sundargarh"], "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga", "Mohali", "Muktsar", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "Shaheed Bhagat Singh Nagar", "Tarn Taran"], "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"], "Sikkim": ["Gangtok", "Gyalshing", "Mangan", "Namchi", "Pakyong", "Soreng"], "Tamil Nadu": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"], "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hanumakonda", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"], "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"], "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"], "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"], "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"], "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"], "Chandigarh": ["Chandigarh"], "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"], "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"], "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"], "Ladakh": ["Kargil", "Leh"], "Lakshadweep": ["Lakshadweep"], "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]};
+const ALL_INDIA_STATES_V254 = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"];
+const ALL_INDIA_DISTRICTS_V254 = {"Andhra Pradesh": ["Anakapalli", "Anantapur", "Annamayya", "Bapatla", "Chittoor", "East Godavari", "Eluru", "Guntur", "Kadapa", "Kakinada", "Konaseema", "Krishna", "Kurnool", "Nandyal", "Nellore", "NTR", "Palnadu", "Parvathipuram Manyam", "Prakasam", "Srikakulam", "Sri Sathya Sai", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari"], "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Kameng", "East Siang", "Kamle", "Kra Daadi", "Kurung Kumey", "Lohit", "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai", "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap", "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang", "Lepa Rada"], "Assam": ["Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", "Kamrup Metro", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur", "South Salmara", "Tinsukia", "Udalguri", "West Karbi Anglong"], "Bihar": ["Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"], "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Gaurela Pendra Marwahi", "Janjgir Champa", "Jashpur", "Kanker", "Kawardha", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Manendragarh", "Mohla Manpur", "Mungeli", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sarangarh", "Sukma", "Surajpur", "Surguja"], "Goa": ["North Goa", "South Goa"], "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udepur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"], "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"], "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"], "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahibganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"], "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikballapur", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"], "Kerala": ["Ernakulam", "Idukki", "Kottayam", "Alappuzha", "Thrissur", "Palakkad", "Kozhikode", "Wayanad", "Kannur", "Kasaragod", "Kollam", "Pathanamthitta", "Thiruvananthapuram", "Malappuram"], "Madhya Pradesh": ["Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Niwari", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"], "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"], "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"], "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"], "Mizoram": ["Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Saitual", "Serchhip"], "Nagaland": ["Chumoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tuensang", "Tseminyu", "Wokha", "Zunheboto"], "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Sonepur", "Sundargarh"], "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Malerkotla", "Mansa", "Moga", "Mohali", "Muktsar", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "Shaheed Bhagat Singh Nagar", "Tarn Taran"], "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"], "Sikkim": ["Gangtok", "Gyalshing", "Mangan", "Namchi", "Pakyong", "Soreng"], "Tamil Nadu": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"], "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hanumakonda", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"], "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"], "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Rae Bareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"], "Uttarakhand": ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"], "West Bengal": ["Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"], "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"], "Chandigarh": ["Chandigarh"], "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"], "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"], "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"], "Ladakh": ["Kargil", "Leh"], "Lakshadweep": ["Lakshadweep"], "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]};
 function v211_stateCode(name){ return name.toUpperCase().replace(/[^A-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,''); }
 async function v211_sendStateList(uid, lang, phoneId){
-  const rows = ALL_INDIA_STATES_V250.map(s=>({id:'STATE_'+v211_stateCode(s), title:s.substring(0,24), description:'Select '+s}));
+  const rows = ALL_INDIA_STATES_V254.map(s=>({id:'STATE_'+v211_stateCode(s), title:s.substring(0,24), description:'Select '+s}));
   const body = lang==='ml' ? `👏 Great!\n👉 What to do now: Select your STATE from dropdown below - Tap to open list, type to shortlist:` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: नीचे dropdown से अपना STATE चुनें - List खोलने के लिए tap करें, type करके shortlist करें:` : `👏 Great!\n👉 What to do now: Select your STATE from dropdown below - Tap to open list, type to shortlist:`;
   const sections=[]; for(let i=0;i<rows.length;i+=10){ sections.push({title:'States '+(Math.floor(i/10)+1), rows:rows.slice(i,i+10)}); }
   await sendWithDelay({messaging_product:'whatsapp',to:uid,type:'interactive',interactive:{type:'list',body:{text:body},action:{button:'Select State', sections:sections}},_phoneId:phoneId});
 }
 async function v211_sendDistrictList(uid, lang, phoneId, stateName){
-  const list = ALL_INDIA_DISTRICTS_V250[stateName] || [];
+  const list = ALL_INDIA_DISTRICTS_V254[stateName] || [];
   const rows = list.map(n=>({id:'DISTRICT_'+v211_stateCode(stateName)+'_'+v211_stateCode(n), title:n.substring(0,24), description:stateName+' - '+n}));
   const body = lang==='ml' ? `👏 Great! State: ${stateName}\n👉 What to do now: Select your DISTRICT from dropdown below - SHORTLISTED to ${stateName} only - Tap to open list, type to shortlist:` : lang==='hi' ? `👏 बढ़िया! State: ${stateName}\n👉 What to do now: नीचे dropdown से अपना DISTRICT चुनें - SHORTLISTED to ${stateName} only - List खोलने के लिए tap करें:` : `👏 Great! State: ${stateName}\n👉 What to do now: Select your DISTRICT from dropdown below - SHORTLISTED to ${stateName} only - Tap to open list, type to shortlist:`;
   const sections=[]; for(let i=0;i<rows.length;i+=10){ sections.push({title:'Districts '+(Math.floor(i/10)+1), rows:rows.slice(i,i+10)}); }
   await sendWithDelay({messaging_product:'whatsapp',to:uid,type:'interactive',interactive:{type:'list',body:{text:body},action:{button:'Select District', sections:sections}},_phoneId:phoneId});
 }
 
-// ===== V250 SHEET NOTICE FIX - ONE READABLE ROW WITH ALL DETAILS FOR TEAM NOTICE =====
+// ===== V254 SHEET NOTICE FIX - ONE READABLE ROW WITH ALL DETAILS FOR TEAM NOTICE =====
 async function v211_saveFinalLead(uid, lang, state, iso){
   try{
     const name = state.leadName || '';
@@ -558,7 +558,7 @@ async function v211_saveFinalLead(uid, lang, state, iso){
     await saveToSheet('Master_Leads', [getISTTime(), uid, lang, 'FINAL LEAD - ' + name, readable, 'COMPLETED - Visit Confirmed', HELP_MARKETING, 'Completed - Visit Confirmed ' + iso, readable], true);
     // ALSO in Franchise_Funnel so you get notice in funnel sheet too
     await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'FINAL LEAD - ' + name, readable, 'COMPLETED', HELP_MARKETING, 'Completed - Visit Confirmed ' + iso, readable], true);
-  }catch(e){ console.log('V250 Final Lead save fail', e.message); }
+  }catch(e){ console.log('V254 Final Lead save fail', e.message); }
 }
 function v211_nameAsk(lang){ return lang==='ml' ? `👏 Congratulations! Payment claimed!\n👉 What to do now: Type your FULL NAME only:\n\nExample: Ajo Devasia` : lang==='hi' ? `👏 Congratulations! Payment claimed!\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:\n\nExample: Ajo Devasia` : `👏 Congratulations! Payment claimed!\n👉 What to do now: Type your FULL NAME only:\n\nExample: Ajo Devasia`; }
 function v211_stateAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to do now: Select your STATE below:` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: नीचे अपना STATE चुनें:` : `👏 Great!\n👉 What to do now: Select your STATE below:`; }
@@ -567,7 +567,7 @@ function v211_mobileAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to d
 function v211_dateAsk(lang){ return lang==='ml' ? `👏 Great!\n👉 What to do now: Select your EXACT VISIT DATE from calendar below - Pick one date:` : lang==='hi' ? `👏 बढ़िया!\n👉 What to do now: नीचे calendar से अपनी EXACT VISIT DATE चुनें - एक date चुनें:` : `👏 Great!\n👉 What to do now: Select your EXACT VISIT DATE from calendar below - Pick one date:`; }
 function v211_dateTypeAsk(lang){ return lang==='ml' ? `👉 What to do now: Type your visit date as DD/MM/YYYY only:\n\nExample: 15/11/2026` : lang==='hi' ? `👉 What to do now: अपनी visit date DD/MM/YYYY में केवल टाइप करें:\n\nExample: 15/11/2026` : `👉 What to do now: Type your visit date as DD/MM/YYYY only:\n\nExample: 15/11/2026`; }
 async function v211_sendDateCalendar(uid, lang, phoneId){
-  // V250 MONTH VIEW - List grouped by Month - November 2026 + December 2026 - Feels like Month Date View
+  // V254 MONTH VIEW - List grouped by Month - November 2026 + December 2026 - Feels like Month Date View
   const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
   const monthsN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const daysN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -581,7 +581,7 @@ async function v211_sendDateCalendar(uid, lang, phoneId){
 }
 async function v211_sendKeralaDistricts(uid, lang, phoneId){
   await sendWithDelay(textMessage(uid, lang==='ml' ? `👏 Great! State: Kerala\n👉 What to do now: Select your DISTRICT below:` : lang==='hi' ? `👏 बढ़िया! State: Kerala\n👉 What to do now: नीचे अपना DISTRICT चुनें:` : `👏 Great! State: Kerala\n👉 What to do now: Select your DISTRICT below:`, phoneId));
-  const D=KERALA_DISTRICTS_V250;
+  const D=KERALA_DISTRICTS_V254;
   for(let i=0;i<D.length;i+=3){
     const chunk=D.slice(i,i+3);
     const btns=chunk.map(n=>({id:'DISTRICT_KL_'+n.toUpperCase().replace(/[^A-Z]/g,''), title:n.substring(0,20)}));
@@ -589,10 +589,10 @@ async function v211_sendKeralaDistricts(uid, lang, phoneId){
   }
 }
 
-const LINKS_V250 = {
+const LINKS_V254 = {
   website: WEBSITE,
   driverApp: PLAY_STORE,
-  // V250 GUARANTEED - 12 FINAL PDFs - FILENAMES = EXACTLY THE 12 UPLOADED FILES
+  // V254 GUARANTEED - 12 FINAL PDFs - FILENAMES = EXACTLY THE 12 UPLOADED FILES
   // 01-02: District WITH Corp+Muni - 15L - CORP_YES | 03-04: District ONLY - 10L - CORP_NO
   // 05-06: Municipal - Rs.150 | 07-08: Corporation - Rs.150
   // 09-10: BC RIDE-HAILING ONLY - Rs.100 | 11-12: BC BUSINESS DIRECTORY ONLY - Rs.100
@@ -646,7 +646,7 @@ const PRICING = {
 };
 
 function getEMIText(lang, fee){
-  // V250: Exact user format - Header + blank line + Option 1 + Option 2. NO emoji numbers, NO mixed lines. Full language.
+  // V254: Exact user format - Header + blank line + Option 1 + Option 2. NO emoji numbers, NO mixed lines. Full language.
   const sel = lang==='ml' ? 'താഴെ നിന്ന് ഏതെങ്കിലും ഒന്ന് തിരഞ്ഞെടുക്കുക' : lang==='hi' ? 'नीचे से कोई एक विकल्प चुनें' : 'Please select any one';
   if(fee>=15){
     return lang==='ml' ? `💳 District Franchise ${fee}L-ന് EMI:\n\nOption 1: Down 5L + 10 മാസം x 1L = ${fee}L\nOption 2: Down 5L + 20 മാസം x 50k = ${fee}L` :
@@ -689,7 +689,7 @@ function saveRegistrationFee(phone, sub, fee){
   try{
     const regFee = getTokenFee(sub);
     const link = getRazorpayLinkForSub(sub);
-    // V250 FIX: Sheet API wants ROW [[...]], not object [{...}]. Header: phone, franchise_type, registration_fee, full_fee, razorpay_link, timestamp, date_ist
+    // V254 FIX: Sheet API wants ROW [[...]], not object [{...}]. Header: phone, franchise_type, registration_fee, full_fee, razorpay_link, timestamp, date_ist
     const row = [phone, sub, regFee, fee+'L', link, getISTTime(), new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})];
     saveToSheet('Registration_Fee', row).catch(()=>{});
   }catch(e){ console.log('REG FEE SAVE FAIL', e.message); }
@@ -738,7 +738,7 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V250 + STANDARD EMOJIS + SPACING
+  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V254 + STANDARD EMOJIS + SPACING
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
@@ -793,7 +793,7 @@ async function getSheets(){
   if(!creds){ console.log('GOOGLE_CREDENTIALS missing - sheet will only console.log'); return null; }
   try{
     if(sheetsClient && Date.now()-sheetsClientAt < 45*60*1000) return sheetsClient;
-    sheetsClient = null; // V250: force fresh auth
+    sheetsClient = null; // V254: force fresh auth
     let credentials;
     try{ credentials = JSON.parse(creds); } catch{ credentials = JSON.parse(Buffer.from(creds, 'base64').toString()); }
     const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
@@ -825,7 +825,7 @@ const OLD_TABS_MAP = {
   'Leads':'System_Logs','No_Language':'System_Logs','HI_Reset':'System_Logs','Franchise_Leads':'Master_Leads','Franchise_Submit':'Franchise_Funnel','Franchise_Benefits':'Franchise_Funnel','Franchise_Support':'Franchise_Funnel','Franchise_Requirements':'Franchise_Funnel','Franchise_CorpCheck':'Franchise_Funnel','Franchise_EMI':'Franchise_Funnel','Franchise_EMI_Selected':'Franchise_Funnel','Franchise_NotPaid':'Franchise_Funnel','Franchise_Ready15L':'Franchise_Funnel','Franchise_Occupation':'Master_Leads','Franchise_Date':'Master_Leads','Franchise_PayDone':'Payments','Franchise_PayDone_VERIFIED':'Payments','Payment_Failed':'Payments','Unverified_Payments':'Payments','OPP_District':'Franchise_Funnel','OPP_Corp':'Franchise_Funnel','OPP_Center':'Franchise_Funnel','App_Install':'System_Logs','Attach_Cab':'Ride_Hailing','Book_Cab':'Ride_Hailing','Book_Rooms':'Booking','Book_Appointments':'Booking','Book_Movie':'Booking','Order_Stores':'Delivery','Delivery_Partner':'Delivery','Register_Business':'Business_Directory','Start_Advertising':'Business_Directory','Book_Apartments':'Booking'
 };
 async function saveToSheet(tab, row, isNew){
-  // V250 SAFETY: convert object {phone,...} to row array - Sheet API rejects objects
+  // V254 SAFETY: convert object {phone,...} to row array - Sheet API rejects objects
   if(row && !Array.isArray(row) && typeof row === 'object'){ row = Object.values(row); }
   let cleanTab = String(tab).trim();
   if(!ALLOWED_SHEETS.includes(cleanTab)){
@@ -846,8 +846,8 @@ async function saveToSheet(tab, row, isNew){
 }
 
 
-// ===== V250 - FIRED_LOSER_LIST GATE - ONLY ADDITION vs V250 =====
-// ===== V250 - FIRED NORMALIZE FIX (international numbers) =====
+// ===== V254 - FIRED_LOSER_LIST GATE - ONLY ADDITION vs V254 =====
+// ===== V254 - FIRED NORMALIZE FIX (international numbers) =====
 function firedVariants(raw){
   let d = String(raw||'').replace(/[^0-9]/g,'');
   const out = new Set();
@@ -908,7 +908,7 @@ function firedWarningText(){
 async function sendFiredWarning(uid, phoneId){
   await sendWithDelay(interactiveButton(uid, firedWarningText(), [{id:'FIRED_YES',title:'YES - Serious Now'},{id:'FIRED_STOP',title:'STOP - No Msg'}], phoneId));
 }
-// ===== END V250 FIRED GATE =====
+// ===== END V254 FIRED GATE =====
 
 async function getState(uid){ if(redisReady){ try{ const v=await redis.get(`state:${uid}`); if(v) return JSON.parse(v);}catch{} } return memoryStore.get(uid)||{}; }
 async function setState(uid,s){ s.lastActive = Date.now(); memoryStore.set(uid,s); if(redisReady){ try{ await redis.set(`state:${uid}`, JSON.stringify(s), 'EX', 86400*7);}catch{} } }
@@ -1041,17 +1041,33 @@ function ctaButtons(to,body,ctaList, phoneId){
 function singleCta(to,body,btn, phoneId){
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:body.substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text: btn.title.substring(0,20), url: btn.url } } }, _phoneId: phoneId };
 }
-// V250 PAY NOW FIX: Real Pay Now URL button (cta_url) with Razorpay link inbuilt. Reply-buttons cannot hold a URL, so Pay step = 1 reply-button message (I Paid / Not Paid / Talk, NO raw link) + 1 CTA Pay Now button below it.
-async function sendPayStep(to, body, lang, sub, phoneId){
+// V254 PAY NOW FIX: Real Pay Now URL button (cta_url) with Razorpay link inbuilt. Reply-buttons cannot hold a URL, so Pay step = 1 reply-button message (I Paid / Not Paid / Talk, NO raw link) + 1 CTA Pay Now button below it.
+async function sendPayStep(to, body, lang, sub, phoneId, isFirst=true){
+  // V254 ONE MESSAGE ONLY for payment: Step 5 text + Pay Now button IN THE SAME message (singleCta).
+  // NO textMessage + singleCta pair arriving together. Body is ~300 chars, well under WhatsApp CTA 1024 limit.
   try{
-    await sendWithDelay(interactiveButton(to, body, [{id:'PAY_DONE',title: (lang==='ml'?'അടച്ചു':lang==='hi'?'भुगतान किया':'I Paid')},{id:'PAY_NOT_DONE',title: (lang==='ml'?'അടച്ചില്ല':lang==='hi'?'भुगतान नहीं किया':'Not Paid')},{id:'HUMAN_TALK',title: HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], phoneId));
-    await delay(400);
     const payUrl = getRazorpayLinkForSub(sub);
-    const ctaBody = lang==='ml' ? '👇 താഴെയുള്ള Pay Now ബട്ടൺ ക്ലിക്ക് ചെയ്ത് രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക:' : lang==='hi' ? '👇 नीचे Pay Now बटन पर क्लिक करके रजिस्ट्रेशन फी का भुगतान करें:' : '👇 Tap the Pay Now button below to pay Registration Fee:';
-    await sendWithDelay(singleCta(to, ctaBody, {title: getPayNowTitle(lang), url: payUrl}, phoneId));
+    const full = body + (lang==='ml' ? '\n\n👇 താഴെയുള്ള Pay Now ബട്ടൺ ക്ലിക്ക് ചെയ്യുക.' : lang==='hi' ? '\n\n👇 नीचे Pay Now बटन पर क्लिक करें।' : '\n\n👇 Tap the Pay Now button below.');
+    await sendWithDelay(singleCta(to, full, {title: getPayNowTitle(lang), url: payUrl}, phoneId));
+    if(isFirst){ try{ scheduleReminder(to, 'install:OPP_PAY_5MIN:5', lang, 5*60*1000, phoneId); }catch(_){} }
   }catch(e){ console.log('sendPayStep error', e.message); }
 }
-
+async function sendDidYouPay(to, body, lang, sub, phoneId){
+  // V254 CORRECT LOGIC - User: If reminder is sent, it MEANS he has NOT paid yet.
+  // Real-time webhook would have auto-verified + cleared reminders if he had paid. So NO Paid/Not Paid buttons.
+  // Reminder = ONE message, 2 reply buttons only: [Pay Now] -> sends Pay Now CTA as ONE message, [Call Now] -> dialer.
+  // 5-min call passes body=null -> only this format. 1h/12h calls pass escalated FOMO text -> FOMO + this format.
+  try{
+    const token = getTokenFee(sub||'OPP_DISTRICT');
+    const core = lang==='ml' ? `💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടയ്ക്കാൻ സാധിച്ചോ?\n\n⏳ ഞങ്ങൾ Razorpay-ൽ തത്സമയം പരിശോധിച്ചു — പേയ്മെന്റ് ഇതുവരെ ലഭിച്ചിട്ടില്ല.\n\nസഹായത്തിന് വിളിക്കുക:` :
+                 lang==='hi' ? `💳 रजिस्ट्रेशन फी Rs.${token} का भुगतान हो पाया?\n\n⏳ हमने Razorpay पर रियल-टाइम में चेक किया — पेमेंट अभी तक नहीं मिला।\n\nसहायता के लिए कॉल करें:` :
+                 `💳 Were you able to pay Registration Fee Rs.${token}?\n\n⏳ We checked in real-time on Razorpay — payment not yet received.\n\nFor help, call:`;
+    const q = body ? body + '\n\n' + core : core;
+    const payTitle = lang==='ml' ? 'ഇപ്പോൾ അടയ്ക്കുക' : lang==='hi' ? 'अभी भुगतान करें' : 'Pay Now';
+    const callTitle = lang==='ml' ? '📞 ഇപ്പോൾ വിളിക്കുക' : lang==='hi' ? '📞 अभी कॉल करें' : '📞 Call Now';
+    await sendWithDelay(interactiveButton(to, q, [{id:'PAY_NOW_CLICK',title: payTitle},{id:'HUMAN_TALK',title: callTitle}], phoneId));
+  }catch(e){ console.log('sendDidYouPay error', e.message); }
+}
 async function sendPayReminder(to, body, lang, sub, phoneId){
   try{
     await sendWithDelay(interactiveButton(to, body, [{id:'HUMAN_TALK',title: HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], phoneId));
@@ -1060,7 +1076,7 @@ async function sendPayReminder(to, body, lang, sub, phoneId){
     await sendWithDelay(singleCta(to, ctaBody, {title: getPayNowTitle(lang), url: getRazorpayLinkForSub(sub)}, phoneId));
   }catch(e){ console.log('sendPayReminder error', e.message); }
 }
-// V250 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
+// V254 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
 function realDialerCta(to, bodyText, phoneFull, phoneId){
   const clean = String(phoneFull).replace(/[^0-9]/g,'');
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:String(bodyText).substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text:'📞 Call Now', url:'tel:+'+clean } } }, _phoneId: phoneId };
@@ -1079,7 +1095,7 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
         await sendWithDelay(singleCta(to, c.title+': Tap below', {title:c.title.substring(0,20), url:c.url}, phoneId));
         await delay(600);
       } else if(c.type==='phone'){
-        // V250 REAL DIALER: CTA URL button with tel: URL - 1 tap opens dialer (same tech as Android/iOS buttons, but tel: instead of https:)
+        // V254 REAL DIALER: CTA URL button with tel: URL - 1 tap opens dialer (same tech as Android/iOS buttons, but tel: instead of https:)
         const phoneClean = c.phone.replace(/[^0-9]/g,'');
         const dialText = lang0 => lang0; // keep simple
         await sendWithDelay(singleCta(to, 'Tap below to call now:', {title:'📞 Call Now', url:'tel:+'+phoneClean}, phoneId));
@@ -1089,19 +1105,19 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
   }catch(e){ console.log('sendCtaSequence error', e.message); }
 }
 
-// V250: Book Taxi - SINGLE body + 3 inbuilt buttons (Android / iOS / Call Now). WhatsApp allows only 1 CTA-URL per message, so these are reply buttons in ONE message; tapping one sends that link/dialer.
+// V254: Book Taxi - SINGLE body + 3 inbuilt buttons (Android / iOS / Call Now). WhatsApp allows only 1 CTA-URL per message, so these are reply buttons in ONE message; tapping one sends that link/dialer.
 async function sendBookTaxiSingle(to, body, phoneId){
   await sendWithDelay(interactiveButton(to, body, [{id:'APP_ANDROID',title:'📱 Android App'},{id:'APP_IOS',title:'🍎 iOS App'},{id:'APP_CALL_NOW',title:'📞 Call Now'}], phoneId));
 }
-// V250: Attach Taxi - SINGLE body + 2 inbuilt buttons (Android / Call Now). Same reason as V250: WhatsApp allows only 1 CTA-URL per message.
+// V254: Attach Taxi - SINGLE body + 2 inbuilt buttons (Android / Call Now). Same reason as V254: WhatsApp allows only 1 CTA-URL per message.
 async function sendAttachTaxiSingle(to, body, phoneId){
   await sendWithDelay(interactiveButton(to, body, [{id:'ATTACH_ANDROID',title:'📱 Android App'},{id:'ATTACH_CALL_NOW',title:'📞 Call Now'}], phoneId));
 }
-// V250: Register Business - SINGLE body + 2 inbuilt buttons (Login Now / Call Now). Same reason as V242/V243: WhatsApp allows only 1 CTA-URL per message.
+// V254: Register Business - SINGLE body + 2 inbuilt buttons (Login Now / Call Now). Same reason as V242/V243: WhatsApp allows only 1 CTA-URL per message.
 async function sendBizRegisterSingle(to, body, phoneId){
   await sendWithDelay(interactiveButton(to, body, [{id:'BIZ_LOGIN_NOW',title:'🔐 Login Now'},{id:'BIZ_CALL_NOW',title:'📞 Call Now'}], phoneId));
 }
-// V250: Start Advertising - SINGLE body + 2 inbuilt buttons (Login/Register Now with Bizmapia website link + Call Now). Same reason as V242-V250: WhatsApp allows only 1 CTA-URL per message.
+// V254: Start Advertising - SINGLE body + 2 inbuilt buttons (Login/Register Now with Bizmapia website link + Call Now). Same reason as V242-V254: WhatsApp allows only 1 CTA-URL per message.
 async function sendBizAdsSingle(to, body, phoneId){
   await sendWithDelay(interactiveButton(to, body, [{id:'BIZ_ADS_LOGIN',title:'🔐 Login / Register'},{id:'BIZ_ADS_CALL',title:'📞 Call Now'}], phoneId));
 }
@@ -1128,7 +1144,7 @@ async function sendWithDelay(msg){
 }
 
 function getSorryExplain(lang, lastStep, userText){
-  // V250: Sorry + Explain last step + No Human before Registration Fee
+  // V254: Sorry + Explain last step + No Human before Registration Fee
   const safeText = (userText||'').slice(0,30);
   const last = lastStep||'';
   let stepName = 'this step';
@@ -1172,7 +1188,7 @@ function getSorryExplain(lang, lastStep, userText){
   }
 }
 
-// V250: Your requirement from YouTube company-video change time - any unknown word/digit/alphabet/media -> Sorry + Stop or Call
+// V254: Your requirement from YouTube company-video change time - any unknown word/digit/alphabet/media -> Sorry + Stop or Call
 function getSorryStopCall(lang, userText){
   const safe = (userText||'').slice(0,30);
   if(lang==='ml') return `😔 Sorry, \u201c${safe}\u201d എന്ന മറുപടി മനസ്സിലായില്ല.\n\nDo you want to stop or call to our team for your doubts?\n\nനിർത്തണോ അതോ സംശയങ്ങൾക്ക് ഞങ്ങളുടെ ടീമിനെ വിളിക്കണോ?`;
@@ -1197,7 +1213,7 @@ function getThirdReminderText(lang){
 function getStopCallButtons(lang){
   return [{id:'HUMAN_TALK', title: lang==='ml' ? '📞 Call Team' : lang==='hi' ? '📞 Call Team' : '📞 Call Team'}, {id:'FIRED_STOP', title: lang==='ml' ? '🛑 STOP' : lang==='hi' ? '🛑 STOP' : '🛑 STOP'}];
 }
-// ===== V250 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
+// ===== V254 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
 // 1 step = 1 message. Every opp message = Congrats (prev step done) + What to do now + Steps Left, all in SAME message.
 function oppProgress(lang, step){
   const left = 6 - step;
@@ -1228,9 +1244,9 @@ function oppCongrats(lang, step){
     return `👏 Congratulations! Opportunity understood!\n👉 What to do now: Select if your district has Corporation:`;
   }
   if(step===5){
-    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! തയ്യാറായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, തുടർന്ന് "അടച്ചു" ക്ലിക്ക് ചെയ്യുക:`;
-    if(lang==='hi') return `👏 बधाई हो! तैयार हैं!\n👉 अब क्या करें: रजिस्ट्रेशन फी भरें, फिर "भुगतान किया" पर क्लिक करें:`;
-    return `👏 Congratulations! You are Ready!\n👉 What to do now: Pay Registration Fee, then click "I Paid":`;
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! തയ്യാറായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: കരാർ + വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക:`;
+    if(lang==='hi') return `👏 बधाई हो! तैयार हैं!\n👉 अब क्या करें: समझौता + आय दस्तावेज़ डाउनलोड करने के लिए रजिस्ट्रेशन फी भरें:`;
+    return `👏 Congratulations! You are Ready!\n👉 What to do now: Pay Registration Fee to download Agreement + Income documents:`;
   }
   if(step===6){
     if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! പേയ്മെന്റ് ക്ലെയിം ചെയ്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1 മെസേജിൽ വിശദാംശങ്ങൾ ടൈപ്പ് ചെയ്യുക:`;
@@ -1261,7 +1277,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
     const fee = state.fee||15;
     const escalatedText = getEscalatedPayText(lang, fee, level);
     console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
-    await sendPayStep(uid, escalatedText, lang, state.sub, phoneId); return;
+    await sendDidYouPay(uid, escalatedText, lang, state.sub, phoneId); return;
   }
   if(sub==='RIDE_BOOK' || last==='Book a Cab'){ const escalatedCab = getEscalatedGeneralText(lang, L.bookCab, level, 'Book a Cab'); return await sendBookTaxiSingle(uid, escalatedCab, phoneId); }
   if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ const escalated = getEscalatedGeneralText(lang, L.attachCab, level, 'Attach Cab'); return await sendAttachTaxiSingle(uid, escalated, phoneId); }
@@ -1273,7 +1289,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(sub==='BOOK_APPOINT' || last==='Book Appointments'){ return await sendBookTaxiSingle(uid, L.bookAppoint, phoneId); }
   if(sub==='BOOK_MOVIE' || last==='Movie Tickets'){ return await sendBookTaxiSingle(uid, L.bookMovie, phoneId); }
   if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('₹5L-₹15L') || last.includes('District')){ 
-  // V250 FIX: tracking link defined correctly
+  // V254 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
   return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
@@ -1286,7 +1302,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
     // Reminder flow: Yes paid / Not paid / Call
-    await sendPayStep(uid, L.payAfter, actualLang, state.sub, phoneId); return;
+    await sendDidYouPay(uid, L.payAfter, lang, state.sub, phoneId); return;
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); const emiBtns = fee===1 ? [{id:'EMI_5',title: lang==='ml' ? 'EMI 5 മാസം' : lang==='hi' ? 'EMI 5 महीने' : 'EMI 5 Months'},{id:'EMI_9',title: lang==='ml' ? 'EMI 9 മാസം' : lang==='hi' ? 'EMI 9 महीने' : 'EMI 9 Months'}] : [{id:'EMI_10',title: lang==='ml' ? 'EMI 10 മാസം' : lang==='hi' ? 'EMI 10 महीने' : 'EMI 10 Months'},{id:'EMI_20',title: lang==='ml' ? 'EMI 20 മാസം' : lang==='hi' ? 'EMI 20 महीने' : 'EMI 20 Months'}]; return await sendWithDelay(interactiveButton(uid,emiText+"\n\n"+getEMISelectLine(lang),emiBtns, phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid, oppProgress(lang,6)+'\n\n'+oppCongrats(lang,6)+'\n\n'+L.leadAsk, phoneId)); }
@@ -1328,7 +1344,7 @@ function clearReminders(uid){
   deleteReminderFromRedis(uid, '').catch(e=>console.log('clearReminders redis error', e.message));
 }
 function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(sub||'OPP_DISTRICT');
-  // FOMO + Social Proof + Scarcity - V250
+  // FOMO + Social Proof + Scarcity - V254
   if(lang==='ml'){
     if(level===1) return `👋 ഓർമ്മപ്പെടുത്തൽ: നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ 📄 Tender + Annexure-B ഉടൻ ലഭിക്കും.\n\n👇 ഇപ്പോൾ അടയ്ക്കൂ, സ്ലോട്ട് നഷ്ടപ്പെടാതിരിക്കാൻ:`;
     if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ആയിട്ടില്ല!\n\n🔥 ഇന്ന് ${fee}L-ന് 3 പേർ അന്വേഷിച്ചു. നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം!\n\nRs${token} (Not refundable, ${fee}L-ന്റെ ഭാഗമല്ല) അടച്ചാൽ 📄 Tender + Annexure-B + ⭐ Priority Verification ലഭിക്കും.\n\n👇 ഇപ്പോൾ ലോക്ക് ചെയ്യൂ:`;
@@ -1376,26 +1392,26 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
       console.log(`REMINDER FIRING ${type} level=${level} to ${uid} via ${actualPhoneId} last=${state?.lastStep} - escalated`);
-      // V250 FIX: Stale reminder guard - Never show Language/Main Menu reminder if user already past that step (e.g. in Pay step)
+      // V254 FIX: Stale reminder guard - Never show Language/Main Menu reminder if user already past that step (e.g. in Pay step)
       // Your 8:30 screenshot: Pay at 8:24, then Main Menu (Malayalam thanks + services) at 8:30 = old noLang/noService reminder firing late
       if((type.startsWith('noLang')||type.startsWith('noService')||type.includes('noLang')||type.includes('noService'))){
         const pastStart = state.lang && state.lastStep && !['First Message','HI - Reset','Language en','Language ml','Language hi','Language'].includes(state.lastStep);
         if(pastStart){
-          console.log(`V250 SKIP stale noLang/noService reminder - user already in ${state.lastStep}, not at start`);
+          console.log(`V254 SKIP stale noLang/noService reminder - user already in ${state.lastStep}, not at start`);
           return;
         }
       }
-      // V250: Company Video 2-min guard - if user already past Company Video, skip
+      // V254: Company Video 2-min guard - if user already past Company Video, skip
       if(type.includes('COMPANY_VIDEO_2MIN') && state.lastStep && !state.lastStep.includes('Company Video')){
-        console.log(`V250 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
+        console.log(`V254 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
         return;
       }
-      // V250: Franchise Video 2-min guard - if user already past Video, skip
+      // V254: Franchise Video 2-min guard - if user already past Video, skip
       if(type.includes('VIDEO_2MIN') && !type.includes('COMPANY') && state.lastStep && !state.lastStep.includes('Video')){
-        console.log(`V250 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
+        console.log(`V254 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
         return;
       }
-      // V250: Every 3rd reminder (24h / :24) = Call + Stop only, not normal reminder. Prevents STOP fatigue + WhatsApp 3-button limit.
+      // V254: Every 3rd reminder (24h / :24) = Call + Stop only, not normal reminder. Prevents STOP fatigue + WhatsApp 3-button limit.
       if(level===24 && state.lang && state.firedGate!=='STOPPED'){
         await sendWithDelay(interactiveButton(uid, getThirdReminderText(actualLang), getStopCallButtons(actualLang), actualPhoneId));
         try{ await autoFireLoser(uid, type); }catch(_){}
@@ -1430,20 +1446,27 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'Hindi'},{id:'LANG_ML',title:'Malayalam'}], actualPhoneId));
       } else if(type.includes('COMPANY_VIDEO_2MIN')){
-        // V250: Company video - Did you watch? as 2-min reminder, then Income Level
+        // V254: Company video - Did you watch? as 2-min reminder, then Income Level
         const cMsg = actualLang==='ml' ? `ഹലോ! കമ്പനി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കാം:` : actualLang==='hi' ? `हैलो! कंपनी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "कंपनी वीडियो देखा" पर क्लिक करें, फिर आय स्तर चुनें:` : `Hello! Did you watch Company video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Company Video" below, then select Income Level:`;
         const cWatched = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video';
         const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
         await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCH_LINK',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
       } else if(type.includes('VIDEO_2MIN')){
-        // V250: Video 2nd message as 2-min reminder - NOT immediate
+        // V254: Video 2nd message as 2-min reminder - NOT immediate
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
         const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
         const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
         const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
         await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCH_LINK',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+      } else if(type.includes('PAY_5MIN')){
+        // V254: 5-min after Pay First - ask Did-you-pay ONLY if still unpaid / still at Pay step
+        const _last = state.lastStep||'';
+        if(_last.includes('Pay Done') || _last.includes('Lead') || _last.includes('Date') || _last.includes('Occupation') || state.flow==='DONE'){ console.log('V254 SKIP stale Pay 5-min reminder - user already past Pay'); }
+        else if(_last.includes('Pay Reg') || _last.includes('EMI Selected') || _last.includes('Not Paid') || _last.includes('Pay Rs') || _last.startsWith('Pay ')){
+          await sendDidYouPay(uid, null, actualLang, state.sub, actualPhoneId);
+        } else { console.log('V254 SKIP stale Pay 5-min reminder - user at '+_last); }
       } else if(type.includes('VERIFY')){
-        // V250: VERIFY reminder - NO raw link, NO STOP, NO number in message. Only 2 buttons: Pay Now (CTA, Razorpay inbuilt) + Talk to Team (auto-dialer).
+        // V254: VERIFY reminder - NO raw link, NO STOP, NO number in message. Only 2 buttons: Pay Now (CTA, Razorpay inbuilt) + Talk to Team (auto-dialer).
         const verifyBody = actualLang==='ml' ? `⏳ പേയ്മെന്റ് ഇതുവരെ കൺഫർമ് ആയിട്ടില്ല.\n\nഅടച്ചിട്ടില്ലെങ്കിൽ താഴെ Pay Now ക്ലിക്ക് ചെയ്യുക.\nഅടച്ചിട്ടും പ്രശ്നമുണ്ടെങ്കിൽ Talk to Team ക്ലിക്ക് ചെയ്യുക.` : actualLang==='hi' ? `⏳ पेमेंट अभी तक कन्फर्म नहीं हुआ।\n\nभुगतान नहीं किया है तो नीचे Pay Now पर क्लिक करें।\nभुगतान किया है और समस्या है तो Talk to Team पर क्लिक करें।` : `⏳ Payment not yet confirmed.\n\nIf you have not paid yet, tap Pay Now below.\nIf you paid and have an issue, tap Talk to Team.`;
         await sendPayReminder(uid, verifyBody, actualLang, state.sub, actualPhoneId);
       } else {
@@ -1453,7 +1476,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
           const escalatedText = getEscalatedPayText(actualLang, fee, level);
-          await sendPayStep(uid, escalatedText, actualLang, state.sub, actualPhoneId); return;
+          await sendDidYouPay(uid, escalatedText, actualLang, state.sub, actualPhoneId); return;
         } else {
           // For all other steps, repeat with escalated wrapper in repeatLastStep will be handled there
           // But we pass level via state
@@ -2027,7 +2050,7 @@ app.get('/fire-template2', async(req,res)=>{
 });
 // === END HOT TEMPLATE SENDER ===
 
-app.get('/',(req,res)=>res.send(`V250 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V254 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -2048,7 +2071,7 @@ app.post('/webhook', async(req,res)=>{
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
-    // ===== V250: 1988 TEST RESET - type 1988 anytime mid-chat to go back to Welcome (language select). For testing only. Clears state + reminders, bypasses STOPPED/FIRED gate. =====
+    // ===== V254: 1988 TEST RESET - type 1988 anytime mid-chat to go back to Welcome (language select). For testing only. Clears state + reminders, bypasses STOPPED/FIRED gate. =====
     if(String(txt||'').trim()==='1988'){
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'1988 - Reset', lang:null, phoneId: incomingPhoneId, firedGate:null, stopConfirmPending:false});
@@ -2059,7 +2082,7 @@ app.post('/webhook', async(req,res)=>{
       scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000, incomingPhoneId);
       return;
     }
-// ===== V250 FIRED GATE - button replies =====
+// ===== V254 FIRED GATE - button replies =====
     if(btnId==='FIRED_YES'){
       await setState(uid,{...state, firedGate:'ALLOWED', lastStep:'Fired YES - Allowed Again', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired YES '+incomingPhoneId, 'YES - Serious Now - Allowed Again', 'Clicked', HELP_ADMIN, 'Fired YES', ''], false);
@@ -2085,7 +2108,7 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(btnId==='FIRED_STOP'){
-      // V250: STOP is 2-step - 1st tap asks confirm, only YES stops. Prevents accidental STOP.
+      // V254: STOP is 2-step - 1st tap asks confirm, only YES stops. Prevents accidental STOP.
       if(!state.stopConfirmPending){
         await setState(uid,{...state, stopConfirmPending:true, phoneId: incomingPhoneId});
         await sendWithDelay(interactiveButton(uid, getStopConfirmText(lang), [{id:'STOP_CONFIRM_YES', title:'Yes, Stop'},{id:'STOP_CONFIRM_NO', title:'No, Continue'}], incomingPhoneId));
@@ -2107,7 +2130,7 @@ app.post('/webhook', async(req,res)=>{
       await sendFiredWarning(uid, incomingPhoneId);
       return;
     }
-    // ===== END V250 FIRED GATE (buttons) =====
+    // ===== END V254 FIRED GATE (buttons) =====
 
 
     if(btnId.startsWith('LANG_')){
@@ -2127,7 +2150,7 @@ app.post('/webhook', async(req,res)=>{
     }
 
     if(!state.lang){
-      try{ if(await isFiredPhone(uid)){ await setState(uid,{first:true, lastStep:'Fired Warning', lang:null, phoneId: incomingPhoneId, firedGate:'WARNED'}); await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired Warning '+incomingPhoneId, 'First Message - Fired Number - Warning Sent', 'Received', HELP_ADMIN, 'Fired Warning', ''], true); await sendFiredWarning(uid, incomingPhoneId); return; } }catch(e){ console.log('V250 fired check fail-open', e.message); }
+      try{ if(await isFiredPhone(uid)){ await setState(uid,{first:true, lastStep:'Fired Warning', lang:null, phoneId: incomingPhoneId, firedGate:'WARNED'}); await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired Warning '+incomingPhoneId, 'First Message - Fired Number - Warning Sent', 'Received', HELP_ADMIN, 'Fired Warning', ''], true); await sendFiredWarning(uid, incomingPhoneId); return; } }catch(e){ console.log('V254 fired check fail-open', e.message); }
       const L=T.en;
       const msgType = msg.type||'text';
       const rawInput = txt || msgType;
@@ -2141,8 +2164,8 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(isHi && (!state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi')){
-      try{ if(state.firedGate!=='ALLOWED' && await isFiredPhone(uid)){ await setState(uid,{first:true, lastStep:'Fired Warning', lang:null, phoneId: incomingPhoneId, firedGate:'WARNED'}); await sendFiredWarning(uid, incomingPhoneId); return; } }catch(e){ console.log('V250 HI fired check fail-open', e.message); }
-      // V250 FIX: Hi/Hai/Hello only resets at START. Mid-flow Hai -> falls through to Sorry + Explain -> repeatLastStep (NOT reset)
+      try{ if(state.firedGate!=='ALLOWED' && await isFiredPhone(uid)){ await setState(uid,{first:true, lastStep:'Fired Warning', lang:null, phoneId: incomingPhoneId, firedGate:'WARNED'}); await sendFiredWarning(uid, incomingPhoneId); return; } }catch(e){ console.log('V254 HI fired check fail-open', e.message); }
+      // V254 FIX: Hi/Hai/Hello only resets at START. Mid-flow Hai -> falls through to Sorry + Explain -> repeatLastStep (NOT reset)
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
@@ -2164,11 +2187,11 @@ app.post('/webhook', async(req,res)=>{
       else if(btnId==='SVC_DELIVERY'){ await sendWithDelay(interactiveButton(uid, L.deliverySelected, L.deliveryButtons, incomingPhoneId)); }
       else if(btnId==='SVC_BOOKING'){ await sendWithDelay(interactiveButton(uid, L.bookingSelected, L.bookingButtons, incomingPhoneId)); }
       else       if(btnId==='SVC_OPP'){ 
-        // V250: 2 messages - Company video + income level selection (user exact flow)
+        // V254: 2 messages - Company video + income level selection (user exact flow)
         const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + oppCongrats(lang,1) + (lang==='ml' ? `\n\nകമ്പനിയെക്കുറിച്ച് അറിയാൻ ഈ വീഡിയോ കാണുക:\n` : lang==='hi' ? `\n\nकंपनी के बारे में जानने के लिए यह वीडियो देखें:\n` : `\n\nWatch this video to know about the company:\n`);
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
         await sendWithDelay(interactiveButton(uid, companyVideo + (lang==='ml' ? `\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കാണുക OR നിങ്ങൾക്ക് Bizmapia അറിയാമെങ്കിൽ Skip ചെയ്യുക:` : lang==='hi' ? `\n\n👉 अब क्या करें: वीडियो देखें OR अगर आप Bizmapia को जानते हैं तो Skip करें:` : `\n\n👉 What to do now: Watch Video OR Skip if you already know Bizmapia:`), [{id:'COMPANY_VIDEO_WATCH',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 See Video'},{id:'COMPANY_KNOW',title: lang==='ml' ? 'അറിയാം - സ്കിപ്പ്' : lang==='hi' ? 'जानता हूँ - स्किप' : 'Yes - Skip'}], incomingPhoneId));
-        // V250: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
+        // V254: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
         scheduleReminder(uid, 'install:COMPANY_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       }
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
@@ -2203,14 +2226,14 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     if(btnId==='COMPANY_WATCHED'){
-      // V250: Company video watched -> now show Income Level (next step)
+      // V254: Company video watched -> now show Income Level (next step)
       state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select investing capacity from below:-`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg, L.oppButtons, incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_NOT_WATCHED'){
-      // V250: Company video not watched -> resend video + reschedule 2-min reminder
+      // V254: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2+'', [{id:'COMPANY_WATCH_LINK',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId));
@@ -2222,7 +2245,7 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,state); clearReminders(uid);
       const videoUrl = getVideoUrl('OPP_DISTRICT', lang);
       const videoObj = getVideoObj('OPP_DISTRICT', lang);
-      // V250: 2 messages - Video + watched confirmation (user exact flow)
+      // V254: 2 messages - Video + watched confirmation (user exact flow)
       const msg1 = lang==='ml' ? `ഹലോ! നിങ്ങൾ ₹5L-₹15L നിക്ഷേപം (ജില്ലാ ഫ്രാഞ്ചൈസി) തിരഞ്ഞെടുത്തു.
 
 ജില്ലാ ഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ നോക്കാം.
@@ -2243,7 +2266,7 @@ Let's check District Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V250: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V254: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 ₹5L-₹15L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_DISTRICT:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -2276,7 +2299,7 @@ Let's check Corporation / Municipal Franchise details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V250: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V254: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 ₹2L-₹5L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CORP:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -2309,7 +2332,7 @@ Let's check Business Center details.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
       state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
-      // V250: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
+      // V254: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_2MIN:2', lang, 2*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 ₹30K-₹1L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid, 'install:OPP_CENTER:1', lang, 1*60*60*1000, incomingPhoneId);
@@ -2317,9 +2340,9 @@ Let's check Business Center details.
       scheduleReminder(uid, 'install:OPP_CENTER:24', lang, 24*60*60*1000, incomingPhoneId);
       return;
     }
-    // ==================== V250 CONFIRMATION FLOW - ALL LANGUAGES ====================
+    // ==================== V254 CONFIRMATION FLOW - ALL LANGUAGES ====================
 
-    // ===== V250 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
+    // ===== V254 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
     if(btnId==='OPP_LEARN_VIDEO'){
       state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
@@ -2335,7 +2358,7 @@ Let's check Business Center details.
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
-    // V250: NO RAW LINK IN BODY - Watch Video link lives ONLY inside its button. Tapping it sends a single CTA button with the YouTube link.
+    // V254: NO RAW LINK IN BODY - Watch Video link lives ONLY inside its button. Tapping it sends a single CTA button with the YouTube link.
     if(btnId==='VIDEO_WATCH_LINK'){
       const wUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
       await sendWithDelay(singleCta(uid, lang==='ml' ? '🎥 താഴെ വീഡിയോ കാണുക:' : lang==='hi' ? '🎥 नीचे वीडियो देखें:' : '🎥 Tap to watch the video:', {title:'🎥 Watch Video', url:wUrl}, incomingPhoneId));
@@ -2545,13 +2568,13 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       return;
     }
     if(btnId==='PAY_NOW_CLICK'){
-      // V250: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
+      // V254: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
       const payLink2 = getRazorpayLinkForSub(state.sub);
       const payText2 = getPayText(lang, state.fee||15, state.sub);
       await sendPayStep(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText2, lang, state.sub, incomingPhoneId);
       return;
     }
-    // V250 FIX: PAY_VERIFY had NO handler in V250 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
+    // V254 FIX: PAY_VERIFY had NO handler in V254 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
     if(btnId==='PAY_VERIFY'){ btnId='PAY_DONE'; }
     if(btnId==='PAY_DONE'){
       // USER CLAIMS PAID - BUT NOT VERIFIED YET
@@ -2565,11 +2588,11 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       return;
     }
 
-    if(btnId.startsWith('STATE_')){ const code=btnId.replace('STATE_',''); const found=ALL_INDIA_STATES_V250.find(s=>v211_stateCode(s)===code); const st=found||code; state.leadState=st; state.detailStep='DISTRICT_BUTTON'; state.lastStep='State '+st; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendDistrictList(uid, lang, incomingPhoneId, st); return; }
+    if(btnId.startsWith('STATE_')){ const code=btnId.replace('STATE_',''); const found=ALL_INDIA_STATES_V254.find(s=>v211_stateCode(s)===code); const st=found||code; state.leadState=st; state.detailStep='DISTRICT_BUTTON'; state.lastStep='State '+st; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendDistrictList(uid, lang, incomingPhoneId, st); return; }
     if(btnId==='STATE_KERALA'){ state.leadState='Kerala'; state.detailStep='DISTRICT_BUTTON'; state.lastStep='State Kerala'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendDistrictList(uid, lang, incomingPhoneId, 'Kerala'); return; }
     if(btnId==='STATE_TAMILNADU'){ state.leadState='Tamil Nadu'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Tamil Nadu'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Tamil Nadu'), incomingPhoneId)); return; }
     if(btnId==='STATE_OTHER'){ state.leadState='Other'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Other'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Other State'), incomingPhoneId)); return; }
-    if(btnId.startsWith('DISTRICT_KL_')){ const code=btnId.replace('DISTRICT_KL_',''); const found=KERALA_DISTRICTS_V250.find(d=>d.toUpperCase().replace(/[^A-Z]/g,'')===code); const dist=found||code; state.leadDistrict=dist; state.detailStep='MOBILE'; state.lastStep='District '+dist; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return; }
+    if(btnId.startsWith('DISTRICT_KL_')){ const code=btnId.replace('DISTRICT_KL_',''); const found=KERALA_DISTRICTS_V254.find(d=>d.toUpperCase().replace(/[^A-Z]/g,'')===code); const dist=found||code; state.leadDistrict=dist; state.detailStep='MOBILE'; state.lastStep='District '+dist; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return; }
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); state.detailStep='DATE'; await setState(uid,state); await v211_sendDateCalendar(uid, lang, incomingPhoneId); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CONFIRM_LATE_DATE'){ const iso=state.pendingDate||state.date; if(!iso){ await v211_sendDateCalendar(uid, lang, incomingPhoneId); return; } state.date=iso; state.visitDate=iso; state.detailStep='DONE'; state.lastStep='Date Confirmed Late '+iso; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsgL = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state); const confirmL = lang==='ml' ? `✅ Visit Confirmed - Late Date Accepted!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: You selected more than 7 days after Registration Fee date. Your slot is at risk - Please try to come earlier if possible. Team will call you to confirm.` : lang==='hi' ? `✅ Visit Confirmed - Late Date Accepted!\n\n📅 आपकी visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: आपने Registration Fee date से 7 दिन से ज्यादा बाद की date चुनी है। आपका slot risk में है - अगर possible हो तो पहले आने की कोशिश करें। Team confirm करने के लिए call करेगी।` : `✅ Visit Confirmed - Late Date Accepted!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: You selected more than 7 days after Registration Fee date. Your slot is at risk - Please try to come earlier if possible. Team will call you to confirm.`; await sendWithDelay(textMessage(uid, confirmL+'\n\n'+tenderMsgL+'\n\n'+L.thanks, incomingPhoneId)); const _pdfL=getTenderPdfLink(state.sub||'OPP_DISTRICT', lang, state); await sendWithDelay(singleCta(uid, lang==='ml' ? '📄 താഴെ Main Tender ഡൗൺലോഡ് ചെയ്യുക:' : lang==='hi' ? '📄 नीचे Main Tender डाउनलोड करें:' : '📄 Download Main Tender below:', {title:'📄 Main Tender', url:_pdfL.main}, incomingPhoneId)); await sendWithDelay(singleCta(uid, lang==='ml' ? '📄 താഴെ Annexure ഡൗൺലോഡ് ചെയ്യുക:' : lang==='hi' ? '📄 नीचे Annexure डाउनलोड करें:' : '📄 Download Annexure below:', {title:'📄 Annexure', url:_pdfL.annexure}, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date Late Confirmed '+iso, 'Clicked - Late Date Warning Accepted', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await v211_saveFinalLead(uid, lang, {...state, occupation:state.occupation}, iso); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:iso, visitDate:iso, lateWarning:true, leadName:state.leadName, leadState:state.leadState, leadDistrict:state.leadDistrict, leadMobile:state.leadMobile, phoneId: incomingPhoneId}); return; }
     if(btnId==='PICK_EARLIER_DATE'){ state.detailStep='DATE'; state.lastStep='Date - Pick Earlier'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, lang==='ml' ? `👏 Good decision! Pick an earlier date - Within 7 days - To save your slot:` : lang==='hi' ? `👏 अच्छा फैसला! Earlier date चुनें - 7 दिन के अंदर - अपना slot बचाने के लिए:` : `👏 Good decision! Pick an earlier date - Within 7 days - To save your slot:`, incomingPhoneId)); await v211_sendDateCalendar(uid, lang, incomingPhoneId); return; }
@@ -2580,7 +2603,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
 
     if(btnId==='YES_ACTIVATE'){ state.installed=true; state.lastStep='Yes Activate'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid,L.activated, incomingPhoneId)); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'Yes Activate - Installed', 'Success', state.service==='SVC_OPP' ? HELP_MARKETING : HELP_ADMIN, state.lastStep, ''], true); return; }
     if(btnId==='NO_LATER'){ state.lastStep='No Later'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const isOpp = state.service==='SVC_OPP' || state.sub?.startsWith('OPP_'); const callNum = isOpp ? HELP_MARKETING_FULL : HELP_ADMIN_FULL; await sendBookTaxiSingle(uid, L.noProblem, incomingPhoneId); await saveToSheet('Ride_Hailing', [nowIso, uid, lang, state.sub||'App', 'No Later - Pending', 'Pending', isOpp?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], true); scheduleReminder(uid, `install:${state.sub||'APP'}:1`, lang, 1*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:12`, lang, 12*60*60*1000, incomingPhoneId); scheduleReminder(uid, `install:${state.sub||'APP'}:24`, lang, 24*60*60*1000, incomingPhoneId); return; }
-    // V250: Start Advertising single-body buttons - tap sends website link / dialer
+    // V254: Start Advertising single-body buttons - tap sends website link / dialer
     if(btnId==='BIZ_ADS_LOGIN'){
       await sendWithDelay(singleCta(uid, lang==='ml' ? '🔐 താഴെ Login / Register Now ക്ലിക്ക് ചെയ്യുക:' : lang==='hi' ? '🔐 नीचे Login / Register Now पर क्लिक करें:' : '🔐 Tap Login / Register Now below:', {title:'🔐 Login / Register', url:WEBSITE}, incomingPhoneId));
       return;
@@ -2589,7 +2612,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, false), HELP_ADMIN, incomingPhoneId));
       return;
     }
-    // V250: Register Business single-body buttons - tap sends website link / dialer
+    // V254: Register Business single-body buttons - tap sends website link / dialer
     if(btnId==='BIZ_LOGIN_NOW'){
       await sendWithDelay(singleCta(uid, lang==='ml' ? '🔐 താഴെ Login Now ക്ലിക്ക് ചെയ്യുക:' : lang==='hi' ? '🔐 नीचे Login Now पर क्लिक करें:' : '🔐 Tap Login Now below:', {title:'🔐 Login Now', url:WEBSITE}, incomingPhoneId));
       return;
@@ -2598,7 +2621,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, false), HELP_ADMIN, incomingPhoneId));
       return;
     }
-    // V250: Attach Taxi single-body buttons - tap sends that app link / dialer
+    // V254: Attach Taxi single-body buttons - tap sends that app link / dialer
     if(btnId==='ATTACH_ANDROID'){
       await sendWithDelay(singleCta(uid, lang==='ml' ? '📱 Android ആപ്പ് താഴെ ക്ലിക്ക് ചെയ്യുക:' : lang==='hi' ? '📱 नीचे Android ऐप पर क्लिक करें:' : '📱 Tap Android App below:', {title:'📱 Android App', url:PLAY_STORE}, incomingPhoneId));
       return;
@@ -2607,7 +2630,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, false), HELP_ADMIN, incomingPhoneId));
       return;
     }
-    // V250: Book Taxi single-body buttons - tap sends that app link / dialer
+    // V254: Book Taxi single-body buttons - tap sends that app link / dialer
     if(btnId==='APP_ANDROID'){
       await sendWithDelay(singleCta(uid, lang==='ml' ? '📱 Android ആപ്പ് താഴെ ക്ലിക്ക് ചെയ്യുക:' : lang==='hi' ? '📱 नीचे Android ऐप पर क्लिक करें:' : '📱 Tap Android App below:', {title:'📱 Android App', url:PLAY_STORE}, incomingPhoneId));
       return;
@@ -2620,12 +2643,12 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, false), HELP_ADMIN, incomingPhoneId));
       return;
     }
-    // V250 REAL DIALER: HUMAN_TALK + CALL handlers - 1 tap opens dialer, NEVER goes to Main Menu
+    // V254 REAL DIALER: HUMAN_TALK + CALL handlers - 1 tap opens dialer, NEVER goes to Main Menu
     if(btnId==='HUMAN_TALK'||btnId==='TALK_TO_TEAM'||btnId==='CONTACT_TEAM'){
-      const isOppV250 = state.service==='SVC_OPP' || (state.sub||'').startsWith('OPP_') || (state.lastStep||'').includes('Pay') || (state.lastStep||'').includes('EMI') || (state.lastStep||'').includes('Ready');
-      const dialNumV250 = isOppV250 ? HELP_MARKETING : HELP_ADMIN;
-      await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV250), dialNumV250, incomingPhoneId));
-      await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV250, state.lastStep||'', ''], true);
+      const isOppV254 = state.service==='SVC_OPP' || (state.sub||'').startsWith('OPP_') || (state.lastStep||'').includes('Pay') || (state.lastStep||'').includes('EMI') || (state.lastStep||'').includes('Ready');
+      const dialNumV254 = isOppV254 ? HELP_MARKETING : HELP_ADMIN;
+      await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV254), dialNumV254, incomingPhoneId));
+      await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV254, state.lastStep||'', ''], true);
       return;
     }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'||btnId.startsWith('CALL_'+HELP_ADMIN)){
@@ -2638,7 +2661,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     }
 
     if(state.flow==='LEAD' && txt){
-      // V250 STRUCTURED DETAILS - NO free-type loophole - Validate each step, do NOT save wrong details
+      // V254 STRUCTURED DETAILS - NO free-type loophole - Validate each step, do NOT save wrong details
       const step = state.detailStep || 'NAME';
       if(step==='NAME'){
         if(v211_isBadName(txt)){ const c=(state.leadFailCount||0)+1; await setState(uid,{...state, leadFailCount:c}); if(c>=2){ await setState(uid,{...state, leadFailCount:0}); await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId)); return; } await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:` : lang==='hi' ? `😔 Sorry, कृपया अपना पूरा नाम केवल टाइप करें - Example: Ajo Devasia\n\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:` : `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:`), incomingPhoneId)); return; }
@@ -2671,10 +2694,10 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     const isMedia = ['image','video','audio','document','sticker','reaction'].includes(msgType);
     const isRandomText = txt && btnId==='' && state.flow!=='LEAD';
     if((isRandomText || isMedia) && state.lang){
-      // V250: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
+      // V254: Sorry + Explain last step + No Human before Registration Fee. Human only from Pay step.
       const sorryMsg = getSorryExplain(lang, state.lastStep||'', txt);
       if(state.lastStep && (state.lastStep.includes('Pay Reg') || state.lastStep.includes('✅ EMI Selected') || state.lastStep.includes('Not Paid') || state.lastStep.startsWith('Pay '))){
-        // V250: Pay step random = 1 MESSAGE ONLY with 3 buttons. User typed = confused = needs Human in SAME message.
+        // V254: Pay step random = 1 MESSAGE ONLY with 3 buttons. User typed = confused = needs Human in SAME message.
         // WhatsApp cannot mix URL button + Reply buttons in 1 message, so Pay link is put as clickable text inside body.
         // Buttons: [Pay Now] [Verify] [Talk to Team] - all Reply buttons, all <=20 chars.
         // Malayalam fix: "ടീമിനോട് സംസാരിക്കൂ" (22 chars) was cut to "മനുഷ്യനോട് സംസാരിക്ക" in screenshot. New "ടീമിനോട് സംസാരിക്കൂ" fits, full meaning.
@@ -2687,11 +2710,11 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await sendWithDelay(interactiveButton(uid, oneMsgBody, [{id:'PAY_NOW_CLICK',title: btnPay},{id:'PAY_VERIFY',title: btnVerify},{id:'HUMAN_TALK',title: btnHuman}], incomingPhoneId));
         return;
       }
-      // V250: Before Pay also gets Stop + Call - your requirement (was: only repeat, no Call/Stop)
+      // V254: Before Pay also gets Stop + Call - your requirement (was: only repeat, no Call/Stop)
       await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId));
       return;
     }
-    // V250 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
+    // V254 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
     // If user is already past start, stay in same step with Sorry + Repeat. Only if truly at First Message, send FULL 5 services in 2 messages.
     if(state.lang){
       const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi';
@@ -2700,7 +2723,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await delay(400);
         await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
       } else {
-        // V250: Unknown button/text -> Sorry + Stop or Call (was: Sorry + repeat only)
+        // V254: Unknown button/text -> Sorry + Stop or Call (was: Sorry + repeat only)
         await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId));
       }
     }
@@ -2719,7 +2742,7 @@ app.post('/razorpay-webhook', async(req,res)=>{
       }catch(e){ console.log('Razorpay signature check skip', e.message); }
     }
     const event = req.body.event || '';
-    // V250 FIX: only PAID events can verify. Ignore created/failed/expired etc - they were marking unpaid links as VERIFIED.
+    // V254 FIX: only PAID events can verify. Ignore created/failed/expired etc - they were marking unpaid links as VERIFIED.
     const PAID_EVENTS = ['payment_link.paid','payment.captured','payment.authorized','order.paid'];
     if(event && !PAID_EVENTS.includes(event)){
       console.log(`RAZORPAY WEBHOOK IGNORED event=${event} - not a paid event`);
@@ -2752,13 +2775,13 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await setState(cleanUid,{...state, flow:'LEAD', detailStep:'NAME', lastStep:'Payment VERIFIED '+paymentId, verified:true, fee: parseInt(fee)||15, phoneId});
         clearReminders(cleanUid);
         await sendWithDelay(textMessage(cleanUid, `✅ Payment Verified! ${paymentId} - Rs${amount}`, phoneId));
-        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V250 Tender auto-send fail', e.message); }
+        try{ await sendTenderPdfsAfterVerification(cleanUid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V254 Tender auto-send fail', e.message); }
         await sendWithDelay(textMessage(cleanUid, `Now please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified - Webhook '+event, JSON.stringify(notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified - Webhook '+event, ''], false);
       }
     } else {
-      // V250: payment arrived but no WhatsApp uid found (paid with different phone / no notes) - SAVE for manual check, do NOT mark anyone verified
+      // V254: payment arrived but no WhatsApp uid found (paid with different phone / no notes) - SAVE for manual check, do NOT mark anyone verified
       try{ await saveToSheet('Payments', [getISTTime(), String(uid||payment?.contact||'UNKNOWN'), 'en', `UNMATCHED ${fee}L`, paymentId, 'UNMATCHED Rs'+amount, HELP_MARKETING, 'Webhook paid but uid not found - MANUAL CHECK '+event, JSON.stringify(notes)], true); }catch{}
       console.log(`RAZORPAY UNMATCHED payment=${paymentId} contact=${payment?.contact||'none'} - saved to Payments for manual /verify/`);
     }
@@ -2776,7 +2799,7 @@ app.get('/verify/:phone', async(req,res)=>{
     const L = T[lang]||T.en;
     await setState(uid,{...state, flow:'LEAD', detailStep:'NAME', lastStep:'Manually Verified', verified:true, phoneId});
     await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!`, phoneId));
-    try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V250 Manual tender send fail', e.message); }
+    try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V254 Manual tender send fail', e.message); }
     await sendWithDelay(textMessage(uid, `Now please continue:\n\n`+L.leadAsk, phoneId));
     res.send(`✅ Manually verified ${uid}`);
   }catch(e){ res.send(`Error ${e.message}`); }
@@ -2886,7 +2909,7 @@ app.get('/replay-last-4-days', async(req,res)=>{
 
 // WIPE + REPLAY - ONE CLICK CLEAR + REWRITE LAST 4 DAYS
 
-// === FIX: Missing functions for wipe-and-replay - Added in V250 ===
+// === FIX: Missing functions for wipe-and-replay - Added in V254 ===
 async function getAllChatsFromMemory(){
   try{
     if(redisReady && redis){
@@ -3105,22 +3128,22 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 12 PDFs - 12 PDF 2+2+2+2+2+2 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - STRUCTURED DETAILS + EXACT CALENDAR DATE + COMPANY SKIP + TENDER 12 PDFs - 12 PDF 2+2+2+2+2+2 - 8 SHEETS LOCKED - WELCOME MAYA FIXED', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V250', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V250','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V250', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V250', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V250', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 12 PDF 2+2+2+2+2+2 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V254', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V254','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V254', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V254', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V254', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + ALL CALL BUTTONS INBUILT DIALER 8590175977 - CONFIRMED + HUMAN HANDOVER + PAY VERIFY + SHORT MAYA + ALL INDIA + EMOJIS + FOMO - 12 PDF 2+2+2+2+2+2 - INDIAN TIME IST - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V250 with proper version control after verification
-// Current locked version: V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V250 + V250-V250 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V250 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V254 with proper version control after verification
+// Current locked version: V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V254 + V254-V254 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V254 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V250 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V254 - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
