@@ -3,6 +3,7 @@
 // V222 FINAL - ONLY CHANGE vs V221: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V220: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V218: Fired_Loser_List gate on first HI + YES/STOP + auto-fire after 3rd reminder. NO Tamil/Kannada/Telugu. NO other code change. ====================
+// V226 CURRENTFILE FIX: Slab Sheet labels + RegFee row fix + Webhook only PAID events + Unmatched payment saved.
 // V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
@@ -692,17 +693,9 @@ function saveRegistrationFee(phone, sub, fee){
   try{
     const regFee = getTokenFee(sub);
     const link = getRazorpayLinkForSub(sub);
-    const data = {
-      phone: phone,
-      franchise_type: sub,
-      registration_fee: regFee,
-      full_fee: fee+'L',
-      razorpay_link: link,
-      timestamp: getISTTime(),
-      date_ist: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
-    };
-    saveToSheet('Registration_Fee', data).catch(()=>{});
-    saveToSheet(getRegistrationFeeTab(), data).catch(()=>{});
+    // V225 FIX: Sheet API wants ROW [[...]], not object [{...}]. Header: phone, franchise_type, registration_fee, full_fee, razorpay_link, timestamp, date_ist
+    const row = [phone, sub, regFee, fee+'L', link, getISTTime(), new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})];
+    saveToSheet('Registration_Fee', row).catch(()=>{});
   }catch(e){ console.log('REG FEE SAVE FAIL', e.message); }
 }
 function getRegistrationFeeForSheet(sub){ return getTokenFee(sub); }
@@ -836,6 +829,8 @@ const OLD_TABS_MAP = {
   'Leads':'System_Logs','No_Language':'System_Logs','HI_Reset':'System_Logs','Franchise_Leads':'Master_Leads','Franchise_Submit':'Franchise_Funnel','Franchise_Benefits':'Franchise_Funnel','Franchise_Support':'Franchise_Funnel','Franchise_Requirements':'Franchise_Funnel','Franchise_CorpCheck':'Franchise_Funnel','Franchise_EMI':'Franchise_Funnel','Franchise_EMI_Selected':'Franchise_Funnel','Franchise_NotPaid':'Franchise_Funnel','Franchise_Ready15L':'Franchise_Funnel','Franchise_Occupation':'Master_Leads','Franchise_Date':'Master_Leads','Franchise_PayDone':'Payments','Franchise_PayDone_VERIFIED':'Payments','Payment_Failed':'Payments','Unverified_Payments':'Payments','OPP_District':'Franchise_Funnel','OPP_Corp':'Franchise_Funnel','OPP_Center':'Franchise_Funnel','App_Install':'System_Logs','Attach_Cab':'Ride_Hailing','Book_Cab':'Ride_Hailing','Book_Rooms':'Booking','Book_Appointments':'Booking','Book_Movie':'Booking','Order_Stores':'Delivery','Delivery_Partner':'Delivery','Register_Business':'Business_Directory','Start_Advertising':'Business_Directory','Book_Apartments':'Booking'
 };
 async function saveToSheet(tab, row, isNew){
+  // V225 SAFETY: convert object {phone,...} to row array - Sheet API rejects objects
+  if(row && !Array.isArray(row) && typeof row === 'object'){ row = Object.values(row); }
   let cleanTab = String(tab).trim();
   if(!ALLOWED_SHEETS.includes(cleanTab)){
     const redirected = OLD_TABS_MAP[cleanTab] || 'Franchise_Funnel';
@@ -1109,7 +1104,7 @@ function getSorryExplain(lang, lastStep, userText){
   let whatToDo = '';
   if(lang==='ml'){
     if(last.includes('Company Video')){ stepName='കമ്പനി വീഡിയോ'; whatToDo='വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക'; }
-    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='ഫ്രാഞ്ചൈസി വീഡിയോ'; whatToDo='വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='ഫ്രാഞ്ചൈസി വീഡിയോ'; whatToDo='വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക'; }
     else if(last.includes('Benefits')){ stepName='ആനുകൂല്യങ്ങൾ'; whatToDo='ആനുകൂല്യങ്ങൾ വായിക്കുക, മനസ്സിലായെങ്കിൽ "ആനുകൂല്യം മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
     else if(last.includes('Support')){ stepName='പിന്തുണ'; whatToDo='പിന്തുണ വായിക്കുക, മനസ്സിലായെങ്കിൽ "കണ്ടു മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
     else if(last.includes('Requirements')){ stepName='ആവശ്യകതകൾ'; whatToDo='ആവശ്യകതകൾ വായിക്കുക, മനസ്സിലായെങ്കിൽ "ആവശ്യകത മനസ്സിലായി" ക്ലിക്ക് ചെയ്യുക'; }
@@ -1121,7 +1116,7 @@ function getSorryExplain(lang, lastStep, userText){
     return `😔 ക്ഷമിക്കണം, നിങ്ങളുടെ "${safeText}" എന്ന മറുപടി മനസ്സിലായില്ല.\n\n📄 നിങ്ങൾ ${stepName} ഘട്ടത്തിലാണ്.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: ${whatToDo}.\n\n💡 എന്തെങ്കിലും സംശയമുണ്ടെങ്കിൽ, ആദ്യം ഈ ഘട്ടം പൂർത്തിയാക്കുക, തുടർന്ന് അടുത്ത ഘട്ടങ്ങളിൽ നിങ്ങൾക്ക് ഞങ്ങളുടെ ടീമുമായി ബന്ധപ്പെടാം.`;
   } else if(lang==='hi'){
     if(last.includes('Company Video')){ stepName='कंपनी वीडियो'; whatToDo='वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें'; }
-    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='फ्रेंचाइजी वीडियो'; whatToDo='वीडियो पूरा देखें, फिर "वीडियो देखा" पर क्लिक करें'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='फ्रेंचाइजी वीडियो'; whatToDo='वीडियो पूरा देखें, फिर "वीडियो देखा" पर क्लिक करें'; }
     else if(last.includes('Benefits')){ stepName='लाभ'; whatToDo='लाभ पढ़ें, समझ आईं तो "लाभ समझा" पर क्लिक करें'; }
     else if(last.includes('Support')){ stepName='सपोर्ट'; whatToDo='सपोर्ट पढ़ें, समझ आया तो "देखा और समझा" पर क्लिक करें'; }
     else if(last.includes('Requirements')){ stepName='आवश्यकताएं'; whatToDo='आवश्यकताएं पढ़ें, समझ आईं तो "आवश्यकता समझी" पर क्लिक करें'; }
@@ -1133,7 +1128,7 @@ function getSorryExplain(lang, lastStep, userText){
     return `😔 माफ़ कीजिए, आपका "${safeText}" जवाब समझ नहीं आया।\n\n📄 आप ${stepName} चरण में हैं।\n\n👉 अब क्या करें: ${whatToDo}।\n\n💡 कोई सवाल है तो पहले यह चरण पूरा करें, फिर अगले चरणों में आप हमारी टीम से संपर्क कर सकते हैं।`;
   } else {
     if(last.includes('Company Video')){ stepName='Company Video'; whatToDo='Watch video fully, then click "Watched Company Video"'; }
-    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='Franchise Video'; whatToDo='Watch video fully, then click "Watched Video"'; }
+    else if(last.includes('Video Must Watch') || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('₹5L-₹15L') || last.includes('Moderate') || last.includes('₹2L-₹5L') || last.includes('₹2L-₹5L') || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('₹30K-₹1L') || last.includes('District') || last.includes('Corp') || last.includes('Center')){ stepName='Franchise Video'; whatToDo='Watch video fully, then click "Watched Video"'; }
     else if(last.includes('Benefits')){ stepName='Benefits'; whatToDo='Read Benefits, if understood click "Understood Benefit"'; }
     else if(last.includes('Support')){ stepName='Support'; whatToDo='Read Support, if understood click "Seen and Understood"'; }
     else if(last.includes('Requirements')){ stepName='Requirements'; whatToDo='Read Requirements, if understood click "Understood Req"'; }
@@ -1221,13 +1216,13 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(sub==='BOOK_ROOM' || last==='Book Rooms'){ return await sendCtaSequence(uid, L.bookRoom, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='BOOK_APPOINT' || last==='Book Appointments'){ return await sendCtaSequence(uid, L.bookAppoint, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='BOOK_MOVIE' || last==='Movie Tickets'){ return await sendCtaSequence(uid, L.bookMovie, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
-  if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('District')){ 
+  if(sub==='OPP_DISTRICT' || last.includes('High level') || last.includes('₹5L-₹15L') || last.includes('₹5L-₹15L') || last.includes('District')){ 
   // V155 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
   return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
   if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
   if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn}], phoneId)); }
   if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n'+escalatedReq, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
@@ -2359,6 +2354,12 @@ app.post('/razorpay-webhook', async(req,res)=>{
       }catch(e){ console.log('Razorpay signature check skip', e.message); }
     }
     const event = req.body.event || '';
+    // V226 FIX: only PAID events can verify. Ignore created/failed/expired etc - they were marking unpaid links as VERIFIED.
+    const PAID_EVENTS = ['payment_link.paid','payment.captured','payment.authorized','order.paid'];
+    if(event && !PAID_EVENTS.includes(event)){
+      console.log(`RAZORPAY WEBHOOK IGNORED event=${event} - not a paid event`);
+      res.sendStatus(200); return;
+    }
     const payload = req.body.payload || {};
     let payment = payload.payment?.entity || null;
     let plink = payload.payment_link?.entity || null;
@@ -2391,6 +2392,10 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified - Webhook '+event, JSON.stringify(notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified - Webhook '+event, ''], false);
       }
+    } else {
+      // V226: payment arrived but no WhatsApp uid found (paid with different phone / no notes) - SAVE for manual check, do NOT mark anyone verified
+      try{ await saveToSheet('Payments', [getISTTime(), String(uid||payment?.contact||'UNKNOWN'), 'en', `UNMATCHED ${fee}L`, paymentId, 'UNMATCHED Rs'+amount, HELP_MARKETING, 'Webhook paid but uid not found - MANUAL CHECK '+event, JSON.stringify(notes)], true); }catch{}
+      console.log(`RAZORPAY UNMATCHED payment=${paymentId} contact=${payment?.contact||'none'} - saved to Payments for manual /verify/`);
     }
     res.sendStatus(200);
   }catch(e){ console.log('razorpay-webhook error', e.message, e.stack); res.sendStatus(200); }
@@ -2500,11 +2505,11 @@ app.get('/replay-last-4-days', async(req,res)=>{
         else if(sub.includes('BIZ_') || lastStep.includes('Business Directory') || lastStep.includes('Register Business') || lastStep.includes('Start Advertising')) tab = 'Business_Directory';
         else if(sub.includes('DEL_') || lastStep.includes('Delivery') || lastStep.includes('Order Stores')) tab = 'Delivery';
         else if(sub.includes('BOOK_') || lastStep.includes('Book Rooms') || lastStep.includes('Book Appointments') || lastStep.includes('Movie Tickets')) tab = 'Booking';
-        else if(sub.includes('OPP_') || lastStep.includes('District') || lastStep.includes('Corp') || lastStep.includes('Center') || lastStep.includes('Benefits') || lastStep.includes('Support') || lastStep.includes('Requirements') || lastStep.includes('Submit Application') || lastStep.includes('Ready') || lastStep.includes('Pay') || lastStep.includes('EMI') || lastStep.includes('High level') || lastStep.includes('₹5L-₹15L') || lastStep.includes('Moderate') || lastStep.includes('Base level')) tab = 'Franchise_Funnel';
+        else if(sub.includes('OPP_') || lastStep.includes('District') || lastStep.includes('Corp') || lastStep.includes('Center') || lastStep.includes('Benefits') || lastStep.includes('Support') || lastStep.includes('Requirements') || lastStep.includes('Submit Application') || lastStep.includes('Ready') || lastStep.includes('Pay') || lastStep.includes('EMI') || lastStep.includes('High level') || lastStep.includes('₹5L-₹15L') || lastStep.includes('₹5L-₹15L') || lastStep.includes('Moderate') || lastStep.includes('Base level')) tab = 'Franchise_Funnel';
         else if(lastStep.includes('Occupation') || lastStep.includes('Date') || lastStep.includes('Lead Typed')) tab = 'Master_Leads';
         else if(lastStep.includes('Payment') || lastStep.includes('VERIFIED') || lastStep.includes('Pay Done')) tab = 'Payments';
         
-        const row = [nowIso, uid, lang, `${sub} (REPLAY 4 DAYS)`, lastStep, 'Recovered from Render', (state.service==='SVC_OPP' || state.sub?.startsWith('OPP_') || sub?.startsWith('OPP_') || lastStep.includes('Business Opportunity') || lastStep.includes('High level') || lastStep.includes('₹5L-₹15L') || lastStep.includes('Moderate level') || lastStep.includes('₹2L-₹5L') || lastStep.includes('Base level') ? HELP_MARKETING : HELP_ADMIN), lastStep, fee ? `Fee:${fee}L Occupation:${state.occupation||''} Date:${state.date||''}` : `Flow:${state.flow||''} Occ:${state.occupation||''} Date:${state.date||''} Lead:${state.leadData||''}` ];
+        const row = [nowIso, uid, lang, `${sub} (REPLAY 4 DAYS)`, lastStep, 'Recovered from Render', (state.service==='SVC_OPP' || state.sub?.startsWith('OPP_') || sub?.startsWith('OPP_') || lastStep.includes('Business Opportunity') || lastStep.includes('High level') || lastStep.includes('₹5L-₹15L') || lastStep.includes('₹5L-₹15L') || lastStep.includes('Moderate level') || lastStep.includes('₹2L-₹5L') || lastStep.includes('₹2L-₹5L') || lastStep.includes('Base level') ? HELP_MARKETING : HELP_ADMIN), lastStep, fee ? `Fee:${fee}L Occupation:${state.occupation||''} Date:${state.date||''}` : `Flow:${state.flow||''} Occ:${state.occupation||''} Date:${state.date||''} Lead:${state.leadData||''}` ];
         await saveToSheet(tab, row, true);
         saved++;
         await new Promise(r=>setTimeout(r,150));
