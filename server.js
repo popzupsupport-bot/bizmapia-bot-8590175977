@@ -749,29 +749,77 @@ function verifyRazorpaySignature(body, signature, secret){
 
 function getPayText(lang, fee, sub){
   const token = getTokenFee(sub||'OPP_DISTRICT');
-  // PURE LANGUAGE RULE: ML=100% Malayalam, HI=100% Hindi, EN=100% English - NO MIXING - V211 + STANDARD EMOJIS + SPACING
+  // V231 EXACT Step 5 body from user - [Pay now] is the CTA URL button BELOW this body, not body text.
   if(lang==='ml'){
     let oppMl = 'ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl = 'ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
     else if(sub==='OPP_CORP') oppMl = 'കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
-    return `🙏 ${oppMl} തിരഞ്ഞെടുത്തതിന് നന്ദി.\n\n📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.`;
+    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 ${oppMl} തിരഞ്ഞെടുത്തതിന് നന്ദി.\n\n👏 അഭിനന്ദനങ്ങൾ! നിങ്ങളുടെ അവസരം ബുക്ക് ചെയ്യാൻ പോകുന്നു!\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത് : 📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ, രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, "Pay now" ക്ലിക്ക് ചെയ്യുക:\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.`;
   }
   if(lang==='hi'){
     let oppHi = 'बिजनेस सेंटर अवसर';
     if(sub==='OPP_DISTRICT') oppHi = 'जिला फ्रेंचाइजी अवसर';
     else if(sub==='OPP_CORP') oppHi = 'कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
-    return `🙏 ${oppHi} चुनने के लिए धन्यवाद।\n\n📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए\n\n💳 पंजीकरण शुल्क Rs.${token} अभी भुगतान करें।`;
+    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 ${oppHi} चुनने के लिए धन्यवाद।\n\n👏 बधाई हो! आपका अवसर बुक होने जा रहा है!\n\n👉 अब क्या करें : 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए, रजिस्ट्रेशन फी भरें, "Pay now" क्लिक करें:\n\n💳 रजिस्ट्रेशन फी Rs.${token} अभी भुगतान करें।`;
   }
   let oppName = 'Business Center opportunity';
   if(sub==='OPP_DISTRICT') oppName = 'District Franchise opportunity';
   else if(sub==='OPP_CORP') oppName = 'Corporation / Municipal Franchise opportunity';
-  return `🙏 Thanks for choosing ${oppName}.\n\n📄 To download your Agreement and Income documents\n\n💳 Pay your registration fee Rs.${token} now.`;
+  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Thanks for choosing ${oppName}.\n\n👏 Congratulations! Your opportunity is about to be booked!\n\n👉 What to do now : 📄 To download your Agreement and Income documents, pay the Registration Fee, click "Pay now":\n\n💳 Pay Registration Fee Rs.${token} now.`;
 }
 function getPayNowTitle(lang){
   if(lang==='ml') return 'ഇപ്പോൾ അടയ്ക്കുക';
   if(lang==='hi') return 'अभी भुगतान करें';
   return 'Pay Now';
 }
+// ===== V230 PAY-NOW-ONLY STEP 5: WhatsApp reply buttons CANNOT open a URL, so 'Paid / Not Paid' buttons made users skip Razorpay. Step 5 now sends: body + REAL CTA URL button [Pay Now -> Razorpay link] + REAL CTA tel: button [Call -> dialer] + one reply button [I Paid - Verify]. No PAY_DONE / PAY_NOT_DONE on Step 5 entry. =====
+async function sendPayNowStep(uid,lang,fee,sub,phoneId,body,schedule5=true){
+  try{
+    const link=getRazorpayLinkForSub(sub);
+    const token=getTokenFee(sub||'OPP_DISTRICT');
+    const payTitle=lang==='ml'?'💳 ഇപ്പോൾ അടയ്ക്കുക':lang==='hi'?'💳 अभी भुगतान करें':'💳 Pay Now';
+    const verifyTitle=lang==='ml'?'അടച്ചു - പരിശോധിക്കൂ':lang==='hi'?'भुगतान किया - जांचें':'I Paid - Verify';
+    const fullBody=String(body||'').includes('🔗') ? String(body||'') : String(body||'')+'\n🔗 '+link; // V231: exact body already ends with Rs. fee line - do NOT duplicate it, only add link backup
+    await sendWithDelay(textMessage(uid,fullBody,phoneId));
+    await delay(400);
+    await sendWithDelay(singleCta(uid, lang==='ml'?'👇 താഴെ Pay Now ക്ലിക്ക് ചെയ്യൂ - Razorpay തുറക്കും:':lang==='hi'?'👇 नीचे Pay Now क्लिक करें - Razorpay खुलेगा:':'👇 Tap Pay Now below - Razorpay will open:', {title:payTitle.substring(0,20), url:link}, phoneId));
+    await delay(400);
+    await sendWithDelay(realDialerCta(uid, lang==='ml'?'സംശയമുണ്ടെങ്കിൽ 👇 Call Now ക്ലിക്ക് ചെയ്യൂ - ഡയലർ തുറക്കും:':lang==='hi'?'कोई doubt हो तो 👇 Call Now क्लिक करें - डायलर खुलेगा:':'Any doubt to pay online? 👇 Tap Call Now - dialer will open:', HELP_MARKETING_FULL, phoneId));
+    await delay(400);
+    await sendWithDelay(interactiveButton(uid, lang==='ml'?'✅ ഇതിനകം അടച്ചോ? താഴെ ക്ലിക്ക് ചെയ്യൂ:':lang==='hi'?'✅ पहले से भुगतान किया? नीचे क्लिक करें:':'✅ Already paid? Tap below:', [{id:'PAY_VERIFY',title:verifyTitle}], phoneId));
+    if(schedule5){ try{scheduleReminder(uid,'install:PAY5MIN:5',lang,5*60*1000,phoneId);}catch(e){} }
+  }catch(e){ console.log('sendPayNowStep fail',e.message); }
+}
+// V233 STEP 5 ONLY: exact body + ONLY [Pay now] CTA button. User did NOT instruct Call fix here, so NO Call / NO Verify button on this Step 5 message. No extra link/fee line appended - body is exact.
+async function sendStep5Exact(uid,lang,fee,sub,phoneId,body){
+  try{
+    const link=getRazorpayLinkForSub(sub);
+    const payTitle=lang==='ml'?'💳 Pay now':lang==='hi'?'💳 Pay now':'💳 Pay now';
+    await sendWithDelay(singleCta(uid, String(body||'').substring(0,1024), {title:payTitle.substring(0,20), url:link}, phoneId)); // ONE message: exact body + [Pay now] button below it. No separate text message, or body would appear twice.
+    try{scheduleReminder(uid,'install:PAY5MIN:5',lang,5*60*1000,phoneId);}catch(e){}
+  }catch(e){ console.log('sendStep5Exact fail',e.message); }
+}
+function getPayReminderExact(lang,fee,sub){
+  const token=getTokenFee(sub||'OPP_DISTRICT');
+  // V232 EXACT 5-min / 1h / 12h / 24h reminder body from user. [Pay now] / [Call now] are the CTA buttons BELOW this body, not body text.
+  if(lang==='ml'){
+    let oppMl='ബിസിനസ് സെന്റർ അവസരം';
+    if(sub==='OPP_DISTRICT') oppMl='ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
+    else if(sub==='OPP_CORP') oppMl='കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
+    return `📍 Step 5 of 6 — 1A സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ബുക്ക് ആയിട്ടില്ല.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത് : 📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ, രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, "Pay now" ക്ലിക്ക് ചെയ്യുക:\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.\n\nപേയ്മെന്റ് അടയ്ക്കുന്നതിൽ സംശയമുണ്ടെങ്കിൽ ഞങ്ങളുടെ ടീമുമായി ഇപ്പോൾ സംസാരിക്കുക, സംശയം തീർത്തതിനുശേഷം വീണ്ടും രെജിസ്ട്രേഷൻ ഫീസ് അടച്ചു, 📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യുക.`;
+  }
+  if(lang==='hi'){
+    let oppHi='बिजनेस सेंटर अवसर';
+    if(sub==='OPP_DISTRICT') oppHi='जिला फ्रेंचाइजी अवसर';
+    else if(sub==='OPP_CORP') oppHi='कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
+    return `📍 Step 5 of 6 — 1A स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n👉 अब क्या करें : 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए, रजिस्ट्रेशन फी भरें, "Pay now" क्लिक करें:\n\n💳 रजिस्ट्रेशन फी Rs.${token} अभी भुगतान करें।\n\nपेमेंट करने में कोई doubt हो तो हमारी टीम से अभी बात करें, doubt दूर होने के बाद फिर से रजिस्ट्रेशन फीस भरें, 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करें।`;
+  }
+  let oppName='Business Center opportunity';
+  if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
+  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
+  return `📍 Step 5 of 6 — 1A step left\n\n🙏 Your ${oppName} is not booked yet.\n\n👉 What to do now : 📄 To download your Agreement and Income documents, pay the Registration Fee, click "Pay now":\n\n💳 Pay Registration Fee Rs.${token} now.\n\nIf you have any doubt in paying, talk to our team now, after clearing the doubt pay the Registration Fee again, 📄 download your Agreement and Income documents.`;
+}
+function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
 
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
@@ -1177,9 +1225,9 @@ function oppCongrats(lang, step){
     return `👏 Congratulations! Opportunity understood!\n👉 What to do now: Select if your district has Corporation:`;
   }
   if(step===5){
-    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! തയ്യാറായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, തുടർന്ന് "അടച്ചു" ക്ലിക്ക് ചെയ്യുക:`;
-    if(lang==='hi') return `👏 बधाई हो! तैयार हैं!\n👉 अब क्या करें: रजिस्ट्रेशन फी भरें, फिर "भुगतान किया" पर क्लिक करें:`;
-    return `👏 Congratulations! You are Ready!\n👉 What to do now: Pay Registration Fee, then click "I Paid":`;
+    if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! തയ്യാറായി!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, തുടർന്ന് "Pay now" ക്ലിക്ക് ചെയ്യുക:`;
+    if(lang==='hi') return `👏 बधाई हो! तैयार हैं!\n👉 अब क्या करें: रजिस्ट्रेशन फी भरें, फिर "Pay now" पर क्लिक करें:`;
+    return `👏 Congratulations! You are Ready!\n👉 What to do now: Pay Registration Fee, then click "Pay now":`;
   }
   if(step===6){
     if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! പേയ്മെന്റ് ക്ലെയിം ചെയ്തു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: 1 മെസേജിൽ വിശദാംശങ്ങൾ ടൈപ്പ് ചെയ്യുക:`;
@@ -1208,9 +1256,9 @@ async function repeatLastStep(uid, state, lang, phoneId){
   // PAY STEP - TOP PRIORITY FOR REMINDERS - Handled in scheduleReminder for escalated text, but keep fallback
   if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
     const fee = state.fee||15;
-    const escalatedText = getEscalatedPayText(lang, fee, level);
-    console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
-    return await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']}], phoneId));
+    const escalatedText = getPayReminderExact(lang, fee, sub); // V232 EXACT reminder, no FOMO variant
+    console.log(`REMINDER: Pay step level=${level} - sending EXACT Pay-Now reminder for ${uid}`);
+    return await sendPayNowStep(uid,lang,fee,state.sub,phoneId, escalatedText, false);
   }
   if(sub==='RIDE_BOOK' || last==='Book a Cab'){ const escalatedCab = getEscalatedGeneralText(lang, L.bookCab, level, 'Book a Cab'); return await sendCtaSequence(uid, escalatedCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ const escalated = getEscalatedGeneralText(lang, L.attachCab, level, 'Attach Cab'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
@@ -1234,8 +1282,8 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
-    // Reminder flow: Yes paid / Not paid / Call
-    return await sendWithDelay(interactiveButton(uid, L.payAfter, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']}])); 
+    // V230 Reminder flow: Pay-Now CTA only, no Paid/Not Paid buttons
+    return await sendPayNowStep(uid,lang,state.fee||15,state.sub,phoneId, getPayReminderExact(lang,state.fee||15,state.sub), false); // V232 EXACT reminder 
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid, oppProgress(lang,6)+'\n\n'+oppCongrats(lang,6)+'\n\n'+L.leadAsk, phoneId)); }
@@ -1325,6 +1373,14 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
       console.log(`REMINDER FIRING ${type} level=${level} to ${uid} via ${actualPhoneId} last=${state?.lastStep} - escalated`);
+      // V230 PAY5MIN: if still in Pay step and NOT verified/claimed, re-send Pay-Now CTA. If already paid/verified, do nothing.
+      if(type.includes('PAY5MIN')){
+        const ls=String(state.lastStep||'');
+        if(state.verified || ls.includes('VERIFIED') || ls.includes('PAY CLAIMED') || ls.includes('Payment Verified') || state.flow==='DONE'){ console.log('V230 SKIP PAY5MIN - already verified/claimed'); return; }
+        if(!(ls.includes('Pay Reg')||ls.includes('EMI Selected')||ls.includes('Not Paid')||ls.includes('Pay Rs')||ls.startsWith('Pay '))){ console.log('V230 SKIP PAY5MIN - no longer in Pay step: '+ls); return; }
+        await sendPayNowStep(uid,actualLang,state.fee||15,state.sub,actualPhoneId, getPay5MinChaseText(actualLang,state.fee||15,state.sub), false);
+        return;
+      }
       // V211 FIX: Stale reminder guard - Never show Language/Main Menu reminder if user already past that step (e.g. in Pay step)
       // Your 8:30 screenshot: Pay at 8:24, then Main Menu (Malayalam thanks + services) at 8:30 = old noLang/noService reminder firing late
       if((type.startsWith('noLang')||type.startsWith('noService')||type.includes('noLang')||type.includes('noService'))){
@@ -1391,8 +1447,8 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
-          const escalatedText = getEscalatedPayText(actualLang, fee, level);
-          await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']}], actualPhoneId));
+          const escalatedText = getPayReminderExact(actualLang, fee, state.sub); // V232 EXACT reminder, no FOMO variant
+          await sendPayNowStep(uid,actualLang,fee,state.sub,actualPhoneId, escalatedText, false);
         } else {
           // For all other steps, repeat with escalated wrapper in repeatLastStep will be handled there
           // But we pass level via state
@@ -2191,7 +2247,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){}
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
+      await sendStep5Exact(uid,lang,state.fee||15,state.sub,incomingPhoneId, payText);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Ready ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_READY:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_READY:12',lang,12*60*60*1000, incomingPhoneId);
@@ -2213,7 +2269,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       const payText = getPayText(lang, fee, state.sub);
   try{ saveRegistrationFee(uid, state.sub, fee); }catch(e){} 
       const dynamicLink = await createRazorpayPaymentLink(uid, state.sub, fee);
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
+      await sendStep5Exact(uid,lang,state.fee||15,state.sub,incomingPhoneId, payText);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `EMI ${btnId} Fee ${fee}L`, 'Clicked', HELP_MARKETING, state.lastStep, `Fee:${fee}L`], true);
       scheduleReminder(uid,'install:OPP_EMISEL:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:OPP_EMISEL:12',lang,12*60*60*1000, incomingPhoneId);
@@ -2226,7 +2282,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       clearReminders(uid); 
       const payText = getPayText(lang, state.fee||15, state.sub);
       const dynamicLink = await createRazorpayPaymentLink(uid, state.fee||15);
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText+'\n\n🔗 '+getRazorpayLinkForSub(state.sub), [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
+      await sendStep5Exact(uid,lang,state.fee||15,state.sub,incomingPhoneId, payText);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, `Not Paid ${state.fee||15}L`, 'Pending', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:NOTPAID:1',lang,1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'install:NOTPAID:12',lang,12*60*60*1000, incomingPhoneId);
@@ -2237,7 +2293,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       // V211: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
       const payLink2 = getRazorpayLinkForSub(state.sub);
       const payText2 = getPayText(lang, state.fee||15, state.sub);
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,5)+'\n\n'+oppCongrats(lang,5)+'\n\n'+payText2+'\n\n🔗 '+payLink2, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], incomingPhoneId));
+      await sendStep5Exact(uid,lang,state.fee||15,state.sub,incomingPhoneId, payText2);
       return;
     }
     // V211 FIX: PAY_VERIFY had NO handler in V208 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
@@ -2333,7 +2389,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         const btnPay = lang==='ml' ? 'ഇപ്പോൾ അടയ്ക്കുക' : lang==='hi' ? 'अभी भुगतान करें' : 'Pay Now';
         const btnVerify = lang==='ml' ? 'അടച്ചു - പരിശോധിക്കൂ' : lang==='hi' ? 'भुगतान किया - जांचें' : 'I Paid - Verify';
         const btnHuman = lang==='ml' ? 'ടീമിനോട് സംസാരിക്കൂ' : lang==='hi' ? 'टीम से बात करें' : 'Talk to Team';
-        await sendWithDelay(interactiveButton(uid, oneMsgBody, [{id:'PAY_NOW_CLICK',title: btnPay},{id:'PAY_VERIFY',title: btnVerify},{id:'HUMAN_TALK',title: btnHuman}], incomingPhoneId));
+        await sendPayNowStep(uid,lang,state.fee||15,state.sub,incomingPhoneId, oneMsgBody, false);
         return;
       }
       // Before Pay: NO human button - only repeat last step buttons
