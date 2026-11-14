@@ -1,10 +1,32 @@
-// V222 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
-// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V222
+// ============================================================================
+// BIZMAPIA BOT - LATEST VERSION - V229 FINAL - DO NOT USE OLDER VERSIONS
+// Built from: LAST server.js you uploaded (V226, 2761 lines, sha e42a1ef7)
+//   + V227: Unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP]
+//   + V228: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop
+//   + V229: Fixed inherited bug repeatLastStep actualLang->lang + stamped V229 everywhere
+// NO CODE AVOIDED: Every V226 line is kept, except 9 lines intentionally replaced (listed in V229 notes below)
+// V229 NOTES - intentional replacements only:
+//   1x repeatLastStep HUMAN_TALK_TEXT[actualLang] -> [lang] (bug fix, was undefined -> fell back to EN)
+//   1x FIRED_STOP setState now adds stopConfirmPending:false (STOP confirm flow)
+//   2x LEAD NAME/MOBILE failure now counts leadFailCount, 2nd wrong -> Call+Stop (was: only Sorry text)
+//   2x Before-Pay unknown: repeatLastStep -> SorryStopCall + [Call][STOP] (was: repeat only)
+//   3x Unknown fallback: Sorry text + repeat -> SorryStopCall + [Call][STOP] (was: Sorry + repeat)
+// REPLAY STANDARD (kept from V226): repeatLastStep() re-sends same step, never Main Menu
+// CONGRATS STANDARD (kept): oppCongrats() = "Excellent choice! / Congratulations! <prev step>! + What to do now: ..."
+// STEPS STANDARD (kept): oppProgress() = "Step X of 6 - Y steps left" (NOT "Only 0/0 steps to book" - that exact phrase was never in code)
+// BUTTONS/LINKS (kept): 75x interactiveButton, 8x getRazorpayLinkForSub, Pay/EMI/Video/Call/CTA links all kept
+// DEPLOY CHECK: Render log must show "V229 FINAL" - if it shows V222, you deployed an old file.
+// ============================================================================
+// // V222 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
+// ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V229 (see VERSION block above for history)
 // V222 FINAL - ONLY CHANGE vs V221: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V220: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
 // V222 FINAL - ONLY CHANGE vs V218: Fired_Loser_List gate on first HI + YES/STOP + auto-fire after 3rd reminder. NO Tamil/Kannada/Telugu. NO other code change. ====================
+// V229 FINAL - From LAST server.js (V226) + V227 + V228, no code avoided. Fixed repeatLastStep actualLang->lang bug.
+// V228: Pay-failed [Pay Again][Call][Stop] + Every 3rd reminder [Call][Stop] + STOP 2-step confirm + LEAD 2nd wrong -> Call/Stop.
+// V227 STOP+CALL FALLBACK: any unknown word/digit/alphabet/media -> Sorry + Do you want to stop or call + [Call Team][STOP].
 // V226 CURRENTFILE FIX: Slab Sheet labels + RegFee row fix + Webhook only PAID events + Unmatched payment saved.
-// V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V229 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // LOCKED ON: 2026-11-04 - BASED ON 7 DAYS DATA 302 USERS - MANUAL 3000->10 (0.33%) BOT 302->6 (2%) - 3 YEARS BRAND FAME
 // FEATURES: SHORT MAYA "Hi, I am Maya here to chat with you! 👋" + ALL INDIA PLATFORM "🇮🇳 India's Largest Online Platform - First 4-in-1 App" + STANDARD EMOJIS + FOMO + INBUILT DIALER + HUMAN HANDOVER + PAY VERIFY
 // 12 PDF: 2 DISTRICT-WITH + 2 DISTRICT-ONLY + 2 MUNICIPAL + 2 CORPORATION + 2 BC-RIDE + 2 BC-DIRECTORY - NO 5000 - REGISTRATION FEE NOT REFUNDABLE NOT PART OF FEE
@@ -1141,6 +1163,31 @@ function getSorryExplain(lang, lastStep, userText){
   }
 }
 
+// V227: Your requirement from YouTube company-video change time - any unknown word/digit/alphabet/media -> Sorry + Stop or Call
+function getSorryStopCall(lang, userText){
+  const safe = (userText||'').slice(0,30);
+  if(lang==='ml') return `😔 Sorry, \u201c${safe}\u201d എന്ന മറുപടി മനസ്സിലായില്ല.\n\nDo you want to stop or call to our team for your doubts?\n\nനിർത്തണോ അതോ സംശയങ്ങൾക്ക് ഞങ്ങളുടെ ടീമിനെ വിളിക്കണോ?`;
+  if(lang==='hi') return `😔 Sorry, आपका \u201c${safe}\u201d जवाब समझ नहीं आया।\n\nDo you want to stop or call to our team for your doubts?\n\nक्या आप रुकना चाहते हैं या अपनी शंकाओं के लिए हमारी टीम को कॉल करना चाहते हैं?`;
+  return `😔 Sorry, I don't understand your reply \u201c${safe}\u201d.\n\nDo you want to stop or call to our team for your doubts?`;
+}
+function getStopConfirmText(lang){
+  if(lang==='ml') return `🛑 Are you sure you want to stop?\n\nഞങ്ങൾ ഇനി മെസേജ് അയക്കില്ല. തുടരണമെങ്കിൽ Continue ക്ലിക്ക് ചെയ്യൂ.`;
+  if(lang==='hi') return `🛑 क्या आप सच में रुकना चाहते हैं?\n\nहम फिर मैसेज नहीं भेजेंगे। जारी रखना है तो Continue पर क्लिक करें।`;
+  return `🛑 Are you sure you want to stop?\n\nWe will not message you again. To continue, click Continue.`;
+}
+function getPayFailedText(lang, fee){
+  if(lang==='ml') return `⚠️ Payment not confirmed.\n\nRazorpay-ൽ നിങ്ങളുടെ പേയ്മെന്റ് കണ്ടില്ല. വീണ്ടും അടയ്ക്കണോ അതോ ടീമിനെ വിളിക്കണോ?`;
+  if(lang==='hi') return `⚠️ Payment not confirmed.\n\nRazorpay में आपका भुगतान नहीं मिला। फिर से भुगतान करें या टीम को कॉल करें?`;
+  return `⚠️ Payment not confirmed.\n\nWe did not find your payment in Razorpay. Pay again or call our team for your doubts?`;
+}
+function getThirdReminderText(lang){
+  if(lang==='ml') return `⏰ You are getting reminders because you did not reply.\n\nDo you want to stop or call to our team for your doubts?`;
+  if(lang==='hi') return `⏰ आपने जवाब नहीं दिया, इसलिए रिमाइंडर आ रहे हैं।\n\nDo you want to stop or call to our team for your doubts?`;
+  return `⏰ You are getting reminders because you did not reply.\n\nDo you want to stop or call to our team for your doubts?`;
+}
+function getStopCallButtons(lang){
+  return [{id:'HUMAN_TALK', title: lang==='ml' ? '📞 Call Team' : lang==='hi' ? '📞 Call Team' : '📞 Call Team'}, {id:'FIRED_STOP', title: lang==='ml' ? '🛑 STOP' : lang==='hi' ? '🛑 STOP' : '🛑 STOP'}];
+}
 // ===== V211 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
 // 1 step = 1 message. Every opp message = Congrats (prev step done) + What to do now + Steps Left, all in SAME message.
 function oppProgress(lang, step){
@@ -1205,7 +1252,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
     const fee = state.fee||15;
     const escalatedText = getEscalatedPayText(lang, fee, level);
     console.log(`REMINDER: Pay step level=${level} - sending 3 buttons Yes/No/Call for ${uid}`);
-    return await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[actualLang]||HUMAN_TALK_TEXT['en']}], phoneId));
+    return await sendWithDelay(interactiveButton(uid, escalatedText, [{id:'PAY_DONE',title:L.payBtn},{id:'PAY_NOT_DONE',title:L.notPaid},{id:'HUMAN_TALK',title:HUMAN_TALK_TEXT[lang]||HUMAN_TALK_TEXT['en']}], phoneId));
   }
   if(sub==='RIDE_BOOK' || last==='Book a Cab'){ const escalatedCab = getEscalatedGeneralText(lang, L.bookCab, level, 'Book a Cab'); return await sendCtaSequence(uid, escalatedCab, [{type:'url', title:'Android', url:PLAY_STORE},{type:'url', title:'iOS', url:APP_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
   if(sub==='RIDE_ATTACH' || last==='Attach Cab'){ const escalated = getEscalatedGeneralText(lang, L.attachCab, level, 'Attach Cab'); return await sendCtaSequence(uid, escalated, [{type:'url', title:'Android', url:PLAY_STORE},{type:'phone', title:'Call', phone:HELP_ADMIN_FULL}], phoneId); }
@@ -1339,6 +1386,12 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         console.log(`V211 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
         return;
       }
+      // V228: Every 3rd reminder (24h / :24) = Call + Stop only, not normal reminder. Prevents STOP fatigue + WhatsApp 3-button limit.
+      if(level===24 && state.lang && state.firedGate!=='STOPPED'){
+        await sendWithDelay(interactiveButton(uid, getThirdReminderText(actualLang), getStopCallButtons(actualLang), actualPhoneId));
+        try{ await autoFireLoser(uid, type); }catch(_){}
+        return;
+      }
       if(type.startsWith('noLang')||type.startsWith('noService')){
         const L = T[actualLang]||T.en;
         let welcomeText = L.welcome;
@@ -1380,6 +1433,11 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
         const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
         await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+      } else if(type.includes('VERIFY')){
+        // V228: Payment confirmation failed in real time - 2-min VERIFY reminder fired, no webhook yet
+        const payLinkV228 = getRazorpayLinkForSub(state.sub);
+        const btnPayAgain = actualLang==='ml' ? 'വീണ്ടും അടയ്ക്കുക' : actualLang==='hi' ? 'फिर से भुगतान करें' : 'Pay Again';
+        await sendWithDelay(interactiveButton(uid, getPayFailedText(actualLang, state.fee||15) + `\n\n🔗 ${payLinkV228}`, [{id:'PAY_NOW_CLICK', title: btnPayAgain},{id:'HUMAN_TALK', title:'📞 Call Team'},{id:'FIRED_STOP', title:'🛑 STOP'}], actualPhoneId));
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
@@ -1775,8 +1833,30 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId, firedGate:'ALLOWED'});
       return;
     }
+    if(btnId==='STOP_CONFIRM_YES'){
+      await setState(uid,{...state, firedGate:'STOPPED', stopConfirmPending:false, lastStep:'Fired STOP - Do Not Message', phoneId: incomingPhoneId});
+      clearReminders(uid);
+      await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired STOP '+incomingPhoneId, 'STOP - Do Not Message', 'Clicked', HELP_ADMIN, 'Fired STOP', ''], false);
+      try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired STOP', 'STOP - Do Not Message', 'STOP - User Said STOP', 'NO - Stopped']); }catch{}
+      await sendWithDelay(textMessage(uid, 'OK. Stopped. We will not message you again. ✅\n\nठीक है। रुक गए। हम आपको फिर मैसेज नहीं करेंगे। ✅\n\nശരി. നിർത്തി. ഞങ്ങൾ ഇനി നിങ്ങൾക്ക് മെസേജ് അയക്കില്ല. ✅', incomingPhoneId));
+      return;
+    }
+    if(btnId==='STOP_CONFIRM_NO'){
+      await setState(uid,{...state, stopConfirmPending:false, lastStep:'Stop Cancelled - Continue', phoneId: incomingPhoneId});
+      await sendWithDelay(textMessage(uid, lang==='ml' ? `👍 ശരി, തുടരാം. താഴെയുള്ള ബട്ടണിൽ ക്ലിക്ക് ചെയ്യൂ.` : lang==='hi' ? `👍 ठीक है, जारी रखते हैं। नीचे दिए बटन पर क्लिक करें।` : `👍 OK, continuing. Please click the button below.`, incomingPhoneId));
+      await repeatLastStep(uid, {...state, stopConfirmPending:false}, lang, incomingPhoneId);
+      return;
+    }
     if(btnId==='FIRED_STOP'){
-      await setState(uid,{...state, firedGate:'STOPPED', lastStep:'Fired STOP - Do Not Message', phoneId: incomingPhoneId});
+      // V228: STOP is 2-step - 1st tap asks confirm, only YES stops. Prevents accidental STOP.
+      if(!state.stopConfirmPending){
+        await setState(uid,{...state, stopConfirmPending:true, phoneId: incomingPhoneId});
+        await sendWithDelay(interactiveButton(uid, getStopConfirmText(lang), [{id:'STOP_CONFIRM_YES', title:'Yes, Stop'},{id:'STOP_CONFIRM_NO', title:'No, Continue'}], incomingPhoneId));
+        return;
+      }
+      // fall through to original STOP logic below if already confirmed
+
+      await setState(uid,{...state, firedGate:'STOPPED', stopConfirmPending:false, lastStep:'Fired STOP - Do Not Message', phoneId: incomingPhoneId});
       clearReminders(uid);
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired STOP '+incomingPhoneId, 'STOP - Do Not Message', 'Clicked', HELP_ADMIN, 'Fired STOP', ''], false);
       try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired STOP', 'STOP - Do Not Message', 'STOP - User Said STOP', 'NO - Stopped']); }catch{}
@@ -2274,7 +2354,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       // V211 STRUCTURED DETAILS - NO free-type loophole - Validate each step, do NOT save wrong details
       const step = state.detailStep || 'NAME';
       if(step==='NAME'){
-        if(v211_isBadName(txt)){ await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:` : lang==='hi' ? `😔 Sorry, कृपया अपना पूरा नाम केवल टाइप करें - Example: Ajo Devasia\n\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:` : `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:`), incomingPhoneId)); return; }
+        if(v211_isBadName(txt)){ const c=(state.leadFailCount||0)+1; await setState(uid,{...state, leadFailCount:c}); if(c>=2){ await setState(uid,{...state, leadFailCount:0}); await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId)); return; } await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:` : lang==='hi' ? `😔 Sorry, कृपया अपना पूरा नाम केवल टाइप करें - Example: Ajo Devasia\n\n👉 What to do now: अपना पूरा नाम केवल टाइप करें:` : `😔 Sorry, please type your FULL NAME only - Example: Ajo Devasia\n\n👉 What to do now: Type your full name only:`), incomingPhoneId)); return; }
         state.leadName=String(txt).trim(); state.detailStep='STATE'; state.lastStep='Name '+state.leadName; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
         await sendWithDelay(interactiveButton(uid, v211_stateAsk(lang), [{id:'STATE_KERALA',title:'Kerala'},{id:'STATE_TAMILNADU',title:'Tamil Nadu'},{id:'STATE_OTHER',title:'Other State'}], incomingPhoneId)); return;
       }
@@ -2284,7 +2364,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return;
       }
       if(step==='MOBILE'){
-        const mob=v211_isValidMobile(txt); if(!mob){ await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:` : lang==='hi' ? `😔 Sorry, कृपया 10-digit MOBILE NUMBER केवल टाइप करें - Example: 9567742507\n\n👉 What to do now: 10-digit mobile केवल टाइप करें:` : `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:`), incomingPhoneId)); return; }
+        const mob=v211_isValidMobile(txt); if(!mob){ const c2=(state.leadFailCount||0)+1; await setState(uid,{...state, leadFailCount:c2}); if(c2>=2){ await setState(uid,{...state, leadFailCount:0}); await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId)); return; } await sendWithDelay(textMessage(uid, (lang==='ml' ? `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:` : lang==='hi' ? `😔 Sorry, कृपया 10-digit MOBILE NUMBER केवल टाइप करें - Example: 9567742507\n\n👉 What to do now: 10-digit mobile केवल टाइप करें:` : `😔 Sorry, please type 10-digit MOBILE NUMBER only - Example: 9567742507\n\n👉 What to do now: Type 10-digit mobile only:`), incomingPhoneId)); return; }
         state.leadMobile=mob; state.leadData=`${state.leadName||''}, ${state.leadDistrict||''}, ${state.leadState||''}, ${mob}`; state.detailStep='OCC'; state.lastStep='Mobile '+mob; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
         await sendWithDelay(interactiveButton(uid,L.occQ,[{id:'OCC_BUSINESS',title:L.bus},{id:'OCC_HOUSE',title:L.house},{id:'OCC_EMP',title:L.emp}], incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Lead Details Validated', state.leadData, HELP_MARKETING, state.lastStep, state.leadData], true); return;
       }
@@ -2320,8 +2400,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await sendWithDelay(interactiveButton(uid, oneMsgBody, [{id:'PAY_NOW_CLICK',title: btnPay},{id:'PAY_VERIFY',title: btnVerify},{id:'HUMAN_TALK',title: btnHuman}], incomingPhoneId));
         return;
       }
-      // Before Pay: NO human button - only repeat last step buttons
-      await repeatLastStep(uid, state, lang, incomingPhoneId);
+      // V227: Before Pay also gets Stop + Call - your requirement (was: only repeat, no Call/Stop)
+      await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId));
       return;
     }
     // V211 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
@@ -2333,10 +2413,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await delay(400);
         await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
       } else {
-        const sorryV211 = getSorryExplain(lang, state.lastStep||'', txt);
-        await sendWithDelay(textMessage(uid, sorryV211, incomingPhoneId));
-        await delay(400);
-        await repeatLastStep(uid, state, lang, incomingPhoneId);
+        // V227: Unknown button/text -> Sorry + Stop or Call (was: Sorry + repeat only)
+        await sendWithDelay(interactiveButton(uid, getSorryStopCall(lang, txt), getStopCallButtons(lang), incomingPhoneId));
       }
     }
   }catch(e){ console.log('webhook error',e.message,e.stack); }
