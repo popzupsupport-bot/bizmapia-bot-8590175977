@@ -826,6 +826,46 @@ function getPayReminderExact(lang,fee,sub){
 }
 function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
 
+// V240 CALL-FOLLOWUP REMINDER - for Pay-step leads who already saw Call button
+// Malayalam uses: "🙏 നിങ്ങൾ ഞങ്ങളുടെ ടീമിനെ വിളിച്ചിരുന്നോ?" (question, not assumption)
+function getCallFollowupReminderExact(lang, fee, sub){
+  const token = getTokenFee(sub||'OPP_DISTRICT');
+  if(lang==='ml'){
+    let oppMl='ബിസിനസ് സെന്റർ അവസരം';
+    if(sub==='OPP_DISTRICT') oppMl='ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
+    else if(sub==='OPP_CORP') oppMl='കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
+    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങൾ ഞങ്ങളുടെ ടീമിനെ വിളിച്ചിരുന്നോ?\n\nമറുപടി കിട്ടിയോ? സംശയങ്ങൾ മാറിയോ? ഇപ്പോൾ Pay ചെയ്യാൻ തയ്യാറാണോ?\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.`;
+  }
+  if(lang==='hi'){
+    let oppHi='बिजनेस सेंटर अवसर';
+    if(sub==='OPP_DISTRICT') oppHi='जिला फ्रेंचाइजी अवसर';
+    else if(sub==='OPP_CORP') oppHi='कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
+    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 क्या आपने हमारी टीम को कॉल किया था?\n\nजवाब मिला? doubts clear हुए? अब Pay करने के लिए तैयार हैं?\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।`;
+  }
+  let oppName='Business Center opportunity';
+  if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
+  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
+  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Did you call our team?\n\nDid you get a response? Doubts cleared? Ready to pay now?\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.`;
+}
+async function sendCallFollowupStep(uid, lang, fee, sub, phoneId){
+  try{
+    const body = getCallFollowupReminderExact(lang, fee, sub);
+    await sendWithDelay(textMessage(uid, String(body||''), phoneId));
+    await delay(400);
+    const link = getRazorpayLinkForSub(sub);
+    const payLine = lang==='ml' ? '👇 താഴെ Pay Now ക്ലിക്ക് ചെയ്യൂ - Razorpay തുറക്കും'
+      : lang==='hi' ? '👇 नीचे Pay Now क्लिक करें - Razorpay खुलेगा'
+      : '👇 Tap Pay Now below - Razorpay will open';
+    await sendWithDelay(singleCta(uid, payLine, {title:'Pay now', url:link}, phoneId));
+    await delay(400);
+    const callLine = lang==='ml' ? 'ഇനിയും സംശയമുണ്ടെങ്കിൽ 👇 Call Again ക്ലിക്ക് ചെയ്യൂ'
+      : lang==='hi' ? 'अभी भी doubt हो तो 👇 Call Again क्लिक करें'
+      : 'Still have doubt? 👇 Tap Call Again';
+    await sendWithDelay(realDialerCta(uid, callLine, HELP_MARKETING_FULL, phoneId));
+  }catch(e){ console.log('sendCallFollowupStep fail', e.message); }
+}
+
+
 const HELP_ADMIN = '8590183646';
 const HELP_MARKETING = '8590175977';
 const HELP_HUMAN = '8590175977';
@@ -1261,6 +1301,11 @@ async function repeatLastStep(uid, state, lang, phoneId){
   // PAY STEP - TOP PRIORITY FOR REMINDERS - Handled in scheduleReminder for escalated text, but keep fallback
   if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
     const fee = state.fee||15;
+    // V240: 12h/24h OR already-called -> Call-followup (Did you call? Doubts cleared? Ready to pay?) + [Pay now] + [Call again]
+    if(state.called || level===12 || level===24){
+      console.log(`REMINDER: Pay step level=${level} - sending CALL-FOLLOWUP reminder for ${uid}`);
+      return await sendCallFollowupStep(uid,lang,fee,state.sub,phoneId);
+    }
     const escalatedText = getPayReminderExact(lang, fee, sub); // V232 EXACT reminder, no FOMO variant
     console.log(`REMINDER: Pay step level=${level} - sending EXACT Pay-Now reminder for ${uid}`);
     return await sendPayNowStep(uid,lang,fee,state.sub,phoneId, escalatedText, false);
@@ -1288,7 +1333,7 @@ async function repeatLastStep(uid, state, lang, phoneId){
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
     if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid')){ 
     // V230 Reminder flow: Pay-Now CTA only, no Paid/Not Paid buttons
-    return await sendPayNowStep(uid,lang,state.fee||15,state.sub,phoneId, getPayReminderExact(lang,state.fee||15,state.sub), false); // V232 EXACT reminder 
+    if(state.called || level===12 || level===24){ return await sendCallFollowupStep(uid,lang,state.fee||15,state.sub,phoneId); } return await sendPayNowStep(uid,lang,state.fee||15,state.sub,phoneId, getPayReminderExact(lang,state.fee||15,state.sub), false); // V232 EXACT reminder 
   }
   if(last.includes('EMI Options')){ const fee = state.fee||15; let emiText = getEMIText(lang, fee); emiText = getEscalatedGeneralText(lang, emiText, level, 'EMI'); return await sendWithDelay(interactiveButton(uid,emiText+"\n\nPlease select any one from below:-",[{id:'EMI_10',title:L.emi10},{id:'EMI_20',title:L.emi20}], phoneId)); }
   if(last.includes('Pay Done') || last.includes('Lead') || last.includes('Lead Typed')){ return await sendWithDelay(textMessage(uid, oppProgress(lang,6)+'\n\n'+oppCongrats(lang,6)+'\n\n'+L.leadAsk, phoneId)); }
@@ -1459,8 +1504,13 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
         if(last.includes('Pay Reg') || last.includes('✅ EMI Selected') || last.includes('Not Paid') || last.includes('Pay Rs') || last.startsWith('Pay ')){
           const L = T[actualLang]||T.en;
           const fee = state.fee||15;
-          const escalatedText = getPayReminderExact(actualLang, fee, state.sub); // V232 EXACT reminder, no FOMO variant
-          await sendPayNowStep(uid,actualLang,fee,state.sub,actualPhoneId, escalatedText, false);
+          // V240: 12h/24h OR already-called -> Call-followup + [Pay now] + [Call again]
+          if(state.called || level===12 || level===24){
+            await sendCallFollowupStep(uid,actualLang,fee,state.sub,actualPhoneId);
+          } else {
+            const escalatedText = getPayReminderExact(actualLang, fee, state.sub); // V232 EXACT reminder, no FOMO variant
+            await sendPayNowStep(uid,actualLang,fee,state.sub,actualPhoneId, escalatedText, false);
+          }
         } else {
           // For all other steps, repeat with escalated wrapper in repeatLastStep will be handled there
           // But we pass level via state
