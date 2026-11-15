@@ -806,23 +806,23 @@ async function sendStep5Exact(uid,lang,fee,sub,phoneId,body){
 }
 function getPayReminderExact(lang,fee,sub){
   const token=getTokenFee(sub||'OPP_DISTRICT');
-  // V232 EXACT 5-min / 1h / 12h / 24h reminder body from user. [Pay now] / [Call now] are the CTA buttons BELOW this body, not body text.
+  // V239 SHORT REMINDER - user asked: too many lines. Short professional body. [Pay now] / [Call now] CTA bubbles BELOW already say what to do, so body does NOT repeat them.
   if(lang==='ml'){
     let oppMl='ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl='ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
     else if(sub==='OPP_CORP') oppMl='കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
-    return `📍 Step 5 of 6 — 1A സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ബുക്ക് ആയിട്ടില്ല.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത് : 📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യാൻ, രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കുക, "Pay now" ക്ലിക്ക് ചെയ്യുക:\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} ഇപ്പോൾ അടയ്ക്കുക.\n\nപേയ്മെന്റ് അടയ്ക്കുന്നതിൽ സംശയമുണ്ടെങ്കിൽ ഞങ്ങളുടെ ടീമുമായി ഇപ്പോൾ സംസാരിക്കുക, സംശയം തീർത്തതിനുശേഷം വീണ്ടും രെജിസ്ട്രേഷൻ ഫീസ് അടച്ചു, 📄 നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ഡൗൺലോഡ് ചെയ്യുക.`;
+    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ഇതുവരെ ബുക്ക് ആയിട്ടില്ല.\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.`;
   }
   if(lang==='hi'){
     let oppHi='बिजनेस सेंटर अवसर';
     if(sub==='OPP_DISTRICT') oppHi='जिला फ्रेंचाइजी अवसर';
     else if(sub==='OPP_CORP') oppHi='कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
-    return `📍 Step 5 of 6 — 1A स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n👉 अब क्या करें : 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए, रजिस्ट्रेशन फी भरें, "Pay now" क्लिक करें:\n\n💳 रजिस्ट्रेशन फी Rs.${token} अभी भुगतान करें।\n\nपेमेंट करने में कोई doubt हो तो हमारी टीम से अभी बात करें, doubt दूर होने के बाद फिर से रजिस्ट्रेशन फीस भरें, 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करें।`;
+    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।`;
   }
   let oppName='Business Center opportunity';
   if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
   else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
-  return `📍 Step 5 of 6 — 1A step left\n\n🙏 Your ${oppName} is not booked yet.\n\n👉 What to do now : 📄 To download your Agreement and Income documents, pay the Registration Fee, click "Pay now":\n\n💳 Pay Registration Fee Rs.${token} now.\n\nIf you have any doubt in paying, talk to our team now, after clearing the doubt pay the Registration Fee again, 📄 download your Agreement and Income documents.`;
+  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.`;
 }
 function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
 
@@ -2839,14 +2839,14 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V238 EMI-FIX - EMI BUTTONS 10/20 MONTHS (CENTER 1L STAYS 5/9) - STEP1/STEP5/REMINDER/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V239 REMINDER-SHORT - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
 app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V222', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V222','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V222', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V222', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V222', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V238 EMI-FIX - EMI BUTTONS 10/20 MONTHS (CENTER 1L STAYS 5/9) - STEP1/STEP5/REMINDER/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V239 REMINDER-SHORT - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V222 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
