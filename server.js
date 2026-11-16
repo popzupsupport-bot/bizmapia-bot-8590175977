@@ -132,7 +132,7 @@ const VIDEO_EN_CENTER = 'https://youtu.be/r0X77XfmF94?si=_8Fej-ncUiO9GRCn';
 const VIDEO_ML_DISTRICT = 'https://youtu.be/Fll3OY-hilU?si=O5VnmyCXTdlfhpsB';
 const VIDEO_ML_CORP = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
 const VIDEO_ML_MUNICIPAL = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
-const VIDEO_ML_CENTER = 'https://youtu.be/Ds0lBtTaI6c?si=oQWgGTrCYg-ODBzF';
+const VIDEO_ML_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=8wyZOiBK6polJwVE';
 
 // HINDI - using English links as fallback (update if you have separate Hindi links)
 const VIDEO_HI_DISTRICT = VIDEO_EN_DISTRICT;
@@ -145,7 +145,7 @@ function getVideoUrl(sub, lang){
   if(lang==='ml'){
     if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Fll3OY-hilU";
     if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=F9rI2crM7Ow";
-    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=Ds0lBtTaI6c";
+    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=jCwTwiuSi5s";
     return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
   }
   if(lang==='hi'){
@@ -277,7 +277,7 @@ const YOUTUBE_VIDEOS_ALL = {
   ML_DISTRICT: { id: "Fll3OY-hilU", url: "https://www.youtube.com/watch?v=Fll3OY-hilU" },
   ML_CORP: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
   ML_MUNI: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
-  ML_CENTER: { id: "Ds0lBtTaI6c", url: "https://www.youtube.com/watch?v=Ds0lBtTaI6c" },
+  ML_CENTER: { id: "jCwTwiuSi5s", url: "https://www.youtube.com/watch?v=jCwTwiuSi5s" },
   EN_DISTRICT: { id: "_y2JeFHBnqg", url: "https://www.youtube.com/watch?v=_y2JeFHBnqg" },
   EN_CORP: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
   EN_MUNI: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
@@ -288,7 +288,7 @@ const YOUTUBE_VIDEOS_ALL = {
     district: "https://www.youtube.com/watch?v=Fll3OY-hilU",
     corp: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
     muni: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
-    center: "https://www.youtube.com/watch?v=Ds0lBtTaI6c",
+    center: "https://www.youtube.com/watch?v=jCwTwiuSi5s",
     knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
   },
   en: {
