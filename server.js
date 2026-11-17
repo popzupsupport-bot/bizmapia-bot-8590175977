@@ -1810,8 +1810,8 @@ async function repeatLastStep(uid, state, lang, phoneId){
   return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
   if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
   if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn}], phoneId)); }
-  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
+  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
+  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n'+escalatedReq, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
@@ -2013,6 +2013,13 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       if(!state || state.flow==='DONE') return;
       const lastActive = state.lastActive ? Date.now() - state.lastActive : 999999999;
       if(type.endsWith(':1') && !type.endsWith(':12') && !type.endsWith(':24') && lastActive < 30*60*1000){ console.log(`Skipping 1h reminder, active ${lastActive}ms ago`); return; }
+      // V285 FIX: User already replied after this reminder was scheduled -> reminder is STALE, do not fire.
+      // Example: user typed "Watched video, whats next?" then old VIDEO reminder still fired 1 min later.
+      // If user was active in last 2 min, ANY VIDEO / OPP / GEN / Are-you-there / Busy reminder firing now is stale.
+      if((type.includes('VIDEO') || type.includes('OPP_') || type.includes('GEN_') || type.includes('ARE_YOU_THERE') || type.includes('BUSY_CHECK')) && lastActive < 2*60*1000){ console.log(`V285 SKIP stale reminder ${type} - user replied ${Math.round(lastActive/1000)}s ago, last=${state?.lastStep}`); return; }
+      // V286 FIX: Already Seen + marked in replay -> never send video link again. Reminders about video are stale.
+      // If user is now stuck on Benefits/Support/Requirements, the GEN chain (not video reminders) handles it.
+      if(state.videoWatched && (type.includes('VIDEO') || type.includes('OPP_ARE_YOU_THERE') || type.includes('OPP_BUSY_CHECK') || type.includes('OPP_1HOUR') || type.includes('OPP_FOLLOWUP'))){ console.log(`V286 SKIP video reminder - already marked Seen, last=${state?.lastStep}`); return; }
       const actualLang = state.lang || lang || 'en';
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
@@ -2751,7 +2758,14 @@ app.post('/webhook', async(req,res)=>{
     const uid = msg.from;
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID;
     const txt = msg.text?.body||'';
-    const btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    // V285 FIX: Free text "Watched video, whats next?" / "video kandu" / "video dekha" after a video = same as tapping [Yes seen].
+    // Without this, Maya treated it as generic chat and the old video reminder still fired after it.
+    try{
+      const _txtLow = String(txt||'').toLowerCase();
+      const _isWatchedText = _txtLow.includes('watched video') || _txtLow.includes('watched the video') || _txtLow.includes('video kandu') || _txtLow.includes('video kandhu') || _txtLow.includes('video dekha') || _txtLow.includes('video dekh') || _txtLow.includes('video parthu') || _txtLow.includes('seen the video') || _txtLow.includes('video seen');
+      if(!btnId && _isWatchedText){ btnId = 'VIDEO_WATCHED'; console.log('V285 free-text watched -> VIDEO_WATCHED'); }
+    }catch(_){}
     const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = getISTTime();
     let state = await getState(uid);
@@ -3304,7 +3318,7 @@ Let's check Business Center details.
 
     // ===== V247 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
     if(btnId==='OPP_LEARN_VIDEO'){
-      state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.videoWatched=false; state.oppVideoWatched=false; state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; // V286: user said NOT watched - video link IS allowed again state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
       if(state.sub==='OPP_DISTRICT' || state.sub==='OPP_CORP' || state.sub==='OPP_MUNI'){
         // V247 FRANCHISEE EXPLAINER (District + Corp/Muni ONLY): same as Step 1 - NO raw link, [Watch Video] CTA carries inbuilt YouTube link, NO skip, NO Watched button yet. Watched is confirmed ONLY by the 5-min reminder below.
@@ -3323,7 +3337,7 @@ Let's check Business Center details.
       state.learnMode='read'; state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const benDyn2 = getBenText(state.sub, lang);
       const qText2 = lang==='ml' ? `\n\n👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?\n👉 മനസ്സിലായെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `\n\n👋 लाभ पढ़े? समझ में आया?\n👉 समझ आया तो नीचे क्लिक करें:` : `\n\n👋 Did you read Benefits? Understood?\n👉 If understood, click below:`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     // ===== V284 GENERIC CONTINUE =====
@@ -3401,12 +3415,13 @@ Let's check Business Center details.
     // ===== END V283 =====
     if(btnId==='VIDEO_WATCHED'){
       if(state.learnMode==='video'){
+        state.videoWatched=true; state.oppVideoWatched=true;
         state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
         const doneMsg = lang==='ml' ? `✅ വീഡിയോ കണ്ടതിന് നന്ദി! അവസരം മനസ്സിലായി.` : lang==='hi' ? `✅ वीडियो देखने के लिए धन्यवाद! अवसर समझ में आ गया।` : `✅ Thanks for watching video! Opportunity understood.`;
         await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+doneMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
         return;
       }
-      state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.lastStep='Benefits - After Video Watched'; state.videoWatched=true; state.oppVideoWatched=true; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); // V286: marked Seen - never send video link again unless user taps Watch now
       const benDyn = getBenText(state.sub, lang);
       const qText = lang==='ml' ? `
 
@@ -3422,12 +3437,12 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
         if(btnId==='VIDEO_NOT_WATCHED'){
       // V247: Franchisee explainer - user did NOT watch yet. Resend Watch-only video message + reschedule 5-min watched confirmation. No skip.
-      state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.videoWatched=false; state.oppVideoWatched=false; state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; // V286: user said NOT watched - video link IS allowed again state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl2 = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
       const vMsg2 = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ അറിയാൻ ഈ അവസരത്തിന്റെ വീഡിയോ കാണുക:\n\n👇 *വീഡിയോ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*` : lang==='hi' ? `\n\nफ्रेंचाइजी विवरण जानने के लिए इस अवसर का वीडियो देखें:\n\n👇 *वीडियो देखने के लिए नीचे See Video बटन पर क्लिक करें:*` : `\n\nWatch this Opportunity Video to know the franchise details:\n\n👇 *Click the button below to see video - See Video:*`);
       await sendWithDelay(singleCta(uid, vMsg2, {title: '🎥 See Video', url: vUrl2}, incomingPhoneId));
@@ -3451,7 +3466,14 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='SKIP_3CLICKS'){
+      // V286: User does not want to read the 3 articles (Benefits / Support / Requirements) -> jump straight to next step.
+      state.lastStep='Requirements Understood - Skipped 3 Clicks - Ready to Submit'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const skipMsg = lang==='ml' ? `👍 മനസ്സിലായി! 3 ലേഖനങ്ങൾ വായിക്കാതെ അടുത്ത സ്റ്റെപ്പിലേക്ക് പോകാം.` : lang==='hi' ? `👍 समझ गई! 3 लेख पढ़े बिना अगले स्टेप पर चलते हैं।` : `👍 Got it! Skipping the 3 articles, going to the next step.`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+skipMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_BEN'){
@@ -3471,7 +3493,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_SUP_AGAIN'){
@@ -3491,7 +3513,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_SUP'){
@@ -3511,7 +3533,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_REQ_AGAIN'){
@@ -3531,7 +3553,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_REQ'){
@@ -3543,9 +3565,9 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+L.benText + `
 
-Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+L.supText, [{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+L.reqText, [{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
+Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+L.supText, [{id:'KNOW_REQ',title:L.reqBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+L.reqText, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
       const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
@@ -4150,7 +4172,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V284 AI-Reminders-Every-Stuck-Step', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V286 No-Repeat-Video-Link + Skip-3-Clicks', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4186,7 +4208,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V284 AI-Reminders-Every-Stuck-Step | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V286 No-Repeat-Video-Link + Skip-3-Clicks | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
