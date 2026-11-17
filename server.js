@@ -16,13 +16,13 @@
 // V287 Company-vs-Opportunity-Video-Seen-Fix | V288 Step-Aware-Recognition-Every-Step | V289 Verified All Edits Present
 // V290 Real-Time vs Slow | V291 Language-From-Typed-Text | V292 Hurry-Proof | V293 Language-After-Reload-Fix
 // V294 State-Declared-First-Fix | V295 FAQ-No-AI-Answer | V296 Universal-Responder-Any-Input (fallback ONLY, NEVER restart in finalization - V296 Guard)
-// V297 Loop-Killed | V312 ALL-CODES-FIXED-TO-LATEST-FINAL | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
+// V297 Loop-Killed | V314 FINAL-BEST | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
-// V312 BOOT-LOG-FIXED-FINAL
+// V314 FINAL-BEST
 // V309 FINAL-COMPLETED-AUDITED - audit stamp, no logic change (all V309 logic carried in V310) ("Yes, next" -> advance, NEVER restart)
 // V304 FINAL-LOCKED - this build
-// V312 BOOT-LOG-FIXED-FINAL - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
+// V314 FINAL-BEST - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
 // 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
@@ -489,12 +489,13 @@ GOAL: Sort + Engage + Finalize.
 FIRST JOB (first 2 messages, for EVERY new user):
 1) If source unknown, ask: "Where did you see Bizmapia? Facebook ad / Instagram / Google / YouTube / Friend / App?" in user's language.
 2) Ask WHAT they want: Business Opportunity OR Service (Taxi / Delivery / Directory / Booking)?
+3) Ask TASTE in 1 question before showing options: e.g. Business -> "What kind of earning are you looking for - small / medium / big?" Service -> "What do you need first - Taxi / shop search / delivery / booking?" Do NOT show full option list before taste.
 3) Sense if they LIKE it / CONSIDERING / DOUBT / PRICE DOUBT. If doubt, solve doubt first, never push pay.
 ALL INDIA + SCARCITY (say naturally once when explaining opportunity, once when reminding - NOT every message):
 "Bizmapia is an All India platform - First 4-in-1 App in India. Daily 10,000+ people enquire from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
 HUMAN HANDOVER RULE:
 - If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
-- If user sends voice note / image / video, say "Please type it in words, I can read text best" in user's language.
+- If user sends voice note: treat it as heard, NEVER restart, NEVER send old menu. Reply in user's language: voice heard, continue the SAME step they were in (video/capacity/pay/details/service), ask ONE short typed line only if the voice point is unclear, then return to finalization. If user sends image/video, ask for 1-line typed note, keep same step.
 - If user sends same message 3+ times, be patient, say "I am reading, one moment".
 
 V268 FINAL ROUTER - HOW YOU WORK (NEVER BREAK):
@@ -513,7 +514,7 @@ V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced 
 - If language = Hindi -> reply ONLY in Hindi script.
 - FIRST MESSAGE of every new chat: WELCOME IN ENGLISH ONLY + CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed. Do NOT use Malayalam/Hindi in first message.
   FIRST WELCOME MESSAGE - ENGLISH ONLY (V267 RULE, NEVER BREAK):
-  "Hello! Welcome to *Bizmapia!* I am *_Maya_*, your personal guide here. Bizmapia is All-India platform - Taxi, Business Search, Delivery, Booking + Business Opportunity to earn. Type or voice note, I will help you find right option. Tap language below:"
+  "Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n📦 *Online Booking* — hotel rooms, appointments, movie / show tickets\n\nWhat do you want to experience — our services, or business opportunity to earn with Bizmapia? Tap language below:"
   Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
   Do NOT write the welcome in Malayalam / Hindi / mixed languages. English only until user picks a language.
   AFTER language is confirmed, reply ONLY in that confirmed language, pure script. No mixing.
@@ -2978,7 +2979,7 @@ app.post('/webhook', async(req,res)=>{
         }
       }
     }catch(_){}
-    // V305 LANGUAGE LOCK - Replaces V291 auto-switch. V291 was the bug: it re-detected language from EVERY typed message.
+    // V314 SINGLE LANGUAGE RULE - Language frozen after first selection. V305 + V307 merged: any later switch request (even explicit 'need english') is IGNORED, lang stays. No exceptions. V291 was the bug: it re-detected language from EVERY typed message.
     // So: user locked Malayalam -> typed "already watched" in English -> Maya switched to English. User typed "need malayalam" -> Maya stayed in English because "need malayalam" was treated as English text.
     // LOCK RULE: Once language is set (by button or explicit request), NEVER auto-switch from normal inputs. English words like "already watched", "yes, next", "balance details" are CONTENT, not language change.
     // ONLY an EXPLICIT language-change request switches: "need malayalam", "malayalam please", "change to malayalam", "malayalathil", "need english", "english please", "change to english", "need hindi", "hindi me", "hindi please".
@@ -3002,7 +3003,7 @@ app.post('/webhook', async(req,res)=>{
       if(state.lang){ _want=null; }
       if(_want && _want!==state.lang){
         const _prev = state.lang||'none'; state.lang=_want; lang=_want;
-        console.log(`V305 LANGUAGE LOCK switch ${_prev} -> ${_want} from explicit request: "${String(txt||'').slice(0,40)}"`);
+        console.log(`V314 LANGUAGE FROZEN - switch ignored ${_prev} -> ${_want} (kept ${_prev}): "${String(txt||'').slice(0,40)}"`);
         try{ await setState(uid, {...state, lang:_want, lastStep: state.lastStep||'Language Switched'}); }catch(_){}
         // Reply in NEW language confirming switch + bring back to current step (do not restart)
         const _step5 = state.lastStep||'';
@@ -3206,13 +3207,44 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     // ===== V249 HYBRID - AI quick button -> feed back to AI =====
+
+    // ===== V314 DETERMINISTIC SERVICES - WHO ARE YOU FIRST (user scope, not generic AI) =====
+    // AI_SERVICES no longer goes straight to 4 services. First: Customer / Driver / Shop Owner.
+    // Each branch is a FIXED script from user scope - AI must not invent rates, must refer to Tender/Annexure-B + www.bizmapia.com for advertainment rates.
+    if(btnId==='WHO_CUSTOMER' || btnId==='WHO_DRIVER' || btnId==='WHO_SHOP'){
+      const sl = state.lang || 'ml';
+      await setState(uid,{...state, lang:sl, lastStep:'V314 - Service Who '+btnId, aiMode:true});
+      if(btnId==='WHO_CUSTOMER'){
+        const msg = sl==='ml' ? `🙏 സ്വാഗതം! Bizmapia App-ൽ നിന്ന് എല്ലാ സേവനങ്ങളും ഉപയോഗിക്കാം. 💛\n\n🚖 Taxi - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n📖 Directory - അടുത്തുള്ള കട / സേവനം / ഓഫർ കണ്ടെത്താം\n🛵 Delivery - ഭക്ഷണം / സാധനങ്ങൾ വീട്ടിലെത്തും\n📦 Booking - ഹോട്ടൽ റൂം, Appointment, Movie / Show ടിക്കറ്റ്\n\n📱 ആദ്യം App install ചെയ്യൂ, OTP login ചെയ്യൂ. ഏതാണ് നിങ്ങളുടെ ഫോൺ?` : `🙏 Welcome! You can use all Bizmapia services from the App. 💛\n\n🚖 Taxi - book a taxi anywhere\n📖 Directory - find nearby shop / service / offer\n🛵 Delivery - food / items to your doorstep\n📦 Booking - hotel room, appointment, movie / show ticket\n\n📱 First install the App and login with OTP. Which phone do you use?`;
+        try{ await sendWithDelay(interactiveButton(uid, msg, [{id:'APP_ANDROID',title:'🤖 Android'},{id:'APP_IOS',title:'🍎 iPhone'},{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+      } else if(btnId==='WHO_DRIVER'){
+        const msg = sl==='ml' ? `🚖 ഡ്രൈവർ ആയി Bizmapia-യിൽ ചേരാം! 🙏\n\n✅ Step 1: Driver App install ചെയ്ത് Google login ചെയ്യൂ\n✅ Step 2: Driver profile + Vehicle details പൂർത്തിയാക്കൂ\n✅ Step 3: Cab attachment Bizmapia-യുമായി submit ചെയ്യൂ\n\n💰 One-time registration: Rs.150/- മാത്രം\n🎁 Rs.150 അടച്ചാൽ 365 ദിവസം / 180 ദിവസം / 90 ദിവസം FREE recharge കിട്ടാൻ chance ഉണ്ട്\n♾️ കുറഞ്ഞ recharge-ൽ endless trip opportunity - Bizmapia മാത്രം\n💸 എല്ലാ trip-നും നല്ല fare - Normal / Peak / Night (Double charge)\n🏧 വരുമാനം 24 മണിക്കൂറിന് ശേഷം withdraw ചെയ്യാം\n\n📞 Registration കഴിഞ്ഞാൽ കമ്പനിയിൽ നിന്ന് callback വരും - test trip വഴി App performance verify ചെയ്യും. അതിന് ശേഷം trips തുടങ്ങാം.` : `🚖 Join Bizmapia as a Driver! 🙏\n\n✅ Step 1: Install Driver App and Google login\n✅ Step 2: Complete driver profile + vehicle details\n✅ Step 3: Submit cab attachment with Bizmapia\n\n💰 One-time registration: only Rs.150/-\n🎁 After paying Rs.150 you get a chance of 365 days / 180 days / 90 days FREE recharge\n♾️ Endless trip opportunity on a lower recharge - only Bizmapia\n💸 Good fare for every trip - Normal / Peak / Night (Double charge)\n🏧 Withdraw your earnings after 24 hours\n\n📞 After registration you will get a callback from the company - a test trip will verify your app performance. After that you can start trips.`;
+        try{ await sendWithDelay(singleCta(uid, msg, {title:'🚖 Driver App', url:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+        try{ await sendWithDelay(interactiveButton(uid, sl==='ml'?'👉 അടുത്തത് എന്ത് വേണം?': '👉 What next?', [{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: sl==='ml'?'സേവനങ്ങൾ':'Services'}], incomingPhoneId)); }catch(e){}
+      } else if(btnId==='WHO_SHOP'){
+        const msg = sl==='ml' ? `🏪 കട Bizmapia-യിൽ register ചെയ്യാം! 🙏\n\n✅ Step 1: www.bizmapia.com-ൽ പോയി Google login ചെയ്യൂ\n✅ Step 2: Business profile ഉണ്ടാക്കൂ\n✅ Step 3: Shop details കൊടുക്കൂ - shop name, address, location, contact, images. നല്ല profile ആയാൽ customers-ന്റെ search-ൽ കാണും.\n\n📣 Profile കഴിഞ്ഞാൽ മാത്രം Advertainment option കിട്ടും - offer / service / എന്തും കുറഞ്ഞ rate-ൽ advertise ചെയ്യാം.\n💡 Rates + tenure-ന് Tender + Annexure-B നോക്കൂ, അല്ലെങ്കിൽ www.bizmapia.com-ൽ current offer rates നോക്കൂ.\n🎯 1-year plan ആണ് ഏറ്റവും നല്ലത് - offer rate-ൽ 1 വർഷം മുഴുവൻ advertise ചെയ്യാം.` : `🏪 Register your shop on Bizmapia! 🙏\n\n✅ Step 1: Go to www.bizmapia.com and Google login\n✅ Step 2: Create your business profile\n✅ Step 3: Add shop details - shop name, address, location, contact, images. A good profile shows in customer search.\n\n📣 Only after profile creation you get the Advertainment option - advertise anything like offers / service at a cheap rate.\n💡 For rates + tenure, check Tender + Annexure-B or current offer rates on www.bizmapia.com.\n🎯 A 1-year plan is best - advertise the full year at the offer rate.`;
+        try{ await sendWithDelay(singleCta(uid, msg, {title:'🌐 bizmapia.com', url:'https://bizmapia.com/'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+        try{ await sendWithDelay(interactiveButton(uid, sl==='ml'?'👉 അടുത്തത് എന്ത് വേണം?': '👉 What next?', [{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: sl==='ml'?'സേവനങ്ങൾ':'Services'}], incomingPhoneId)); }catch(e){}
+      }
+      return;
+    }
+    // V314: APP_ANDROID / APP_IOS -> warm app help, links only inside buttons, never raw links in text
+    if(btnId==='APP_ANDROID' || btnId==='APP_IOS'){
+      const sl = state.lang || 'ml';
+      const isAnd = btnId==='APP_ANDROID';
+      const msg = sl==='ml' ? (isAnd ? `📱 Android - Bizmapia App install ചെയ്യാം 💛\n\nPlay Store > Bizmapia search > Install > OTP login.\nOTP വരുന്നില്ലെങ്കിൽ 60 sec wait ചെയ്ത് Resend നോക്കൂ.\n\nApp തുറന്നാൽ 4 സേവനങ്ങളും കാണാം - Taxi, Directory, Delivery, Booking. എന്താണ് ആദ്യം വേണ്ടത്?` : `📱 iPhone - Bizmapia App install ചെയ്യാം 💛\n\nApp Store > Bizmapia search > Get > OTP login.\nOTP വരുന്നില്ലെങ്കിൽ 60 sec wait ചെയ്ത് Resend നോക്കൂ.\n\nApp തുറന്നാൽ 4 സേവനങ്ങളും കാണാം - Taxi, Directory, Delivery, Booking. എന്താണ് ആദ്യം വേണ്ടത്?`) : (isAnd ? `📱 Android - install Bizmapia App 💛\n\nPlay Store > Search Bizmapia > Install > OTP login.\nNo OTP? Wait 60s, tap Resend.\n\nIn the App you will see all 4 services - Taxi, Directory, Delivery, Booking. What do you need first?` : `📱 iPhone - install Bizmapia App 💛\n\nApp Store > Search Bizmapia > Get > OTP login.\nNo OTP? Wait 60s, tap Resend.\n\nIn the App you will see all 4 services - Taxi, Directory, Delivery, Booking. What do you need first?`);
+      const url = isAnd ? 'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia' : 'https://apps.apple.com/in/app/bizmapia/id6761577245';
+      try{ await sendWithDelay(singleCta(uid, msg, {title: isAnd?'📱 Android App':'🍎 iPhone App', url}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+      await setState(uid,{...state, lang:sl, lastStep:'V314 - App Link '+btnId, aiMode:true});
+      return;
+    }
     // ===== V257: AI_SERVICES -> show 4 services (3+1, WhatsApp max 3 per msg) =====
     if(btnId==='AI_SERVICES' || btnId==='AI_TAXI'){
       const sl = state.lang || 'ml';
       const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
       const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
       await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
-      try{ await sendWithDelay(interactiveButton(uid, svcText, [b2('SVC_RIDE','🚖 ടാക്സി','Taxi','Taxi'), b2('SVC_BIZDIR','📖 ബിസിനസ് ഡയറക്ടറി','Business Directory','Business Directory'), b2('SVC_DELIVERY','🛵 ഡെലിവറി','Delivery','Delivery')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
+      try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 നിങ്ങൾ ആരാണ്? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : `🙏 Who are you? I will guide you exactly for you. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
       await delay(300);
       try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
@@ -3223,8 +3255,8 @@ app.post('/webhook', async(req,res)=>{
       const sl2 = state.lang || 'ml';
       const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
       const asSvc = svcMap[btnId] || 'Service';
-      const aiSvc = AI_ENABLED ? await callMayaAI(sl2, `Explain ${asSvc} in detail in my language - what is it, how to use it in Bizmapia app, and at the end ask if they want Business Opportunity also. Keep it short.`, state.aiHistory||[]) : null;
-      const svcReply = aiSvc && aiSvc.text ? aiSvc.text : (sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. Detail ariyamengil app install cheyyam.` : `${asSvc} - You can use it from Bizmapia App.`);
+      const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee aaraanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Who are you - Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
+      const svcReply = svcFixed;
       await setState(uid,{...state, lang:sl2, lastStep:'AI Maya - Service '+btnId, aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, svcReply, mayaQuickButtons(sl2, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcReply, incomingPhoneId)); }
       await saveToSheet('System_Logs',[nowIso,uid,sl2,'AI Service Detail '+incomingPhoneId,`${btnId} -> ${asSvc}`,'AI Service',HELP_ADMIN,'AI Service Detail',''],false);
@@ -3282,6 +3314,15 @@ app.post('/webhook', async(req,res)=>{
     }
     // ===== V248 AI MAYA - FREE-TEXT -> AI FIRST (buttons still work below) =====
     // Only for typed text, not button clicks. Payment / Pay / verification steps keep old button flow.
+    // ===== V314 VOICE - audio keeps same step, never restart =====
+    if(msg.type==='audio' || msg.type==='voice' || msg.type==='ptt'){
+      const slV = state.lang || 'ml';
+      const stepV = state.lastStep || 'AI Maya - Fresh';
+      const vMsg = slV==='ml' ? `🎤 Voice kettu. 🙏\n\nNingal ippol ullathu: ${stepV}.\n\nAthu thanne continue cheyyam. Oru varil type cheythu parayaamo - Business opportunity aano, service aano?` : `🎤 Voice heard. 🙏\n\nYou are at: ${stepV}.\n\nWe continue from the same step. Can you type in one line - Business opportunity or service?`;
+      try{ await sendWithDelay(interactiveButton(uid, vMsg, mayaQuickButtons(slV, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, vMsg, incomingPhoneId)); }
+      await setState(uid,{...state, lang:slV, lastStep: stepV, aiMode:true});
+      return;
+    }
     const isFreeText = !!txt && !btnId && msg.type==='text';
     // V255 FIX: AI ALWAYS WINS. Old inPayFlow block removed - it trapped old users in Company Video loop forever.
     // Payment flow is now handled INSIDE Maya AI prompt, not by blocking AI.
@@ -4837,7 +4878,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V312 BOOT-LOG-FIXED-FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V314 FINAL-BEST', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4873,7 +4914,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V312 BOOT-LOG-FIXED-FINAL | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V314 FINAL-BEST | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
