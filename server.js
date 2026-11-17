@@ -1667,6 +1667,7 @@ async function sendWithDelay(msg){
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
     const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
+    try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -2011,6 +2012,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       if(redisReady && redis){ await redis.del(`reminder:${uid}:${type}`); }
       const state = await getState(uid);
       if(!state || state.flow==='DONE') return;
+      if(state.isRealTime && state.lastReplyAt && (Date.now() - state.lastReplyAt) < 2*60*1000){ console.log(`V290 SKIP reminder ${type} - real-time user replied ${Math.round((Date.now()-state.lastReplyAt)/1000)}s ago`); return; }
       const lastActive = state.lastActive ? Date.now() - state.lastActive : 999999999;
       if(type.endsWith(':1') && !type.endsWith(':12') && !type.endsWith(':24') && lastActive < 30*60*1000){ console.log(`Skipping 1h reminder, active ${lastActive}ms ago`); return; }
       // V285 FIX: User already replied after this reminder was scheduled -> reminder is STALE, do not fire.
@@ -2762,11 +2764,100 @@ app.post('/webhook', async(req,res)=>{
     // V285 FIX: Free text "Watched video, whats next?" / "video kandu" / "video dekha" after a video = same as tapping [Yes seen].
     // Without this, Maya treated it as generic chat and the old video reminder still fired after it.
     try{
-      const _txtLow = String(txt||'').toLowerCase();
-      const _isWatchedText = _txtLow.includes('watched video') || _txtLow.includes('watched the video') || _txtLow.includes('video kandu') || _txtLow.includes('video kandhu') || _txtLow.includes('video dekha') || _txtLow.includes('video dekh') || _txtLow.includes('video parthu') || _txtLow.includes('seen the video') || _txtLow.includes('video seen');
-      if(!btnId && _isWatchedText){ btnId = 'VIDEO_WATCHED'; console.log('V285 free-text watched -> VIDEO_WATCHED'); }
+      const _txtLow = String(txt||'').toLowerCase().trim();
+      // V287: "yes seen" alone (your screenshot) was NOT recognised - only "watched video" was. Now "yes seen" / "seen" / "kandu" also count, BUT only when Maya is actually waiting for a video.
+      const _waitingForVideo = (state.lastStep||'').includes('Video') || (state.lastStep||'').includes('V270 - Business Video') || (state.lastStep||'').includes('Opportunity Video');
+      const _isWatchedText = _waitingForVideo && (_txtLow.includes('watched video') || _txtLow.includes('watched the video') || _txtLow.includes('video kandu') || _txtLow.includes('video kandhu') || _txtLow.includes('video dekha') || _txtLow.includes('video dekh') || _txtLow.includes('video parthu') || _txtLow.includes('seen the video') || _txtLow.includes('video seen') || _txtLow==='yes seen' || _txtLow==='yes, seen' || _txtLow==='seen' || _txtLow==='yes seen video' || _txtLow.includes('yes seen') || _txtLow==='kandu' || _txtLow==='kandhu' || _txtLow==='dekha' || _txtLow==='parthu');
+      if(!btnId && _isWatchedText){
+        // V287: Company Video Seen vs Opportunity Video Seen are DIFFERENT steps. Check which video Maya sent.
+        const _ls = state.lastStep||'';
+        const _isCompanyStage = _ls.includes('Company Video') || _ls.includes('V270 - Business Video') || _ls.includes('Business Video Sent') || _ls.includes('Company Video - Must Watch');
+        const _hasCapacity = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT' || state.sub==='OPP_MUNI');
+        if(_isCompanyStage && !_hasCapacity){ btnId = 'COMPANY_WATCHED'; console.log('V287 free-text watched -> COMPANY_WATCHED (Company Video stage, no capacity yet)'); }
+        else { btnId = 'VIDEO_WATCHED'; console.log('V287 free-text watched -> VIDEO_WATCHED (Opportunity Video stage)'); }
+      }
     }catch(_){}
-    const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
+    // ===== V288: STEP-AWARE RECOGNITION FOR EVERY STEP - WITHOUT FAIL =====
+    // Rule: Free text is NEVER generic. Maya first looks at state.lastStep, then decides what the user meant.
+    // "yes" on Corp Check = CORP_YES. "yes" on Benefits = UNDERSTOOD_BEN. "skip" anywhere = SKIP. "seen" on Company Video = COMPANY_WATCHED.
+    // Without this, "yes / ok / seen / next / skip" fell into generic AI chat and Maya sent duplicate / wrong step.
+    try{
+      if(!btnId){
+        const _low = String(txt||'').toLowerCase().trim();
+        const _ls = state.lastStep||'';
+        const _isYes = _low==='yes' || _low==='yes.' || _low==='yeah' || _low==='yep' || _low==='ok' || _low==='okay' || _low==='sheri' || _low==='shery' || _low==='athe' || _low==='haan' || _low==='haa';
+        const _isNext = _low.includes('next') || _low.includes('aduth') || _low.includes('aage') || _low==='continue' || _low.includes('continue');
+        const _isSkip = _low.includes('skip') || _low.includes('skip cheyy') || _low.includes('vittekk');
+        const _isUnderstood = _low.includes('understood') || _low.includes('manasilayi') || _low.includes('manasilaayi') || _low.includes('samajh') || _low.includes('got it') || _low.includes('puriy') || _low==='ok' || _low==='okay' || _low.includes('understand');
+        const _isNo = _low==='no' || _low==='no.' || _low==='illa' || _low==='nahi' || _low==='vendaa' || _low==='venda';
+        // Language step
+        if(_ls.includes('Language') || _ls.includes('LANG') || _ls.includes('AI Maya - Lang')){
+          if(_low.includes('malayalam') || _low.includes('malayalam')) btnId='LANG_ML';
+          else if(_low.includes('hindi')) btnId='LANG_HI';
+          else if(_low.includes('english')) btnId='LANG_EN';
+        }
+        // Business vs Services choice
+        else if(_ls.includes('Business Opportunity') && _ls.includes('Select') || _ls.includes('AI Maya - Lang Confirm') || _ls.includes('2 buttons')){
+          if(_low.includes('business') || _low.includes('opportunity') || _low.includes('oppertunity') || _low.includes('franchise')) btnId='AI_BUSINESS';
+          else if(_low.includes('service') || _low.includes('other service')) btnId='AI_SERVICES';
+        }
+        // Company Video stage (already handled for watched, but also skip / not watched)
+        else if(_ls.includes('Company Video') || _ls.includes('V270 - Business Video')){
+          if(_isSkip) btnId='COMPANY_SKIP';
+          else if(_low.includes('not seen') || _low.includes('not watched') || _low.includes('kandilla') || _low.includes('nahi dekha')) btnId='COMPANY_NOT_WATCHED';
+        }
+        // Capacity / Income Level stage
+        else if(_ls.includes('Income Level') || _ls.includes('Capacity') || _ls.includes('Investing capacity')){
+          if(_low.includes('30') || _low.includes('1l') || _low.includes('1 lakh') || _low.includes('business center') || _low.includes('business centre')) btnId='OPP_CENTER';
+          else if(_low.includes('2l') || _low.includes('2 lakh') || _low.includes('5l') && !_low.includes('15') || _low.includes('corporation') || _low.includes('municipal')) btnId='OPP_CORP';
+          else if(_low.includes('5l') && _low.includes('15') || _low.includes('15l') || _low.includes('10l') || _low.includes('10 lakh') || _low.includes('district')) btnId='OPP_DISTRICT';
+        }
+        // Opportunity Video stage (watched already handled above, but also not watched / skip)
+        else if(_ls.includes('Opportunity Video') || _ls.includes('V280 - Opportunity Video')){
+          if(_low.includes('not seen') || _low.includes('not watched') || _low.includes('kandilla')) btnId='VIDEO_NOT_WATCHED';
+        }
+        // 3 Clicks - Benefits / Support / Requirements: understood / next / skip all mean "go next"
+        else if(_ls.includes('Benefits')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_BEN';
+        }
+        else if(_ls.includes('Support')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_SUP';
+        }
+        else if(_ls.includes('Requirements')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_REQ';
+        }
+        // Corp Check / Submit Application: yes = have corp, no = no corp
+        else if(_ls.includes('Corp Check') || _ls.includes('Submit Application')){
+          if(_isYes || _low.includes('i have') || _low.includes('und') || _low.includes('hai')) btnId='CORP_YES';
+          else if(_isNo || _low.includes('no corp') || _low.includes('illa')) btnId='CORP_NO';
+        }
+        // Are-you-there / Busy check: yes = continue, no = continue, stop = stop - handled by BUSY_* but free text "yes" here means continue
+        else if(_ls.includes('Busy') || _ls.includes('Are-you-there') || _ls.includes('Are you there')){
+          if(_low.includes('busy') || _low.includes('thirakku')) btnId='BUSY_YES';
+          else if(_isYes || _isNext) btnId='BUSY_NO';
+          else if(_low.includes('stop') || _low.includes('nirth')) btnId='BUSY_STOP';
+        }
+        if(btnId) console.log(`V288 step-aware free-text: last="${_ls}" text="${txt}" -> ${btnId}`);
+      }
+    }catch(_){}
+        try{ state.lastReplyAt = Date.now(); }catch(_){}
+    try{
+      const _botAt = state.lastBotMsgAt || 0;
+      const _delay = _botAt ? (Date.now() - _botAt) : 999999;
+      if(_botAt && _delay < 2*60*1000){
+        state.isRealTime = true; state.slowUser = false; state.fastReplyCount = (state.fastReplyCount||0)+1;
+        clearReminders(uid);
+        console.log(`V290 REAL-TIME replied in ${Math.round(_delay/1000)}s - reminders cancelled`);
+      } else {
+        state.fastReplyCount = 0;
+        if(!state.isRealTime) state.slowUser = true;
+      }
+      if(state.fastReplyCount >= 2) state.isRealTime = true;
+    }catch(_){}
+        const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = getISTTime();
     let state = await getState(uid);
     if(isSpamming(uid)){ try{ await sendWithDelay(textMessage(uid, (state.lang||'ml')==='ml' ? `🙏 ഒന്ന് പതുക്കെ... ഞാൻ വായിക്കുന്നുണ്ട്. ഒരു മെസ്സേജ് അയച്ചാൽ മതി, ഞാൻ മറുപടി തരാം.` : `🙏 One message is enough, I am reading. Please wait a moment.` , incomingPhoneId)); }catch(e){} return; }
@@ -2854,7 +2945,7 @@ app.post('/webhook', async(req,res)=>{
         const _capUid = uid, _capPhone = incomingPhoneId, _capLang = sl, _capSentAt = Date.now();
         setTimeout(async()=>{ try{
           const cur = await getState(_capUid);
-          if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; // user already replied / moved on - cancel
+          if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt) return; /* V289 replied after video */
           const capMsg = _capLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one from below:*`;
           const bL2=(id,ml,en,hi)=>({id,title:(_capLang==='ml'?ml:_capLang==='hi'?hi:en).substring(0,20)});
           try{ await sendWithDelay(interactiveButton(_capUid, capMsg, [bL2('OPP_CENTER','30K - 1L','30K - 1L','30K - 1L'), bL2('OPP_CORP','2L - 5L','2L - 5L','2L - 5L'), bL2('OPP_DISTRICT','5L - 15L','5L - 15L','5L - 15L')], _capPhone)); }catch(e){ await sendWithDelay(textMessage(_capUid, capMsg, _capPhone)); }
@@ -2956,8 +3047,8 @@ app.post('/webhook', async(req,res)=>{
       const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
       await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
       await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
-      const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl;
-      setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
+      const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl, _capSentAt2 = Date.now();
+      setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt2) return; /* V289 replied after video */ const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
       await saveToSheet('System_Logs',[nowIso,uid,sl,'V276 AI_BUSINESS '+incomingPhoneId,'AI_BUSINESS button -> direct Company Video + See Video button, no AI loop','V276',HELP_ADMIN,'V276 Business',''],false);
       return;
     }
@@ -3414,6 +3505,19 @@ Let's check Business Center details.
     }
     // ===== END V283 =====
     if(btnId==='VIDEO_WATCHED'){
+      // V287 FIX: Same [Yes seen] button was used for BOTH videos. If Maya is still on Company Video stage (no capacity picked yet),
+      // Yes seen means COMPANY video seen -> go to Capacity (Step 2), NOT to Benefits / 3 Clicks (Step 3).
+      try{
+        const _ls2 = state.lastStep||'';
+        const _isCompany2 = _ls2.includes('Company Video') || _ls2.includes('V270 - Business Video') || _ls2.includes('Business Video Sent');
+        const _hasCap2 = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT' || state.sub==='OPP_MUNI');
+        if(_isCompany2 && !_hasCap2){
+          state.lastStep='Income Level - After Company Video Watched'; state.companyVideoWatched=true; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+          const incomeMsg2 = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select investing capacity from below:-`;
+          await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg2, L.oppButtons, incomingPhoneId));
+          return;
+        }
+      }catch(_){}
       if(state.learnMode==='video'){
         state.videoWatched=true; state.oppVideoWatched=true;
         state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
@@ -4172,7 +4276,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V286 No-Repeat-Video-Link + Skip-3-Clicks', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V290 RealTime-vs-Slow-Users', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4208,7 +4312,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V286 No-Repeat-Video-Link + Skip-3-Clicks | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V290 RealTime-vs-Slow-Users | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
