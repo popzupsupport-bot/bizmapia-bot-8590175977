@@ -19,9 +19,10 @@
 // V297 Loop-Killed | V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
-// V309 FINAL-COMPLETED-AUDITED ("Yes, next" -> advance, NEVER restart)
+// V311 ALL-CODES-FIXED-TO-LATEST-FINAL
+// V309 FINAL-COMPLETED-AUDITED - audit stamp, no logic change (all V309 logic carried in V310) ("Yes, next" -> advance, NEVER restart)
 // V304 FINAL-LOCKED - this build
-// V309 FINAL-COMPLETED-AUDITED - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
+// V311 ALL-CODES-FIXED-TO-LATEST-FINAL - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
 // 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
@@ -519,7 +520,7 @@ V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced 
 - If user already typed in Malayalam script -> still confirm once in ENGLISH: "Hello! I am Maya from Bizmapia. Which language shall we speak in?" and wait for tap. Do NOT reply in Malayalam before they tap.
 - If user already typed in English -> still confirm once in ENGLISH: "Shall we continue in English?" and wait for yes.
 - ONLY AFTER language confirmed, then ask intention (V260 rule). Intention question must be in the CONFIRMED language only, pure script.
-- If user switches language mid-chat ("English-il parayu"), switch fully to that language immediately, no mixing.
+- V307 FIXED TERMS: NEVER switch language mid-chat. Once language is selected, it is FROZEN for the whole chat. Even if user says "English-il parayu" / "need english" after Malayalam selected, DO NOT switch. Reply in the LOCKED language that language is fixed as per terms, and continue the step in locked language.
 
 FIRST CHAT RULE - MOST IMPORTANT (V260 - AI MAYA, NOT BUTTON BOT):
 - When chat starts / after 1988 / after language select, DO NOT give Business / Services buttons immediately.
@@ -1332,18 +1333,18 @@ function getPayReminderExact(lang,fee,sub){
     let oppMl='ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl='ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
     else if(sub==='OPP_CORP') oppMl='കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
-    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ഇതുവരെ ബുക്ക് ആയിട്ടില്ല.\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.`;
+    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ഇതുവരെ ബുക്ക് ആയിട്ടില്ല.\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ പരിശോധിച്ചു — നിങ്ങളുടെ ഫീ ഇതുവരെ പ്രതിഫലിച്ചിട്ടില്ല.\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.\n\n⚠️ ഫീ അടച്ചില്ലെങ്കിൽ നിങ്ങൾക്ക് ലഭിക്കില്ല:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
   }
   if(lang==='hi'){
     let oppHi='बिजनेस सेंटर अवसर';
     if(sub==='OPP_DISTRICT') oppHi='जिला फ्रेंचाइजी अवसर';
     else if(sub==='OPP_CORP') oppHi='कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
-    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।`;
+    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n🔍 मैंने अभी payment system में चेक किया — आपकी फी अभी तक नहीं दिखी है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।\n\n⚠️ फी नहीं भरी तो आपको नहीं मिलेगा:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
   }
   let oppName='Business Center opportunity';
   if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
   else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
-  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.`;
+  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n🔍 I just checked our payment system — your fee is not yet reflected.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.\n\n⚠️ If fee is not paid, you will NOT get:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
 }
 function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
 
@@ -3294,6 +3295,19 @@ app.post('/webhook', async(req,res)=>{
       }catch(e){}
       return;
     }
+    // V310 FREE-TEXT PAID CLAIM: "yes i done payment" / "paid" / "payment done" typed after reminder -> same Confidence Check, do NOT trust blindly.
+    try{
+      const _low310 = String(txt||'').toLowerCase().trim();
+      const _isPayStep310 = /pay|step 5|registration fee|token|verify/i.test(String(state.lastStep||'')) || state.lastStep==='PAY CLAIMED - Confidence Check';
+      const _claimsPaid310 = /(yes.*(done|paid)|i.*paid|payment.*done|paid.*already|already.*paid|i done payment|payment done|paid bro|paid da|adachu|pay cheythu|payment cheythu)/i.test(String(txt||'')) && !/not.*paid|did.*not.*pay|haven.*paid/.test(_low310);
+      if(_isPayStep310 && _claimsPaid310 && txt && !btnId){
+        state.lastStep=`PAY CLAIMED - Confidence Check ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const _conf310 = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+        await sendWithDelay(interactiveButton(uid,_conf310,[{id:'PAY_CONFIRM_CHECK',title:'✅ Yes check'},{id:'PAY_NOW_AGAIN',title:'💳 Pay now'}], incomingPhoneId));
+        await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED TEXT ${state.fee||15}L`, String(txt||'').slice(0,80), 'CONFIDENCE CHECK', HELP_MARKETING, state.lastStep, ''], true);
+        return;
+      }
+    }catch(_){}
     // V300 VIDEO-KNOWN + BALANCE - "I know this video, give balance details" = 2 intents in 1 sentence. Maya echoed it before because V288 only knew "seen/watched".
     // Rule: "know this video / already saw / kandu / already watched" = VIDEO SEEN. "balance details / balance amount / balance ethra" = show Full - Token balance for PICKED level + ask to lock slot with token.
     try{
@@ -4071,13 +4085,41 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
     }
     // V247 FIX: PAY_VERIFY had NO handler in V247 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
     if(btnId==='PAY_VERIFY'){ btnId='PAY_DONE'; }
+    // V310 PAY CLAIM CHECK: user says "I paid" -> do NOT trust blindly. Confidence check first.
+    if(btnId==='PAY_CONFIRM_CHECK'){
+      // Real-time check = state.verified / paymentVerified set ONLY by Razorpay webhook. Never by claim text.
+      const _isVer = !!(state.verified || state.paymentVerified || state.paid || state.razorpayVerified);
+      const _time = getISTTime();
+      if(_isVer){
+        state.lastStep='Payment Verified - Details'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const _ok = lang==='ml' ? `✅ Payment verified!\n\n🙏 Thank you! Your payment is confirmed in our payment system at ${_time}.\n\n📄 Next: Tender + Annexure-B is ready for you.\n\n👉 Now type your FULL NAME only:` : lang==='hi' ? `✅ Payment verified!\n\n🙏 धन्यवाद! आपका payment हमारे payment system में ${_time} पर confirm हो गया है।\n\n📄 आगे: Tender + Annexure-B आपके लिए तैयार है।\n\n👉 अब अपना FULL NAME केवल टाइप करें:` : `✅ Payment verified!\n\n🙏 Thank you! Your payment is confirmed in our payment system at ${_time}.\n\n📄 Next: Tender + Annexure-B is ready for you.\n\n👉 Now type your FULL NAME only:`;
+        await sendWithDelay(textMessage(uid,_ok, incomingPhoneId));
+        await saveToSheet('Payments', [getISTTime(), uid, lang, `VERIFIED ${state.fee||15}L`, 'PAY_CONFIRM_CHECK', 'VERIFIED', HELP_MARKETING, state.lastStep, ''], true);
+        return;
+      }
+      // NOT FOUND - polite, no accusation, timestamped, give UTR option + Pay now
+      state.lastStep=`PAY CLAIMED - Checked Not Found ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state);
+      const _nf = lang==='ml' ? `🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ പരിശോധിച്ചു (${_time}).\n\n⚠️ നിങ്ങളുടെ ഫീ ഇതുവരെ പ്രതിഫലിച്ചിട്ടില്ല.\n\n🙏 തെറ്റിദ്ധാരണ ഉണ്ടാകാം — വേറെ നമ്പറിൽ നിന്ന് അടച്ചതോ, Razorpay 1-2 മിനിറ്റ് വൈകിയതോ ആകാം.\n\n👉 നിങ്ങൾ അടച്ചിട്ടുണ്ടെങ്കിൽ UTR / Payment ID ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.\n\n⚠️ ഫീ അടച്ചില്ലെങ്കിൽ നിങ്ങൾക്ക് ലഭിക്കില്ല:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking` : lang==='hi' ? `🔍 मैंने अभी payment system में चेक किया (${_time})।\n\n⚠️ आपकी फी अभी तक नहीं दिखी है।\n\n🙏 गलतफहमी हो सकती है — दूसरे नंबर से पे किया हो, या Razorpay 1-2 मिनट late हो।\n\n👉 अगर आपने पे किया है तो UTR / Payment ID यहाँ टाइप करें या स्क्रीनशॉट भेजें।\n\n⚠️ फी नहीं भरी तो आपको नहीं मिलेगा:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking` : `🔍 I just checked our payment system (${_time}).\n\n⚠️ Your fee is not yet reflected.\n\n🙏 This can be a delay — paid from another number, or Razorpay 1-2 min late.\n\n👉 If you paid, type your UTR / Payment ID here or send a screenshot.\n\n⚠️ If fee is not paid, you will NOT get:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
+      await sendWithDelay(textMessage(uid,_nf, incomingPhoneId)); await delay(400);
+      await sendPayNowStep(uid,lang,state.fee||15,state.sub||'OPP_CENTER',incomingPhoneId,_nf,false);
+      await saveToSheet('Payments', [getISTTime(), uid, lang, `CHECKED NOT FOUND ${state.fee||15}L`, 'PAY_CONFIRM_CHECK', 'NOT FOUND', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='PAY_NOW_AGAIN'){
+      state.lastStep='Pay Now Again - After Claim Check'; state.phoneId=incomingPhoneId; await setState(uid,state);
+      await sendPayNowStep(uid,lang,state.fee||15,state.sub||'OPP_CENTER',incomingPhoneId,getPayReminderExact(lang,state.fee||15,state.sub||'OPP_CENTER'),false);
+      return;
+    }
     if(btnId==='PAY_DONE'){
-      // USER CLAIMS PAID - BUT NOT VERIFIED YET
-      state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      // V310: USER CLAIMS PAID - CONFIDENCE CHECK FIRST, do not mark verified yet
+      state.lastStep=`PAY CLAIMED - Confidence Check ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
 
 ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
-      await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
+      // V310 CONFIDENCE CHECK: Are you confident? I am going to check real-time. If not paid, I can understand with my checking.
+      const _conf = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+      await sendWithDelay(interactiveButton(uid,_conf,[{id:'PAY_CONFIRM_CHECK',title: lang==='ml' ? '✅ Yes check' : lang==='hi' ? '✅ Yes check' : '✅ Yes check'},{id:'PAY_NOW_AGAIN',title: lang==='ml' ? '💳 Pay now' : lang==='hi' ? '💳 Pay now' : '💳 Pay now'}], incomingPhoneId));
       await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
       return;
@@ -4795,7 +4837,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V309 FINAL-COMPLETED-AUDITED', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V311 ALL-CODES-FIXED-TO-LATEST-FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
