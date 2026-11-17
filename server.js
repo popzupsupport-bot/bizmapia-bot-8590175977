@@ -103,19 +103,35 @@ function langInstruction(lang){
   return 'REPLY ONLY IN ENGLISH.';
 }
 const MAYA_BIZMAPIA_FACTS = `
-Bizmapia = Kerala's 4-in-1 platform: Ride Hailing (Taxi), Business Directory, Delivery, Booking. India's Largest Online Platform - First 4-in-1 App.
-Business Opportunity / Franchise levels (DO NOT invent other prices):
-- Business Center: Full fee 1 Lakh, Registration/Token Rs 100, EMI available.
-- Corporation / Municipal: Full fee 4 Lakh (some flows 5L), Token Rs 150.
-- District Franchise: Full fee 10 Lakh, Token Rs 250, EMI Options 10L.
-Registration fee is NOT refundable and NOT part of full fee.
-After payment verification, user gets 12 Tender PDFs guaranteed (District / Corporation / Municipal / Business Center).
-Steps: 1) Watch Company Video, 2) Choose Investment Capacity, 3) Benefits / Requirements / Support / Income, 4) Pay Token via Razorpay, 5) Give Name + State + District + Mobile + Visit Date, 6) Team verification.
-Never promise fixed/guaranteed income. Say income depends on area, effort, bookings.
-Never ask for OTP, card PIN, UPI PIN.
-If user wants to pay, say you will send the Pay button/link for their chosen level, do not paste fake links.
-If user asks for human, say team will call.
-`;
+=== V269 FINALIZED PURPOSE - OWNER LOCKED - THIS IS WHY MAYA EXISTS ===
+Old button Maya FAILED: users from Meta ads did not tap buttons, Maya could not identify real-time requirement, users went to other options, ZERO registrations, total waste.
+New AI Maya: SAME correct flow, but AI understands typed text + voice in real time, entertains, and takes user to RIGHT step in very next message.
+
+BIZMAPIA = All-India company. Helps users fulfil daily-life needs via pre-recorded steps:
+1) Real-time Taxi Booking - any taxi for travel needs
+2) Business Searches - find store / service / product / offer near them
+3) Online Delivery - food + any items from nearby town stores to doorstep
+4) Online Booking - hotel rooms, appointments, movie/show tickets in real time
+
+FLOW - EXACT ORDER, NEVER REORDER:
+STEP 0 - WELCOME IN ENGLISH ONLY: Explain which company they are going to understand/use for daily needs (4 services above, 2 lines each max). Then ask: "What do you want to experience - our services, or business opportunity to earn with Bizmapia?" + 2 buttons: [Experience Our Services] [Business Opportunity]
+STEP 1 - AFTER LANGUAGE TAP: reply ONLY in confirmed language, pure script. No Manglish.
+STEP 2 - IF SERVICES: show 4 buttons: [Taxi] [Directory] [Delivery] [Booking]. Then branch by who they are:
+  - CUSTOMER for all 4 services: give Android + iOS app links with warm text to help use app properly. Explain service briefly using Tender + Annexure-B + www.bizmapia.com data. Ask Android or iPhone first if needed.
+  - DRIVER: give Driver App link. Explain: complete vehicle registration like Google login with Bizmapia app, complete driver profile / vehicle details, submit cab attachment with Bizmapia. One-time registration Rs.150. If he pays Rs.150 he gets chance of 365 days / 180 days / 90 days FREE recharge opportunity (explain as per Tender/Annexure-B - do NOT invent which one he gets, say company decides on verification). Explain: Bizmapia only platform giving endless trip opportunity on lower recharge (Tender/Annexure-B). Good fare every trip: Normal, Peak, Night = Double charge. Withdraw earnings after 24 hours. Then: he will get callback from company to verify app performance via TEST TRIP. After that he can start trips.
+  - BUSINESSMAN / SHOP OWNER: support him to register shop via www.bizmapia.com. After business profile creation via Google login, give shop details: shop name, address, location, contact, images - to make good profile for customer search. After profile creation only he gets Advertainment option: advertise anything - offers, service, etc. for cheap rate. Refer rates + tenure in Tender/Annexure-B. Entertain him to choose ONE YEAR plan with offer rates - refer offer rates on www.bizmapia.com. Do NOT invent rates.
+STEP 3 - IF BUSINESS OPPORTUNITY:
+  - FIRST: MUST WATCH COMPANY VIDEO - it describes what is needed + what is expected on terms & conditions basis. Send Company Video link in his language. Do NOT let him skip without at least seeing it. Say "Please watch this 2-min video first, then pick your capacity - it will save your time."
+  - THEN: 3 capacity buttons (NOT old 1L/4L/10L labels alone - use capacity ranges user understands):
+    [30K - 1L] = Business Center, Full ~1 Lakh, Token Rs.100
+    [2L - 5L] = Corporation / Municipal, Full ~4-5 Lakh, Token Rs.150
+    [5L - 15L] = District Franchise, Full ~10 Lakh, Token Rs.250
+  - AFTER CAPACITY PICK: assist + give proper direction in simple steps + supporting YouTube video link for that level (use VIDEO_ML/EN/HI_* in code). Then: reminders + follow-up to get REGISTRATION FEE. Give appropriate Tender + Annexure-B PDF downloads (12 PDFs after verification, via /tenders/ links in code - do NOT invent links).
+  - DETAILS COLLECTION (after fee interest, one by one, never all at once): Full Name, Address, Business Planning Location, Primary Contact, Secondary Contact, Exact Location via dropdowns: State, District, Corporation & Municipality, Town, Exact Agreement Date. Purpose: support company with right-time info sharing: Follow-up Required / Finalization Required / Finalized - Need to Allot Business Opportunity. Log all to Sheet perfectly.
+STEP 4 - IN BETWEEN: If he shares doubts via extra text / voice, TREAT ACCORDINGLY: answer doubt in his language, entertain, then RETURN him to complete opportunity finalization. Do NOT restart. Do NOT send old menu.
+STEP 5 - TEAM CONTACT: If needed, share team contact and explain WHY he needs to call team: tight schedules + enquiry flow from others, team is busy. If team tries to call him it may be wasted because he may be busy with other works. So HE calls team in free time. Team calls ONLY after registration fee. Never promise team will call now.
+Registration fee NOT refundable, NOT part of full fee. Never promise fixed/guaranteed income. Never ask OTP/PIN.
+`
 
 const BIZMAPIA_OFFICIAL = {
   website:'https://bizmapia.com/', playStore:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share',
@@ -2715,7 +2731,7 @@ app.post('/webhook', async(req,res)=>{
     if(btnId && btnId.startsWith('LANG_')){
       const ll = btnId.replace('LANG_','').toLowerCase();
       const clang = ll==='ml'?'ml':ll==='hi'?'hi':'en';
-      await setState(uid,{lang:clang, lastStep:'V268 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
+      await setState(uid,{lang:clang, lastStep:'V269 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
       clearReminders(uid);
       const q = clang==='ml' ? `നമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : clang==='hi' ? `नमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `Hello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`;
       await sendWithDelay(textMessage(uid, q, incomingPhoneId));
@@ -2727,10 +2743,10 @@ app.post('/webhook', async(req,res)=>{
       if(sortedTop==='business_opportunity'){
         const sl = state.lang;
         // V266: User already gave requirement -> SHOW EXACT OPTIONS immediately. Do NOT ask district / job now. District comes AFTER they pick level.
-        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്.\n\nBizmapia-യിൽ 3 അവസരങ്ങൾ ഉണ്ട്:\n\n1️⃣ ബിസിനസ് സെന്റർ - 1 ലക്ഷം - ടോക്കൺ Rs.100\n2️⃣ കോർപ്പറേഷൻ / മുനിസിപ്പൽ - 4 ലക്ഷം - ടോക്കൺ Rs.150\n3️⃣ ജില്ലാ ഫ്രാഞ്ചൈസി - 10 ലക്ഷം - ടോക്കൺ Rs.250\n\n👉 ഏതാണ് വേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `👍 समझ गई! 🙏\n\nबिज़नेस अवसर चाहिए।\n\nBizmapia में 3 अवसर हैं:\n\n1️⃣ बिज़नेस सेंटर - 1 लाख - टोकन Rs.100\n2️⃣ कॉर्पोरेशन / मुनिसिपल - 4 लाख - टोकन Rs.150\n3️⃣ जिला फ्रेंचाइज़ी - 10 लाख - टोकन Rs.250\n\n👉 कौन सा चाहिए? नीचे क्लिक करें:` : `👍 Got it! 🙏\n\nYou want Business Opportunity.\n\nBizmapia has 3 opportunities:\n\n1️⃣ Business Center - 1 Lakh - Token Rs.100\n2️⃣ Corporation / Municipal - 4 Lakh - Token Rs.150\n3️⃣ District Franchise - 10 Lakh - Token Rs.250\n\n👉 Which one do you want? Tap below:`;
+        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്.\n\nBizmapia-യിൽ 3 അവസരങ്ങൾ ഉണ്ട് - ആദ്യം കമ്പനി വീഡിയോ കാണൂ, പിന്നെ capacity തിരഞ്ഞെടുക്കൂ:\n\n🎥 ആദ്യം ഈ കമ്പനി വീഡിയോ കാണൂ: https://youtu.be/7kkR_4w1ZMk\n\n1️⃣ 30K - 1L : ബിസിനസ് സെന്റർ - ടോക്കൺ Rs.100\n2️⃣ 2L - 5L : കോർപ്പറേഷൻ / മുനിസിപ്പൽ - ടോക്കൺ Rs.150\n3️⃣ 5L - 15L : ജില്ലാ ഫ്രാഞ്ചൈസി - ടോക്കൺ Rs.250\n\n👉 ഏതാണ് വേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `👍 समझ गई! 🙏\n\nबिज़नेस अवसर चाहिए।\n\nBizmapia में 3 अवसर हैं - पहले कंपनी वीडियो देखें, फिर capacity चुनें:\n\n1️⃣ बिज़नेस सेंटर - 1 लाख - टोकन Rs.100\n2️⃣ कॉर्पोरेशन / मुनिसिपल - 4 लाख - टोकन Rs.150\n3️⃣ जिला फ्रेंचाइज़ी - 10 लाख - टोकन Rs.250\n\n👉 कौन सा चाहिए? नीचे क्लिक करें:` : `👍 Got it! 🙏\n\nYou want Business Opportunity.\n\nBizmapia has 3 opportunities - first watch Company Video, then pick capacity:\n\n1️⃣ Business Center - 1 Lakh - Token Rs.100\n2️⃣ Corporation / Municipal - 4 Lakh - Token Rs.150\n3️⃣ District Franchise - 10 Lakh - Token Rs.250\n\n👉 Which one do you want? Tap below:`;
         await setState(uid,{...state, lastStep:'V266 - Showed Business Options', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
         const bL=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
-        try{ await sendWithDelay(interactiveButton(uid, sortMsg, [bL('OPP_CENTER','ബിസിനസ് സെന്റർ','Business Center','Business Center'), bL('OPP_CORP','കോർപ്പറേഷൻ','Corporation','Corporation'), bL('OPP_DISTRICT','ജില്ലാ ഫ്രാഞ്ചൈസി','District Franchise','District Franchise')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId)); }
+        try{ await sendWithDelay(interactiveButton(uid, sortMsg, [bL('OPP_CENTER','30K - 1L സെന്റർ','30K - 1L Center','30K - 1L Center'), bL('OPP_CORP','2L - 5L കോർപ്പറേഷൻ','2L - 5L Corporation','2L - 5L Corporation'), bL('OPP_DISTRICT','5L - 15L ജില്ലാ','5L - 15L District','5L - 15L District')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId)); }
         try{ await logLeadPerfect(uid, state, {lastMsg: txt, summary: 'V265 sorted: business_opportunity'}); }catch(e){}
         return;
       }
@@ -3926,7 +3942,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V268 AI-Router-Final', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V269 Final-Purpose-Maya', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
