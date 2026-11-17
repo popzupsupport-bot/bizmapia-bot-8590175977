@@ -2665,8 +2665,19 @@ app.post('/webhook', async(req,res)=>{
     // ===== V248 AI MAYA - FREE-TEXT -> AI FIRST (buttons still work below) =====
     // Only for typed text, not button clicks. Payment / Pay / verification steps keep old button flow.
     const isFreeText = !!txt && !btnId && msg.type==='text';
-    const inPayFlow = /Pay|VERIFIED|Lead Typed|Visit Date|Mobile|District|State/.test(state.lastStep||'');
-    if(isFreeText && AI_ENABLED && !inPayFlow && txt.trim()!=='1988'){
+    // V255 FIX: AI ALWAYS WINS. Old inPayFlow block removed - it trapped old users in Company Video loop forever.
+    // Payment flow is now handled INSIDE Maya AI prompt, not by blocking AI.
+    const inPayFlow = false;
+    // V255: 1988 = RESET command - clear stale state and restart as fresh AI user
+    if(txt && txt.trim()==='1988'){
+      try{
+        const fresh = { lang: state.lang||'ml', aiHistory: [], lead: {}, lastStep: 'AI Maya - Fresh', aiMode: true, createdAt: Date.now() };
+        await setState(uid, fresh); clearReminders(uid);
+        await sendWithDelay(textMessage(uid, (state.lang||'ml')==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ Maya ആണ്. Bizmapia-യിൽ നിന്ന് എന്താണ് വേണ്ടത്? Business opportunity ആണോ?` : `🔄 Okay, fresh start. 🙏\n\nI am Maya. What do you need from Bizmapia? Business opportunity?`, incomingPhoneId));
+      }catch(e){}
+      return;
+    }
+    if(isFreeText && AI_ENABLED && !inPayFlow){
       const detected = detectUserLanguage(txt, state.lang);
       // First message from social ad: "Hello! Can I get more info on this?" -> do NOT force English. Default to Malayalam, Maya will ask.
       let effLang = detected;
@@ -3714,7 +3725,8 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V254 Production', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V255 AI-Always-Wins', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 app.get('/test-payment-notify', async(req,res)=>{
