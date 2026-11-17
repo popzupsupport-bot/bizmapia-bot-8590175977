@@ -19,8 +19,9 @@
 // V297 Loop-Killed | V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
-// V304 FINAL-LOCKED-ALL-EDITS ("Yes, next" -> advance, NEVER restart)
+// V305 LANGUAGE-LOCKED-FINAL ("Yes, next" -> advance, NEVER restart)
 // V304 FINAL-LOCKED - this build
+// V305 LANGUAGE-LOCKED-FINAL - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
 // 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
@@ -2960,33 +2961,43 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
         try{ state.lastReplyAt = Date.now(); }catch(_){}
-    // V291: LANGUAGE FROM TYPED TEXT - user typed English but Maya replied Malayalam (screenshot 11:20 PM).
-    // Rule: Language follows the LATEST typed message, not the old state, not the button tap.
-    // If user types English, answer English. If Malayalam script, answer Malayalam. If Hindi script, answer Hindi.
-    // This must run BEFORE any reply, even if user never tapped a language button.
+    // V305 LANGUAGE LOCK - Replaces V291 auto-switch. V291 was the bug: it re-detected language from EVERY typed message.
+    // So: user locked Malayalam -> typed "already watched" in English -> Maya switched to English. User typed "need malayalam" -> Maya stayed in English because "need malayalam" was treated as English text.
+    // LOCK RULE: Once language is set (by button or explicit request), NEVER auto-switch from normal inputs. English words like "already watched", "yes, next", "balance details" are CONTENT, not language change.
+    // ONLY an EXPLICIT language-change request switches: "need malayalam", "malayalam please", "change to malayalam", "malayalathil", "need english", "english please", "change to english", "need hindi", "hindi me", "hindi please".
+    // After switch, new language is LOCKED. Reply in new language + bring back to current step in new language.
     try{
-      const _t = String(txt||'');
-      const _hasMl = /[\u0D00-\u0D7F]/.test(_t);
-      const _hasHi = /[\u0900-\u097F]/.test(_t);
-      const _isAscii = _t.length > 3 && /^[\x00-\x7F\s\p{P}]+$/u.test(_t);
-      let _detected = null;
-      if(_hasMl) _detected = 'ml';
-      else if(_hasHi) _detected = 'hi';
-      else if(_isAscii && /[a-zA-Z]{3,}/.test(_t)) _detected = 'en';
-      // Manglish (Malayalam in English letters) -> Malayalam, not English. Detect common Manglish words.
-      if(!_hasMl && !_hasHi && _isAscii){
-        const _mlWords = ['enthanu','enth','ariyam','ariyanam','venam','cheyyanam','kandu','kandhu','manasilayi','eppo','evide','engane','sheri','illa','unda','cheyyu','parayu','nokku','kittumo','cheyyan'];
-        const _lowT = _t.toLowerCase();
-        if(_mlWords.some(w=>_lowT.includes(w))) _detected = 'ml';
+      const _t5 = String(txt||''); const _low5 = _t5.toLowerCase().trim();
+      const _hasMl5 = /[\u0D00-\u0D7F]/.test(_t5); const _hasHi5 = /[\u0900-\u097F]/.test(_t5);
+      let _want = null;
+      if(/need\s+malayalam|malayalam\s+please|change.*malayalam|malayalathil|malayalam.*venam|malayalam.*parayu|malayalam.*madi|ente.*malayalam/.test(_low5) || _low5==='malayalam' || _low5==='malayalam please') _want='ml';
+      else if(/need\s+english|english\s+please|change.*english|english.*venam|english.*parayu|english.*madi/.test(_low5) || _low5==='english' || _low5==='english please') _want='en';
+      else if(/need\s+hindi|hindi\s+please|change.*hindi|hindi\s+me|hindi.*me.*bolo/.test(_low5) || _low5==='hindi') _want='hi';
+      else if(_hasMl5 && !state.lang) _want='ml';
+      else if(_hasHi5 && !state.lang) _want='hi';
+      // If no language set at all, use script detection once (first message only)
+      if(!state.lang && !_want){
+        if(_hasMl5) _want='ml'; else if(_hasHi5) _want='hi'; else if(_t5.length>3 && /[a-zA-Z]{3,}/.test(_t5)){
+          const _mlW=['enthanu','enth','ariyam','venam','kandu','manasilayi','evide','engane']; if(_mlW.some(w=>_low5.includes(w))) _want='ml'; else _want='en';
+        }
       }
-      if(_detected && _detected !== state.lang){
-        console.log(`V291 lang switch ${state.lang} -> ${_detected} from typed text: "${String(txt||'').slice(0,40)}"`);
-        state.lang = _detected;
-        // Persist immediately so next reply also uses new language
-        try{ await setState(uid, {...state, lang: _detected}); }catch(_){}
+      if(_want && _want!==state.lang){
+        const _prev = state.lang||'none'; state.lang=_want; lang=_want;
+        console.log(`V305 LANGUAGE LOCK switch ${_prev} -> ${_want} from explicit request: "${String(txt||'').slice(0,40)}"`);
+        try{ await setState(uid, {...state, lang:_want, lastStep: state.lastStep||'Language Switched'}); }catch(_){}
+        // Reply in NEW language confirming switch + bring back to current step (do not restart)
+        const _step5 = state.lastStep||'';
+        const _conf = _want==='ml' ? `✅ മനസ്സിലായി! ഇനി മുതൽ *മലയാളത്തിൽ* മാത്രം സംസാരിക്കാം. 🙏\n\n📍 നമ്മൾ ഇപ്പോൾ *${_step5}* step-ൽ ആണ്. തുടരാൻ തയ്യാറാണോ?` : _want==='hi' ? `✅ समझ गया! अब से *हिन्दी* में ही बात करेंगे। 🙏\n\n📍 हम अभी *${_step5}* step पर हैं। आगे बढ़ने के लिए तैयार हैं?` : `✅ Got it! From now, we will speak *only in English*. 🙏\n\n📍 We are at *${_step5}* step. Are you ready to continue?`;
+        // Only send confirm if this message was ONLY a language request (not "need malayalam + other content"). If it also has other content, let later handlers reply in new language.
+        if(/^(need\s+(malayalam|english|hindi)|malayalam|english|hindi|change.*(malayalam|english|hindi)).*$/ .test(_low5) && _low5.length<40){
+          try{ await sendWithDelay(textMessage(uid, _conf, incomingPhoneId)); }catch(_){}
+          // Do NOT return here - let flow continue so next step buttons come in new language on next turn. Mark that we already confirmed.
+          state._langJustSwitched=true;
+        }
+      } else {
+        // LOCKED: keep existing language, ignore auto-detection from content words
+        if(state.lang) lang=state.lang;
       }
-      // If no language set at all, use detected or default to English for English text, not Malayalam
-      if(!state.lang && _detected) state.lang = _detected;
     }catch(_){}
     try{
       const _botAt = state.lastBotMsgAt || 0;
@@ -4213,7 +4224,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
           const _low2 = String(txt||'').toLowerCase();
           // On-topic inputs for this step are already handled above (seen/kandu, capacity buttons, understood, yes/no, paid, balance, district name). If we REACHED here, it is off-topic or unclear -> bring back.
           // Do not trigger for very short step answers that slipped through: seen/kandu/manasilayi/yes/no/paid/balance - let V301 handle them.
-          const _onTopic = /seen|kandu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token/.test(_low2);
+          const _onTopic = /seen|watched|already|kandu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token/.test(_low2);
           if(!_onTopic){
             const _cur = _finSteps[_idx];
             const _rem = _finSteps.slice(_idx); // current + balance
@@ -4760,7 +4771,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V304 FINAL-LOCKED-ALL-EDITS', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V305 LANGUAGE-LOCKED-FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
