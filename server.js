@@ -123,7 +123,7 @@ const BIZMAPIA_OFFICIAL = {
   facebook:'https://www.facebook.com/bizmapia', threads:'https://www.threads.com/@bizmapia',
   youtubeCompany:'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', email:'customercare@bizmapia.com',
   office:'1st Floor Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584',
-  services:'4 Services: 1) Taxi / Ride Hailing, 2) Business Directory, 3) Delivery, 4) Booking',
+  services:'4 Services: 1) Taxi / Ride Hailing, 2) Business Directory, 3) Delivery, 4) Booking. If user taps Know Our Services, show all 4. Never say Taxi Book only.',
   proof:'5K+ downloads on Play Store (Customer + Driver App). Live across Kerala - Thiruvananthapuram, Kollam, Pathanamthitta, Kochi, Kottayam.'
 };
 function getBizmapiaGrounding(userText){
@@ -321,10 +321,13 @@ function clearIdleNudges(uid){
 function mayaQuickButtons(lang, intent){
   const L=lang||'ml';
   const b=(id,ml,en,hi)=>({id,title:(L==='ml'?ml:L==='hi'?hi:en).substring(0,20)});
-  if(intent==='finalize') return [b('AI_PAY','പേ ചെയ്യാം','Pay Now','Pay करें'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात'), b('AI_LATER','പിന്നീട്','Later','Baad Mein')];
-  if(intent==='service') return [b('AI_TAXI','ടാക്സി ബുക്ക്','Book Taxi','Taxi Book'), b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात')];
-  if(intent==='app') return [b('AI_APP_ANDROID','Android App','Android App','Android App'), b('AI_APP_IPHONE','iPhone App','iPhone App','iPhone App'), b('AI_TALK','സഹായം വേണം','Need Help','Help Chahiye')];
-  return [b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_TAXI','ടാക്സി ബുക്ക്','Book Taxi','Taxi Book'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात')];
+  // V259: ONLY 2 TABS - user said [Later] also not needed. Perfect = [Business] + [Services] only.
+  // Talk-to-Team removed, Later removed. User must TYPE if they want later / team - Maya will understand typing.
+  // Finalize still 2 tabs: [Pay] + [Business] - no 3rd button.
+  if(intent==='finalize') return [b('AI_PAY','പേ ചെയ്യാം','Pay Now','Pay करें'), b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')];
+  if(intent==='service') return [b('AI_SERVICES','സേവനങ്ങൾ അറിയാം','Know Our Services','Hamari Services'), b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')];
+  if(intent==='app') return [b('AI_APP_ANDROID','Android App','Android App','Android App'), b('AI_APP_IPHONE','iPhone App','iPhone App','iPhone App')];
+  return [b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_SERVICES','സേവനങ്ങൾ അറിയാം','Know Our Services','Hamari Services')];
 }
 function detectMayaIntent(userText, aiText){
   const s=((userText||'')+' '+(aiText||'')).toLowerCase();
@@ -423,6 +426,39 @@ HUMAN HANDOVER RULE:
 - If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
 - If user sends voice note / image / video, say "Please type it in words, I can read text best" in user's language.
 - If user sends same message 3+ times, be patient, say "I am reading, one moment".
+LANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
+- NEVER use Manglish (Malayalam in English letters like 'Enikku venam', 'Ningal evideya'). NEVER.
+- If language = Malayalam -> reply ONLY in Malayalam script (മലയാളം). No Roman letters except brand names Bizmapia, App, Razorpay.
+- If language = English -> reply ONLY in English. No Malayalam words.
+- If language = Hindi -> reply ONLY in Hindi script.
+- FIRST MESSAGE of every new chat: CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed.
+  Example first message (3 languages, so user can pick):
+  "Namaskaram! 🙏 Njan Maya aanu. / Hello! I am Maya. / नमस्कार! मैं Maya हूँ।\n\nWhich language shall we speak in? / Ethu bhashayil samsarikkatte? / Kis bhasha mein baat karein?"
+  Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
+- If user already typed in Malayalam script -> still confirm once: "Malayalam-il samsarikkatte?" and wait for yes.
+- If user already typed in English -> still confirm once: "Shall we continue in English?" and wait for yes.
+- ONLY AFTER language confirmed, then ask intention (V260 rule). Intention question must be in the CONFIRMED language only, pure script.
+- If user switches language mid-chat ("English-il parayu"), switch fully to that language immediately, no mixing.
+
+FIRST CHAT RULE - MOST IMPORTANT (V260 - AI MAYA, NOT BUTTON BOT):
+- When chat starts / after 1988 / after language select, DO NOT give Business / Services buttons immediately.
+- First, ASK their real intention in 1 simple question, like a human:
+  ML: "Namaskaram! Njan Maya aanu. Ningal Bizmapia-il enthaanu thedunnathu? Business opportunity aano, service use cheyyan aano, allenkil vere enthelum aano?"
+  EN: "Hello! I am Maya. What are you actually looking for in Bizmapia? Business opportunity, or to use a service, or something else?"
+- Then ASK taste / situation in 2nd question: "Evideya? Ippo entha cheyyunnathu? Monthly ethra varumaanam aagraham?"
+- Ask ONE question at a time. Do NOT list 4 services, do NOT list levels, do NOT push token on first message.
+- ONLY AFTER user tells intention + taste, THEN give options:
+  If intention = business -> give Business options + ask district + level.
+  If intention = service -> give 4 services options.
+  If intention = just enquiry -> explain simply, then ask if they want business or service.
+- If user says "just checking / nokkan vannathu", don't push. Say "Kuzhappamilla, nokkiyal mathi" + ask what caught their eye.
+- Buttons are for AFTER intention is known, not before. First 1-2 messages = TEXT ONLY, NO BUTTONS.
+
+TEAM GATE RULE - VERY IMPORTANT (V258):
+- NEVER offer 'Talk to Team' in every reply. Maya must explain first.
+- If user says 'team / human / call me' in first 1-2 messages, say: 'Team is busy, I can explain faster, tell me what you need' + ask their doubt. Do NOT transfer immediately.
+- Only offer team AFTER: user understood business + token + level, OR user insists 2 times 'I still want team', OR user has complaint / fraud / refund-manager issue.
+- When you DO transfer, you must include in your reply: user's name, district, what they already know, what they still doubt - so team does NOT have to explain everything from zero.
 TEAM CALL RULE - VERY IMPORTANT, NEVER BREAK:
 - Team calls user ONLY AFTER registration fee (token) is PAID.
 - Before token, NEVER say "team will call you" or "I will ask team to call".
@@ -2603,9 +2639,10 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid);
       const prevLang = state.lang || 'ml';
       await setState(uid,{lang: prevLang, lastStep:'AI Maya - Fresh Reset', phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}, firedGate:null, stopConfirmPending:false});
-      const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. I want to know about Bizmapia business opportunity.', []) : null;
+      const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. FIRST confirm my language - ask which language: Malayalam / English / Hindi. Do NOT ask intention yet. Do NOT use Manglish.', []) : null;
       const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ Maya ആണ്. Bizmapia business opportunity-യെ കുറിച്ച് അറിയണോ?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
-      try{ await sendWithDelay(interactiveButton(uid, resetText, mayaQuickButtons(prevLang, 'business_opportunity'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, resetText, incomingPhoneId)); }
+      const langConfirmText = `Namaskaram! 🙏 Njan Maya aanu.\nHello! I am Maya.\n\nEthu bhashayil samsarikkatte? / Which language shall we speak in?\n\n👉 Thazhe language thiranjedukku:`;
+      try{ await sendWithDelay(interactiveButton(uid, langConfirmText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, langConfirmText, incomingPhoneId)); } // V261: First = LANGUAGE CONFIRM, 3 buttons - exception to 2-tab rule
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       return;
     }
@@ -2646,12 +2683,50 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     // ===== V249 HYBRID - AI quick button -> feed back to AI =====
+    // ===== V257: AI_SERVICES -> show 4 services (3+1, WhatsApp max 3 per msg) =====
+    if(btnId==='AI_SERVICES' || btnId==='AI_TAXI'){
+      const sl = state.lang || 'ml';
+      const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
+      const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
+      await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
+      try{ await sendWithDelay(interactiveButton(uid, svcText, [b2('SVC_RIDE','🚖 ടാക്സി','Taxi','Taxi'), b2('SVC_BIZDIR','📖 ബിസിനസ് ഡയറക്ടറി','Business Directory','Business Directory'), b2('SVC_DELIVERY','🛵 ഡെലിവറി','Delivery','Delivery')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
+      await delay(300);
+      try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
+      await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
+      return;
+    }
+    // ===== V257: SVC_* taps -> AI explains THAT service, then offers Business Opportunity =====
+    if(btnId.startsWith('SVC_')){
+      const sl2 = state.lang || 'ml';
+      const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
+      const asSvc = svcMap[btnId] || 'Service';
+      const aiSvc = AI_ENABLED ? await callMayaAI(sl2, `Explain ${asSvc} in detail in my language - what is it, how to use it in Bizmapia app, and at the end ask if they want Business Opportunity also. Keep it short.`, state.aiHistory||[]) : null;
+      const svcReply = aiSvc && aiSvc.text ? aiSvc.text : (sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. Detail ariyamengil app install cheyyam.` : `${asSvc} - You can use it from Bizmapia App.`);
+      await setState(uid,{...state, lang:sl2, lastStep:'AI Maya - Service '+btnId, aiMode:true});
+      try{ await sendWithDelay(interactiveButton(uid, svcReply, mayaQuickButtons(sl2, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcReply, incomingPhoneId)); }
+      await saveToSheet('System_Logs',[nowIso,uid,sl2,'AI Service Detail '+incomingPhoneId,`${btnId} -> ${asSvc}`,'AI Service',HELP_ADMIN,'AI Service Detail',''],false);
+      return;
+    }
     if(btnId.startsWith('AI_')){
-      const map={AI_BUSINESS:'Business opportunity ariyam',AI_TAXI:'Taxi book cheyyanam',AI_TALK:'Team-inodu samsarikkanam',AI_PAY:'Pay cheyyan ready aanu',AI_LATER:'Pinneedu vilikkam',AI_APP_ANDROID:'Android app install cheyyanam',AI_APP_IPHONE:'iPhone app install cheyyanam',AI_STILL_HERE:'Und, thudarram - I am here, continue',AI_NEED_TIME:'Samayam venam, kurachu kazhinju reply cheyyam - need time',AI_REMIND_LATER:'Pinneedu ormmippikku - remind later',AI_REMIND_EVENING:'Vaikunneram ormmippikku - remind evening',AI_REMIND_TOMORROW:'Naale ormmippikku - remind tomorrow',AI_NOT_INTERESTED:'Thalparyam illa, venda - not interested'};
+      const map={AI_BUSINESS:'Business opportunity ariyam',AI_SERVICES:'Njangalude services ariyam - What are your 4 services?',AI_TAXI:'Taxi book cheyyanam',AI_TALK:'Team-inodu samsarikkanam',AI_PAY:'Pay cheyyan ready aanu',AI_LATER:'Pinneedu vilikkam',AI_APP_ANDROID:'Android app install cheyyanam',AI_APP_IPHONE:'iPhone app install cheyyanam',AI_STILL_HERE:'Und, thudarram - I am here, continue',AI_NEED_TIME:'Samayam venam, kurachu kazhinju reply cheyyam - need time',AI_REMIND_LATER:'Pinneedu ormmippikku - remind later',AI_REMIND_EVENING:'Vaikunneram ormmippikku - remind evening',AI_REMIND_TOMORROW:'Naale ormmippikku - remind tomorrow',AI_NOT_INTERESTED:'Thalparyam illa, venda - not interested'};
       const asText=map[btnId]||'Hello';
       const effLang2=state.lang||'ml'; const hist2=state.aiHistory||[];
       const aiRes2=AI_ENABLED?await callMayaAI(effLang2, asText, hist2):null;
-      if(btnId==='AI_TALK'){ try{ await notifyAdminTeamRequest(uid, state, 'Tapped Talk to Team button'); }catch(e){} }
+      if(btnId==='AI_TALK'){
+      // V258 GATE: Don't alert team with blank "want to talk". Ask WHAT they want first.
+      // Only alert team AFTER Maya knows name/district/need, or if user already explained in history.
+      const histLen = (state.aiHistory||[]).length;
+      const hasContext = (state.lead && (state.lead.district || state.lead.intent)) || histLen >= 4;
+      if(!hasContext){
+        const slG = state.lang || 'ml';
+        const askText = slG==='ml' ? `🙏 ടീമിനോട് സംസാരിക്കും മുമ്പ് ഒന്ന് പറയാമോ?\n\nടീം തിരക്കിലാണ്, ഞാൻ വേഗം പറഞ്ഞു തരാം.\n\n👉 എന്താണ് അറിയേണ്ടത്?\n1. Business opportunity-യെ കുറിച്ച്\n2. Token / Payment-നെ കുറിച്ച്\n3. App-നെ കുറിച്ച്\n\nടൈപ്പ് ചെയ്ത് പറയൂ, ഞാൻ ഉടൻ മറുപടി തരാം. ടീം വേണമെങ്കിൽ പിന്നെ വിളിക്കാം.` : slG==='hi' ? `🙏 Team se baat karne se pehle ek baat batayein?\n\nTeam busy hai, main jaldi samjha deti hoon.\n\n👉 Kya jaanna hai?\n1. Business opportunity\n2. Token / Payment\n3. App\n\nType karke batayein, main turant jawab dungi.` : `🙏 Before I connect you to team, one thing?\n\nTeam is busy, I can explain faster.\n\n👉 What do you want to know?\n1. Business opportunity\n2. Token / Payment\n3. App\n\nType it, I will reply immediately. If you still need team, I will inform them.`;
+        try{ await sendWithDelay(interactiveButton(uid, askText, mayaQuickButtons(slG, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, askText, incomingPhoneId)); }
+        await setState(uid,{...state, lastStep:'AI Maya - Team Gate Asked', aiMode:true});
+        await saveToSheet('System_Logs',[nowIso,uid,slG,'Team Gate '+incomingPhoneId,'User tapped Talk to Team early - Maya asked what they need first, did NOT alert team yet','Team Gate',HELP_ADMIN,'Team Gate',''],false);
+        return;
+      }
+      try{ await notifyAdminTeamRequest(uid, state, 'Tapped Talk to Team button (with context)'); }catch(e){}
+    }
       if(aiRes2 && aiRes2.text){
         hist2.push({role:'user',text:asText}); hist2.push({role:'maya',text:aiRes2.text.slice(0,500)});
         state.aiHistory=hist2.slice(-12); state.lastStep='AI Maya - '+effLang2; await setState(uid,state);
@@ -2662,6 +2737,13 @@ app.post('/webhook', async(req,res)=>{
       }
     }
 
+    // ===== V261: LANGUAGE NOT CONFIRMED YET -> CONFIRM FIRST, do NOT ask intention / business =====
+    if(isFreeText && !state.lang){
+      const lcText = `Namaskaram! 🙏 Njan Maya aanu.\nHello! I am Maya.\n\nEthu bhashayil samsarikkatte? / Which language shall we speak in?`;
+      try{ await sendWithDelay(interactiveButton(uid, lcText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, lcText, incomingPhoneId)); }
+      await setState(uid,{...state, lastStep:'V261 - Language Confirm Sent', phoneId: incomingPhoneId});
+      return;
+    }
     // ===== V248 AI MAYA - FREE-TEXT -> AI FIRST (buttons still work below) =====
     // Only for typed text, not button clicks. Payment / Pay / verification steps keep old button flow.
     const isFreeText = !!txt && !btnId && msg.type==='text';
@@ -2721,7 +2803,10 @@ app.post('/webhook', async(req,res)=>{
         await setState(uid, state);
         // HYBRID: AI text + max 3 buttons
         const intent = aiRes.intent || detectMayaIntent(txt, aiReply);
-        try{ await sendWithDelay(interactiveButton(uid, aiReply, mayaQuickButtons(effLang, intent), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, aiReply, incomingPhoneId)); }
+        // V260: If this is 1st-2nd AI turn (user hasn't told intention yet), send TEXT ONLY, no buttons. Buttons only after intention known.
+        const isEarlyChat = (hist.length <= 3);
+        if(isEarlyChat){ try{ await sendWithDelay(textMessage(uid, aiReply, incomingPhoneId)); }catch(e){} }
+        else { try{ await sendWithDelay(interactiveButton(uid, aiReply, mayaQuickButtons(effLang, intent), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, aiReply, incomingPhoneId)); } }
         await logLeadPerfect(uid, state, {lastMsg: txt, summary: aiReply});
         // V252 DAILY + TEAM ALERTS
         try{
@@ -2749,9 +2834,9 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{lang, lastStep:'AI Maya - Lang '+lang, phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}});
       clearReminders(uid);
       // V256: Language tap -> AI Maya greeting in that language, NOT old mainMenu/earnButtons
-      const aiGreet = AI_ENABLED ? await callMayaAI(lang, 'Hi, I selected my language. Tell me about Bizmapia business opportunity in my language.', []) : null;
+      const aiGreet = AI_ENABLED ? await callMayaAI(lang, 'Hi, I selected my language. Language is now CONFIRMED. Now ask me my real intention in my CONFIRMED language ONLY - pure Malayalam script if Malayalam, pure English if English. NO Manglish, NO mixing. Ask ONE question, do NOT give options yet.', []) : null;
       const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `Namaskaram! 🙏 Njan Maya aanu. Bizmapia business opportunity-ye kurichu parayam?` : lang==='hi' ? `Namaskar! Main Maya hoon. Bizmapia business opportunity ke baare mein bataun?` : `Hello! I am Maya. Shall I tell you about Bizmapia business opportunity?`);
-      try{ await sendWithDelay(interactiveButton(uid, greetText, mayaQuickButtons(lang, 'business_opportunity'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); }
+      try{ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); } // V260: First msg = TEXT ONLY, ask intention
       await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected AI '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language AI '+lang, ''], false);
       try{ scheduleIdleNudges(uid, lang, incomingPhoneId); }catch(e){}
       return;
@@ -3721,7 +3806,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V256 AI-Reset-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V261 Language-First-No-Manglish', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
