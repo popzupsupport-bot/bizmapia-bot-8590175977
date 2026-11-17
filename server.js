@@ -2246,19 +2246,91 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
         await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
       } else if(type.includes('VIDEO_5MIN')){
-        // V247: Franchisee explainer - 5-min watched confirmation. Only [Watched] + [Not watched]. No skip, no raw link.
+        // V281: Opportunity Video reminder - buttons = Yes seen / Watch now + SAME video link again in this reminder.
+        // Nobody replies after watching, so reminder must carry the video again, not just ask.
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
-        const vMsg = actualLang==='ml' ? `ഹലോ! ഫ്രാഞ്ചൈസി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : actualLang==='hi' ? `हैलो! फ्रेंचाइजी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें:` : `Hello! Did you watch the franchise video?\n\n👉 What to do now: If you watched the full video, click "Watched Video" below:`;
-        const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
-        const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
-        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+        // V282: ONLY ONE message - the Yes seen / Watch now message IS the reminder. No separate See Video message before it.
+        // Video comes again ONLY if they tap Watch now (VIDEO_NOT_WATCHED already resends same video).
+        const vMsg = actualLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n👉 കണ്ടെങ്കിൽ *Yes seen* ക്ലിക്ക് ചെയ്യൂ, കണ്ടില്ലെങ്കിൽ *Watch now* ക്ലിക്ക് ചെയ്യൂ — അതേ വീഡിയോ വീണ്ടും വരും:` : actualLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n👉 देखा तो *Yes seen* पर क्लिक करें, नहीं देखा तो *Watch now* पर क्लिक करें — वही वीडियो फिर आएगा:` : `🎬 *Did you watch the video?* 😊\n\n👉 If seen, click *Yes seen*, if not, click *Watch now* — same video will come again:`;
+        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V282: If still no reply, Maya follows up like AI / human - "are you there?" - 2 min after this reminder
+        scheduleReminder(uid, 'install:OPP_ARE_YOU_THERE_' + subForVideo + ':10', actualLang, 2*60*1000, actualPhoneId);
       } else if(type.includes('VIDEO_2MIN')){
-        // V247: Video 2nd message as 2-min reminder - NOT immediate
+        // V281: Same as 5-min reminder - Yes seen / Watch now + SAME video link again.
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
-        const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
-        const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
-        const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
-        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+        // V282: ONLY ONE message - Yes seen / Watch now IS the reminder.
+        const vMsg = actualLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n👉 കണ്ടെങ്കിൽ *Yes seen* ക്ലിക്ക് ചെയ്യൂ, കണ്ടില്ലെങ്കിൽ *Watch now* ക്ലിക്ക് ചെയ്യൂ — അതേ വീഡിയോ വീണ്ടും വരും:` : actualLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n👉 देखा तो *Yes seen* पर क्लिक करें, नहीं देखा तो *Watch now* पर क्लिक करें — वही वीडियो फिर आएगा:` : `🎬 *Did you watch the video?* 😊\n\n👉 If seen, click *Yes seen*, if not, click *Watch now* — same video will come again:`;
+        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        scheduleReminder(uid, 'install:OPP_ARE_YOU_THERE_' + subForVideo + ':10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('OPP_ARE_YOU_THERE')){
+        // V282: AI-style confirmation nudge - "are you there?" - only if user is STILL on Opportunity Video step (no reply yet).
+        // If user already moved on (lastStep no longer has Video), skip.
+        if(state.lastStep && !state.lastStep.includes('Video') && !state.lastStep.includes('Opportunity')){
+          console.log(`V282 SKIP stale Are-you-there - user already in ${state.lastStep}`);
+          return;
+        }
+        const areMsg = actualLang==='ml' ? `ഹലോ, അവിടെയുണ്ടോ? 😊\n\nവീഡിയോ കാണാൻ പറ്റിയോ? എന്തെങ്കിലും സംശയം ഉണ്ടോ?\n\n👉 കണ്ടെങ്കിൽ *Yes seen*, കണ്ടില്ലെങ്കിൽ *Watch now* — ഞാൻ ഇവിടെ തന്നെയുണ്ട്:` : actualLang==='hi' ? `हैलो, आप वहाँ हैं? 😊\n\nवीडियो देखने का मौका मिला? कोई doubt है?\n\n👉 देखा तो *Yes seen*, नहीं देखा तो *Watch now* — मैं यहीं हूँ:` : `Hello, are you there? 😊\n\nDid you get a chance to watch the video? Any doubt?\n\n👉 If seen, *Yes seen*, if not, *Watch now* — I'm right here:`;
+        await sendWithDelay(interactiveButton(uid, areMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V283: 2nd AI reminder after 2 min - "Are you busy right now?"
+        scheduleReminder(uid, 'install:OPP_BUSY_CHECK_' + (type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER') + ':10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('OPP_BUSY_CHECK')){
+        // V283 2nd AI reminder: "Are you busy right now? Can I schedule a reminder after 1 Hour?" - Yes / No / Stop
+        if(state.lastStep && !state.lastStep.includes('Video') && !state.lastStep.includes('Opportunity') && !state.lastStep.includes('Are-you-there') && !state.lastStep.includes('Busy')){
+          console.log(`V283 SKIP stale Busy check - user already in ${state.lastStep}`);
+          return;
+        }
+        const busyMsg = actualLang==='ml' ? `ഒരു കാര്യം ചോദിക്കട്ടെ 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 മണിക്കൂറിന് ശേഷം ഓർമ്മിപ്പിക്കാം, No = ഇപ്പോൾ തുടരാം, Stop = നിർത്താം:` : actualLang==='hi' ? `एक बात पूछूँ 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 घंटे बाद याद दिलाऊँगी, No = अभी जारी रखते हैं, Stop = रोकें:` : `One thing 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = remind after 1 hour, No = continue now, Stop = stop:`;
+        await sendWithDelay(interactiveButton(uid, busyMsg, [{id:'BUSY_YES',title:'Yes'},{id:'BUSY_NO',title:'No'},{id:'BUSY_STOP',title:'Stop'}], actualPhoneId));
+      } else if(type.includes('OPP_1HOUR')){
+        // V283: 1-hour reminder after Busy Yes - back to Yes seen / Watch now about last step
+        const hMsg = actualLang==='ml' ? `ഹലോ, 1 മണിക്കൂർ കഴിഞ്ഞു 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു.\n\n🎬 *വീഡിയോ കണ്ടോ?*\n\n👉 കണ്ടെങ്കിൽ *Yes seen*, കണ്ടില്ലെങ്കിൽ *Watch now*:` : actualLang==='hi' ? `हैलो, 1 घंटा हो गया 😊 जैसा कहा था, याद दिला रही हूँ।\n\n🎬 *वीडियो देखा?*\n\n👉 देखा तो *Yes seen*, नहीं देखा तो *Watch now*:` : `Hello, 1 hour is up 😊 reminding you as promised.\n\n🎬 *Did you watch the video?*\n\n👉 If seen, *Yes seen*, if not, *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, hMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_1H')){
+        // V283: Stop-later followup - 1 hour - about last step
+        const f1 = actualLang==='ml' ? `ഹലോ 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു — നിങ്ങളുടെ അവസരം ഇവിടെയുണ്ട്.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 जैसा कहा था, याद दिला रही हूँ — आपका अवसर यहाँ है।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 reminding you as promised — your opportunity is here.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f1, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_12H')){
+        const f12 = actualLang==='ml' ? `ഹലോ 😊 12 മണിക്കൂർ കഴിഞ്ഞു — നിങ്ങളുടെ അവസരം കാത്തിരിക്കുന്നു.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 12 घंटे हो गए — आपका अवसर इंतज़ार कर रहा है।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 12 hours done — your opportunity is waiting.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f12, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_24H')){
+        const f24 = actualLang==='ml' ? `ഹലോ 😊 അവസാന ഓർമ്മപ്പെടുത്തൽ — 24 മണിക്കൂർ കഴിഞ്ഞു.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 आखिरी याद — 24 घंटे हो गए।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 last reminder — 24 hours done.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f24, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V283: After 24h followup, if still no reply, move to fired list (autoFireLoser handles sheet + gate)
+        try{ await autoFireLoser(uid, 'OPP - No Response After 1h/12h/24h Followups'); }catch(_){}
+      } else if(type.includes('GEN_ARE_YOU_THERE')){
+        // V284 GENERIC 1st AI reminder (every stuck step, not just video): "Are you there?" + names the stuck step. Only if user still stuck (lastActive old + lastStep unchanged).
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const areG = actualLang==='ml' ? `ഹലോ, അവിടെയുണ്ടോ? 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*\nവീഡിയോ / മെസേജ് കാണാൻ പറ്റിയോ? എന്തെങ്കിലും സംശയം ഉണ്ടോ?\n\n👉 തുടരാൻ Yes / Watch now — ഞാൻ ഇവിടെ തന്നെയുണ്ട്:` : actualLang==='hi' ? `हैलो, आप वहाँ हैं? 😊\n\nआप यहाँ रुके थे: *${stuckName}*\nवीडियो / मैसेज देखने का मौका मिला? कोई doubt है?\n\n👉 जारी रखने के लिए Yes / Watch now — मैं यहीं हूँ:` : `Hello, are you there? 😊\n\nYou stopped at: *${stuckName}*\nDid you get a chance to watch / read it? Any doubt?\n\n👉 To continue, tap Yes / Watch now — I'm right here:`;
+        // Generic: offer Continue (BUSY_NO path reuses No logic via generic buttons) - use same Yes seen / Watch now ids for video, else generic continue uses BUSY_NO flow via Yes button
+        await sendWithDelay(interactiveButton(uid, areG, [{id:'GEN_CONTINUE',title:'Yes - Continue'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        scheduleReminder(uid, 'install:GEN_BUSY_CHECK:10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('GEN_BUSY_CHECK')){
+        // V284 GENERIC 2nd AI reminder: "Are you busy right now? Can I schedule a reminder after 1 Hour?" - Yes / No / Stop (same as video chain)
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const busyG = actualLang==='ml' ? `ഒരു കാര്യം ചോദിക്കട്ടെ 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 മണിക്കൂറിന് ശേഷം ഓർമ്മിപ്പിക്കാം, No = ഇപ്പോൾ തുടരാം, Stop = നിർത്താം:` : actualLang==='hi' ? `एक बात पूछूँ 😊\n\nआप यहाँ रुके थे: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 घंटे बाद याद दिलाऊँगी, No = अभी जारी रखते हैं, Stop = रोकें:` : `One thing 😊\n\nYou stopped at: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = remind after 1 hour, No = continue now, Stop = stop:`;
+        await sendWithDelay(interactiveButton(uid, busyG, [{id:'BUSY_YES',title:'Yes'},{id:'BUSY_NO',title:'No'},{id:'BUSY_STOP',title:'Stop'}], actualPhoneId));
+      } else if(type.includes('GEN_1HOUR')){
+        // V284 GENERIC 1h reminder after Busy Yes - resend the stuck step
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const hG = actualLang==='ml' ? `ഹലോ, 1 മണിക്കൂർ കഴിഞ്ഞു 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു.\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — തുടരാം:` : actualLang==='hi' ? `हैलो, 1 घंटा हो गया 😊 जैसा कहा था, याद दिला रही हूँ।\n\nआप यहाँ रुके थे: *${stuckName}* — जारी रखते हैं:` : `Hello, 1 hour is up 😊 reminding you as promised.\n\nYou stopped at: *${stuckName}* — let's continue:`;
+        await sendWithDelay(textMessage(uid, hG, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_1H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f1 = actualLang==='ml' ? `ഹലോ 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു — നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 जैसा कहा था, याद दिला रही हूँ — आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 reminding you as promised — you stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f1, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_12H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f12 = actualLang==='ml' ? `ഹലോ 😊 12 മണിക്കൂർ കഴിഞ്ഞു — നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 12 घंटे हो गए — आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 12 hours done — you stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f12, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_24H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f24 = actualLang==='ml' ? `ഹലോ 😊 അവസാന ഓർമ്മപ്പെടുത്തൽ — 24 മണിക്കൂർ കഴിഞ്ഞു. നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 आखिरी याद — 24 घंटे हो गए। आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 last reminder — 24 hours done. You stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f24, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+        try{ await autoFireLoser(uid, 'GEN - No Response After 1h/12h/24h Followups'); }catch(_){}
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
@@ -2278,6 +2350,17 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
           state.reminderLevel = level;
           await setState(uid, state);
           await repeatLastStep(uid, state, actualLang, actualPhoneId);
+          // V284 GENERIC: every stuck step gets the same AI chain. Video/Opportunity steps already have their own OPP chain - do not double-schedule.
+          // Pay steps have their own pay-reminder chain - do not double-schedule.
+          try{
+            const _ls = String(state.lastStep||'');
+            const _isVideo = _ls.includes('Video') || _ls.includes('Opportunity');
+            const _isPay = _ls.includes('Pay') || _ls.includes('EMI') || _ls.includes('Reg');
+            const _isDone = state.flow==='DONE' || _ls.includes('DONE') || _ls.includes('Fired') || _ls.includes('Stopped');
+            if(!_isVideo && !_isPay && !_isDone && !type.includes('GEN_') && !type.includes('OPP_')){
+              scheduleReminder(uid, 'install:GEN_ARE_YOU_THERE:10', actualLang, 2*60*1000, actualPhoneId);
+            }
+          }catch(_){}
         }
       }
     try{ const isThird = /noLang3|noService3|:24$/.test(type); if(isThird){ await autoFireLoser(uid, type); } }catch(_){}
@@ -2785,6 +2868,10 @@ app.post('/webhook', async(req,res)=>{
       // Opportunity Video = level + language specific via getVideoUrl (District/Corp/Center), shown AFTER capacity pick.
       const oppVideoUrl = (typeof getVideoUrl === 'function') ? getVideoUrl(btnId, sl3) : 'https://www.youtube.com/watch?v=jCwTwiuSi5s';
       await sendWithDelay(singleCta(uid, lvlMsg, {title: '🎥 See Video', url: oppVideoUrl}, incomingPhoneId));
+      // V280 FIX: Nobody replies after watching a video - same as Company Video. Schedule Opportunity Video reminder after 5 min.
+      // Without this, Maya waited forever after Opportunity Video. Reminder asks [Watched] / [Not Watched], no raw link.
+      await setState(uid, {...state, sub: btnId, lastStep: 'V280 - Opportunity Video Sent ' + btnId, aiMode: true, lead: {...(state.lead||{}), level: btnId, intent: 'business_opportunity'}});
+      scheduleReminder(uid, 'install:VIDEO_5MIN_' + btnId + ':5', sl3, 5*60*1000, incomingPhoneId);
       return;
     }
     // ===== END V265 HARD OVERRIDE =====
@@ -3239,6 +3326,79 @@ Let's check Business Center details.
       await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
       return;
     }
+    // ===== V284 GENERIC CONTINUE =====
+    if(btnId==='GEN_CONTINUE'){
+      // Generic "Yes - Continue" from Are-you-there (non-video steps): resend the stuck step
+      clearReminders(uid);
+      const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+      await setState(uid, {...state, lastStep: state.lastStep, phoneId: incomingPhoneId});
+      const thxG = lang==='ml' ? `Thanks for continuing your chat 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — ഇപ്പോൾ തന്നെ തുടരാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\nआप यहाँ रुके थे: *${stuckName}* — अभी जारी रखते हैं:` : `Thanks for continuing your chat 😊\n\nYou stopped at: *${stuckName}* — let's continue right now:`;
+      await sendWithDelay(textMessage(uid, thxG, incomingPhoneId));
+      try{ await repeatLastStep(uid, state, lang, incomingPhoneId); }catch(_){}
+      return;
+    }
+    // ===== V283 BUSY / STOP CHAIN =====
+    if(btnId==='BUSY_YES'){
+      // Yes = remind after 1 hour
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Busy Yes - Remind After 1 Hour', phoneId: incomingPhoneId});
+      const okMsg = lang==='ml' ? `👍 മനസ്സിലായി! 1 മണിക്കൂറിന് ശേഷം ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊` : lang==='hi' ? `👍 समझ गई! 1 घंटे बाद मैं याद दिलाऊँगी। 😊` : `👍 Got it! I will remind you after 1 hour. 😊`;
+      await sendWithDelay(textMessage(uid, okMsg, incomingPhoneId));
+      // V284 GENERIC: if stuck on Video -> video 1h reminder, else generic 1h reminder that resends the stuck step
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){ scheduleReminder(uid, 'install:OPP_1HOUR_' + (state.sub||'OPP_CENTER') + ':1', lang, 60*60*1000, incomingPhoneId); } else { scheduleReminder(uid, 'install:GEN_1HOUR:1', lang, 60*60*1000, incomingPhoneId); }
+      return;
+    }
+    if(btnId==='BUSY_NO'){
+      // No = continue now - back to Yes seen / Watch now
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Busy No - Continue Now', phoneId: incomingPhoneId});
+      // V284 GENERIC: No = continue now. Video step -> Yes seen / Watch now. Any other stuck step -> resend THAT step (repeatLastStep) with a Thanks line.
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){
+        const thx = lang==='ml' ? `Thanks for continuing your chat 😊\n\n👉 ഇപ്പോൾ തന്നെ തുടരാം — *Yes seen* അല്ലെങ്കിൽ *Watch now* ബട്ടൺ തിരഞ്ഞെടുക്കൂ, അടുത്ത സ്റ്റെപ്പിലേക്ക് പോകാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\n👉 अभी जारी रखते हैं — *Yes seen* या *Watch now* बटन चुनें, अगले स्टेप पर चलते हैं:` : `Thanks for continuing your chat 😊\n\n👉 Let's continue right now — please select *Yes seen* or *Watch now* button now to go to the next step:`;
+        await sendWithDelay(interactiveButton(uid, thx, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], incomingPhoneId));
+      } else {
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const thx2 = lang==='ml' ? `Thanks for continuing your chat 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — ഇപ്പോൾ തന്നെ തുടരാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\nआप यहाँ रुके थे: *${stuckName}* — अभी जारी रखते हैं:` : `Thanks for continuing your chat 😊\n\nYou stopped at: *${stuckName}* — let's continue right now:`;
+        await sendWithDelay(textMessage(uid, thx2, incomingPhoneId));
+        try{ await repeatLastStep(uid, state, lang, incomingPhoneId); }catch(_){}
+      }
+      return;
+    }
+    if(btnId==='BUSY_STOP'){
+      // Stop = ask confirm: really stop, or remind after some time? Buttons: Stop and Yes
+      await setState(uid, {...state, lastStep:'V283 - Busy Stop - Confirm', phoneId: incomingPhoneId});
+      const cf = lang==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : lang==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाऊँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind you after some time:`;
+      await sendWithDelay(interactiveButton(uid, cf, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='STOP_FINAL'){
+      // Final Stop - move to fired list
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Stopped - Fired', phoneId: incomingPhoneId});
+      const bye = lang==='ml' ? `👍 മനസ്സിലായി, അപേക്ഷ നിർത്തുന്നു. ആവശ്യമുള്ളപ്പോൾ വീണ്ടും വരൂ. 🙏` : lang==='hi' ? `👍 समझ गई, आवेदन रोक रही हूँ। ज़रूरत हो तो फिर आइए। 🙏` : `👍 Got it, stopping your application. Come back whenever you need. 🙏`;
+      await sendWithDelay(textMessage(uid, bye, incomingPhoneId));
+      try{ await autoFireLoser(uid, 'OPP - User Stopped Application'); }catch(_){}
+      return;
+    }
+    if(btnId==='STOP_LATER'){
+      // Yes = remind after some time: 1h + 12h + 24h about last step, then fired list
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Stop Later - 1h/12h/24h Followups', phoneId: incomingPhoneId});
+      const okL = lang==='ml' ? `👍 മനസ്സിലായി! 1 മണിക്കൂർ, 12 മണിക്കൂർ, 24 മണിക്കൂർ കഴിഞ്ഞ് ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊` : lang==='hi' ? `👍 समझ गई! 1 घंटे, 12 घंटे, 24 घंटे बाद मैं याद दिलाऊँगी। 😊` : `👍 Got it! I will remind you after 1 hour, 12 hours and 24 hours. 😊`;
+      await sendWithDelay(textMessage(uid, okL, incomingPhoneId));
+      // V284 GENERIC: Stop-later followups - video steps use OPP_FOLLOWUP_*, every other stuck step uses GEN_FOLLOWUP_* (resends that step)
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_1H_' + (state.sub||'OPP_CENTER') + ':1', lang, 60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_12H_' + (state.sub||'OPP_CENTER') + ':12', lang, 12*60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_24H_' + (state.sub||'OPP_CENTER') + ':24', lang, 24*60*60*1000, incomingPhoneId);
+      } else {
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_1H:1', lang, 60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_12H:12', lang, 12*60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_24H:24', lang, 24*60*60*1000, incomingPhoneId);
+      }
+      return;
+    }
+    // ===== END V283 =====
     if(btnId==='VIDEO_WATCHED'){
       if(state.learnMode==='video'){
         state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
@@ -3990,7 +4150,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V279 Company-Video-Reminder-3Min', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V284 AI-Reminders-Every-Stuck-Step', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4026,7 +4186,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V279 Company-Video-Reminder-3Min | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V284 AI-Reminders-Every-Stuck-Step | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
