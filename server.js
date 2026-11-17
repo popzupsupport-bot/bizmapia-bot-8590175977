@@ -3234,6 +3234,39 @@ app.post('/webhook', async(req,res)=>{
       }catch(e){}
       return;
     }
+    // V295: FAQ NO-AI ANSWER - Maya must answer real questions even when Gemini fails. "who is owner" fell through to old mainMenu because AI returned null and fallback sent repeatLastStep. This block runs BEFORE AI, needs no AI call, and returns.
+    // It handles QUESTION text only (who/what/how/price/services/contact/app), not yes/no/skip/seen which are handled by V288/V292 above.
+    try{
+      if(isFreeText){
+        const _q = String(txt||'').toLowerCase();
+        const _isQ = /\?|\bwho\b|\bwhat\b|\bhow\b|\bwhen\b|\bwhere\b|\bwhy\b|\bwhich\b|\bowner\b|\bfounder\b|\bprice\b|\bfee\b|\bcost\b|\bcontact\b|\baddress\b|\bservices?\b|\bapp\b|\bbizmapia\b/.test(_q);
+        const _isShortAns = ['yes','no','ok','okay','seen','skip','next','kandu','manasilayi'].includes(_q.trim());
+        if(_isQ && !_isShortAns){
+          let _ans = null;
+          const _L = lang || state.lang || 'en';
+          if(/owner|founder|who.*(run|start|made|create)|aadhar|who is.*bizmapia/.test(_q)){
+            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് കേരളത്തിൽ നിന്നുള്ള ഒരു *All-India കമ്പനി* ആണ്.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nകമ്പനിയെക്കുറിച്ച് കൂടുതൽ അറിയാൻ Company Video കാണണോ? 👇` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* केरल की एक *All-India कंपनी* है।\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nCompany के बारे में और जानने के लिए Company Video देखें? 👇` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India company* from Kerala.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nWant to know more about the company? Watch the Company Video 👇`;
+          } else if(/what.*bizmapia|bizmapia.*(what|entha|enth)/.test(_q)){
+            _ans = _L==='ml' ? `🌍 *Bizmapia* എന്നത് നിങ്ങളുടെ ദൈനംദിന ആവശ്യങ്ങൾക്കുള്ള *All-India പ്ലാറ്റ്ഫോം* ആണ്.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nഇതിൽ ഏതാണ് വേണ്ടത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ Business Opportunity എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : _L==='hi' ? `🌍 *Bizmapia* आपकी daily needs के लिए *All-India प्लेटफॉर्म* है।\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nआपको क्या चाहिए? Service use करना है, या Business Opportunity लेकर कमाना है?` : `🌍 *Bizmapia* is an *All-India platform* for your daily needs.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nWhat do you need? Use a service, or take the Business Opportunity and earn with us?`;
+          } else if(/price|fee|cost|token|vila|charge/.test(_q)){
+            _ans = _L==='ml' ? `💰 *Token Fee:*\n\n• Business Center (30K - 1L): Token Rs.100 | Full ~1 Lakh\n• Corporation / Municipal (2L - 5L): Token Rs.150 | Full ~4-5 Lakh\n• District (5L - 15L): Token Rs.250 | Full ~10 Lakh\n\nToken എന്നത് slot lock ചെയ്യാനാണ്. ഏത് level ആണ് വേണ്ടത്?` : `💰 *Token Fee:*\n\n• Business Center (30K - 1L): Token Rs.100 | Full ~1 Lakh\n• Corporation / Municipal (2L - 5L): Token Rs.150 | Full ~4-5 Lakh\n• District (5L - 15L): Token Rs.250 | Full ~10 Lakh\n\nToken is to lock your slot. Which level do you want?`;
+          } else if(/service|sevana/.test(_q)){
+            _ans = _L==='ml' ? `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n🛵 Online Delivery - ഭക്ഷണവും സാധനങ്ങളും വീട്ടിൽ\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nഏത് സേവനമാണ് വേണ്ടത്?` : `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - find shops / services\n🛵 Online Delivery - food & items to your door\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nWhich service do you need?`;
+          } else if(/contact|phone|number|call|team|address|office/.test(_q)){
+            _ans = _L==='ml' ? `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nടീം തിരക്കിലാണ്. നിങ്ങൾക്ക് free time-ൽ വിളിക്കാം. Registration fee കഴിഞ്ഞാൽ ടീം നിങ്ങളെ വിളിക്കും.` : `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nTeam is busy. You can call in your free time. After registration fee, team will call you for verification.`;
+          } else if(/app|install|download|play store|link/.test(_q)){
+            _ans = _L==='ml' ? `📱 *Bizmapia App:*\n\nAndroid: Play Store-ൽ Bizmapia എന്ന് search ചെയ്യൂ\n🌐 Website: bizmapia.com\n\nഏത് phone ആണ്? Android ആണോ iPhone ആണോ?` : `📱 *Bizmapia App:*\n\nAndroid: Search Bizmapia on Play Store\n🌐 Website: bizmapia.com\n\nWhich phone do you use? Android or iPhone?`;
+          }
+          if(_ans){
+            const _h = state.aiHistory||[]; _h.push({role:'user', text: String(txt||'').slice(0,300)}); _h.push({role:'maya', text: _ans.slice(0,500)}); state.aiHistory=_h.slice(-12); state.lastStep='AI Maya - FAQ '+_L; state.aiMode=true;
+            await setState(uid, state);
+            try{ await sendWithDelay(textMessage(uid, _ans, incomingPhoneId)); }catch(e){}
+            await saveToSheet('System_Logs',[nowIso,uid,_L,'V295 FAQ '+incomingPhoneId, 'FAQ no-AI: '+String(txt||'').slice(0,80),'V295 FAQ',HELP_ADMIN,'V295 FAQ',''],false);
+            return;
+          }
+        }
+      }
+    }catch(_){}
     if(isFreeText && AI_ENABLED && !inPayFlow){
       const detected = detectUserLanguage(txt, state.lang);
       // First message from social ad: "Hello! Can I get more info on this?" -> do NOT force English. Default to Malayalam, Maya will ask.
@@ -3968,33 +4001,62 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
       await repeatLastStep(uid, state, lang, incomingPhoneId);
       return;
     }
-    // V247 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
-    // If user is already past start, stay in same step with Sorry + Repeat. Only if truly at First Message, send FULL 5 services in 2 messages.
-    if(state.lang){
-      // V263: Language XX is NOT start - user already in AI mode. Only First Message / HI-Reset is start. Old mainMenu must NEVER come back.
-      const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset';
-      if(atStart){
-        await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), incomingPhoneId));
-        await delay(400);
-        await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
-      } else {
-        // V263: AI failed / fallback - SORT the typed input in Malayalam too, don't send old Sorry+Repeat.
-        const sorted = detectIntentLocal(txt);
-        if(sorted==='business_opportunity'){
-          const sortMsg = lang==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്, അല്ലേ?\n\nഞാൻ മായ ആണ്. ആദ്യം കമ്പനിയെക്കുറിച്ച് വീഡിയോ കാണൂ, പിന്നെ നിങ്ങൾക്ക് ചേർന്ന അവസരം തിരഞ്ഞെടുക്കാം.` : lang==='hi' ? `👍 Samajh gaya! Business opportunity chahiye, sahi? Pehle company ke baare me video dekhein, phir aapke liye sahi avasar chunenge.` : `👍 Got it! You want Business Opportunity, right? First watch the company video, then we will choose the right opportunity for you.`;
-          await setState(uid,{...state, lastStep:'AI Maya - Sorted Business', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
-          await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId));
-        } else if(sorted==='service' || sorted==='taxi' || sorted==='delivery' || sorted==='directory' || sorted==='booking'){
-          const sortMsg2 = lang==='ml' ? `👍 മനസ്സിലായി! സേവനമാണ് വേണ്ടത്.\n\nഏത് സേവനമാണ് വേണ്ടത്? ടാക്സി, ഡയറക്ടറി, ഡെലിവറി, അതോ ബുക്കിങ്?` : `👍 Got it! You want a service. Which one? Taxi, Directory, Delivery, or Booking?`;
-          await sendWithDelay(textMessage(uid, sortMsg2, incomingPhoneId));
-        } else {
-          const sorryV247 = getSorryExplain(lang, state.lastStep||'', txt);
-          await sendWithDelay(textMessage(uid, sorryV247, incomingPhoneId));
-          await delay(400);
-          await repeatLastStep(uid, state, lang, incomingPhoneId);
-        }
+    // V296 UNIVERSAL RESPONDER - MAYA ANSWERS ANY INPUT. No silence, no old mainMenu, no dead-end.
+    // This is the LAST net: anything that reached here (AI null, unknown button, joke, doubt, abuse, emoji, gibberish, sticker, photo, location, single letter) gets ONE warm reply in user's language + guides back to next step.
+    // Rule: NEVER send old mainMenu (Thank you for selecting English + 5 services). NEVER send bare Sorry + Repeat. ALWAYS: acknowledge what they said + answer or ask 1 question + 2 buttons max.
+    try{
+      const _uLang = lang || state.lang || 'en';
+      const _rawU = String(txt||'').trim();
+      const _lowU = _rawU.toLowerCase();
+      const _mType = msg.type||'text';
+      const _isMediaU = ['image','video','document','sticker','location','reaction','contacts'].includes(_mType);
+      const _isUnknownBtn = !!btnId && !['LANG_ML','LANG_EN','LANG_HI'].includes(btnId);
+      // 1) Media / sticker / photo / location -> ask to type or voice, do not ignore
+      if(_isMediaU && !_rawU){
+        const _m = _uLang==='ml' ? `📩 കിട്ടി! 🙏\n\nPhoto / location കണ്ടു. എനിക്ക് വായിക്കാൻ പറ്റുന്നത് *ടൈപ്പ് ചെയ്ത മെസ്സേജും voice note-ഉം* ആണ്.\n\n👉 എന്താണ് വേണ്ടത് എന്ന് ഒന്ന് ടൈപ്പ് ചെയ്ത് പറയാമോ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `📩 मिल गया! 🙏\n\nPhoto / location देखा। मैं *टाइप किया मैसेज और voice note* पढ़ सकती हूँ।\n\n👉 क्या चाहिए, एक बार टाइप करके बताएँगे? Business Opportunity या Service?` : `📩 Got it! 🙏\n\nI saw your photo / location. I can read *typed messages and voice notes*.\n\n👉 Can you type what you need? Business Opportunity or a service?`;
+        try{ await sendWithDelay(textMessage(uid, _m, incomingPhoneId)); }catch(e){}
+        await setState(uid, {...state, lastStep:'V296 - Media Asked To Type', aiMode:true});
+        return;
       }
-    }
+      // 2) Pick reply by meaning - every category covered
+      let _reply = null;
+      const _isGreet = /^(hi+|hello+|hey+|hai+|namaste|namaskaram|vanakkam|assalam|good (morning|evening|afternoon)|🙏|👋|hello 👋)/.test(_lowU) || _lowU==='hi' || _lowU==='hey';
+      const _isThanks = /thank|thanks|nanni|nandhi|shukriya|dhanyavad/.test(_lowU);
+      const _isJoke = /joke|funny|comedy|thമാശ|thamas|lol|haha|😂|🤣|😅/.test(_lowU);
+      const _isDoubt = /fake|fraud|scam|trust|real|true|viswasam|doubt|cheat|cheating|safe|believ/.test(_lowU);
+      const _isAbuse = /fool|idiot|stupid|useless|waste|bad|poda|poo|fuck|shit|damn/.test(_lowU);
+      const _isPriceQ = /price|fee|cost|token|vila|charge|paisa|money|payment/.test(_lowU);
+      const _isShort = _rawU.length<=3 || ['k','ok','okk','yes','no','y','n','??','?','...','.','👍','👌','😊'].includes(_lowU);
+      const _isEmojiOnly = _rawU.length>0 && /^[^a-zA-Z0-9\u0D00-\u0D7F\u0900-\u097F]+$/u.test(_rawU);
+      if(_isGreet){
+        _reply = _uLang==='ml' ? `ഹായ്! 🙏😊 ഞാൻ *മായ* ആണ്. സന്തോഷം!\n\nഎന്താണ് വേണ്ടത്? 👇\n• Business Opportunity എടുത്ത് വരുമാനം ഉണ്ടാക്കണോ?\n• അതോ Bizmapia സേവനം ഉപയോഗിക്കണോ?\n\nഒന്ന് തിരഞ്ഞെടുത്താൽ മതി, ഞാൻ വഴി കാണിക്കാം.` : _uLang==='hi' ? `हाय! 🙏😊 मैं *माया* हूँ। खुशी हुई!\n\nक्या चाहिए? 👇\n• Business Opportunity लेकर कमाना है?\n• या Bizmapia service use करनी है?\n\nएक चुनें, मैं रास्ता दिखाती हूँ।` : `Hi! 🙏😊 I am *Maya*. Happy to chat!\n\nWhat do you need? 👇\n• Take Business Opportunity and earn with us?\n• Or use a Bizmapia service?\n\nPick one and I will guide you.`;
+      } else if(_isThanks){
+        _reply = _uLang==='ml' ? `അയ്യോ, സന്തോഷം! 😊🙏\n\nഇനി അടുത്ത step എന്താണ്? Business Opportunity-യെക്കുറിച്ച് വീഡിയോ കാണണോ, അതോ സേവനം നോക്കണോ?` : _uLang==='hi' ? `अरे, खुशी हुई! 😊🙏\n\nअब अगला step क्या है? Business Opportunity का video देखें, या service देखें?` : `You are most welcome! 😊🙏\n\nWhat is the next step? Watch the Business Opportunity video, or look at a service?`;
+      } else if(_isJoke){
+        _reply = _uLang==='ml' ? `😂 ഹഹാ, കൊള്ളാം! നിങ്ങൾക്ക് humour ഉണ്ട്.\n\nചിരിച്ചല്ലോ, ഇനി കാര്യത്തിലേക്ക് വരാം — Business Opportunity ആണോ വേണ്ടത്, അതോ സേവനമാണോ? 😊` : _uLang==='hi' ? `😂 हाहा, बढ़िया! आपको humour है।\n\nहँस लिए, अब काम की बात — Business Opportunity चाहिए या Service? 😊` : `😂 Haha, nice one! You have humour.\n\nLaughed enough — now to business: do you want the Business Opportunity, or a service? 😊`;
+      } else if(_isDoubt){
+        _reply = _uLang==='ml' ? `🙏 നിങ്ങളുടെ സംശയം മനസ്സിലായി, അത് നല്ലതാണ്.\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — Website: bizmapia.com, Office: Thodupuzha, Idukki. ആദ്യം *Company Video* കണ്ടാൽ കമ്പനി എന്താണ്, എന്താണ് പ്രതീക്ഷിക്കുന്നത് എന്ന് വ്യക്തമാകും.\n\nവീഡിയോ കാണണോ?` : _uLang==='hi' ? `🙏 आपका doubt समझ गई, यह अच्छा है।\n\nBizmapia एक *All-India प्लेटफॉर्म* है — Website: bizmapia.com, Office: Thodupuzha, Idukki। पहले *Company Video* देखें, कंपनी क्या है, क्या उम्मीद करती है — सब साफ हो जाएगा।\n\nVideo देखें?` : `🙏 I understand your doubt — that is a good thing.\n\nBizmapia is an *All-India platform* — Website: bizmapia.com, Office: Thodupuzha, Idukki. Watch the *Company Video* first — you will clearly see what the company is and what it expects.\n\nWant to watch the video?`;
+      } else if(_isAbuse){
+        _reply = _uLang==='ml' ? `🙏 ക്ഷമിക്കണം, നിങ്ങൾക്ക് ദേഷ്യം വന്നത് മനസ്സിലായി. ഞാൻ ഇവിടെയുണ്ട്, സഹായിക്കാം.\n\nഎന്താണ് പ്രശ്നം? ഒന്ന് പറയൂ — വീഡിയോ കണ്ടില്ലേ, അതോ പേയ്മെന്റിൽ സംശയമുണ്ടോ?` : _uLang==='hi' ? `🙏 माफ़ कीजिए, गुस्सा समझ गई। मैं यहाँ हूँ, मदद करती हूँ।\n\nक्या problem है? बताइए — video नहीं देखा, या payment में doubt है?` : `🙏 Sorry, I can see you are upset. I am here to help.\n\nWhat is the problem? Tell me — did you not see the video, or is there a doubt about payment?`;
+      } else if(_isPriceQ){
+        _reply = _uLang==='ml' ? `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nഏത് level ആണ് വേണ്ടത്?` : `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nWhich level do you want?`;
+      } else if(_isShort || _isEmojiOnly || _isUnknownBtn){
+        const _step = state.lastStep||'';
+        _reply = _uLang==='ml' ? `👍 കിട്ടി! 😊\n\nഞാൻ ഇവിടെയുണ്ട്. ഇപ്പോൾ നമ്മൾ ഇവിടെയാണ്: *${_step||'Bizmapia-യെക്കുറിച്ച് അറിയുന്നു'}*.\n\nതുടരട്ടെ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `👍 मिल गया! 😊\n\nमैं यहाँ हूँ। अभी हम यहाँ हैं: *${_step||'Bizmapia के बारे में जान रहे हैं'}*।\n\nआगे बढ़ें? Business Opportunity या Service?` : `👍 Got it! 😊\n\nI am here. Right now we are at: *${_step||'learning about Bizmapia'}*.\n\nShall we continue? Business Opportunity or a service?`;
+      } else {
+        // General / off-topic / gibberish / anything else - acknowledge + bring back, never Sorry+Repeat, never old menu
+        const _echo = _rawU ? `“${_rawU.slice(0,60)}”` : '';
+        _reply = _uLang==='ml' ? `👍 മനസ്സിലായി! ${_echo} — ഞാൻ കേട്ടു. 😊\n\nഞാൻ *മായ* ആണ്, Bizmapia-യിൽ നിങ്ങളെ സഹായിക്കാനാണ് ഇവിടെ.\n\nഎന്താണ് വേണ്ടത്? 👇\n• Business Opportunity — വരുമാനം ഉണ്ടാക്കാൻ\n• സേവനം ഉപയോഗിക്കാൻ — Taxi / Directory / Delivery / Booking\n\nഒന്ന് തിരഞ്ഞെടുക്കൂ, ഞാൻ വഴി കാണിക്കാം.` : _uLang==='hi' ? `👍 समझ गई! ${_echo} — सुन लिया। 😊\n\nमैं *माया* हूँ, Bizmapia में आपकी मदद के लिए यहाँ हूँ।\n\nक्या चाहिए? 👇\n• Business Opportunity — कमाने के लिए\n• Service use करनी है — Taxi / Directory / Delivery / Booking\n\nएक चुनें, मैं रास्ता दिखाती हूँ।` : `👍 Got it! ${_echo} — heard you. 😊\n\nI am *Maya*, here to help you with Bizmapia.\n\nWhat do you need? 👇\n• Business Opportunity — to earn with us\n• Use a service — Taxi / Directory / Delivery / Booking\n\nPick one and I will guide you.`;
+      }
+      // Save + send with 2 buttons only (never old 5-service mainMenu)
+      const _h2 = state.aiHistory||[]; if(_rawU){ _h2.push({role:'user', text:_rawU.slice(0,300)}); _h2.push({role:'maya', text: String(_reply).slice(0,500)}); }
+      await setState(uid, {...state, aiHistory:_h2.slice(-12), lastStep:'V296 - Universal Reply', aiMode:true});
+      const _b1 = _uLang==='ml' ? 'ബിസിനസ് അവസരം' : 'Business Opportunity';
+      const _b2 = _uLang==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : 'Use Other Services';
+      try{ await sendWithDelay(interactiveButton(uid, _reply, [{id:'AI_BUSINESS',title:_b1},{id:'AI_SERVICES',title:_b2}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _reply, incomingPhoneId)); }
+      await saveToSheet('System_Logs',[nowIso,uid,_uLang,'V296 Universal '+incomingPhoneId,'Universal reply to: '+String(txt||msg.type||'').slice(0,80),'V296',HELP_ADMIN,'V296 Universal',''],false);
+      return;
+    }catch(_e){ console.log('V296 universal fail', _e.message); try{ await sendWithDelay(textMessage(uid, `🙏 I am here! I heard you. What do you need — Business Opportunity or a service? Type it, I will guide you.`, incomingPhoneId)); }catch(e){} return; }
   }catch(e){ console.log('webhook error',e.message,e.stack); }
 });
 
@@ -4404,7 +4466,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V294 State-Declared-First-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V296 Universal-Responder-Any-Input', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4440,7 +4502,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V294 State-Declared-First-Fix | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V296 Universal-Responder-Any-Input | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
