@@ -2777,7 +2777,85 @@ app.post('/webhook', async(req,res)=>{
         else { btnId = 'VIDEO_WATCHED'; console.log('V287 free-text watched -> VIDEO_WATCHED (Opportunity Video stage)'); }
       }
     }catch(_){}
-    // ===== V288: STEP-AWARE RECOGNITION FOR EVERY STEP - WITHOUT FAIL =====
+    // ===== V292: HURRY-PROOF - EXPECT EVERY TYPE OF ACTION =====
+    // Hurried users do: "hi", "k", "ok", "??", "price", "video", wrong tap, double tap, "back", 3 msgs at once, voice note.
+    // Maya must NOT treat these as generic chat. It must map them by step, allow Back, ignore duplicates, keep it short.
+    try{
+      const _raw = String(txt||'').trim();
+      const _lowH = _raw.toLowerCase();
+      // 1) Duplicate / double-tap: same text within 10s = ignore duplicate, do not send duplicate reply
+      if(_raw && state.lastUserText === _raw && state.lastReplyAt && (Date.now() - (state.lastUserTextAt||0)) < 10*1000){
+        console.log(`V292 duplicate ignored: "${ _raw}"`);
+        // Do not return - let it fall through but mark duplicate so handlers skip sending again? We return silently to avoid duplicate.
+        // To avoid breaking webhook flow, we still update lastUserTextAt and return from handler via a flag.
+        state.isDuplicate = true;
+      } else {
+        state.isDuplicate = false;
+      }
+      state.lastUserText = _raw; state.lastUserTextAt = Date.now();
+      // 2) Back / Wrong / Change: hurried user tapped wrong button - go back to Business vs Services choice
+      if(!btnId && (_lowH==='back' || _lowH==='thirich' || _lowH==='thirike' || _lowH.includes('wrong') || _lowH.includes('not this') || _lowH.includes('maatti') || _lowH.includes('change') || _lowH==='pinnem' || _lowH==='back cheyy')){
+        btnId = 'HURRY_BACK';
+        console.log(`V292 hurry back -> HURRY_BACK from "${ _raw}" at step ${state.lastStep}`);
+      }
+      // 3) Single-word hurried intents - one word is enough
+      if(!btnId && !_isWatchedText){
+        if(_lowH==='price' || _lowH==='fee' || _lowH==='token' || _lowH==='rate' || _lowH==='vila' || _lowH==='cash') btnId = 'HURRY_PRICE';
+        else if(_lowH==='video' || _lowH==='videyo') btnId = 'HURRY_VIDEO';
+        else if(_lowH==='business' || _lowH==='opportunity' || _lowH==='oppertunity' || _lowH==='franchise' || _lowH==='franchisee') btnId = 'HURRY_BUSINESS';
+        else if(_lowH==='taxi' || _lowH==='cab' || _lowH==='auto') btnId = 'HURRY_TAXI';
+        else if(_lowH==='delivery' || _lowH==='food') btnId = 'HURRY_DELIVERY';
+        else if(_lowH==='hi' || _lowH==='hello' || _lowH==='hey' || _lowH==='hai' || _lowH==='hii' || _lowH==='🙏' || _lowH==='👋') btnId = 'HURRY_HI';
+        else if(_lowH==='k' || _lowH==='ok' || _lowH==='okay' || _lowH==='okk' || _lowH==='👍' || _lowH==='👍🏻' || _lowH==='??' || _lowH==='?' || _lowH==='...' || _lowH==='.' || _lowH==='yes' || _lowH==='y' || _lowH==='no' || _lowH==='n'){
+          // Short "ok / k / ??" means "I am here, what is next?" - do NOT treat as generic. Let V288 step-aware decide by step.
+          // Mark hurry so reply stays short.
+          state.hurryUser = true;
+          console.log(`V292 hurry short "${ _raw}" at step ${state.lastStep} - let V288 decide`);
+        }
+      }
+      // 4) Hurry flag: 2+ fast replies + short messages = hurried user -> Maya must reply SHORT (2 lines + button), not long paragraph
+      if(_raw.length <= 10 && state.fastReplyCount >= 1) state.hurryUser = true;
+      if(state.hurryUser) console.log(`V292 hurry user - keep reply SHORT`);
+    }catch(_){}
+
+        try{
+      if(btnId==='HURRY_BUSINESS') btnId='AI_BUSINESS';
+      else if(btnId==='HURRY_TAXI' || btnId==='HURRY_DELIVERY') btnId='AI_SERVICES';
+      else if(btnId==='HURRY_BACK'){
+        // Send Business vs Services choice again, in user's language, short
+        const _sl = state.lang || 'ml';
+        const _q = _sl==='ml' ? `👍 ശരി, വീണ്ടും തിരഞ്ഞെടുക്കൂ:\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : _sl==='hi' ? `👍 ठीक है, फिर से चुनें:\n\n👇 एक चुनें:` : `👍 OK, choose again:\n\n👇 Select one:`;
+        await sendWithDelay(interactiveButton(uid, _q, [{id:'AI_BUSINESS',title: _sl==='ml' ? 'Business Opportunity' : 'Business Opportunity'},{id:'AI_SERVICES',title: _sl==='ml' ? 'Use Other Services' : 'Use Other Services'}], incomingPhoneId));
+        await setState(uid,{...state, lastStep:'V292 - Hurry Back - Business vs Services', aiMode:true});
+        return;
+      }
+      else if(btnId==='HURRY_PRICE'){
+        // Price in hurry = token fee for current level, or all 3 levels if no level yet. Short reply.
+        const _sl2 = state.lang || 'ml';
+        const _lvl = state.sub || '';
+        let _p = '';
+        if(_lvl==='OPP_CENTER') _p = _sl2==='ml' ? `💰 Business Center: Token Rs.100. Full ~1 Lakh.` : `💰 Business Center: Token Rs.100. Full ~1 Lakh.`;
+        else if(_lvl==='OPP_CORP') _p = _sl2==='ml' ? `💰 Corporation / Municipal: Token Rs.150. Full ~4-5 Lakh.` : `💰 Corporation / Municipal: Token Rs.150. Full ~4-5 Lakh.`;
+        else if(_lvl==='OPP_DISTRICT') _p = _sl2==='ml' ? `💰 District: Token Rs.250. Full ~10 Lakh.` : `💰 District: Token Rs.250. Full ~10 Lakh.`;
+        else _p = _sl2==='ml' ? `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n👇 Capacity തിരഞ്ഞെടുക്കൂ:` : `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n👇 Select capacity:`;
+        await sendWithDelay(interactiveButton(uid, _p, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], incomingPhoneId));
+        await setState(uid,{...state, lastStep:'V292 - Hurry Price Asked', aiMode:true});
+        return;
+      }
+      else if(btnId==='HURRY_VIDEO'){
+        // Video in hurry = resend current video (Company if no capacity, Opportunity if capacity picked)
+        const _hasCap = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT');
+        if(!_hasCap) btnId='COMPANY_VIDEO_WATCH';
+        else btnId='OPP_LEARN_VIDEO';
+      }
+      else if(btnId==='HURRY_HI'){
+        // Hi in hurry = repeat current step in 1 line, not restart
+        // Fall through to V288 / generic - do not set btnId, let step repeat logic handle
+        btnId='';
+      }
+    }catch(_){}
+        if(state.isDuplicate){ console.log(`V292 duplicate - skipping duplicate reply`); return; }
+        // ===== V288: STEP-AWARE RECOGNITION FOR EVERY STEP - WITHOUT FAIL =====
     // Rule: Free text is NEVER generic. Maya first looks at state.lastStep, then decides what the user meant.
     // "yes" on Corp Check = CORP_YES. "yes" on Benefits = UNDERSTOOD_BEN. "skip" anywhere = SKIP. "seen" on Company Video = COMPANY_WATCHED.
     // Without this, "yes / ok / seen / next / skip" fell into generic AI chat and Maya sent duplicate / wrong step.
@@ -2894,6 +2972,27 @@ app.post('/webhook', async(req,res)=>{
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
+    // V293 FIX: Language detection MUST run AFTER state reload (line above). V291 ran BEFORE reload, so its switch was discarded and Maya kept replying Malayalam.
+    // This block re-detects from THIS message and updates BOTH state.lang AND lang (the variable every reply below uses).
+    try{
+      const _t2 = String(txt||'');
+      const _hasMl2 = /[\u0D00-\u0D7F]/.test(_t2);
+      const _hasHi2 = /[\u0900-\u097F]/.test(_t2);
+      const _isAscii2 = _t2.length > 3 && /^[\x00-\x7F\s\p{P}]+$/u.test(_t2);
+      let _det2 = null;
+      if(_hasMl2) _det2 = 'ml';
+      else if(_hasHi2) _det2 = 'hi';
+      else if(_isAscii2 && /[a-zA-Z]{3,}/.test(_t2)) _det2 = 'en';
+      if(!_hasMl2 && !_hasHi2 && _isAscii2){
+        const _mlW = ['enthanu','enth','ariyam','ariyanam','venam','cheyyanam','kandu','kandhu','manasilayi','eppo','evide','engane','sheri','illa','unda','cheyyu','parayu','nokku','kittumo','cheyyan','bizmapia entha'];
+        if(_mlW.some(w=>_t2.toLowerCase().includes(w))) _det2 = 'ml';
+      }
+      if(_det2 && _det2 !== state.lang){
+        console.log(`V293 lang switch AFTER reload ${state.lang} -> ${_det2} from "${String(txt||'').slice(0,40)}"`);
+        state.lang = _det2; lang = _det2;
+        try{ await setState(uid, {...state, lang: _det2}); }catch(_){}
+      }
+    }catch(_){}
     // ===== V256 FIX: 1988 = RESET TO AI MAYA (not old Language Menu) =====
     if(String(txt||'').trim()==='1988'){
       clearReminders(uid);
@@ -4304,7 +4403,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V291 Language-From-Typed-Text', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V293 Language-After-Reload-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4340,7 +4439,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V291 Language-From-Typed-Text | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V293 Language-After-Reload-Fix | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
