@@ -2598,15 +2598,15 @@ app.post('/webhook', async(req,res)=>{
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
-    // ===== ONLY CHANGE vs V247: 1988 TEST RESET - type 1988 anytime to go back to Welcome. NOTHING ELSE CHANGED. =====
+    // ===== V256 FIX: 1988 = RESET TO AI MAYA (not old Language Menu) =====
     if(String(txt||'').trim()==='1988'){
       clearReminders(uid);
-      await setState(uid,{first:true, lastStep:'1988 - Reset', lang:null, phoneId: incomingPhoneId, firedGate:null, stopConfirmPending:false});
-      await sendWithDelay(interactiveButton(uid, T.en.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
-      await saveToSheet('System_Logs', [nowIso, uid, 'none', '1988 Reset '+incomingPhoneId, '1988 - Back to Welcome', 'Clicked', HELP_ADMIN, '1988 Reset', ''], false);
-      scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
-      scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
-      scheduleReminder(uid,'noLang3:'+Date.now(),'en',24*60*60*1000, incomingPhoneId);
+      const prevLang = state.lang || 'ml';
+      await setState(uid,{lang: prevLang, lastStep:'AI Maya - Fresh Reset', phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}, firedGate:null, stopConfirmPending:false});
+      const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. I want to know about Bizmapia business opportunity.', []) : null;
+      const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ Maya ആണ്. Bizmapia business opportunity-യെ കുറിച്ച് അറിയണോ?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
+      try{ await sendWithDelay(interactiveButton(uid, resetText, mayaQuickButtons(prevLang, 'business_opportunity'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, resetText, incomingPhoneId)); }
+      await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       return;
     }
 // ===== V247 FIRED GATE - button replies =====
@@ -2746,18 +2746,14 @@ app.post('/webhook', async(req,res)=>{
     if(btnId.startsWith('LANG_')){
       const l = btnId.replace('LANG_','').toLowerCase();
       lang = l==='ml'?'ml':l==='hi'?'hi':'en';
-      await setState(uid,{lang, lastStep:'Language '+lang, phoneId: incomingPhoneId});
-      const L=T[lang];
+      await setState(uid,{lang, lastStep:'AI Maya - Lang '+lang, phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}});
       clearReminders(uid);
-      await sendWithDelay(interactiveButton(uid, L.mainMenu, L.earnButtons, incomingPhoneId));
-      await delay(300);
-      await sendWithDelay(interactiveButton(uid, L.useServices, L.useButtons, incomingPhoneId));
-      await delay(300);
-      await sendWithDelay(interactiveButton(uid, L.useServices, L.useMoreButtons, incomingPhoneId));
-      await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language '+lang, ''], false);
-      scheduleReminder(uid,'noService:'+Date.now(),lang,1*60*60*1000, incomingPhoneId);
-      scheduleReminder(uid,'noService2:'+Date.now(),lang,12*60*60*1000, incomingPhoneId);
-      scheduleReminder(uid,'noService3:'+Date.now(),lang,24*60*60*1000, incomingPhoneId);
+      // V256: Language tap -> AI Maya greeting in that language, NOT old mainMenu/earnButtons
+      const aiGreet = AI_ENABLED ? await callMayaAI(lang, 'Hi, I selected my language. Tell me about Bizmapia business opportunity in my language.', []) : null;
+      const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `Namaskaram! 🙏 Njan Maya aanu. Bizmapia business opportunity-ye kurichu parayam?` : lang==='hi' ? `Namaskar! Main Maya hoon. Bizmapia business opportunity ke baare mein bataun?` : `Hello! I am Maya. Shall I tell you about Bizmapia business opportunity?`);
+      try{ await sendWithDelay(interactiveButton(uid, greetText, mayaQuickButtons(lang, 'business_opportunity'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); }
+      await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected AI '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language AI '+lang, ''], false);
+      try{ scheduleIdleNudges(uid, lang, incomingPhoneId); }catch(e){}
       return;
     }
 
@@ -3725,7 +3721,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V255 AI-Always-Wins', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V256 AI-Reset-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
