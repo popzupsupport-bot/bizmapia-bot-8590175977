@@ -330,9 +330,13 @@ function mayaQuickButtons(lang, intent){
   return [b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_SERVICES','സേവനങ്ങൾ അറിയാം','Know Our Services','Hamari Services')];
 }
 function detectMayaIntent(userText, aiText){
-  const s=((userText||'')+' '+(aiText||'')).toLowerCase();
+  const raw=((userText||'')+' '+(aiText||''));
+  const s=raw.toLowerCase();
+  if(/പേ|പേയ്മെന്റ്|ടോക്കൺ|രജിസ്ട്രേഷൻ/.test(raw)) return 'finalize';
   if(/pay|payment|token|registration|final|ready/.test(s)) return 'finalize';
+  if(/ടാക്സി|ഡെലിവറി|ബുക്ക്|ഡയറക്ടറി|സേവനം/.test(raw)) return 'service';
   if(/taxi|cab|ride|delivery|booking|room|movie|directory|service/.test(s)) return 'service';
+  if(/ആപ്പ്/.test(raw)) return 'app';
   if(/app|install|download|play store|app store|otp|login/.test(s)) return 'app';
   return 'business';
 }
@@ -354,13 +358,23 @@ function detectSourceFromFirstMsg(txt){
   return 'unknown_ask';
 }
 function detectIntentLocal(txt){
-  const s=String(txt||'').toLowerCase();
+  const raw=String(txt||'');
+  const s=raw.toLowerCase();
+  // V263: Malayalam script keywords - MUST sort Malayalam input, not just English/Manglish
+  if(/ബിസിനസ്|ബിസിനസ്സ്|അവസരം|അവസരമാണ്|വരുമാനം|ഫ്രാഞ്ചൈസി|നിക്ഷേപം/.test(raw)) return 'business_opportunity';
   if(/business|franchise|invest|opportunity|slot|avakasam|1l|4l|5l|10l|lakh/.test(s)) return 'business_opportunity';
+  if(/ടാക്സി|വണ്ടി|കാർ/.test(raw)) return 'taxi';
   if(/taxi|cab|auto|ride|car|vandi/.test(s)) return 'taxi';
+  if(/ഡെലിവറി|ഭക്ഷണം/.test(raw)) return 'delivery';
   if(/delivery|food|parcel/.test(s)) return 'delivery';
+  if(/ഡയറക്ടറി/.test(raw)) return 'directory';
   if(/directory|listing|shop.*list/.test(s)) return 'directory';
+  if(/ബുക്ക്|ബുക്കിങ്|റൂം|മൂവി/.test(raw)) return 'booking';
   if(/booking|room|movie|appointment/.test(s)) return 'booking';
+  if(/ജോലി|ഡ്രൈവർ/.test(raw)) return 'job';
   if(/job|work|driver|vacancy/.test(s)) return 'job';
+  if(/സേവനം|സേവനങ്ങൾ/.test(raw)) return 'service';
+  if(/service/.test(s)) return 'service';
   return '';
 }
 function detectSentimentLocal(txt){
@@ -3387,16 +3401,28 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     // V247 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
     // If user is already past start, stay in same step with Sorry + Repeat. Only if truly at First Message, send FULL 5 services in 2 messages.
     if(state.lang){
-      const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset' || state.lastStep==='Language en' || state.lastStep==='Language ml' || state.lastStep==='Language hi';
+      // V263: Language XX is NOT start - user already in AI mode. Only First Message / HI-Reset is start. Old mainMenu must NEVER come back.
+      const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset';
       if(atStart){
         await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), incomingPhoneId));
         await delay(400);
         await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
       } else {
-        const sorryV247 = getSorryExplain(lang, state.lastStep||'', txt);
-        await sendWithDelay(textMessage(uid, sorryV247, incomingPhoneId));
-        await delay(400);
-        await repeatLastStep(uid, state, lang, incomingPhoneId);
+        // V263: AI failed / fallback - SORT the typed input in Malayalam too, don't send old Sorry+Repeat.
+        const sorted = detectIntentLocal(txt);
+        if(sorted==='business_opportunity'){
+          const sortMsg = lang==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്, അല്ലേ?\n\nഞാൻ മായ ആണ്. നിങ്ങളുടെ ജില്ല ഏതാണ്? ഇപ്പോൾ എന്താണ് ചെയ്യുന്നത്?` : lang==='hi' ? `👍 Samajh gaya! Business opportunity chahiye, sahi? Aapka district kaunsa hai? Abhi kya karte hain?` : `👍 Got it! You want Business Opportunity, right? Which is your district? What do you do now?`;
+          await setState(uid,{...state, lastStep:'AI Maya - Sorted Business', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
+          await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId));
+        } else if(sorted==='service' || sorted==='taxi' || sorted==='delivery' || sorted==='directory' || sorted==='booking'){
+          const sortMsg2 = lang==='ml' ? `👍 മനസ്സിലായി! സേവനമാണ് വേണ്ടത്.\n\nഏത് സേവനമാണ് വേണ്ടത്? ടാക്സി, ഡയറക്ടറി, ഡെലിവറി, അതോ ബുക്കിങ്?` : `👍 Got it! You want a service. Which one? Taxi, Directory, Delivery, or Booking?`;
+          await sendWithDelay(textMessage(uid, sortMsg2, incomingPhoneId));
+        } else {
+          const sorryV247 = getSorryExplain(lang, state.lastStep||'', txt);
+          await sendWithDelay(textMessage(uid, sorryV247, incomingPhoneId));
+          await delay(400);
+          await repeatLastStep(uid, state, lang, incomingPhoneId);
+        }
       }
     }
   }catch(e){ console.log('webhook error',e.message,e.stack); }
@@ -3808,7 +3834,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V262 Language-First-Fixed', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V263 Malayalam-Sorting-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
