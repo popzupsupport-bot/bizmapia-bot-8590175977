@@ -1,3 +1,41 @@
+// ============================================================================
+// 🔒 FINAL LOCKED BUILD - V304 FINAL - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE SECTIONS BELOW
+// Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
+// If a new fix is needed, ADD a new V305+ block at the end of the AI chain - NEVER edit a locked block.
+// ============================================================================
+// LOCKED HISTORY (all present in this file, verified):
+// V254 Production (health/redis/sheets/23 reminders) | V255 AI-Always-Wins + 1988=reset | V256 AI-Reset-Fix
+// V257 Services-Menu | V258 No-Team-Spam | V259 Only-2-Tabs | V260 Ask-Intention-First
+// V261-264 Language-First-No-Manglish + Hard-Override | V265 Hard-Override | V266 Show-Exact-Options
+// V267 English-First-Welcome | V268 AI-Router-Final | V269 Final-Purpose-Maya | V270 Attractive-Welcome-Business-Only
+// V271 See-Video-Button | V272 Details-Last-After-Payment | V273 Reconfirm-High-Payable + Upgrade
+// V274 No-Raw-Link-Fixed | V275 Two-Buttons-After-Lang | V276 Business-Button-Direct-Video
+// V277-279 Video Audit + Hindi Fix + Company Video Reminder 3min | V280 Opportunity-Video-Reminder 5min
+// V281 Yes Seen / Watch Now | V282 One-Message Reminder + Are You There | V283 Busy/Stop Chain (Yes/No/Stop, 1h/12h/24h, fired list)
+// V284 AI Reminders Every Stuck Step | V285 No-Stale-Reminder-After-Reply | V286 No-Repeat-Video-Link + Skip-3-Clicks
+// V287 Company-vs-Opportunity-Video-Seen-Fix | V288 Step-Aware-Recognition-Every-Step | V289 Verified All Edits Present
+// V290 Real-Time vs Slow | V291 Language-From-Typed-Text | V292 Hurry-Proof | V293 Language-After-Reload-Fix
+// V294 State-Declared-First-Fix | V295 FAQ-No-AI-Answer | V296 Universal-Responder-Any-Input (fallback ONLY, NEVER restart in finalization - V296 Guard)
+// V297 Loop-Killed | V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
+// V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
+// V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
+// V304 FINAL-LOCKED-ALL-EDITS ("Yes, next" -> advance, NEVER restart)
+// V304 FINAL-LOCKED - this build
+// ============================================================================
+// LOCKED RULES (never break):
+// 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
+// 2. Intention first, then taste, then exact options. Never ask district/job before options. Never repeat Maya name after first welcome. Never explain company again.
+// 3. Buttons: Normal replies ONLY 2 tabs [Business Opportunity] [Use Other Services]. No Talk to Team, No Later, No More services. Language step is ONLY 3-button exception.
+// 4. Business flow ORDER (never reorder): Company Video (See Video button, never raw link) -> 3min capacity reminder -> Capacity 30K-1L / 2L-5L / 5L-15L -> Level Opportunity Video (different from Company Video) -> Reconfirm/Upgrade -> Benefits/Support/Requirements (Skip allowed) -> Corp Check -> Pay Token -> Details LAST after payment verified.
+// 5. Token/registration details ONLY after video + reconfirm. Full name/address/planning location/contacts/state/district/corp-muni/town/agreement date/Tender/Annexure-B ONLY after registration fee verified. Never ask district/name/address before payment.
+// 6. Services: 4 services Taxi / Business Directory / Online Delivery / Book Anything. Customer = app links as buttons. Driver = driver app + profile/vehicle + cab attachment + Rs.150 one-time + 365/180/90 days free recharge chance + Normal/Peak/Night double + withdraw after 24h + callback test trip. Businessman = shop registration then advertainment.
+// 7. Reminders: Company Video 3min, Opportunity Video 5min, Are you there after 2min, Are you busy/Can I schedule after +2min with Yes/No/Stop, Yes=1h reminder, Stop=Stop or Yes, Yes=1h/12h/24h then fired list. Real-time fast users = no stale reminders, slow users = simple one-step reminders. No stale reminder after reply.
+// 8. AI, not button bot: Understand any input in any step, voice notes, doubts, jokes, short replies, duplicates, back, wrong taps. Any input in any step -> handled IN that step (V301). Off-topic in finalization -> Current Step + Balance Steps + Are You Ready + Next Option (V302). Yes/Next -> advance (V303). Never echo user text. Never generic restart in finalization.
+// 9. Never invent numbers, owner name, rates, Tender/Annexure-B details. Refer to Tender/Annexure-B and www.bizmapia.com when unverified. No raw links in chat - all links ONLY inside buttons.
+// 10. Testing: 1988 = reset. Verify ONLY via /health + Render logs, not deploy success alone.
+// ============================================================================
+// LOCK RULE: Any input while lastStep is in Opportunity Finalization (Company Video/Capacity/Opportunity Video/Benefits/Support/Requirements/Corp/Pay/Details/V300) MUST NEVER send generic "I am Maya, What do you need? Business vs Services" restart. It MUST advance or bring-back in same finalization.
+// CHECK: After any edit, grep for "I am Maya, here to help" - it must appear ONLY in V298 polite-unknown, never as finalization fallback.
 // V248 AI-MAYA - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
 // ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V247
 // V247 FINAL - ONLY CHANGE vs V247: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
@@ -3233,6 +3271,78 @@ app.post('/webhook', async(req,res)=>{
       }catch(e){}
       return;
     }
+    // V300 VIDEO-KNOWN + BALANCE - "I know this video, give balance details" = 2 intents in 1 sentence. Maya echoed it before because V288 only knew "seen/watched".
+    // Rule: "know this video / already saw / kandu / already watched" = VIDEO SEEN. "balance details / balance amount / balance ethra" = show Full - Token balance for PICKED level + ask to lock slot with token.
+    try{
+      if(isFreeText){
+        const _v = String(txt||'').toLowerCase();
+        const _knowsVideo = /know.*video|already.*(saw|seen|watched|kandu)|i.*saw.*video|video.*(kandu|kandhu|ariyam|manasilayi)|seen.*video|watched.*already/.test(_v);
+        const _wantsBalance = /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
+        if(_knowsVideo || _wantsBalance){
+          const _L0 = lang || state.lang || 'en';
+          const _lvl = state.sub || state.lead?.level || 'OPP_CENTER';
+          const _info = _lvl==='OPP_DISTRICT' ? {name:'District Franchise', full:'10 Lakh', token:250, bal:'Rs.9,99,750', emi:'EMI available'} : _lvl==='OPP_CORP' ? {name:'Corporation / Municipal', full:'4-5 Lakh', token:150, bal:'Rs.3,99,850 - 4,99,850', emi:'EMI available'} : {name:'Business Center', full:'1 Lakh', token:100, bal:'Rs.99,900', emi:'Down Rs.30,000 + EMI'};
+          const _ans0 = _L0==='ml' ? `👍 മനസ്സിലായി! വീഡിയോ അറിയാം — കണ്ടതായി കുറിച്ചു. 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (ഇപ്പോൾ): Rs.${_info.token} — slot lock ചെയ്യാൻ\n• Balance after Token: ${_info.bal}\n• ${_info.emi}\n\nToken അടച്ചാൽ slot lock ആകും, പിന്നെ ടീം verification-ന് വിളിക്കും. ഇപ്പോൾ Token അടയ്ക്കണോ?` : _L0==='hi' ? `👍 समझ गई! Video जानते हैं — देखा हुआ नोट कर लिया। 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (अभी): Rs.${_info.token} — slot lock के लिए\n• Token के बाद Balance: ${_info.bal}\n• ${_info.emi}\n\nToken देते ही slot lock होगा, फिर team verification के लिए call करेगी। अभी Token दें?` : `👍 Got it! You know this video — marked as seen. 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (now): Rs.${_info.token} — to lock your slot\n• Balance after Token: ${_info.bal}\n• ${_info.emi}\n\nOnce you pay Token, slot locks, then team will call for verification. Pay Token now?`;
+          const _h0=[...(state.aiHistory||[])]; _h0.push({role:'user',text:String(txt||'').slice(0,300)}); _h0.push({role:'maya',text:_ans0.slice(0,500)});
+          state.aiHistory=_h0.slice(-12); state.lastStep='V300 - Video Known + Balance Shown '+_lvl; state.aiMode=true;
+          if(_knowsVideo){ state.lead={...(state.lead||{}), videoSeen:true, funnel:'VIDEO_SEEN'}; }
+          await setState(uid, state);
+          const _bPay = _L0==='ml' ? 'Token അടയ്ക്കാം' : _L0==='hi' ? 'Token दें' : 'Pay Token Now';
+          const _bLater = _L0==='ml' ? 'പിന്നീട്' : _L0==='hi' ? 'बाद में' : 'Later';
+          try{ await sendWithDelay(interactiveButton(uid, _ans0, [{id:'PAY_TOKEN',title:_bPay},{id:'AI_BUSINESS',title: _L0==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ans0, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L0,'V300 VideoKnownBalance '+incomingPhoneId,'Video known + balance: '+String(txt||'').slice(0,80),'V300',HELP_ADMIN,'V300 Balance',''],false);
+          return;
+        }
+      }
+    }catch(_){}
+    // V299 CONTEXT MEMORY - Maya must remember what SHE just asked. "idukki" after "Which district are you from?" is a DISTRICT ANSWER, not a new random message.
+    // Without this, Maya asks district -> user answers -> Maya says "Got it! heard you" + generic menu. That is the 90% missing.
+    // Rule: Look at last Maya message in aiHistory. If it asked a question, THIS message is the answer to THAT question.
+    try{
+      if(isFreeText){
+        const _hist = state.aiHistory||[];
+        const _lastMaya = [..._hist].reverse().find(h=>h.role==='maya')?.text || '';
+        const _cur = String(txt||'').trim().toLowerCase();
+        const _L9 = lang || state.lang || 'en';
+        // 1) District answer: Maya asked "Which district are you from?"
+        if(/which district|district.*from|ente district|which district are you/.test(_lastMaya.toLowerCase())){
+          const _districts = ['thiruvananthapuram','trivandrum','kollam','pathanamthitta','alappuzha','alleppey','kottayam','idukki','ernakulam','kochi','thrissur','palakkad','malappuram','kozhikode','calicut','wayanad','kannur','kasaragod','chennai','bangalore','bengaluru','hyderabad','mumbai','delhi','pune','coimbatore','madurai'];
+          const _found = _districts.find(d=>_cur.includes(d));
+          if(_found){
+            const _cap = _found.charAt(0).toUpperCase()+_found.slice(1);
+            state.lead = {...(state.lead||{}), district:_cap, intent: state.lead?.intent||'unknown'};
+            state.lastStep='V299 - District Saved '+_cap; state.aiMode=true;
+            const _h9=[..._hist]; _h9.push({role:'user',text:String(txt||'').slice(0,300)}); const _ans9 = _L9==='ml' ? `👍 *${_cap}* — കുറിച്ചു! 🙏\n\n${_cap}-യിൽ നിന്ന് Bizmapia-യോടൊപ്പം എന്താണ് ചെയ്യാൻ ആഗ്രഹിക്കുന്നത്?\n\n• Business Opportunity എടുത്ത് ${_cap}-യിൽ വരുമാനം ഉണ്ടാക്കണോ?\n• അതോ സേവനം ഉപയോഗിക്കണോ?` : _L9==='hi' ? `👍 *${_cap}* — नोट कर लिया! 🙏\n\n${_cap} से Bizmapia के साथ क्या करना चाहते हैं?\n\n• Business Opportunity लेकर ${_cap} में कमाना है?\n• या Service use करनी है?` : `👍 *${_cap}* — noted! 🙏\n\nWhat would you like to do with Bizmapia from ${_cap}?\n\n• Take Business Opportunity and earn in ${_cap}?\n• Or use a service?`;
+            _h9.push({role:'maya',text:_ans9.slice(0,500)}); state.aiHistory=_h9.slice(-12);
+            await setState(uid, state);
+            try{ await sendWithDelay(interactiveButton(uid, _ans9, [{id:'AI_BUSINESS',title: _L9==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: _L9==='ml'?'സേവനങ്ങൾ ഉപയോഗിക്കാം':'Use Other Services'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ans9, incomingPhoneId)); }
+            await saveToSheet('System_Logs',[nowIso,uid,_L9,'V299 District '+incomingPhoneId,'District answer saved: '+_cap,'V299',HELP_ADMIN,'V299 District',''],false);
+            return;
+          }
+        }
+        // 2) Phone answer: Maya asked "Android or iPhone?"
+        if(/android.*iphone|iphone.*android|which phone/.test(_lastMaya.toLowerCase())){
+          if(/android/.test(_cur) || /iphone|ios|apple/.test(_cur)){
+            const _ph = /android/.test(_cur) ? 'Android' : 'iPhone';
+            state.lead = {...(state.lead||{}), phone:_ph}; state.lastStep='V299 - Phone Saved '+_ph; state.aiMode=true;
+            const _ansP = _L9==='ml' ? `👍 *${_ph}* — മനസ്സിലായി!\n\nBizmapia App ${_ph}-ൽ install ചെയ്യാൻ ഞാൻ ലിങ്ക് തരാം. ആദ്യം പറയൂ — Business Opportunity ആണോ വേണ്ടത്, അതോ സേവനം ഉപയോഗിക്കാനാണോ?` : `👍 *${_ph}* — got it!\n\nI will give you the Bizmapia App link for ${_ph}. First tell me — do you want Business Opportunity or use a service?`;
+            const _hP=[..._hist]; _hP.push({role:'user',text:String(txt||'').slice(0,300)}); _hP.push({role:'maya',text:_ansP.slice(0,500)}); state.aiHistory=_hP.slice(-12);
+            await setState(uid, state);
+            try{ await sendWithDelay(interactiveButton(uid, _ansP, [{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansP, incomingPhoneId)); }
+            return;
+          }
+        }
+        // 3) Yes/No answer to "Want to watch video?" - Maya asked video, user says yes/no
+        if(/watch.*video|video.*watch|company video/.test(_lastMaya.toLowerCase()) && (_cur==='yes'||_cur==='no'||_cur==='ok'||_cur==='okay')){
+          if(_cur==='yes'||_cur==='ok'||_cur==='okay'){
+            state.lastStep='V299 - Video Yes After Ask'; state.aiMode=true; await setState(uid, state);
+            const _ansV = _L9==='ml' ? `🎥 സൂപ്പർ! Company Video ഇതാ — 2 മിനിറ്റ് കണ്ടാൽ കമ്പനി മനസ്സിലാകും.\n\nകണ്ട ശേഷം പറയൂ — “kandu” എന്ന് ടൈപ്പ് ചെയ്താൽ മതി.` : `🎥 Super! Here is the Company Video — 2 minutes and you will understand the company.\n\nAfter watching, just type “seen”.`;
+            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url:'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
+            return;
+          }
+        }
+      }
+    }catch(_){}
     // V295: FAQ NO-AI ANSWER - Maya must answer real questions even when Gemini fails. "who is owner" fell through to old mainMenu because AI returned null and fallback sent repeatLastStep. This block runs BEFORE AI, needs no AI call, and returns.
     // It handles QUESTION text only (who/what/how/price/services/contact/app), not yes/no/skip/seen which are handled by V288/V292 above.
     try{
@@ -4029,7 +4139,163 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
       // V297: BYPASS KILLED - this block used to call repeatLastStep() which sends old mainMenu ("Thank you for selecting English!") for EVERY free-text question, so V296 never ran. That was the loop.
       // Now: do NOT return here. Fall through to V296 Universal Responder below, which answers in user's language + 2 buttons.
     }
-    // V296 UNIVERSAL RESPONDER - MAYA ANSWERS ANY INPUT. No silence, no old mainMenu, no dead-end.
+    // V303 YES/NEXT/CONTINUE IN FINALIZATION - "Yes, next" MUST advance, NEVER restart. This fixes screenshot 12:14 AM: user said "Yes, next" after Balance, Maya restarted to Business vs Services.
+    // Rule: If in finalization and input is yes/next/ok/continue/ready/proceed/ahead/yes next, go to NEXT finalization step with THAT step's content + button. Language-aware.
+    try{
+      if(isFreeText){
+        const _s3 = state.lastStep||''; const _low3 = String(txt||'').toLowerCase().trim();
+        const _isContinue = /^(yes|yeah|ok|okay|sure|ready|continue|next|proceed|ahead|yes[,.\s]+next|next[,.\s]+step|manasilayi|seriya|seri|ha|haan|yes sir|yes mam)[\s.,!]*$/.test(_low3) || _low3==='yes, next' || _low3==='yes next' || _low3==='next';
+        if(_isContinue){
+          const _L3 = lang || state.lang || 'en';
+          let _nextIdx = -1, _curName='';
+          if(/Company Video/.test(_s3)){ _nextIdx=1; _curName='Company Video'; }
+          else if(/Capacity|Income Level/.test(_s3)){ _nextIdx=2; _curName='Capacity'; }
+          else if(/Opportunity Video|V300|Video Known|Balance Shown/.test(_s3)){ _nextIdx=3; _curName='Opportunity Video'; }
+          else if(/Benefits/.test(_s3)){ _nextIdx=4; _curName='Benefits'; }
+          else if(/Support/.test(_s3)){ _nextIdx=5; _curName='Support'; }
+          else if(/Requirements/.test(_s3)){ _nextIdx=6; _curName='Requirements'; }
+          else if(/Corp Check|Submit Application/.test(_s3)){ _nextIdx=7; _curName='Corp Check'; }
+          else if(/Pay|Token|EMI/.test(_s3)){ _nextIdx=8; _curName='Pay Token'; }
+          if(_nextIdx>=0){
+            const _steps3 = [
+              {en:'Capacity', ml:'Capacity', hi:'Capacity', msg: _L3==='ml' ? `✅ Company Video കണ്ടു — നന്ദി! 🙏\n\n💰 *Capacity — 7 ദിവസത്തിനുള്ളിൽ ചെലവാക്കാൻ കഴിയുന്ന തുക?*` : _L3==='hi' ? `✅ Company Video देखा — धन्यवाद! 🙏\n\n💰 *Capacity — 7 दिन में कितना खर्च कर सकते हैं?*` : `✅ Company Video seen — thank you! 🙏\n\n💰 *Capacity — How much can you spend in 7 days?*`, btns:[{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], last:'Capacity'},
+              {en:'Opportunity Video', ml:'Opportunity Video', hi:'Opportunity Video', msg: _L3==='ml' ? `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — ഇത് കണ്ടാൽ Balance + Token മനസ്സിലാകും.*\n\nവീഡിയോ കണ്ടോ?` : _L3==='hi' ? `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — इसे देखने से Balance + Token समझ आएगा।*\n\nVideo देखा?` : `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — watching this explains Balance + Token.*\n\nDid you watch it?`, btns:[{id:'VIDEO_WATCHED',title: _L3==='ml'?'കണ്ടു':'Seen'},{id:'VIDEO_NOT_WATCHED',title: _L3==='ml'?'കണ്ടില്ല':'Not Seen'}], last:'Opportunity Video - Must Watch'},
+              {en:'Benefits', ml:'Benefits', hi:'Benefits', msg: _L3==='ml' ? `✅ Opportunity Video കണ്ടു — നന്ദി! 🙏\n\n📋 *Benefits — ഇത് വായിച്ചോ?*\n\nമനസ്സിലായെങ്കിൽ “Understood” അമർത്തൂ.` : _L3==='hi' ? `✅ Opportunity Video देखा — धन्यवाद! 🙏\n\n📋 *Benefits — पढ़ा?*\n\nसमझ गए तो “Understood” दबाएँ।` : `✅ Opportunity Video seen — thank you! 🙏\n\n📋 *Benefits — did you read it?*\n\nIf understood, tap “Understood”.`, btns:[{id:'UNDERSTOOD_BEN',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Benefits - After Video Watched'},
+              {en:'Support', ml:'Support', hi:'Support', msg: _L3==='ml' ? `✅ Benefits മനസ്സിലായി! 🙏\n\n🛟 *Support — ഇത് വായിച്ചോ?*` : _L3==='hi' ? `✅ Benefits समझ गए! 🙏\n\n🛟 *Support — पढ़ा?*` : `✅ Benefits understood! 🙏\n\n🛟 *Support — did you read it?*`, btns:[{id:'UNDERSTOOD_SUP',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Support - After Benefits Understood'},
+              {en:'Requirements', ml:'Requirements', hi:'Requirements', msg: _L3==='ml' ? `✅ Support മനസ്സിലായി! 🙏\n\n📋 *Requirements — ഇത് വായിച്ചോ?*` : _L3==='hi' ? `✅ Support समझ गए! 🙏\n\n📋 *Requirements — पढ़ा?*` : `✅ Support understood! 🙏\n\n📋 *Requirements — did you read it?*`, btns:[{id:'UNDERSTOOD_REQ',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Requirements - After Support Understood'},
+              {en:'Corp Check', ml:'Corp Check', hi:'Corp Check', msg: _L3==='ml' ? `✅ Requirements മനസ്സിലായി! 🙏\n\n🏢 *Corp Check — Corporation / Municipal area ഉണ്ടോ?*` : _L3==='hi' ? `✅ Requirements समझ गए! 🙏\n\n🏢 *Corp Check — Corporation / Municipal area है?*` : `✅ Requirements understood! 🙏\n\n🏢 *Corp Check — Do you have a Corporation / Municipal area?*`, btns:[{id:'CORP_YES',title:'Yes'},{id:'CORP_NO',title:'No'}], last:'Submit Application - Corp Check'},
+              {en:'Pay Token', ml:'Token അടയ്ക്കുക', hi:'Token दें', msg: _L3==='ml' ? `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Token അടച്ച് slot lock ചെയ്യാം.*\n\nതയ്യാറാണോ?` : _L3==='hi' ? `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Token देकर slot lock करें।*\n\nतैयार हैं?` : `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Pay Token to lock your slot.*\n\nReady?`, btns:[{id:'PAY_TOKEN',title:'Pay Token Now'},{id:'AI_BUSINESS',title:'Business Opportunity'}], last:'Pay Token'},
+              {en:'Details', ml:'Details', hi:'Details', msg: _L3==='ml' ? `✅ Token step-ൽ എത്തി! 🙏\n\n📝 *Details — Token verify ചെയ്ത ശേഷം details എടുക്കാം.*` : _L3==='hi' ? `✅ Token step पर आ गए! 🙏\n\n📝 *Details — Token verify के बाद details लेंगे।*` : `✅ Reached Token step! 🙏\n\n📝 *Details — we will take details after Token verification.*`, btns:[{id:'PAY_TOKEN',title:'Pay Token Now'}], last:'Pay Token'},
+            ];
+            // _nextIdx 1..8 maps to _steps3 index _nextIdx-1 (Capacity is index 0)
+            const _n = _steps3[_nextIdx-1];
+            if(_n){
+              await setState(uid, {...state, lastStep:_n.last, aiMode:true, aiHistory:[...(state.aiHistory||[]),{role:'user',text:String(txt||'').slice(0,100)},{role:'maya',text:_n.msg.slice(0,400)}].slice(-12)});
+              try{ await sendWithDelay(interactiveButton(uid, _n.msg, _n.btns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _n.msg, incomingPhoneId)); }
+              await saveToSheet('System_Logs',[nowIso,uid,_L3,'V303 YesNext Advance '+incomingPhoneId,_curName+' -> '+_n.en,'V303',HELP_ADMIN,'V303 YesNext',''],false);
+              return;
+            }
+          }
+        }
+      }
+    }catch(_){}
+    // V302 OFF-TOPIC DURING OPPORTUNITY FINALIZATION - Bring back with Current Step + Balance Steps + Are You Ready + Next Option.
+    // Problem: user talks anything outer (weather, joke, news, personal, other business) in middle of finalization, Maya either answered it and lost flow, or restarted.
+    // Rule: If lastStep is inside Opportunity Finalization (Company Video -> Capacity -> Opportunity Video -> Benefits -> Support -> Requirements -> Corp Check -> Pay Token -> Details), and input is OFF-TOPIC (not the expected answer for that step, not a button that was handled above), then:
+    // 1) Acknowledge off-topic in 1 line in user's language. 2) Say "We are in THIS step". 3) List BALANCE steps remaining. 4) Ask "Are you ready?" 5) Show NEXT option you need to do with THAT step's button. Never restart, never generic menu.
+    try{
+      if(isFreeText){
+        const _s2 = state.lastStep||'';
+        const _finSteps = [
+          {key:'Company Video', ml:'Company Video', en:'Watch Company Video', hi:'Company Video देखें', btn:{id:'COMPANY_WATCHED',title:'Seen'}, btnMl:'കണ്ടു', btnHi:'देख लिया'},
+          {key:'Capacity', ml:'Capacity തിരഞ്ഞെടുക്കുക', en:'Pick Capacity', hi:'Capacity चुनें', btn:{id:'OPP_CENTER',title:'30K - 1L'}, btnMl:'30K - 1L', btnHi:'30K - 1L'},
+          {key:'Opportunity Video', ml:'Opportunity Video', en:'Watch Opportunity Video', hi:'Opportunity Video देखें', btn:{id:'VIDEO_WATCHED',title:'Seen'}, btnMl:'കണ്ടു', btnHi:'देख लिया'},
+          {key:'Benefits', ml:'Benefits', en:'Benefits', hi:'Benefits', btn:{id:'UNDERSTOOD_BEN',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Support', ml:'Support', en:'Support', hi:'Support', btn:{id:'UNDERSTOOD_SUP',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Requirements', ml:'Requirements', en:'Requirements', hi:'Requirements', btn:{id:'UNDERSTOOD_REQ',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Corp Check', ml:'Corp Check', en:'Corp Check', hi:'Corp Check', btn:{id:'CORP_YES',title:'Yes'}, btnMl:'Yes', btnHi:'Yes'},
+          {key:'Pay Token', ml:'Token അടയ്ക്കുക', en:'Pay Token', hi:'Token दें', btn:{id:'PAY_TOKEN',title:'Pay Token Now'}, btnMl:'Token അടയ്ക്കാം', btnHi:'Token दें'},
+          {key:'Details', ml:'Details', en:'Details', hi:'Details', btn:{id:'AI_BUSINESS',title:'Business Opportunity'}, btnMl:'ബിസിനസ് അവസരം', btnHi:'Business Opportunity'},
+        ];
+        let _idx = -1;
+        if(/Company Video|Business Video/.test(_s2)) _idx=0;
+        else if(/Capacity|Income Level/.test(_s2)) _idx=1;
+        else if(/Opportunity Video/.test(_s2)) _idx=2;
+        else if(/Benefits/.test(_s2)) _idx=3;
+        else if(/Support/.test(_s2)) _idx=4;
+        else if(/Requirements/.test(_s2)) _idx=5;
+        else if(/Corp Check|Submit Application/.test(_s2)) _idx=6;
+        else if(/Pay|Token|EMI/.test(_s2)) _idx=7;
+        else if(/V300|Video Known|Balance Shown/.test(_s2)) _idx=2;
+        else if(/Name|District|Address|Details|Lead/.test(_s2)) _idx=8;
+        if(_idx>=0){
+          const _L2 = lang || state.lang || 'en';
+          const _low2 = String(txt||'').toLowerCase();
+          // On-topic inputs for this step are already handled above (seen/kandu, capacity buttons, understood, yes/no, paid, balance, district name). If we REACHED here, it is off-topic or unclear -> bring back.
+          // Do not trigger for very short step answers that slipped through: seen/kandu/manasilayi/yes/no/paid/balance - let V301 handle them.
+          const _onTopic = /seen|kandu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token/.test(_low2);
+          if(!_onTopic){
+            const _cur = _finSteps[_idx];
+            const _rem = _finSteps.slice(_idx); // current + balance
+            const _next = _cur;
+            const _remTxt = _rem.map((s,i)=> _L2==='ml' ? `${i+1}. ${s.ml}${i===0?' ← ഇപ്പോൾ ഇവിടെ':''}` : _L2==='hi' ? `${i+1}. ${s.hi}${i===0?' ← अभी यहाँ':''}` : `${i+1}. ${s.en}${i===0?' ← we are here':''}`).join('\n');
+            const _nextTitle = _L2==='ml' ? _next.btnMl : _L2==='hi' ? _next.btnHi : _next.btn.title;
+            const _msg = _L2==='ml' ? `👍 കിട്ടി — “${String(txt||'').slice(0,60)}”.\n\nഅത് കഴിഞ്ഞ് നമുക്ക് തുടരാം. 🙏\n\n📍 *നമ്മൾ ഇപ്പോൾ ഈ step-ൽ ആണ്: ${_cur.ml}*\n\n📋 *Balance Steps — ചെയ്യാൻ ബാക്കിയുള്ളത്:*\n${_remTxt}\n\n❓ *Are you ready — തുടരാൻ തയ്യാറാണോ?*\n\n👉 *Next Option — ഇനി ചെയ്യേണ്ടത്:* ${_next.ml} — താഴെ ബട്ടൺ അമർത്തൂ.` : _L2==='hi' ? `👍 मिल गया — “${String(txt||'').slice(0,60)}”.\n\nउसे बाद में देखेंगे। 🙏\n\n📍 *हम अभी इस step पर हैं: ${_cur.hi}*\n\n📋 *Balance Steps — बाकी काम:*\n${_remTxt}\n\n❓ *Are you ready — आगे बढ़ने के लिए तैयार हैं?*\n\n👉 *Next Option — अब करना है:* ${_next.hi} — नीचे button दबाएँ।` : `👍 Got it — “${String(txt||'').slice(0,60)}”.\n\nWe will come back to that. 🙏\n\n📍 *We are in this step: ${_cur.en}*\n\n📋 *Balance Steps — still to do:*\n${_remTxt}\n\n❓ *Are you ready to continue?*\n\n👉 *Next Option — you need to do this now:* ${_next.en} — tap the button below.`;
+            const _h2=[...(state.aiHistory||[])]; _h2.push({role:'user',text:String(txt||'').slice(0,300)}); _h2.push({role:'maya',text:_msg.slice(0,500)});
+            await setState(uid, {...state, aiHistory:_h2.slice(-12), lastStep:_s2, aiMode:true});
+            const _btn = [{id:_next.btn.id, title:_nextTitle}, {id:'AI_BUSINESS', title: _L2==='ml'?'ബിസിനസ് അവസരം': _L2==='hi'?'Business Opportunity':'Business Opportunity'}];
+            // For Capacity step, show all 3 capacity buttons instead of only 30K-1L
+            if(_idx===1) _btn.splice(0,1,{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'});
+            try{ await sendWithDelay(interactiveButton(uid, _msg, _btn.slice(0,3), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _msg, incomingPhoneId)); }
+            await saveToSheet('System_Logs',[nowIso,uid,_L2,'V302 OffTopic Finalization '+incomingPhoneId,'Off-topic at '+_cur.key+': '+String(txt||'').slice(0,80),'V302',HELP_ADMIN,'V302 Final',''],false);
+            return;
+          }
+        }
+      }
+    }catch(_){}
+    // V301 STEP-AWARE UNIVERSAL - ANY INPUT IN ANY STEP HANDLED IN THAT STEP. This is the rule for the whole bot.
+    // Before this, any input that missed earlier handlers fell to generic "Got it! heard you" + Business vs Services (restart). That is why users felt looped.
+    // Now: Maya looks at state.lastStep FIRST. She answers the input briefly, then returns user to THE SAME step with THAT step's question + THAT step's buttons. Never restarts, never sends generic menu.
+    // Steps covered: Language, Business vs Services, Company Video, Capacity, Opportunity Video, Benefits/Support/Requirements, Corp Check, Pay Token, Details (Name/District/Address), Services.
+    try{
+      if(isFreeText || (!!btnId && !['LANG_ML','LANG_EN','LANG_HI'].includes(btnId))){
+        const _s = state.lastStep||'';
+        const _L1 = lang || state.lang || 'en';
+        const _in1 = String(txt||'').trim();
+        const _low1 = _in1.toLowerCase();
+        // Do not hijack Pay / Details steps that have their own handlers above (they already returned if handled). This block only runs if we REACHED here.
+        let _stepQ = null, _stepBtns = null, _stepName = '';
+        if(/Language|LANG|Lang Confirm/.test(_s) && !/AI Maya - Lang/.test(_s)){
+          _stepName = 'Language'; _stepQ = _L1==='ml' ? `👇 ഭാഷ തിരഞ്ഞെടുക്കൂ:` : `👇 Please tap your language:`; _stepBtns=[{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}];
+        } else if(/Company Video|Business Video|V270/.test(_s)){
+          _stepName='Company Video'; _stepQ = _L1==='ml' ? `🎥 Company Video കണ്ടോ? കണ്ടെങ്കിൽ “kandu” എന്ന് ടൈപ്പ് ചെയ്യൂ, ഇല്ലെങ്കിൽ വീഡിയോ വീണ്ടും അയയ്ക്കാം.` : `🎥 Did you watch the Company Video? If yes type “seen”, if not I will resend it.`;
+          _stepBtns=[{id:'COMPANY_WATCHED',title: _L1==='ml'?'കണ്ടു':'Seen'},{id:'COMPANY_NOT_WATCHED',title: _L1==='ml'?'കണ്ടില്ല':'Not Seen'}];
+        } else if(/Capacity|Income Level|V270 - Capacity/.test(_s)){
+          _stepName='Capacity'; _stepQ = _L1==='ml' ? `💰 7 ദിവസത്തിനുള്ളിൽ ചെലവാക്കാൻ കഴിയുന്ന തുക എത്ര? താഴെ ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : `💰 How much can you spend in 7 days? Pick one below:`;
+          _stepBtns=[{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}];
+        } else if(/Opportunity Video|V280|V300|Video Known|Balance Shown/.test(_s)){
+          _stepName='Opportunity Video'; _stepQ = _L1==='ml' ? `🎥 Opportunity Video കണ്ടോ? കണ്ടെങ്കിൽ “kandu” എന്ന് ടൈപ്പ് ചെയ്യൂ. Balance അറിയണമെങ്കിൽ “balance details” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `🎥 Did you watch the Opportunity Video? If yes type “seen”. For balance type “balance details”.`;
+          _stepBtns=[{id:'VIDEO_WATCHED',title: _L1==='ml'?'കണ്ടു':'Seen'},{id:'VIDEO_NOT_WATCHED',title: _L1==='ml'?'കണ്ടില്ല':'Not Seen'}];
+        } else if(/Benefits/.test(_s)){
+          _stepName='Benefits'; _stepQ = _L1==='ml' ? `📋 Benefits മനസ്സിലായോ? മനസ്സിലായെങ്കിൽ “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ, അല്ലെങ്കിൽ Skip ചെയ്യാം.` : `📋 Did you understand Benefits? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_BEN',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Support/.test(_s)){
+          _stepName='Support'; _stepQ = _L1==='ml' ? `🛟 Support മനസ്സിലായോ? “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ അല്ലെങ്കിൽ Skip.` : `🛟 Did you understand Support? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_SUP',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Requirements/.test(_s)){
+          _stepName='Requirements'; _stepQ = _L1==='ml' ? `📋 Requirements മനസ്സിലായോ? “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ അല്ലെങ്കിൽ Skip.` : `📋 Did you understand Requirements? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_REQ',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Corp Check|Submit Application/.test(_s)){
+          _stepName='Corp Check'; _stepQ = _L1==='ml' ? `🏢 നിങ്ങൾക്ക് Corporation / Municipal area ഉണ്ടോ? ഉണ്ടെങ്കിൽ “yes”, ഇല്ലെങ്കിൽ “no” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `🏢 Do you have a Corporation / Municipal area? Type “yes” or “no”.`;
+          _stepBtns=[{id:'CORP_YES',title:'Yes'},{id:'CORP_NO',title:'No'}];
+        } else if(/Pay|Token|EMI/.test(_s)){
+          _stepName='Pay Token'; _stepQ = _L1==='ml' ? `💰 Token അടയ്ക്കാൻ തയ്യാറാണോ? അടച്ചെങ്കിൽ “paid” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `💰 Ready to pay Token? If paid, type “paid”.`;
+          _stepBtns=[{id:'PAY_TOKEN',title:'Pay Token Now'},{id:'AI_BUSINESS',title:'Business Opportunity'}];
+        } else if(/Name|District|Address|Details|Lead/.test(_s)){
+          _stepName='Details'; _stepQ = _L1==='ml' ? `📝 ${_s} — ഈ step-ന് വേണ്ട വിവരം ടൈപ്പ് ചെയ്യൂ.` : `📝 ${_s} — please type the detail for this step.`;
+          _stepBtns=[{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}];
+        } else if(/Business.*Video Sent|AI Maya - Sorted Business|2 buttons|Business vs Services/.test(_s) || _s.includes('Business Opportunity')){
+          _stepName='Business vs Services'; _stepQ = _L1==='ml' ? `👇 ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : `👇 Pick one:`; _stepBtns=[{id:'AI_BUSINESS',title: _L1==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: _L1==='ml'?'സേവനങ്ങൾ ഉപയോഗിക്കാം':'Use Other Services'}];
+        }
+        if(_stepQ){
+          // Universal actions in ANY step: back / price / video / help - handled in-step, not restart
+          let _prefix = '';
+          if(_low1==='back' || _low1.includes('back') || _low1.includes('thirich')) _prefix = _L1==='ml' ? `👍 ശരി, തിരിച്ചു പോകാം.\n\n` : `👍 OK, going back.\n\n`;
+          else if(/price|fee|token|vila/.test(_low1)) _prefix = _L1==='ml' ? `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n` : `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n`;
+          else if(/video|videyo/.test(_low1)) _prefix = _L1==='ml' ? `🎥 വീഡിയോ വീണ്ടും അയയ്ക്കാം.\n\n` : `🎥 I will resend the video.\n\n`;
+          else if(_in1) _prefix = _L1==='ml' ? `👍 കിട്ടി — “${_in1.slice(0,50)}”.\n\n` : `👍 Got it — “${_in1.slice(0,50)}”.\n\n`;
+          const _final = _prefix + (_L1==='ml' ? `ഇപ്പോൾ നമ്മൾ *${_stepName}* step-ൽ ആണ്.\n\n${_stepQ}` : `We are now at *${_stepName}* step.\n\n${_stepQ}`);
+          const _h1=[...(state.aiHistory||[])]; if(_in1){ _h1.push({role:'user',text:_in1.slice(0,300)}); _h1.push({role:'maya',text:_final.slice(0,500)}); }
+          await setState(uid, {...state, aiHistory:_h1.slice(-12), lastStep:_s||'V301 - Step Aware', aiMode:true});
+          try{ await sendWithDelay(interactiveButton(uid, _final, _stepBtns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _final, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L1,'V301 StepAware '+incomingPhoneId,'Step '+_stepName+' input: '+String(txt||btnId||'').slice(0,80),'V301',HELP_ADMIN,'V301 Step',''],false);
+          return;
+        }
+      }
+    }catch(_){}
+    // V296 UNIVERSAL RESPONDER - 🔒 LOCKED: NEVER restart if in finalization. If we reach here in finalization, V301/V302/V303 already handled it. This block is fallback ONLY for non-finalization.
+    // V296 GUARD - if finalization, NEVER generic restart
+    try{ var _g=(state.lastStep||''); if(/Company Video|Capacity|Opportunity Video|Benefits|Support|Requirements|Corp Check|Pay Token|V300|Video Known|Balance Shown|Submit Application/.test(_g) && isFreeText){ var _Lg=lang||state.lang||'en'; var _mg='Got it - '+String(txt||'').slice(0,50)+'. We are in '+_g+' step. Are you ready to continue? Tap below.'; try{ await sendWithDelay(interactiveButton(uid,_mg,[{id:'AI_BUSINESS',title:'Business Opportunity'}],incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid,_mg,incomingPhoneId)); } await saveToSheet('System_Logs',[nowIso,uid,_Lg,'V296 Guard '+incomingPhoneId,'Guard prevented restart', 'V296-GUARD',HELP_ADMIN,'V296 Guard',''],false); return; } }catch(_){}
     // This is the LAST net: anything that reached here (AI null, unknown button, joke, doubt, abuse, emoji, gibberish, sticker, photo, location, single letter) gets ONE warm reply in user's language + guides back to next step.
     // Rule: NEVER send old mainMenu (Thank you for selecting English + 5 services). NEVER send bare Sorry + Repeat. ALWAYS: acknowledge what they said + answer or ask 1 question + 2 buttons max.
     try{
@@ -4494,7 +4760,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V298 Polite-Unknown-Plus-Suggestions FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V304 FINAL-LOCKED-ALL-EDITS', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
