@@ -419,6 +419,10 @@ FIRST JOB (first 2 messages, for EVERY new user):
 3) Sense if they LIKE it / CONSIDERING / DOUBT / PRICE DOUBT. If doubt, solve doubt first, never push pay.
 ALL INDIA + SCARCITY (say naturally once when explaining opportunity, once when reminding - NOT every message):
 "Bizmapia is an All India platform - First 4-in-1 App in India. Daily 10,000+ people enquire from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
+HUMAN HANDOVER RULE:
+- If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
+- If user sends voice note / image / video, say "Please type it in words, I can read text best" in user's language.
+- If user sends same message 3+ times, be patient, say "I am reading, one moment".
 TEAM CALL RULE - VERY IMPORTANT, NEVER BREAK:
 - Team calls user ONLY AFTER registration fee (token) is PAID.
 - Before token, NEVER say "team will call you" or "I will ask team to call".
@@ -1770,6 +1774,116 @@ async function deleteReminderFromRedis(uid, typePattern){
     }
   }catch(e){ console.log('deleteReminder error', e.message); }
 }
+
+
+// ===== V254 PRODUCTION PACK - FOR SUCCESSFUL IMPLEMENTATION =====
+// 1) Weekly Summary (Sunday 9 PM)  2) Health Check  3) Human Handover  4) Spam / Duplicate Guard  5) Backup + Error Alert
+const weeklyStats = { weekStart: new Date().toISOString().slice(0,10), leads:0, payments:0, total:0, talk:0, notInterested:0 };
+async function sendWeeklySummary(){
+  resetDailyIfNeeded();
+  const msg=`📅 WEEKLY SUMMARY - Bizmapia Maya - Week of ${weeklyStats.weekStart}\n\n📊 THIS WEEK:\n• New leads: ${weeklyStats.leads + dailyStats.newLeads}\n• Talk-to-Team: ${weeklyStats.talk + dailyStats.talkRequests}\n• Payments: ${weeklyStats.payments + dailyStats.payments} | Total: Rs ${weeklyStats.total + dailyStats.paymentTotal}\n• Not Interested: ${weeklyStats.notInterested + dailyStats.notInterested}\n\n🎯 TOP LEARNING FOR NEXT WEEK:\n• Call ONLY Token Paid leads first.\n• Follow up Token Ready + Considering leads within 24h.\n• Check Master_Leads for Avoid 3+ - do NOT spam them.\n\nCheck Sheet for full list.`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  weeklyStats.weekStart=new Date().toISOString().slice(0,10); weeklyStats.leads=0; weeklyStats.payments=0; weeklyStats.total=0; weeklyStats.talk=0; weeklyStats.notInterested=0;
+  return msg;
+}
+function scheduleWeeklySummary(){
+  // Every Sunday 9 PM IST - check every hour, fire if Sunday 21:00
+  setInterval(async()=>{
+    try{
+      const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+      if(now.getDay()===0 && now.getHours()===21 && now.getMinutes()<60){
+        // Prevent double-send in same hour: use a flag in memory
+        if(globalThis.__weeklySent===now.toDateString()) return;
+        globalThis.__weeklySent=now.toDateString();
+        await sendWeeklySummary();
+      }
+    }catch(e){}
+  }, 60*60*1000);
+}
+// Human Handover: if user says "human / staff / manager / complaint / fraud / police" -> alert team + tell user team will see it
+function needsHuman(txt){
+  const s=String(txt||'').toLowerCase();
+  return /human|staff|manager|complaint|fraud|cheat|police|legal|refund.*manager|talk.*manager|supervisor/.test(s);
+}
+async function notifyHumanHandover(uid, state, txt){
+  const L=state.lead||{};
+  const msg=`🚨 HUMAN HANDOVER NEEDED\n\n👤 Phone: +${uid}\n👤 Name: ${state?.leadData?.name||'Not given'}\n📍 District: ${L.district||'Not given'}\n🎯 Intent: ${L.intent||''} | Sentiment: ${L.sentiment||''} | Token: ${L.tokenStatus||''}\n\n💬 User said: "${String(txt).slice(0,300)}"\n\n📌 Needs: ${whatHeNeeds(state)}\n🧠 Nature: ${describeNature(state)}\n\n⚠️ Action: Team, please check this chat in Sheet / WhatsApp. Do NOT promise refund / call unless token paid.\nTime: ${getISTTime()}`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  return msg;
+}
+// Spam / Duplicate Guard: if same user sends 10+ msgs in 1 min, slow down, don't call AI 10x
+const userMsgTimes = new Map();
+function isSpamming(uid){
+  const now=Date.now(); const arr=(userMsgTimes.get(uid)||[]).filter(x=>now-x<60000); arr.push(now); userMsgTimes.set(uid, arr);
+  return arr.length>10;
+}
+// Backup: every day, log a backup row so you can see server was alive
+async function dailyBackupLog(){
+  try{ await saveToSheet('System_Logs',[getISTTime(),'SERVER','all','Daily Backup - Server Alive',`Memory:${memoryStore.size} Reminders:${reminders.size} Redis:${redisReady?'ON':'OFF'} Sheets:${lastSheetError||'OK'}`,'Health','SYSTEM','Backup',''],false); }catch(e){}
+}
+
+// ===== V253 PERSISTENT REMINDERS - SURVIVE RENDER RESTART / SLEEP =====
+// Problem in V247: setTimeout dies if Render restarts/sleeps -> reminder lost.
+// Fix: Every reminder is ALSO saved in Redis with due time.
+// On startup + every 60 sec, server scans Redis for due reminders and re-fires them.
+// So even if Render sleeps at 4 PM, evening reminder at 7 PM will still push.
+let reminderCheckerStarted = false;
+async function restoreRemindersFromRedis(){
+  if(!redisReady || !redis) { console.log('V253 restore skipped - Redis not ready'); return 0; }
+  try{
+    const keys = await redis.keys('reminder:*');
+    let restored = 0;
+    for(let k of keys){
+      try{
+        const raw = await redis.get(k);
+        if(!raw) continue;
+        const d = JSON.parse(raw);
+        const memKey = `${d.uid}:${d.type}`;
+        if(reminders.has(memKey)) continue; // already has in-memory timer
+        const remaining = (d.due || 0) - Date.now();
+        // If already due (Render was asleep), fire in 5 sec. Else schedule remaining time.
+        const ms = remaining <= 0 ? 5000 : Math.min(remaining, 24*60*60*1000);
+        scheduleReminder(d.uid, d.type, d.lang||'ml', ms, d.phoneId||PHONE_NUMBER_ID);
+        restored++;
+      }catch(e){ console.log('V253 restore one fail', e.message); }
+    }
+    console.log(`V253 restored ${restored} reminders from Redis`);
+    return restored;
+  }catch(e){ console.log('V253 restore fail', e.message); return 0; }
+}
+async function checkDueReminders(){
+  // Called every 60 sec by interval + by /check-reminders endpoint
+  if(!redisReady || !redis) return {checked:0, fired:0, reason:'redis-not-ready'};
+  try{
+    const keys = await redis.keys('reminder:*');
+    let fired = 0;
+    for(let k of keys){
+      try{
+        const raw = await redis.get(k);
+        if(!raw) continue;
+        const d = JSON.parse(raw);
+        if((d.due||0) > Date.now()) continue; // not due yet
+        const memKey = `${d.uid}:${d.type}`;
+        if(reminders.has(memKey)) continue; // in-memory timer will fire it, don't double-fire
+        // Due + no in-memory timer = Render restarted while waiting -> re-fire now
+        console.log(`V253 CHECKER re-firing due reminder ${d.type} for ${d.uid}`);
+        scheduleReminder(d.uid, d.type, d.lang||'ml', 2000, d.phoneId||PHONE_NUMBER_ID);
+        fired++;
+      }catch(e){}
+    }
+    return {checked: keys.length, fired};
+  }catch(e){ console.log('V253 checker fail', e.message); return {checked:0, fired:0, error:e.message}; }
+}
+function startReminderChecker(){
+  if(reminderCheckerStarted) return;
+  reminderCheckerStarted = true;
+  // 60 sec checker - survives restart because it scans Redis, not memory
+  setInterval(async()=>{ try{ await checkDueReminders(); }catch(e){} }, 60*1000);
+  console.log('V253 reminder checker started - every 60 sec');
+}
+
 function clearReminders(uid){
   for(let key of reminders.keys()){ if(key.startsWith(uid+':')){ clearTimeout(reminders.get(key)); reminders.delete(key); } }
   deleteReminderFromRedis(uid, '').catch(e=>console.log('clearReminders redis error', e.message));
@@ -2478,6 +2592,7 @@ app.post('/webhook', async(req,res)=>{
     const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = getISTTime();
     let state = await getState(uid);
+    if(isSpamming(uid)){ try{ await sendWithDelay(textMessage(uid, (state.lang||'ml')==='ml' ? `🙏 ഒന്ന് പതുക്കെ... ഞാൻ വായിക്കുന്നുണ്ട്. ഒരു മെസ്സേജ് അയച്ചാൽ മതി, ഞാൻ മറുപടി തരാം.` : `🙏 One message is enough, I am reading. Please wait a moment.` , incomingPhoneId)); }catch(e){} return; }
     // V250: User replied -> they are here, clear idle nudges, mark time
     try{ clearIdleNudges(uid); state.lastUserAt = Date.now(); }catch(e){}
     // save which number user contacted
@@ -2561,6 +2676,7 @@ app.post('/webhook', async(req,res)=>{
         await setState(uid, {...state, lang: effLang, lastStep: 'AI Maya - Lang '+effLang});
       }
       const hist = state.aiHistory || [];
+      if(needsHuman(txt)){ try{ await notifyHumanHandover(uid, state, txt); }catch(e){} }
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
         const aiReply = aiRes.text;
@@ -3597,6 +3713,10 @@ app.get('/sheet-data', async(req,res)=>{
 app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSummary(); res.send(`✅ Day-end summary sent to admin numbers.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
+
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V254 Production', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
+
 app.get('/test-payment-notify', async(req,res)=>{
   try{
     const phone = (req.query.phone||'919567742507').replace(/[^0-9]/g,'');
@@ -3606,6 +3726,15 @@ app.get('/test-payment-notify', async(req,res)=>{
     res.send(`✅ Test intimation sent to admin numbers. Check your WhatsApp.<br><br><pre>${msg}</pre>`);
   }catch(e){ res.send('Error '+e.message); }
 });
+
+
+app.get('/check-reminders', async(req,res)=>{ try{ const r = await checkDueReminders(); const restored = await restoreRemindersFromRedis(); res.json({ok:true, time: getISTTime(), checker: r, restored, inMemory: reminders.size}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/reminders-status', async(req,res)=>{ try{
+  let redisList=[];
+  if(redisReady && redis){ const keys=await redis.keys('reminder:*'); for(let k of keys){ try{ const v=await redis.get(k); const d=JSON.parse(v); redisList.push({uid:d.uid, type:d.type, lang:d.lang, due: new Date(d.due).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}), minsLeft: Math.round((d.due-Date.now())/60000)}); }catch(e){} } }
+  res.json({ok:true, time:getISTTime(), inMemoryCount: reminders.size, redisCount: redisList.length, redisReminders: redisList.slice(0,50)});
+}catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/test-reminder', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const secs=Number(req.query.secs||30); scheduleReminder('91'+phone, 'maya_idle_1:TEST-'+Date.now(), 'ml', secs*1000, PHONE_NUMBER_ID); res.send(`✅ Test reminder scheduled in ${secs} sec for +${phone}. You should get "Are you there?" message. Check /reminders-status to see it.`); }catch(e){ res.send('Error '+e.message); } });
 
 app.get('/render-stats', async(req,res)=>{
   try{
@@ -3620,7 +3749,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
