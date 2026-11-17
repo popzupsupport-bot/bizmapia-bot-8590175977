@@ -466,14 +466,14 @@ V268 FINAL ROUTER - HOW YOU WORK (NEVER BREAK):
 - VOICE: Voice transcript is same as typed text. Reply to the MEANING, not "I heard voice".
 - If user is confused, simplify, do NOT add more questions. Give exact options, let him pick.
 
-LANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
+V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced ONCE only. After language tap, NEVER say 'I am Maya' again. Second message starts 'Super! / Great! / Bahut badhiya!' + continue in confirmed language.\n- Business-only: if user says business opportunity, NEVER show Services / More services / 2-button menu again. Only Business flow: Video first (no capacity buttons), then after 4.5 min capacity reminder: 'What is your spending capacity within 7 days, choose right one' + [30K-1L][2L-5L][5L-15L].\n- Capacity question MUST say 'within 7 days' / '7 ദിവസത്തിനുള്ളിൽ'. Never ask plain 'capacity ethാണ്?'.\nLANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
 - NEVER use Manglish (Malayalam in English letters like 'Enikku venam', 'Ningal evideya'). NEVER.
 - If language = Malayalam -> reply ONLY in Malayalam script (മലയാളം). NEVER write 'Njan Maya aanu', 'Enikku venam', 'Bizmapia business opportunity-ye kurichu parayam' - those are MANGLISH and FORBIDDEN. If you are unsure, use pure Malayalam: 'ഞാൻ മായ ആണ്', 'ബിസിനസ് അവസരമാണ് വേണ്ടത്' (മലയാളം). No Roman letters except brand names Bizmapia, App, Razorpay.
 - If language = English -> reply ONLY in English. No Malayalam words.
 - If language = Hindi -> reply ONLY in Hindi script.
 - FIRST MESSAGE of every new chat: WELCOME IN ENGLISH ONLY + CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed. Do NOT use Malayalam/Hindi in first message.
   FIRST WELCOME MESSAGE - ENGLISH ONLY (V267 RULE, NEVER BREAK):
-  "Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?"
+  "Hello! Welcome to *Bizmapia!* I am *_Maya_*, your personal guide here. Bizmapia is All-India platform - Taxi, Business Search, Delivery, Booking + Business Opportunity to earn. Type or voice note, I will help you find right option. Tap language below:"
   Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
   Do NOT write the welcome in Malayalam / Hindi / mixed languages. English only until user picks a language.
   AFTER language is confirmed, reply ONLY in that confirmed language, pure script. No mixing.
@@ -2195,18 +2195,18 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
       if((type.startsWith('noLang')||type.startsWith('noService')||type.includes('noLang')||type.includes('noService'))){
         const pastStart = state.lang && state.lastStep && !['First Message','HI - Reset','Language en','Language ml','Language hi','Language'].includes(state.lastStep);
         if(pastStart){
-          console.log(`V269 Final-Purpose-Maya - AI Router over V247 order - English First Welcome - listening on ${PORT}`);
+          console.log(`V247 SKIP stale noLang/noService reminder - user already in ${state.lastStep}, not at start`);
           return;
         }
       }
       // V247: Company Video 2-min guard - if user already past Company Video, skip
       if(type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN') && state.lastStep && !state.lastStep.includes('Company Video')){
-        console.log(`V269 Final-Purpose-Maya - AI Router over V247 order - English First Welcome - listening on ${PORT}`);
+        console.log(`V247 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
         return;
       }
       // V247: Franchise Video 2-min guard - if user already past Video, skip
       if((type.includes('VIDEO_5MIN') || type.includes('VIDEO_2MIN')) && !type.includes('COMPANY') && state.lastStep && !state.lastStep.includes('Video')){
-        console.log(`V269 Final-Purpose-Maya - AI Router over V247 order - English First Welcome - listening on ${PORT}`);
+        console.log(`V247 SKIP stale Franchise Video reminder - user already in ${state.lastStep}`);
         return;
       }
       if(type.startsWith('noLang')||type.startsWith('noService')){
@@ -2683,7 +2683,7 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{lang: prevLang, lastStep:'AI Maya - Fresh Reset', phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}, firedGate:null, stopConfirmPending:false});
       const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. FIRST confirm my language - ask which language: Malayalam / English / Hindi. Do NOT ask intention yet. Do NOT use Manglish.', []) : null;
       const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ മായ ആണ്. ബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
-      const langConfirmText = `Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?`;
+      const langConfirmText = `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`;
       try{ await sendWithDelay(interactiveButton(uid, langConfirmText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, langConfirmText, incomingPhoneId)); } // V261: First = LANGUAGE CONFIRM, 3 buttons - exception to 2-tab rule
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       return;
@@ -2731,9 +2731,9 @@ app.post('/webhook', async(req,res)=>{
     if(btnId && btnId.startsWith('LANG_')){
       const ll = btnId.replace('LANG_','').toLowerCase();
       const clang = ll==='ml'?'ml':ll==='hi'?'hi':'en';
-      await setState(uid,{lang:clang, lastStep:'V269 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
+      await setState(uid,{lang:clang, lastStep:'V270 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
       clearReminders(uid);
-      const q = clang==='ml' ? `നമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : clang==='hi' ? `नमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `Hello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`;
+      const q = clang==='ml' ? `സൂപ്പർ! മലയാളത്തിൽ തുടരാം. 🙏\n\nനിങ്ങൾക്ക് എന്താണ് വേണ്ടത് എന്ന് സ്വന്തം വാക്കുകളിൽ പറഞ്ഞാൽ മതി, ഞാൻ ശരിയായ ഓപ്ഷൻ കണ്ടുപിടിക്കാൻ സഹായിക്കാം.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ ബിസ്മാപ്പിയയോടൊപ്പം ബിസിനസ് അവസരം എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : clang==='hi' ? `बहुत बढ़िया! हिन्दी में जारी रखते हैं। 🙏\n\nआपको क्या चाहिए, अपने शब्दों में बताइए, मैं सही ऑप्शन ढूंढने में मदद करूंगी।\n\nBizmapia में आप क्या खोज रहे हैं? सेवा इस्तेमाल करना है, या Bizmapia के साथ बिज़नेस अवसर लेकर कमाना है?` : `Great! Let’s continue in English. 🙏\n\nJust tell me in your own words what you need, I will help you find the right option.\n\nWhat are you looking for in Bizmapia? To use a service, or to earn with Bizmapia through a business opportunity?`;
       await sendWithDelay(textMessage(uid, q, incomingPhoneId));
       await saveToSheet('System_Logs',[nowIso,uid,clang,'V265 Lang Confirm '+incomingPhoneId,'LANG tap -> pure intention question, no AI call','V265',HELP_ADMIN,'V265 Lang',''],false);
       return;
@@ -2743,10 +2743,20 @@ app.post('/webhook', async(req,res)=>{
       if(sortedTop==='business_opportunity'){
         const sl = state.lang;
         // V266: User already gave requirement -> SHOW EXACT OPTIONS immediately. Do NOT ask district / job now. District comes AFTER they pick level.
-        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്.\n\nBizmapia-യിൽ 3 അവസരങ്ങൾ ഉണ്ട് - ആദ്യം കമ്പനി വീഡിയോ കാണൂ, പിന്നെ capacity തിരഞ്ഞെടുക്കൂ:\n\n🎥 ആദ്യം ഈ കമ്പനി വീഡിയോ കാണൂ: https://youtu.be/7kkR_4w1ZMk\n\n1️⃣ 30K - 1L : ബിസിനസ് സെന്റർ - ടോക്കൺ Rs.100\n2️⃣ 2L - 5L : കോർപ്പറേഷൻ / മുനിസിപ്പൽ - ടോക്കൺ Rs.150\n3️⃣ 5L - 15L : ജില്ലാ ഫ്രാഞ്ചൈസി - ടോക്കൺ Rs.250\n\n👉 ഏതാണ് വേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `👍 समझ गई! 🙏\n\nबिज़नेस अवसर चाहिए।\n\nBizmapia में 3 अवसर हैं - पहले कंपनी वीडियो देखें, फिर capacity चुनें:\n\n1️⃣ बिज़नेस सेंटर - 1 लाख - टोकन Rs.100\n2️⃣ कॉर्पोरेशन / मुनिसिपल - 4 लाख - टोकन Rs.150\n3️⃣ जिला फ्रेंचाइज़ी - 10 लाख - टोकन Rs.250\n\n👉 कौन सा चाहिए? नीचे क्लिक करें:` : `👍 Got it! 🙏\n\nYou want Business Opportunity.\n\nBizmapia has 3 opportunities - first watch Company Video, then pick capacity:\n\n1️⃣ Business Center - 1 Lakh - Token Rs.100\n2️⃣ Corporation / Municipal - 4 Lakh - Token Rs.150\n3️⃣ District Franchise - 10 Lakh - Token Rs.250\n\n👉 Which one do you want? Tap below:`;
-        await setState(uid,{...state, lastStep:'V266 - Showed Business Options', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
-        const bL=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
-        try{ await sendWithDelay(interactiveButton(uid, sortMsg, [bL('OPP_CENTER','30K - 1L സെന്റർ','30K - 1L Center','30K - 1L Center'), bL('OPP_CORP','2L - 5L കോർപ്പറേഷൻ','2L - 5L Corporation','2L - 5L Corporation'), bL('OPP_DISTRICT','5L - 15L ജില്ലാ','5L - 15L District','5L - 15L District')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId)); }
+        // V270 BUSINESS-ONLY: 3A now = Video only, NO capacity buttons, NO services, NO More services. 3B after 4.5 min = capacity reminder.
+        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
+        await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
+        await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId));
+        // V270: Capacity reminder after 4.5 min (270s) - only if user has NOT replied / picked level yet
+        const _capUid = uid, _capPhone = incomingPhoneId, _capLang = sl, _capSentAt = Date.now();
+        setTimeout(async()=>{ try{
+          const cur = await getState(_capUid);
+          if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; // user already replied / moved on - cancel
+          const capMsg = _capLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one from below:*`;
+          const bL2=(id,ml,en,hi)=>({id,title:(_capLang==='ml'?ml:_capLang==='hi'?hi:en).substring(0,20)});
+          try{ await sendWithDelay(interactiveButton(_capUid, capMsg, [bL2('OPP_CENTER','30K - 1L','30K - 1L','30K - 1L'), bL2('OPP_CORP','2L - 5L','2L - 5L','2L - 5L'), bL2('OPP_DISTRICT','5L - 15L','5L - 15L','5L - 15L')], _capPhone)); }catch(e){ await sendWithDelay(textMessage(_capUid, capMsg, _capPhone)); }
+          await setState(_capUid,{...(await getState(_capUid)), lastStep:'V270 - Capacity Reminder Sent'});
+        }catch(e){ console.log('V270 capacity reminder fail', e.message); } }, 270000);
         try{ await logLeadPerfect(uid, state, {lastMsg: txt, summary: 'V265 sorted: business_opportunity'}); }catch(e){}
         return;
       }
@@ -2863,7 +2873,7 @@ app.post('/webhook', async(req,res)=>{
     // V262 FIX: Cannot use isFreeText here - it is defined LATER. Compute inline instead.
     const isFreeTextForLangCheck = !!txt && !btnId && msg.type==='text';
     if(isFreeTextForLangCheck && !state.lang){
-      const lcText = `Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?`;
+      const lcText = `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`;
       try{ await sendWithDelay(interactiveButton(uid, lcText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, lcText, incomingPhoneId)); }
       await setState(uid,{...state, lastStep:'V261 - Language Confirm Sent', phoneId: incomingPhoneId});
       return;
@@ -2971,7 +2981,24 @@ app.post('/webhook', async(req,res)=>{
       const L=T.en;
       const msgType = msg.type||'text';
       const rawInput = txt || msgType;
-      await sendWithDelay(interactiveButton(uid, L.welcome + '\n\n👉 Please tap your language below:', [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, `Hello! Welcome to *Bizmapia!* 🙏✨
+
+I am *_Maya_*, your personal guide here. 💁‍♀️
+
+🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —
+
+🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel
+🔍 *Business Search* — find _shops, services, products & offers_ near you
+🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_
+🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time
+
+💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*
+
+🎙️ I am here to understand *what YOU need* —
+Just _type in your own words_ or send a *voice note* 🎤
+I will help you find the *right option*, step by step. 🤝
+
+👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
       clearReminders(uid);
@@ -2986,7 +3013,7 @@ app.post('/webhook', async(req,res)=>{
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
-      await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Hi Received '+incomingPhoneId, 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
@@ -3942,7 +3969,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V269 Final-Purpose-Maya', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V270 Attractive-Welcome-Business-Only', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -3970,15 +3997,15 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V269 Final-Purpose-Maya AI Router - ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V269 Final-Purpose-Maya', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V269','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V269 Final-Purpose-Maya', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V269 Final-Purpose-Maya', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V269 Final-Purpose-Maya', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V247', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V269 Final-Purpose-Maya - AI Router over V247 order - English First Welcome - listening on ${PORT}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
