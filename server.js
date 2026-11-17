@@ -2737,8 +2737,10 @@ app.post('/webhook', async(req,res)=>{
       }
     }
 
-    // ===== V261: LANGUAGE NOT CONFIRMED YET -> CONFIRM FIRST, do NOT ask intention / business =====
-    if(isFreeText && !state.lang){
+    // ===== V261 FIX V262: LANGUAGE NOT CONFIRMED YET -> CONFIRM FIRST =====
+    // V262 FIX: Cannot use isFreeText here - it is defined LATER. Compute inline instead.
+    const isFreeTextForLangCheck = !!txt && !btnId && msg.type==='text';
+    if(isFreeTextForLangCheck && !state.lang){
       const lcText = `Namaskaram! 🙏 Njan Maya aanu.\nHello! I am Maya.\n\nEthu bhashayil samsarikkatte? / Which language shall we speak in?`;
       try{ await sendWithDelay(interactiveButton(uid, lcText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, lcText, incomingPhoneId)); }
       await setState(uid,{...state, lastStep:'V261 - Language Confirm Sent', phoneId: incomingPhoneId});
@@ -3806,7 +3808,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V261 Language-First-No-Manglish', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V262 Language-First-Fixed', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
