@@ -1837,9 +1837,8 @@ async function repeatLastStep(uid, state, lang, phoneId){
     }
     if(state.service==='SVC_OPP') return await sendWithDelay(interactiveButton(uid, L.oppSelected, L.oppButtons, phoneId));
   }
-  await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), phoneId));
-  await delay(300);
-  await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5), phoneId));
+  // V297: Old mainMenu KILLED here too - repeatLastStep must never send 'Thank you for selecting English' + 5 services again. Send 2 buttons only.
+  await sendWithDelay(interactiveButton(uid, `👍 I am here! 😊\n\nWhat do you need? Business Opportunity or a service?`, [{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}], phoneId));
 }
 
 
@@ -3254,8 +3253,14 @@ app.post('/webhook', async(req,res)=>{
             _ans = _L==='ml' ? `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n🛵 Online Delivery - ഭക്ഷണവും സാധനങ്ങളും വീട്ടിൽ\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nഏത് സേവനമാണ് വേണ്ടത്?` : `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - find shops / services\n🛵 Online Delivery - food & items to your door\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nWhich service do you need?`;
           } else if(/contact|phone|number|call|team|address|office/.test(_q)){
             _ans = _L==='ml' ? `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nടീം തിരക്കിലാണ്. നിങ്ങൾക്ക് free time-ൽ വിളിക്കാം. Registration fee കഴിഞ്ഞാൽ ടീം നിങ്ങളെ വിളിക്കും.` : `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nTeam is busy. You can call in your free time. After registration fee, team will call you for verification.`;
+          } else if(/where|located|location|head office|office|address|evide|kuth/.test(_q)){
+            _ans = _L==='ml' ? `📍 *Bizmapia എവിടെയാണ്?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — എവിടെ നിന്നും ഉപയോഗിക്കാം. നിങ്ങൾ ഏത് ജില്ലയിൽ നിന്നാണ്?` : _L==='hi' ? `📍 *Bizmapia कहाँ है?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia एक *All-India प्लेटफॉर्म* है — कहीं से भी use कर सकते हैं। आप किस जिले से हैं?` : `📍 *Where is Bizmapia located?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia is an *All-India platform* — you can use it from anywhere. Which district are you from?`;
           } else if(/app|install|download|play store|link/.test(_q)){
             _ans = _L==='ml' ? `📱 *Bizmapia App:*\n\nAndroid: Play Store-ൽ Bizmapia എന്ന് search ചെയ്യൂ\n🌐 Website: bizmapia.com\n\nഏത് phone ആണ്? Android ആണോ iPhone ആണോ?` : `📱 *Bizmapia App:*\n\nAndroid: Search Bizmapia on Play Store\n🌐 Website: bizmapia.com\n\nWhich phone do you use? Android or iPhone?`;
+          }
+          if(!_ans){
+            // V298: Catch-all question - if it is NOT a Bizmapia question, say politely I don't have it + suggestions (do not pretend to know). If it IS Bizmapia-related, answer with Bizmapia intro.
+            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് നിങ്ങളുടെ ദൈനംദിന ആവശ്യങ്ങൾക്കുള്ള *All-India പ്ലാറ്റ്ഫോം* ആണ് — Taxi, Directory, Delivery, Booking.\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nഎന്താണ് വേണ്ടത്? Business Opportunity ആണോ, സേവനമാണോ?` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* आपकी daily needs के लिए *All-India प्लेटफॉर्म* है — Taxi, Directory, Delivery, Booking।\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nक्या चाहिए? Business Opportunity या Service?` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India platform* for your daily needs — Taxi, Directory, Delivery, Booking.\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nWhat do you need? Business Opportunity or a service?`;
           }
           if(_ans){
             const _h = state.aiHistory||[]; _h.push({role:'user', text: String(txt||'').slice(0,300)}); _h.push({role:'maya', text: _ans.slice(0,500)}); state.aiHistory=_h.slice(-12); state.lastStep='AI Maya - FAQ '+_L; state.aiMode=true;
@@ -3264,6 +3269,30 @@ app.post('/webhook', async(req,res)=>{
             await saveToSheet('System_Logs',[nowIso,uid,_L,'V295 FAQ '+incomingPhoneId, 'FAQ no-AI: '+String(txt||'').slice(0,80),'V295 FAQ',HELP_ADMIN,'V295 FAQ',''],false);
             return;
           }
+        }
+      }
+    }catch(_){}
+    // V298 OUT-OF-KNOWLEDGE - If user asks anything OUTSIDE Maya's memory, NEVER guess, NEVER invent, NEVER send old menu.
+    // Say politely: I don't have that info + WHY + give 3 related questions Maya CAN answer, so user still leaves satisfied.
+    // Maya KNOWS: Bizmapia services, Business Opportunity levels, token fee, videos, office, contact, app, registration flow.
+    // Maya DOES NOT KNOW: other companies, politics, weather, scores, stocks, celebrities, astrology, personal data, other apps.
+    try{
+      if(isFreeText){
+        const _o = String(txt||'').toLowerCase();
+        const _isBiz = /bizmapia|business|opportunity|franchise|token|fee|price|service|taxi|delivery|directory|booking|video|app|office|contact|team|location|where.*bizmapia|owner/.test(_o);
+        const _isOut = !_isBiz && (/\b(who is|what is|tell me|explain|meaning|weather|rain|temperature|cricket|football|score|stock|share price|bitcoin|lottery|astrology|horoscope|prime minister|president|minister|politics|election|actor|actress|celebrity|movie|song|ola|uber|swiggy|zomato|amazon|flipkart|dunzo|rapido|other company|other app|my name|my number|my address|password|otp|pin)\b/.test(_o) || /\?/.test(_o) && _o.split(' ').length>=4);
+        // Also: if AI already failed before, this same message would have reached here via fallback - but this block runs BEFORE AI, so out-of-scope is caught early.
+        if(_isOut){
+          const _L3 = lang || state.lang || 'en';
+          const _sugg = _L3==='ml' ? `💡 *എനിക്ക് ഉത്തരം പറയാൻ പറ്റുന്ന ചോദ്യങ്ങൾ:*\n\n1️⃣ Bizmapia എന്താണ്?\n2️⃣ Business Opportunity-യുടെ Token Fee എത്രയാണ്?\n3️⃣ Bizmapia ഓഫീസ് എവിടെയാണ്?\n\nഇതിൽ ഏതെങ്കിലും ഒന്ന് ടൈപ്പ് ചെയ്താൽ മതി, ഞാൻ ഉടൻ പറഞ്ഞു തരാം. 😊` : _L3==='hi' ? `💡 *मैं इन सवालों का जवाब दे सकती हूँ:*\n\n1️⃣ Bizmapia क्या है?\n2️⃣ Business Opportunity की Token Fee कितनी है?\n3️⃣ Bizmapia office कहाँ है?\n\nइनमें से कोई एक टाइप करें, मैं तुरंत बता दूँगी। 😊` : `💡 *Questions I CAN answer for you:*\n\n1️⃣ What is Bizmapia?\n2️⃣ What is the Token Fee for Business Opportunity?\n3️⃣ Where is Bizmapia office?\n\nJust type any one of these and I will answer right away. 😊`;
+          const _polite = _L3==='ml' ? `🙏 ക്ഷമിക്കണം, അതിനെക്കുറിച്ച് എന്റെ കൈയിൽ വിവരം ഇല്ല.\n\nഞാൻ *Bizmapia-യുടെ Maya* ആണ് — Bizmapia സേവനങ്ങളെക്കുറിച്ചും Business Opportunity-യെക്കുറിച്ചും മാത്രമേ എനിക്ക് കൃത്യമായി പറയാൻ പറ്റൂ. അറിയാത്ത കാര്യം ഞാൻ ഊഹിച്ച് പറയില്ല, അത് നിങ്ങളെ തെറ്റിദ്ധരിപ്പിക്കും.\n\n${_sugg}` : _L3==='hi' ? `🙏 माफ़ कीजिए, इसके बारे में मेरे पास जानकारी नहीं है।\n\nमैं *Bizmapia की Maya* हूँ — मैं Bizmapia services और Business Opportunity के बारे में ही सही-सही बता सकती हूँ। जो नहीं जानती, वो अंदाज़े पर नहीं कहूँगी, इससे आप गलत समझ सकते हैं।\n\n${_sugg}` : `🙏 Sorry, I don't have information about that.\n\nI am *Maya from Bizmapia* — I can accurately answer only about Bizmapia services and Business Opportunity. I won't guess what I don't know, because that could mislead you.\n\n${_sugg}`;
+          const _h3 = state.aiHistory||[]; _h3.push({role:'user', text: String(txt||'').slice(0,300)}); _h3.push({role:'maya', text: _polite.slice(0,500)}); state.aiHistory=_h3.slice(-12); state.lastStep='V298 - Out Of Knowledge Polite'; state.aiMode=true;
+          await setState(uid, state);
+          const _b1 = _L3==='ml' ? 'ബിസിനസ് അവസരം' : 'Business Opportunity';
+          const _b2 = _L3==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : 'Use Other Services';
+          try{ await sendWithDelay(interactiveButton(uid, _polite, [{id:'AI_BUSINESS',title:_b1},{id:'AI_SERVICES',title:_b2}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _polite, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L3,'V298 OutOfKnowledge '+incomingPhoneId,'Polite unknown: '+String(txt||'').slice(0,80),'V298',HELP_ADMIN,'V298 Unknown',''],false);
+          return;
         }
       }
     }catch(_){}
@@ -3997,9 +4026,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
         await sendPayNowStep(uid,lang,state.fee||15,state.sub,incomingPhoneId, oneMsgBody, false);
         return;
       }
-      // Before Pay: NO human button - only repeat last step buttons
-      await repeatLastStep(uid, state, lang, incomingPhoneId);
-      return;
+      // V297: BYPASS KILLED - this block used to call repeatLastStep() which sends old mainMenu ("Thank you for selecting English!") for EVERY free-text question, so V296 never ran. That was the loop.
+      // Now: do NOT return here. Fall through to V296 Universal Responder below, which answers in user's language + 2 buttons.
     }
     // V296 UNIVERSAL RESPONDER - MAYA ANSWERS ANY INPUT. No silence, no old mainMenu, no dead-end.
     // This is the LAST net: anything that reached here (AI null, unknown button, joke, doubt, abuse, emoji, gibberish, sticker, photo, location, single letter) gets ONE warm reply in user's language + guides back to next step.
@@ -4466,7 +4494,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V296 Universal-Responder-Any-Input', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V298 Polite-Unknown-Plus-Suggestions FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -4502,7 +4530,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V296 Universal-Responder-Any-Input | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V298 Polite-Unknown-Plus-Suggestions | V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
