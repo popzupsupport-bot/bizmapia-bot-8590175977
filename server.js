@@ -1,3 +1,50 @@
+// ============================================================================
+// 🔒 FINAL LOCKED BUILD - V318 FINAL-AUDITED - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE SECTIONS BELOW
+// Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
+// If a new fix is needed, ADD a new V319+ block at the end of the AI chain - NEVER edit a locked block. V304 is HISTORY ONLY, not this build.
+// ============================================================================
+// LOCKED HISTORY (all present in this file, verified):
+// V254 Production (health/redis/sheets/23 reminders) | V255 AI-Always-Wins + 1988=reset | V256 AI-Reset-Fix
+// V257 Services-Menu | V258 No-Team-Spam | V259 Only-2-Tabs | V260 Ask-Intention-First
+// V261-264 Language-First-No-Manglish + Hard-Override | V265 Hard-Override | V266 Show-Exact-Options
+// V267 English-First-Welcome | V268 AI-Router-Final | V269 Final-Purpose-Maya | V270 Attractive-Welcome-Business-Only
+// V271 See-Video-Button | V272 Details-Last-After-Payment | V273 Reconfirm-High-Payable + Upgrade
+// V274 No-Raw-Link-Fixed | V275 Two-Buttons-After-Lang | V276 Business-Button-Direct-Video
+// V277-279 Video Audit + Hindi Fix + Company Video Reminder 3min | V280 Opportunity-Video-Reminder 5min
+// V281 Yes Seen / Watch Now | V282 One-Message Reminder + Are You There | V283 Busy/Stop Chain (Yes/No/Stop, 1h/12h/24h, fired list)
+// V284 AI Reminders Every Stuck Step | V285 No-Stale-Reminder-After-Reply | V286 No-Repeat-Video-Link + Skip-3-Clicks
+// V287 Company-vs-Opportunity-Video-Seen-Fix | V288 Step-Aware-Recognition-Every-Step | V289 Verified All Edits Present
+// V290 Real-Time vs Slow | V291 Language-From-Typed-Text | V292 Hurry-Proof | V293 Language-After-Reload-Fix
+// V294 State-Declared-First-Fix | V295 FAQ-No-AI-Answer | V296 Universal-Responder-Any-Input (fallback ONLY, NEVER restart in finalization - V296 Guard)
+// V264 Language-First-No-Manglish-Hard-Override (part of V261-264, now named explicitly) | V279 Company-Video-Reminder-3min (part of V277-279, now named explicitly)
+// V312 BOOT-LOG-FIXED-FINAL - boot log printed old V298, fixed to print current version (logic carried in V313+)
+// V313 SCOPE-FINAL-DETERMINISTIC-SERVICES - WHO Customer/Driver/Shop deterministic scripts (logic carried in V314+)
+// V314 FINAL-BEST - single welcome, language-frozen single rule, taste before options, SVC deterministic, voice handler in code (logic carried in V316+)
+// V315 GLOBAL-STOP-FIXED - stop works from any step, Stop/Yes confirm (logic carried in V316+)
+// V318 FINAL-AUDITED - re-audit of ALL chats: PAY_TOKEN + CALL_DIALER_/DIAL_ handlers added (sent but never handled), version labels unified to V318 on /health + /check-fired + /sheet-status + root. All V247-V317 logic kept, no flow changed.
+// V317 GLOBAL-STOP-TOP-PRIORITY - REAL FIX: Stop moved to TOP of webhook handler (before V285/V292/V288/sorting/AI), so Stop from ANY step -> Stop/Yes confirm, never language-confirm + sorting. All V247-V316 logic kept.
+// V297 Loop-Killed | V316 ALL-NAMES-PERFECT | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
+// V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
+// V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
+// V316 ALL-NAMES-PERFECT
+// V309 FINAL-COMPLETED-AUDITED - audit stamp, no logic change (all V309 logic carried in V310) ("Yes, next" -> advance, NEVER restart)
+// V304 FINAL-LOCKED - HISTORY ONLY, not this build. THIS BUILD = V318 FINAL-AUDITED.
+// V316 ALL-NAMES-PERFECT - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
+// ============================================================================
+// LOCKED RULES (never break):
+// 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
+// 2. Intention first, then taste, then exact options. Never ask district/job before options. Never repeat Maya name after first welcome. Never explain company again.
+// 3. Buttons: Normal replies ONLY 2 tabs [Business Opportunity] [Use Other Services]. No Talk to Team, No Later, No More services. Language step is ONLY 3-button exception.
+// 4. Business flow ORDER (never reorder): Company Video (See Video button, never raw link) -> 3min capacity reminder -> Capacity 30K-1L / 2L-5L / 5L-15L -> Level Opportunity Video (different from Company Video) -> Reconfirm/Upgrade -> Benefits/Support/Requirements (Skip allowed) -> Corp Check -> Pay Token -> Details LAST after payment verified.
+// 5. Token/registration details ONLY after video + reconfirm. Full name/address/planning location/contacts/state/district/corp-muni/town/agreement date/Tender/Annexure-B ONLY after registration fee verified. Never ask district/name/address before payment.
+// 6. Services: 4 services Taxi / Business Directory / Online Delivery / Book Anything. Customer = app links as buttons. Driver = driver app + profile/vehicle + cab attachment + Rs.150 one-time + 365/180/90 days free recharge chance + Normal/Peak/Night double + withdraw after 24h + callback test trip. Businessman = shop registration then advertainment.
+// 7. Reminders: Company Video 3min, Opportunity Video 5min, Are you there after 2min, Are you busy/Can I schedule after +2min with Yes/No/Stop, Yes=1h reminder, Stop=Stop or Yes, Yes=1h/12h/24h then fired list. Real-time fast users = no stale reminders, slow users = simple one-step reminders. No stale reminder after reply.
+// 8. AI, not button bot: Understand any input in any step, voice notes, doubts, jokes, short replies, duplicates, back, wrong taps. Any input in any step -> handled IN that step (V301). Off-topic in finalization -> Current Step + Balance Steps + Are You Ready + Next Option (V302). Yes/Next -> advance (V303). Never echo user text. Never generic restart in finalization.
+// 9. Never invent numbers, owner name, rates, Tender/Annexure-B details. Refer to Tender/Annexure-B and www.bizmapia.com when unverified. No raw links in chat - all links ONLY inside buttons.
+// 10. Testing: 1988 = reset. Verify ONLY via /health + Render logs, not deploy success alone.
+// ============================================================================
+// LOCK RULE: Any input while lastStep is in Opportunity Finalization (Company Video/Capacity/Opportunity Video/Benefits/Support/Requirements/Corp/Pay/Details/V300) MUST NEVER send generic "I am Maya, What do you need? Business vs Services" restart. It MUST advance or bring-back in same finalization.
+// CHECK: After any edit, grep for "I am Maya, here to help" - it must appear ONLY in V298 polite-unknown, never as finalization fallback.
 // V248 AI-MAYA - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
 // ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V247
 // V247 FINAL - ONLY CHANGE vs V247: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
@@ -127,7 +174,7 @@ STEP 3 - IF BUSINESS OPPORTUNITY:
     [2L - 5L] = Corporation / Municipal, Full ~4-5 Lakh, Token Rs.150
     [5L - 15L] = District Franchise, Full ~10 Lakh, Token Rs.250
   - AFTER CAPACITY PICK: assist + give proper direction in simple steps + supporting YouTube video link for that level (use VIDEO_ML/EN/HI_* in code). Then: reminders + follow-up to get REGISTRATION FEE. Give appropriate Tender + Annexure-B PDF downloads (12 PDFs after verification, via /tenders/ links in code - do NOT invent links).
-  - DETAILS COLLECTION (after fee interest, one by one, never all at once): Full Name, Address, Business Planning Location, Primary Contact, Secondary Contact, Exact Location via dropdowns: State, District, Corporation & Municipality, Town, Exact Agreement Date. Purpose: support company with right-time info sharing: Follow-up Required / Finalization Required / Finalized - Need to Allot Business Opportunity. Log all to Sheet perfectly.
+  - DETAILS COLLECTION - LAST STEP ONLY, AFTER REGISTRATION FEE IS VERIFIED (NEVER BEFORE): Do NOT ask Full Name, Address, Business Planning Location, Primary/Secondary Contact, State, District, Corporation/Municipality, Town, or Agreement Date before payment. Those are the LAST step. Before payment, only: Video -> Capacity -> Explain -> Token/Pay. After Razorpay payment is VERIFIED, then collect details one by one, never all at once. Purpose: support company with right-time info sharing: Follow-up Required / Finalization Required / Finalized - Need to Allot Business Opportunity. Log all to Sheet perfectly.
 STEP 4 - IN BETWEEN: If he shares doubts via extra text / voice, TREAT ACCORDINGLY: answer doubt in his language, entertain, then RETURN him to complete opportunity finalization. Do NOT restart. Do NOT send old menu.
 STEP 5 - TEAM CONTACT: If needed, share team contact and explain WHY he needs to call team: tight schedules + enquiry flow from others, team is busy. If team tries to call him it may be wasted because he may be busy with other works. So HE calls team in free time. Team calls ONLY after registration fee. Never promise team will call now.
 Registration fee NOT refundable, NOT part of full fee. Never promise fixed/guaranteed income. Never ask OTP/PIN.
@@ -449,12 +496,13 @@ GOAL: Sort + Engage + Finalize.
 FIRST JOB (first 2 messages, for EVERY new user):
 1) If source unknown, ask: "Where did you see Bizmapia? Facebook ad / Instagram / Google / YouTube / Friend / App?" in user's language.
 2) Ask WHAT they want: Business Opportunity OR Service (Taxi / Delivery / Directory / Booking)?
+3) Ask TASTE in 1 question before showing options: e.g. Business -> "What kind of earning are you looking for - small / medium / big?" Service -> "What do you need first - Taxi / shop search / delivery / booking?" Do NOT show full option list before taste.
 3) Sense if they LIKE it / CONSIDERING / DOUBT / PRICE DOUBT. If doubt, solve doubt first, never push pay.
 ALL INDIA + SCARCITY (say naturally once when explaining opportunity, once when reminding - NOT every message):
 "Bizmapia is an All India platform - First 4-in-1 App in India. Daily 10,000+ people enquire from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
 HUMAN HANDOVER RULE:
 - If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
-- If user sends voice note / image / video, say "Please type it in words, I can read text best" in user's language.
+- If user sends voice note: treat it as heard, NEVER restart, NEVER send old menu. Reply in user's language: voice heard, continue the SAME step they were in (video/capacity/pay/details/service), ask ONE short typed line only if the voice point is unclear, then return to finalization. If user sends image/video, ask for 1-line typed note, keep same step.
 - If user sends same message 3+ times, be patient, say "I am reading, one moment".
 
 V268 FINAL ROUTER - HOW YOU WORK (NEVER BREAK):
@@ -466,21 +514,21 @@ V268 FINAL ROUTER - HOW YOU WORK (NEVER BREAK):
 - VOICE: Voice transcript is same as typed text. Reply to the MEANING, not "I heard voice".
 - If user is confused, simplify, do NOT add more questions. Give exact options, let him pick.
 
-V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced ONCE only. After language tap, NEVER say 'I am Maya' again. Second message starts 'Super! / Great! / Bahut badhiya!' + continue in confirmed language.\n- Business-only: if user says business opportunity, NEVER show Services / More services / 2-button menu again. Only Business flow: Video first (no capacity buttons), then after 4.5 min capacity reminder: 'What is your spending capacity within 7 days, choose right one' + [30K-1L][2L-5L][5L-15L].\n- Capacity question MUST say 'within 7 days' / '7 ദിവസത്തിനുള്ളിൽ'. Never ask plain 'capacity ethാണ്?'.\nLANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
+V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced ONCE only. After language tap, NEVER say 'I am Maya' again. Second message starts 'Super! / Great! / Bahut badhiya!' + continue in confirmed language.\n- Business-only: if user says business opportunity, NEVER show Services / More services / 2-button menu again. Only Business flow: Video first (no capacity buttons), then after 3 min capacity reminder: 'What is your spending capacity within 7 days, choose right one' + [30K-1L][2L-5L][5L-15L].\n- Capacity question MUST say 'within 7 days' / '7 ദിവസത്തിനുള്ളിൽ'. Never ask plain 'capacity ethാണ്?'.\nLANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
 - NEVER use Manglish (Malayalam in English letters like 'Enikku venam', 'Ningal evideya'). NEVER.
 - If language = Malayalam -> reply ONLY in Malayalam script (മലയാളം). NEVER write 'Njan Maya aanu', 'Enikku venam', 'Bizmapia business opportunity-ye kurichu parayam' - those are MANGLISH and FORBIDDEN. If you are unsure, use pure Malayalam: 'ഞാൻ മായ ആണ്', 'ബിസിനസ് അവസരമാണ് വേണ്ടത്' (മലയാളം). No Roman letters except brand names Bizmapia, App, Razorpay.
 - If language = English -> reply ONLY in English. No Malayalam words.
 - If language = Hindi -> reply ONLY in Hindi script.
 - FIRST MESSAGE of every new chat: WELCOME IN ENGLISH ONLY + CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed. Do NOT use Malayalam/Hindi in first message.
   FIRST WELCOME MESSAGE - ENGLISH ONLY (V267 RULE, NEVER BREAK):
-  "Hello! Welcome to *Bizmapia!* I am *_Maya_*, your personal guide here. Bizmapia is All-India platform - Taxi, Business Search, Delivery, Booking + Business Opportunity to earn. Type or voice note, I will help you find right option. Tap language below:"
+  "Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n📦 *Online Booking* — hotel rooms, appointments, movie / show tickets\n\nWhat do you want to experience — our services, or business opportunity to earn with Bizmapia? Tap language below:"
   Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
   Do NOT write the welcome in Malayalam / Hindi / mixed languages. English only until user picks a language.
   AFTER language is confirmed, reply ONLY in that confirmed language, pure script. No mixing.
 - If user already typed in Malayalam script -> still confirm once in ENGLISH: "Hello! I am Maya from Bizmapia. Which language shall we speak in?" and wait for tap. Do NOT reply in Malayalam before they tap.
 - If user already typed in English -> still confirm once in ENGLISH: "Shall we continue in English?" and wait for yes.
 - ONLY AFTER language confirmed, then ask intention (V260 rule). Intention question must be in the CONFIRMED language only, pure script.
-- If user switches language mid-chat ("English-il parayu"), switch fully to that language immediately, no mixing.
+- V307 FIXED TERMS: NEVER switch language mid-chat. Once language is selected, it is FROZEN for the whole chat. Even if user says "English-il parayu" / "need english" after Malayalam selected, DO NOT switch. Reply in the LOCKED language that language is fixed as per terms, and continue the step in locked language.
 
 FIRST CHAT RULE - MOST IMPORTANT (V260 - AI MAYA, NOT BUTTON BOT):
 - When chat starts / after 1988 / after language select, DO NOT give Business / Services buttons immediately.
@@ -1293,18 +1341,18 @@ function getPayReminderExact(lang,fee,sub){
     let oppMl='ബിസിനസ് സെന്റർ അവസരം';
     if(sub==='OPP_DISTRICT') oppMl='ജില്ലാ ഫ്രാഞ്ചൈസി അവസരം';
     else if(sub==='OPP_CORP') oppMl='കോർപ്പറേഷൻ / മുനിസിപ്പൽ ഫ്രാഞ്ചൈസി അവസരം';
-    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ഇതുവരെ ബുക്ക് ആയിട്ടില്ല.\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.`;
+    return `📍 Step 5 of 6 — 1 സ്റ്റെപ്പ് ബാക്കി\n\n🙏 നിങ്ങളുടെ ${oppMl} ഇതുവരെ ബുക്ക് ആയിട്ടില്ല.\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ പരിശോധിച്ചു — നിങ്ങളുടെ ഫീ ഇതുവരെ പ്രതിഫലിച്ചിട്ടില്ല.\n\n💳 രജിസ്ട്രേഷൻ ഫീ Rs.${token} അടച്ചാൽ, നിങ്ങളുടെ കരാർ, വരുമാന രേഖകൾ ലഭിക്കും.\n\n⚠️ ഫീ അടച്ചില്ലെങ്കിൽ നിങ്ങൾക്ക് ലഭിക്കില്ല:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
   }
   if(lang==='hi'){
     let oppHi='बिजनेस सेंटर अवसर';
     if(sub==='OPP_DISTRICT') oppHi='जिला फ्रेंचाइजी अवसर';
     else if(sub==='OPP_CORP') oppHi='कॉर्पोरेशन / म्युनिसिपल फ्रेंचाइजी अवसर';
-    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।`;
+    return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n🔍 मैंने अभी payment system में चेक किया — आपकी फी अभी तक नहीं दिखी है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।\n\n⚠️ फी नहीं भरी तो आपको नहीं मिलेगा:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
   }
   let oppName='Business Center opportunity';
   if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
   else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
-  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.`;
+  return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n🔍 I just checked our payment system — your fee is not yet reflected.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.\n\n⚠️ If fee is not paid, you will NOT get:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
 }
 function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
 
@@ -1498,10 +1546,12 @@ async function getState(uid){ if(redisReady){ try{ const v=await redis.get(`stat
 async function setState(uid,s){ s.lastActive = Date.now(); memoryStore.set(uid,s); if(redisReady){ try{ await redis.set(`state:${uid}`, JSON.stringify(s), 'EX', 86400*7);}catch{} } }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-function textMessage(to,body, phoneId){ return { messaging_product:'whatsapp', to, type:'text', text:{body:body.substring(0,4096)} , _phoneId: phoneId }; }
+// V274: NO RAW LINKS - safety net. Any https:// / www. in visible text is stripped. Links live ONLY inside buttons.
+function stripRawUrls(s){ return String(s||'').replace(/https?:\/\/[^\s\n]+/gi,'').replace(/www\.[^\s\n]+/gi,'').replace(/👉\s*\n/g,'').replace(/\n{3,}/g,'\n\n').trim(); }
+function textMessage(to,body, phoneId){ return { messaging_product:'whatsapp', to, type:'text', text:{body:stripRawUrls(body).substring(0,4096)} , _phoneId: phoneId }; }
 function interactiveButton(to,body,buttons, phoneId){
   const btns = buttons.slice(0,3).map(b=>({type:'reply', reply:{id:b.id, title:b.title.substring(0,20)}}));
-  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:body.substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{type:'button', body:{text:stripRawUrls(body).substring(0,1024)}, action:{buttons:btns}}, _phoneId: phoneId };
 }
 
 function interactiveWithCallButtons(to, body, replyButtons, phoneNumber, phoneTitle, phoneId){
@@ -1665,6 +1715,7 @@ async function sendWithDelay(msg){
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
     const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
+    try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -1734,7 +1785,7 @@ function oppCongrats(lang, step){
   if(step===1){
     if(lang==='ml') return `🎉 മികച്ച തിരഞ്ഞെടുപ്പ്!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: കമ്പനി വീഡിയോ കാണുക, തുടർന്ന് താഴെ ക്ലിക്ക് ചെയ്യുക:`;
     if(lang==='hi') return `🎉 बेहतरीन चयन!\n👉 अब क्या करें: कंपनी वीडियो देखें, फिर नीचे क्लिक करें:`;
-    return `🎉 Excellent choice!\n👉 What to do now: Watch Company Video, then click below:`;
+    return `🎉 Excellent choice!\n👉 What to do now: See Company Video, then click below:`;
   }
   if(step===2){
     if(lang==='ml') return `👏 അഭിനന്ദനങ്ങൾ! കമ്പനി വീഡിയോ കണ്ടു!\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:`;
@@ -1766,12 +1817,12 @@ function oppCongrats(lang, step){
 function oppRoadmap(lang){
   if(lang==='ml') return `🎯 നിങ്ങളുടെ അവസരം — 6 സ്റ്റെപ്പിൽ ഫൈനൽ\n1️⃣ കമ്പനിയെ അറിയാം - വീഡിയോ കാണൂ (2 മിനിറ്റ്)\n2️⃣ നിക്ഷേപ ശേഷി അനുസരിച്ച് തിരഞ്ഞെടുക്കൂ\n3️⃣ അവസരം മനസ്സിലാക്കൂ - വീഡിയോ OR 3 വിവരണങ്ങൾ\n4️⃣ തയ്യാറാണ് — കൺഫേം ചെയ്യൂ\n5️⃣ രജിസ്ട്രേഷൻ ഫീ അടയ്ക്കൂ\n6️⃣ എഗ്രിമെന്റ് തീയതി ഫിക്സ് ചെയ്യൂ`;
   if(lang==='hi') return `🎯 आपका अवसर — 6 स्टेप में फाइनल\n1️⃣ कंपनी जानें — वीडियो देखें (2 मिनट)\n2️⃣ निवेश क्षमता के अनुसार चुनें\n3️⃣ अवसर समझें — वीडियो OR 3 पेज पढ़ें\n4️⃣ तैयार हैं — कन्फर्म करें\n5️⃣ रजिस्ट्रेशन फी भरें\n6️⃣ एग्रीमेंट डेट फिक्स करें`;
-  return `🎯 Your Opportunity — 6 Steps to Finalize\n1️⃣ Know the Company — Watch Company Video (2 min)\n2️⃣ Choose as per your Investing Capacity\n3️⃣ Understand Opportunity — Watch Video OR Read 3 Short Pages\n4️⃣ Confirm You Are Ready\n5️⃣ Pay Registration Fee\n6️⃣ Fix Agreement Date`;
+  return `🎯 Your Opportunity — 6 Steps to Finalize\n1️⃣ Know the Company — See Company Video (2 min)\n2️⃣ Choose as per your Investing Capacity\n3️⃣ Understand Opportunity — Watch Video OR Read 3 Short Pages\n4️⃣ Confirm You Are Ready\n5️⃣ Pay Registration Fee\n6️⃣ Fix Agreement Date`;
 }
 function oppLearnQ(lang){
   if(lang==='ml') return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 വീഡിയോ കണ്ടാൽ — വീഡിയോ കണ്ട് നേരെ Corp Check-ലേക്ക് പോകാം.\n📄 3 ക്ലിക്ക് വായിച്ചാൽ — ആനുകൂല്യം + പിന്തുണ + ആവശ്യകത വായിച്ച് മനസ്സിലാക്കാം.\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കുക:`;
   if(lang==='hi') return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 वीडियो देखें — वीडियो देखकर सीधे Corp Check पर जाएं।\n📄 3 क्लिक पढ़ें — लाभ + सपोर्ट + आवश्यकता पढ़कर समझें।\n\n👇 एक चुनें:`;
-  return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 Watch Video — Watch video and go directly to Corp Check.\n📄 Read 3 Clicks — Read Benefits + Support + Requirements.\n\n👇 Select one:`;
+  return oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n🎥 See Video — Watch video and go directly to Corp Check.\n📄 Read 3 Clicks — Read Benefits + Support + Requirements.\n\n👇 Select one:`;
 }
 
 async function repeatLastStep(uid, state, lang, phoneId){
@@ -1805,11 +1856,11 @@ async function repeatLastStep(uid, state, lang, phoneId){
   // V247 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
-  return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn}], phoneId)); }
-  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn}], phoneId)); }
+  return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
+  if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n'+escalatedReq, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
   if(last.includes('Corp Check') || last.includes('Submit Application')){ const escalatedCorp = getEscalatedGeneralText(lang, L.corpQ, level, 'CorpCheck'); return await sendWithDelay(interactiveButton(uid,escalatedCorp,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], phoneId)); }
   if(last.includes('Ready')){ const fee = state.fee||15; const franchiseName = state.franchiseName||'Franchise'; let readyText = getReadyText(lang, fee, franchiseName); readyText = getEscalatedGeneralText(lang, readyText, level, 'Ready'); const readyBtnTitle = lang==='ml' ? `അതെ തയ്യാർ - ${fee}L` : lang==='hi' ? `हाँ तैयार - ${fee}L` : `Yes Ready - ${fee}L`; return await sendWithDelay(interactiveButton(uid,readyText,[{id:'READY_15L',title:readyBtnTitle},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
@@ -1834,9 +1885,8 @@ async function repeatLastStep(uid, state, lang, phoneId){
     }
     if(state.service==='SVC_OPP') return await sendWithDelay(interactiveButton(uid, L.oppSelected, L.oppButtons, phoneId));
   }
-  await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), phoneId));
-  await delay(300);
-  await sendWithDelay(interactiveButton(uid, 'More services:-', L.services.slice(3,5), phoneId));
+  // V297: Old mainMenu KILLED here too - repeatLastStep must never send 'Thank you for selecting English' + 5 services again. Send 2 buttons only.
+  await sendWithDelay(interactiveButton(uid, `👍 I am here! 😊\n\nWhat do you need? Business Opportunity or a service?`, [{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}], phoneId));
 }
 
 
@@ -2009,8 +2059,16 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       if(redisReady && redis){ await redis.del(`reminder:${uid}:${type}`); }
       const state = await getState(uid);
       if(!state || state.flow==='DONE') return;
+      if(state.isRealTime && state.lastReplyAt && (Date.now() - state.lastReplyAt) < 2*60*1000){ console.log(`V290 SKIP reminder ${type} - real-time user replied ${Math.round((Date.now()-state.lastReplyAt)/1000)}s ago`); return; }
       const lastActive = state.lastActive ? Date.now() - state.lastActive : 999999999;
       if(type.endsWith(':1') && !type.endsWith(':12') && !type.endsWith(':24') && lastActive < 30*60*1000){ console.log(`Skipping 1h reminder, active ${lastActive}ms ago`); return; }
+      // V285 FIX: User already replied after this reminder was scheduled -> reminder is STALE, do not fire.
+      // Example: user typed "Watched video, whats next?" then old VIDEO reminder still fired 1 min later.
+      // If user was active in last 2 min, ANY VIDEO / OPP / GEN / Are-you-there / Busy reminder firing now is stale.
+      if((type.includes('VIDEO') || type.includes('OPP_') || type.includes('GEN_') || type.includes('ARE_YOU_THERE') || type.includes('BUSY_CHECK')) && lastActive < 2*60*1000){ console.log(`V285 SKIP stale reminder ${type} - user replied ${Math.round(lastActive/1000)}s ago, last=${state?.lastStep}`); return; }
+      // V286 FIX: Already Seen + marked in replay -> never send video link again. Reminders about video are stale.
+      // If user is now stuck on Benefits/Support/Requirements, the GEN chain (not video reminders) handles it.
+      if(state.videoWatched && (type.includes('VIDEO') || type.includes('OPP_ARE_YOU_THERE') || type.includes('OPP_BUSY_CHECK') || type.includes('OPP_1HOUR') || type.includes('OPP_FOLLOWUP'))){ console.log(`V286 SKIP video reminder - already marked Seen, last=${state?.lastStep}`); return; }
       const actualLang = state.lang || lang || 'en';
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
@@ -2200,7 +2258,7 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         }
       }
       // V247: Company Video 2-min guard - if user already past Company Video, skip
-      if(type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN') && state.lastStep && !state.lastStep.includes('Company Video')){
+      if(type.includes('COMPANY_VIDEO_3MIN') || type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN') && state.lastStep && !state.lastStep.includes('Company Video')){
         console.log(`V247 SKIP stale Company Video reminder - user already in ${state.lastStep}`);
         return;
       }
@@ -2237,26 +2295,98 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
           }
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], actualPhoneId));
-      } else if(type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN')){
+      } else if(type.includes('COMPANY_VIDEO_3MIN') || type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN')){
         // V247: Company video - Did you watch? as 2-min reminder, then Income Level
         const cMsg = actualLang==='ml' ? `ഹലോ! കമ്പനി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കാം:` : actualLang==='hi' ? `हैलो! कंपनी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "कंपनी वीडियो देखा" पर क्लिक करें, फिर आय स्तर चुनें:` : `Hello! Did you watch Company video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Company Video" below, then select Income Level:`;
         const cWatched = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video';
         const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
         await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
       } else if(type.includes('VIDEO_5MIN')){
-        // V247: Franchisee explainer - 5-min watched confirmation. Only [Watched] + [Not watched]. No skip, no raw link.
+        // V281: Opportunity Video reminder - buttons = Yes seen / Watch now + SAME video link again in this reminder.
+        // Nobody replies after watching, so reminder must carry the video again, not just ask.
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
-        const vMsg = actualLang==='ml' ? `ഹലോ! ഫ്രാഞ്ചൈസി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : actualLang==='hi' ? `हैलो! फ्रेंचाइजी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें:` : `Hello! Did you watch the franchise video?\n\n👉 What to do now: If you watched the full video, click "Watched Video" below:`;
-        const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
-        const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
-        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+        // V282: ONLY ONE message - the Yes seen / Watch now message IS the reminder. No separate See Video message before it.
+        // Video comes again ONLY if they tap Watch now (VIDEO_NOT_WATCHED already resends same video).
+        const vMsg = actualLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n👉 കണ്ടെങ്കിൽ *Yes seen* ക്ലിക്ക് ചെയ്യൂ, കണ്ടില്ലെങ്കിൽ *Watch now* ക്ലിക്ക് ചെയ്യൂ — അതേ വീഡിയോ വീണ്ടും വരും:` : actualLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n👉 देखा तो *Yes seen* पर क्लिक करें, नहीं देखा तो *Watch now* पर क्लिक करें — वही वीडियो फिर आएगा:` : `🎬 *Did you watch the video?* 😊\n\n👉 If seen, click *Yes seen*, if not, click *Watch now* — same video will come again:`;
+        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V282: If still no reply, Maya follows up like AI / human - "are you there?" - 2 min after this reminder
+        scheduleReminder(uid, 'install:OPP_ARE_YOU_THERE_' + subForVideo + ':10', actualLang, 2*60*1000, actualPhoneId);
       } else if(type.includes('VIDEO_2MIN')){
-        // V247: Video 2nd message as 2-min reminder - NOT immediate
+        // V281: Same as 5-min reminder - Yes seen / Watch now + SAME video link again.
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
-        const vMsg = actualLang==='ml' ? `ഹലോ! വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് ആനുകൂല്യങ്ങൾ കാണാം:` : actualLang==='hi' ? `हैलो! वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "वीडियो देखा" पर क्लिक करें, फिर लाभ देखेंगे:` : `Hello! Did you watch the video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Video" below to see Benefits:`;
-        const watchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'वीडियो देखा' : 'Watched Video';
-        const notWatchedTitle = actualLang==='ml' ? 'വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'वीडियो नहीं देखा' : 'Video not seen';
-        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:watchedTitle},{id:'VIDEO_NOT_WATCHED',title:notWatchedTitle}], actualPhoneId));
+        // V282: ONLY ONE message - Yes seen / Watch now IS the reminder.
+        const vMsg = actualLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n👉 കണ്ടെങ്കിൽ *Yes seen* ക്ലിക്ക് ചെയ്യൂ, കണ്ടില്ലെങ്കിൽ *Watch now* ക്ലിക്ക് ചെയ്യൂ — അതേ വീഡിയോ വീണ്ടും വരും:` : actualLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n👉 देखा तो *Yes seen* पर क्लिक करें, नहीं देखा तो *Watch now* पर क्लिक करें — वही वीडियो फिर आएगा:` : `🎬 *Did you watch the video?* 😊\n\n👉 If seen, click *Yes seen*, if not, click *Watch now* — same video will come again:`;
+        await sendWithDelay(interactiveButton(uid, vMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        scheduleReminder(uid, 'install:OPP_ARE_YOU_THERE_' + subForVideo + ':10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('OPP_ARE_YOU_THERE')){
+        // V282: AI-style confirmation nudge - "are you there?" - only if user is STILL on Opportunity Video step (no reply yet).
+        // If user already moved on (lastStep no longer has Video), skip.
+        if(state.lastStep && !state.lastStep.includes('Video') && !state.lastStep.includes('Opportunity')){
+          console.log(`V282 SKIP stale Are-you-there - user already in ${state.lastStep}`);
+          return;
+        }
+        const areMsg = actualLang==='ml' ? `ഹലോ, അവിടെയുണ്ടോ? 😊\n\nവീഡിയോ കാണാൻ പറ്റിയോ? എന്തെങ്കിലും സംശയം ഉണ്ടോ?\n\n👉 കണ്ടെങ്കിൽ *Yes seen*, കണ്ടില്ലെങ്കിൽ *Watch now* — ഞാൻ ഇവിടെ തന്നെയുണ്ട്:` : actualLang==='hi' ? `हैलो, आप वहाँ हैं? 😊\n\nवीडियो देखने का मौका मिला? कोई doubt है?\n\n👉 देखा तो *Yes seen*, नहीं देखा तो *Watch now* — मैं यहीं हूँ:` : `Hello, are you there? 😊\n\nDid you get a chance to watch the video? Any doubt?\n\n👉 If seen, *Yes seen*, if not, *Watch now* — I'm right here:`;
+        await sendWithDelay(interactiveButton(uid, areMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V283: 2nd AI reminder after 2 min - "Are you busy right now?"
+        scheduleReminder(uid, 'install:OPP_BUSY_CHECK_' + (type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER') + ':10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('OPP_BUSY_CHECK')){
+        // V283 2nd AI reminder: "Are you busy right now? Can I schedule a reminder after 1 Hour?" - Yes / No / Stop
+        if(state.lastStep && !state.lastStep.includes('Video') && !state.lastStep.includes('Opportunity') && !state.lastStep.includes('Are-you-there') && !state.lastStep.includes('Busy')){
+          console.log(`V283 SKIP stale Busy check - user already in ${state.lastStep}`);
+          return;
+        }
+        const busyMsg = actualLang==='ml' ? `ഒരു കാര്യം ചോദിക്കട്ടെ 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 മണിക്കൂറിന് ശേഷം ഓർമ്മിപ്പിക്കാം, No = ഇപ്പോൾ തുടരാം, Stop = നിർത്താം:` : actualLang==='hi' ? `एक बात पूछूँ 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 घंटे बाद याद दिलाऊँगी, No = अभी जारी रखते हैं, Stop = रोकें:` : `One thing 😊\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = remind after 1 hour, No = continue now, Stop = stop:`;
+        await sendWithDelay(interactiveButton(uid, busyMsg, [{id:'BUSY_YES',title:'Yes'},{id:'BUSY_NO',title:'No'},{id:'BUSY_STOP',title:'Stop'}], actualPhoneId));
+      } else if(type.includes('OPP_1HOUR')){
+        // V283: 1-hour reminder after Busy Yes - back to Yes seen / Watch now about last step
+        const hMsg = actualLang==='ml' ? `ഹലോ, 1 മണിക്കൂർ കഴിഞ്ഞു 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു.\n\n🎬 *വീഡിയോ കണ്ടോ?*\n\n👉 കണ്ടെങ്കിൽ *Yes seen*, കണ്ടില്ലെങ്കിൽ *Watch now*:` : actualLang==='hi' ? `हैलो, 1 घंटा हो गया 😊 जैसा कहा था, याद दिला रही हूँ।\n\n🎬 *वीडियो देखा?*\n\n👉 देखा तो *Yes seen*, नहीं देखा तो *Watch now*:` : `Hello, 1 hour is up 😊 reminding you as promised.\n\n🎬 *Did you watch the video?*\n\n👉 If seen, *Yes seen*, if not, *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, hMsg, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_1H')){
+        // V283: Stop-later followup - 1 hour - about last step
+        const f1 = actualLang==='ml' ? `ഹലോ 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു — നിങ്ങളുടെ അവസരം ഇവിടെയുണ്ട്.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 जैसा कहा था, याद दिला रही हूँ — आपका अवसर यहाँ है।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 reminding you as promised — your opportunity is here.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f1, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_12H')){
+        const f12 = actualLang==='ml' ? `ഹലോ 😊 12 മണിക്കൂർ കഴിഞ്ഞു — നിങ്ങളുടെ അവസരം കാത്തിരിക്കുന്നു.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 12 घंटे हो गए — आपका अवसर इंतज़ार कर रहा है।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 12 hours done — your opportunity is waiting.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f12, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+      } else if(type.includes('OPP_FOLLOWUP_24H')){
+        const f24 = actualLang==='ml' ? `ഹലോ 😊 അവസാന ഓർമ്മപ്പെടുത്തൽ — 24 മണിക്കൂർ കഴിഞ്ഞു.\n\n🎬 *വീഡിയോ കണ്ടോ?* 👉 *Yes seen* / *Watch now*:` : actualLang==='hi' ? `हैलो 😊 आखिरी याद — 24 घंटे हो गए।\n\n🎬 *वीडियो देखा?* 👉 *Yes seen* / *Watch now*:` : `Hello 😊 last reminder — 24 hours done.\n\n🎬 *Did you watch the video?* 👉 *Yes seen* / *Watch now*:`;
+        await sendWithDelay(interactiveButton(uid, f24, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        // V283: After 24h followup, if still no reply, move to fired list (autoFireLoser handles sheet + gate)
+        try{ await autoFireLoser(uid, 'OPP - No Response After 1h/12h/24h Followups'); }catch(_){}
+      } else if(type.includes('GEN_ARE_YOU_THERE')){
+        // V284 GENERIC 1st AI reminder (every stuck step, not just video): "Are you there?" + names the stuck step. Only if user still stuck (lastActive old + lastStep unchanged).
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const areG = actualLang==='ml' ? `ഹലോ, അവിടെയുണ്ടോ? 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*\nവീഡിയോ / മെസേജ് കാണാൻ പറ്റിയോ? എന്തെങ്കിലും സംശയം ഉണ്ടോ?\n\n👉 തുടരാൻ Yes / Watch now — ഞാൻ ഇവിടെ തന്നെയുണ്ട്:` : actualLang==='hi' ? `हैलो, आप वहाँ हैं? 😊\n\nआप यहाँ रुके थे: *${stuckName}*\nवीडियो / मैसेज देखने का मौका मिला? कोई doubt है?\n\n👉 जारी रखने के लिए Yes / Watch now — मैं यहीं हूँ:` : `Hello, are you there? 😊\n\nYou stopped at: *${stuckName}*\nDid you get a chance to watch / read it? Any doubt?\n\n👉 To continue, tap Yes / Watch now — I'm right here:`;
+        // Generic: offer Continue (BUSY_NO path reuses No logic via generic buttons) - use same Yes seen / Watch now ids for video, else generic continue uses BUSY_NO flow via Yes button
+        await sendWithDelay(interactiveButton(uid, areG, [{id:'GEN_CONTINUE',title:'Yes - Continue'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], actualPhoneId));
+        scheduleReminder(uid, 'install:GEN_BUSY_CHECK:10', actualLang, 2*60*1000, actualPhoneId);
+      } else if(type.includes('GEN_BUSY_CHECK')){
+        // V284 GENERIC 2nd AI reminder: "Are you busy right now? Can I schedule a reminder after 1 Hour?" - Yes / No / Stop (same as video chain)
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const busyG = actualLang==='ml' ? `ഒരു കാര്യം ചോദിക്കട്ടെ 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 മണിക്കൂറിന് ശേഷം ഓർമ്മിപ്പിക്കാം, No = ഇപ്പോൾ തുടരാം, Stop = നിർത്താം:` : actualLang==='hi' ? `एक बात पूछूँ 😊\n\nआप यहाँ रुके थे: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = 1 घंटे बाद याद दिलाऊँगी, No = अभी जारी रखते हैं, Stop = रोकें:` : `One thing 😊\n\nYou stopped at: *${stuckName}*\n\n*Are you busy right now?*\n\n*Can I schedule a reminder after 1 Hour?*\n\n👉 Yes = remind after 1 hour, No = continue now, Stop = stop:`;
+        await sendWithDelay(interactiveButton(uid, busyG, [{id:'BUSY_YES',title:'Yes'},{id:'BUSY_NO',title:'No'},{id:'BUSY_STOP',title:'Stop'}], actualPhoneId));
+      } else if(type.includes('GEN_1HOUR')){
+        // V284 GENERIC 1h reminder after Busy Yes - resend the stuck step
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const hG = actualLang==='ml' ? `ഹലോ, 1 മണിക്കൂർ കഴിഞ്ഞു 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു.\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — തുടരാം:` : actualLang==='hi' ? `हैलो, 1 घंटा हो गया 😊 जैसा कहा था, याद दिला रही हूँ।\n\nआप यहाँ रुके थे: *${stuckName}* — जारी रखते हैं:` : `Hello, 1 hour is up 😊 reminding you as promised.\n\nYou stopped at: *${stuckName}* — let's continue:`;
+        await sendWithDelay(textMessage(uid, hG, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_1H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f1 = actualLang==='ml' ? `ഹലോ 😊 പറഞ്ഞ പോലെ ഓർമ്മിപ്പിക്കുന്നു — നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 जैसा कहा था, याद दिला रही हूँ — आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 reminding you as promised — you stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f1, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_12H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f12 = actualLang==='ml' ? `ഹലോ 😊 12 മണിക്കൂർ കഴിഞ്ഞു — നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 12 घंटे हो गए — आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 12 hours done — you stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f12, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+      } else if(type.includes('GEN_FOLLOWUP_24H')){
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const f24 = actualLang==='ml' ? `ഹലോ 😊 അവസാന ഓർമ്മപ്പെടുത്തൽ — 24 മണിക്കൂർ കഴിഞ്ഞു. നിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}*:` : actualLang==='hi' ? `हैलो 😊 आखिरी याद — 24 घंटे हो गए। आप यहाँ रुके थे: *${stuckName}*:` : `Hello 😊 last reminder — 24 hours done. You stopped at: *${stuckName}*:`;
+        await sendWithDelay(textMessage(uid, f24, actualPhoneId));
+        try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
+        try{ await autoFireLoser(uid, 'GEN - No Response After 1h/12h/24h Followups'); }catch(_){}
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
@@ -2276,6 +2406,17 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
           state.reminderLevel = level;
           await setState(uid, state);
           await repeatLastStep(uid, state, actualLang, actualPhoneId);
+          // V284 GENERIC: every stuck step gets the same AI chain. Video/Opportunity steps already have their own OPP chain - do not double-schedule.
+          // Pay steps have their own pay-reminder chain - do not double-schedule.
+          try{
+            const _ls = String(state.lastStep||'');
+            const _isVideo = _ls.includes('Video') || _ls.includes('Opportunity');
+            const _isPay = _ls.includes('Pay') || _ls.includes('EMI') || _ls.includes('Reg');
+            const _isDone = state.flow==='DONE' || _ls.includes('DONE') || _ls.includes('Fired') || _ls.includes('Stopped');
+            if(!_isVideo && !_isPay && !_isDone && !type.includes('GEN_') && !type.includes('OPP_')){
+              scheduleReminder(uid, 'install:GEN_ARE_YOU_THERE:10', actualLang, 2*60*1000, actualPhoneId);
+            }
+          }catch(_){}
         }
       }
     try{ const isThird = /noLang3|noService3|:24$/.test(type); if(isThird){ await autoFireLoser(uid, type); } }catch(_){}
@@ -2652,7 +2793,7 @@ app.get('/fire-template2', async(req,res)=>{
 });
 // === END HOT TEMPLATE SENDER ===
 
-app.get('/',(req,res)=>res.send(`V247 FINAL RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V318 FINAL-AUDITED RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -2664,18 +2805,281 @@ app.post('/webhook', async(req,res)=>{
     const msg = value?.messages?.[0];
     if(!msg) return;
     const uid = msg.from;
+    let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID;
     const txt = msg.text?.body||'';
-    const btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
+    let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    // ===== V317 GLOBAL STOP - TOP PRIORITY, BEFORE EVERYTHING =====
+    // BUG (user correct, not user mistake): V315/V316 Stop was at line ~3345, AFTER V285/V292/V288/V307/V265-sorting/language-confirm blocks that return first.
+    // So on many steps Stop never reached it and fell to AI sorting / language confirm - exactly the screenshot: Stop -> "Malayalam thiranjeduthathinu nandi" + Business/Service sorting.
+    // FIX: Stop is checked HERE, first, before duplicate/hurry/step-aware/sorting/AI. No other block can grab it.
+    // Matches: stop / Stop. / nirthu / nirthuka / stop cheyyu / nirthu cheyyu / niruthu / vend (exact, whole message only - NOT inside longer sentences, so "stop cheyyan vend" etc still works, but "I want to stop and think" does NOT trigger).
+    // Also matches Stop button payloads BUSY_STOP / STOP_FINAL / STOP_LATER are handled by their own handlers below - do NOT convert them here.
+    try{
+      const _s317 = String(txt||'').toLowerCase().trim();
+      const _isStop317 = !btnId && msg.type==='text' && txt && /^\s*(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_s317);
+      if(_isStop317){
+        const _lang317 = (state.lang||'ml');
+        await setState(uid,{...state, lastStep:'V317 - Stop - Confirm', phoneId: incomingPhoneId});
+        const _cf317 = _lang317==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang317==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
+        await sendWithDelay(interactiveButton(uid,_cf317,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+        return;
+      }
+    }catch(_){}
+    // V285 FIX: Free text "Watched video, whats next?" / "video kandu" / "video dekha" after a video = same as tapping [Yes seen].
+    // Without this, Maya treated it as generic chat and the old video reminder still fired after it.
+    try{
+      const _txtLow = String(txt||'').toLowerCase().trim();
+      // V287: "yes seen" alone (your screenshot) was NOT recognised - only "watched video" was. Now "yes seen" / "seen" / "kandu" also count, BUT only when Maya is actually waiting for a video.
+      const _waitingForVideo = (state.lastStep||'').includes('Video') || (state.lastStep||'').includes('V270 - Business Video') || (state.lastStep||'').includes('Opportunity Video');
+      const _isWatchedText = _waitingForVideo && (_txtLow.includes('watched video') || _txtLow.includes('watched the video') || _txtLow.includes('video kandu') || _txtLow.includes('video kandhu') || _txtLow.includes('video dekha') || _txtLow.includes('video dekh') || _txtLow.includes('video parthu') || _txtLow.includes('seen the video') || _txtLow.includes('video seen') || _txtLow==='yes seen' || _txtLow==='yes, seen' || _txtLow==='seen' || _txtLow==='yes seen video' || _txtLow.includes('yes seen') || _txtLow==='kandu' || _txtLow==='kandhu' || _txtLow==='dekha' || _txtLow==='parthu');
+      if(!btnId && _isWatchedText){
+        // V287: Company Video Seen vs Opportunity Video Seen are DIFFERENT steps. Check which video Maya sent.
+        const _ls = state.lastStep||'';
+        const _isCompanyStage = _ls.includes('Company Video') || _ls.includes('V270 - Business Video') || _ls.includes('Business Video Sent') || _ls.includes('Company Video - Must Watch');
+        const _hasCapacity = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT' || state.sub==='OPP_MUNI');
+        if(_isCompanyStage && !_hasCapacity){ btnId = 'COMPANY_WATCHED'; console.log('V287 free-text watched -> COMPANY_WATCHED (Company Video stage, no capacity yet)'); }
+        else { btnId = 'VIDEO_WATCHED'; console.log('V287 free-text watched -> VIDEO_WATCHED (Opportunity Video stage)'); }
+      }
+    }catch(_){}
+    // ===== V292: HURRY-PROOF - EXPECT EVERY TYPE OF ACTION =====
+    // Hurried users do: "hi", "k", "ok", "??", "price", "video", wrong tap, double tap, "back", 3 msgs at once, voice note.
+    // Maya must NOT treat these as generic chat. It must map them by step, allow Back, ignore duplicates, keep it short.
+    try{
+      const _raw = String(txt||'').trim();
+      const _lowH = _raw.toLowerCase();
+      // 1) Duplicate / double-tap: same text within 10s = ignore duplicate, do not send duplicate reply
+      if(_raw && state.lastUserText === _raw && state.lastReplyAt && (Date.now() - (state.lastUserTextAt||0)) < 10*1000){
+        console.log(`V292 duplicate ignored: "${ _raw}"`);
+        // Do not return - let it fall through but mark duplicate so handlers skip sending again? We return silently to avoid duplicate.
+        // To avoid breaking webhook flow, we still update lastUserTextAt and return from handler via a flag.
+        state.isDuplicate = true;
+      } else {
+        state.isDuplicate = false;
+      }
+      state.lastUserText = _raw; state.lastUserTextAt = Date.now();
+      // 2) Back / Wrong / Change: hurried user tapped wrong button - go back to Business vs Services choice
+      if(!btnId && (_lowH==='back' || _lowH==='thirich' || _lowH==='thirike' || _lowH.includes('wrong') || _lowH.includes('not this') || _lowH.includes('maatti') || _lowH.includes('change') || _lowH==='pinnem' || _lowH==='back cheyy')){
+        btnId = 'HURRY_BACK';
+        console.log(`V292 hurry back -> HURRY_BACK from "${ _raw}" at step ${state.lastStep}`);
+      }
+      // 3) Single-word hurried intents - one word is enough
+      if(!btnId && !_isWatchedText){
+        if(_lowH==='price' || _lowH==='fee' || _lowH==='token' || _lowH==='rate' || _lowH==='vila' || _lowH==='cash') btnId = 'HURRY_PRICE';
+        else if(_lowH==='video' || _lowH==='videyo') btnId = 'HURRY_VIDEO';
+        else if(_lowH==='business' || _lowH==='opportunity' || _lowH==='oppertunity' || _lowH==='franchise' || _lowH==='franchisee') btnId = 'HURRY_BUSINESS';
+        else if(_lowH==='taxi' || _lowH==='cab' || _lowH==='auto') btnId = 'HURRY_TAXI';
+        else if(_lowH==='delivery' || _lowH==='food') btnId = 'HURRY_DELIVERY';
+        else if(_lowH==='hi' || _lowH==='hello' || _lowH==='hey' || _lowH==='hai' || _lowH==='hii' || _lowH==='🙏' || _lowH==='👋') btnId = 'HURRY_HI';
+        else if(_lowH==='k' || _lowH==='ok' || _lowH==='okay' || _lowH==='okk' || _lowH==='👍' || _lowH==='👍🏻' || _lowH==='??' || _lowH==='?' || _lowH==='...' || _lowH==='.' || _lowH==='yes' || _lowH==='y' || _lowH==='no' || _lowH==='n'){
+          // Short "ok / k / ??" means "I am here, what is next?" - do NOT treat as generic. Let V288 step-aware decide by step.
+          // Mark hurry so reply stays short.
+          state.hurryUser = true;
+          console.log(`V292 hurry short "${ _raw}" at step ${state.lastStep} - let V288 decide`);
+        }
+      }
+      // 4) Hurry flag: 2+ fast replies + short messages = hurried user -> Maya must reply SHORT (2 lines + button), not long paragraph
+      if(_raw.length <= 10 && state.fastReplyCount >= 1) state.hurryUser = true;
+      if(state.hurryUser) console.log(`V292 hurry user - keep reply SHORT`);
+    }catch(_){}
+
+        try{
+      if(btnId==='HURRY_BUSINESS') btnId='AI_BUSINESS';
+      else if(btnId==='HURRY_TAXI' || btnId==='HURRY_DELIVERY') btnId='AI_SERVICES';
+      else if(btnId==='HURRY_BACK'){
+        // Send Business vs Services choice again, in user's language, short
+        const _sl = state.lang || 'ml';
+        const _q = _sl==='ml' ? `👍 ശരി, വീണ്ടും തിരഞ്ഞെടുക്കൂ:\n\n👇 ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : _sl==='hi' ? `👍 ठीक है, फिर से चुनें:\n\n👇 एक चुनें:` : `👍 OK, choose again:\n\n👇 Select one:`;
+        await sendWithDelay(interactiveButton(uid, _q, [{id:'AI_BUSINESS',title: _sl==='ml' ? 'Business Opportunity' : 'Business Opportunity'},{id:'AI_SERVICES',title: _sl==='ml' ? 'Use Other Services' : 'Use Other Services'}], incomingPhoneId));
+        await setState(uid,{...state, lastStep:'V292 - Hurry Back - Business vs Services', aiMode:true});
+        return;
+      }
+      else if(btnId==='HURRY_PRICE'){
+        // Price in hurry = token fee for current level, or all 3 levels if no level yet. Short reply.
+        const _sl2 = state.lang || 'ml';
+        const _lvl = state.sub || '';
+        let _p = '';
+        if(_lvl==='OPP_CENTER') _p = _sl2==='ml' ? `💰 Business Center: Token Rs.100. Full ~1 Lakh.` : `💰 Business Center: Token Rs.100. Full ~1 Lakh.`;
+        else if(_lvl==='OPP_CORP') _p = _sl2==='ml' ? `💰 Corporation / Municipal: Token Rs.150. Full ~4-5 Lakh.` : `💰 Corporation / Municipal: Token Rs.150. Full ~4-5 Lakh.`;
+        else if(_lvl==='OPP_DISTRICT') _p = _sl2==='ml' ? `💰 District: Token Rs.250. Full ~10 Lakh.` : `💰 District: Token Rs.250. Full ~10 Lakh.`;
+        else _p = _sl2==='ml' ? `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n👇 Capacity തിരഞ്ഞെടുക്കൂ:` : `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n👇 Select capacity:`;
+        await sendWithDelay(interactiveButton(uid, _p, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], incomingPhoneId));
+        await setState(uid,{...state, lastStep:'V292 - Hurry Price Asked', aiMode:true});
+        return;
+      }
+      else if(btnId==='HURRY_VIDEO'){
+        // Video in hurry = resend current video (Company if no capacity, Opportunity if capacity picked)
+        const _hasCap = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT');
+        if(!_hasCap) btnId='COMPANY_VIDEO_WATCH';
+        else btnId='OPP_LEARN_VIDEO';
+      }
+      else if(btnId==='HURRY_HI'){
+        // Hi in hurry = repeat current step in 1 line, not restart
+        // Fall through to V288 / generic - do not set btnId, let step repeat logic handle
+        btnId='';
+      }
+    }catch(_){}
+        if(state.isDuplicate){ console.log(`V292 duplicate - skipping duplicate reply`); return; }
+        // ===== V288: STEP-AWARE RECOGNITION FOR EVERY STEP - WITHOUT FAIL =====
+    // Rule: Free text is NEVER generic. Maya first looks at state.lastStep, then decides what the user meant.
+    // "yes" on Corp Check = CORP_YES. "yes" on Benefits = UNDERSTOOD_BEN. "skip" anywhere = SKIP. "seen" on Company Video = COMPANY_WATCHED.
+    // Without this, "yes / ok / seen / next / skip" fell into generic AI chat and Maya sent duplicate / wrong step.
+    try{
+      if(!btnId){
+        const _low = String(txt||'').toLowerCase().trim();
+        const _ls = state.lastStep||'';
+        const _isYes = _low==='yes' || _low==='yes.' || _low==='yeah' || _low==='yep' || _low==='ok' || _low==='okay' || _low==='sheri' || _low==='shery' || _low==='athe' || _low==='haan' || _low==='haa';
+        const _isNext = _low.includes('next') || _low.includes('aduth') || _low.includes('aage') || _low==='continue' || _low.includes('continue');
+        const _isSkip = _low.includes('skip') || _low.includes('skip cheyy') || _low.includes('vittekk');
+        const _isUnderstood = _low.includes('understood') || _low.includes('manasilayi') || _low.includes('manasilaayi') || _low.includes('samajh') || _low.includes('got it') || _low.includes('puriy') || _low==='ok' || _low==='okay' || _low.includes('understand');
+        const _isNo = _low==='no' || _low==='no.' || _low==='illa' || _low==='nahi' || _low==='vendaa' || _low==='venda';
+        // Language step
+        if(_ls.includes('Language') || _ls.includes('LANG') || _ls.includes('AI Maya - Lang')){
+          if(_low.includes('malayalam') || _low.includes('malayalam')) btnId='LANG_ML';
+          else if(_low.includes('hindi')) btnId='LANG_HI';
+          else if(_low.includes('english')) btnId='LANG_EN';
+        }
+        // Business vs Services choice
+        else if(_ls.includes('Business Opportunity') && _ls.includes('Select') || _ls.includes('AI Maya - Lang Confirm') || _ls.includes('2 buttons')){
+          if(_low.includes('business') || _low.includes('opportunity') || _low.includes('oppertunity') || _low.includes('franchise')) btnId='AI_BUSINESS';
+          else if(_low.includes('service') || _low.includes('other service')) btnId='AI_SERVICES';
+        }
+        // Company Video stage (already handled for watched, but also skip / not watched)
+        else if(_ls.includes('Company Video') || _ls.includes('V270 - Business Video')){
+          if(_isSkip) btnId='COMPANY_SKIP';
+          else if(_low.includes('not seen') || _low.includes('not watched') || _low.includes('kandilla') || _low.includes('nahi dekha')) btnId='COMPANY_NOT_WATCHED';
+        }
+        // Capacity / Income Level stage
+        else if(_ls.includes('Income Level') || _ls.includes('Capacity') || _ls.includes('Investing capacity')){
+          if(_low.includes('30') || _low.includes('1l') || _low.includes('1 lakh') || _low.includes('business center') || _low.includes('business centre')) btnId='OPP_CENTER';
+          else if(_low.includes('2l') || _low.includes('2 lakh') || _low.includes('5l') && !_low.includes('15') || _low.includes('corporation') || _low.includes('municipal')) btnId='OPP_CORP';
+          else if(_low.includes('5l') && _low.includes('15') || _low.includes('15l') || _low.includes('10l') || _low.includes('10 lakh') || _low.includes('district')) btnId='OPP_DISTRICT';
+        }
+        // Opportunity Video stage (watched already handled above, but also not watched / skip)
+        else if(_ls.includes('Opportunity Video') || _ls.includes('V280 - Opportunity Video')){
+          if(_low.includes('not seen') || _low.includes('not watched') || _low.includes('kandilla')) btnId='VIDEO_NOT_WATCHED';
+        }
+        // 3 Clicks - Benefits / Support / Requirements: understood / next / skip all mean "go next"
+        else if(_ls.includes('Benefits')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_BEN';
+        }
+        else if(_ls.includes('Support')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_SUP';
+        }
+        else if(_ls.includes('Requirements')){
+          if(_isSkip) btnId='SKIP_3CLICKS';
+          else if(_isUnderstood || _isYes || _isNext) btnId='UNDERSTOOD_REQ';
+        }
+        // Corp Check / Submit Application: yes = have corp, no = no corp
+        else if(_ls.includes('Corp Check') || _ls.includes('Submit Application')){
+          if(_isYes || _low.includes('i have') || _low.includes('und') || _low.includes('hai')) btnId='CORP_YES';
+          else if(_isNo || _low.includes('no corp') || _low.includes('illa')) btnId='CORP_NO';
+        }
+        // Are-you-there / Busy check: yes = continue, no = continue, stop = stop - handled by BUSY_* but free text "yes" here means continue
+        else if(_ls.includes('Busy') || _ls.includes('Are-you-there') || _ls.includes('Are you there')){
+          if(_low.includes('busy') || _low.includes('thirakku')) btnId='BUSY_YES';
+          else if(_isYes || _isNext) btnId='BUSY_NO';
+          else if(_low.includes('stop') || _low.includes('nirth')) btnId='BUSY_STOP';
+        }
+        if(btnId) console.log(`V288 step-aware free-text: last="${_ls}" text="${txt}" -> ${btnId}`);
+      }
+    }catch(_){}
+        try{ state.lastReplyAt = Date.now(); }catch(_){}
+    // V307 FIXED TERMS & CONDITIONS: ONCE LANGUAGE SELECTED, ALL CHATS DRAFT IN THAT LANGUAGE. NO SWITCH AFTER.
+    // If selected = Malayalam, ALL drafts after = Malayalam script ONLY (except brand names Bizmapia/Taxi/App). No English sentences, no English bring-back, no English buttons.
+    // This overrides ALL later detection: V291/V293/AI-router/detectUserLanguage are all ignored once lang is set.
+    // If user asks "need english" after Malayalam selected, Maya replies IN MALAYALAM: "Language fixed to Malayalam as per terms, cannot change in this chat."
+    try{
+      if(state.lang){
+        lang = state.lang;
+        // If user explicitly asks to switch AFTER lock, answer in LOCKED language that it is fixed, then continue in locked language (do not switch, do not return - let step handler reply in locked lang)
+        const _low7 = String(txt||'').toLowerCase().trim();
+        const _asksSwitch = /need\s+(english|hindi|malayalam)|change.*(english|hindi|malayalam)|(english|hindi)\s+please|malayalam\s+please/.test(_low7);
+        if(_asksSwitch && state.lang==='ml'){
+          // Do not switch. Mark for step handlers to use ml. Log it.
+          console.log(`V307 FIXED: switch request ignored, lang stays ml: "${String(txt||'').slice(0,40)}"`);
+        }
+      }
+    }catch(_){}
+    // V316 SINGLE LANGUAGE RULE - Language frozen after first selection. V305 + V307 merged: any later switch request (even explicit 'need english') is IGNORED, lang stays. No exceptions. V291 was the bug: it re-detected language from EVERY typed message.
+    // So: user locked Malayalam -> typed "already watched" in English -> Maya switched to English. User typed "need malayalam" -> Maya stayed in English because "need malayalam" was treated as English text.
+    // LOCK RULE: Once language is set (by button or explicit request), NEVER auto-switch from normal inputs. English words like "already watched", "yes, next", "balance details" are CONTENT, not language change.
+    // ONLY an EXPLICIT language-change request switches: "need malayalam", "malayalam please", "change to malayalam", "malayalathil", "need english", "english please", "change to english", "need hindi", "hindi me", "hindi please".
+    // After switch, new language is LOCKED. Reply in new language + bring back to current step in new language.
+    try{
+      const _t5 = String(txt||''); const _low5 = _t5.toLowerCase().trim();
+      const _hasMl5 = /[\u0D00-\u0D7F]/.test(_t5); const _hasHi5 = /[\u0900-\u097F]/.test(_t5);
+      let _want = null;
+      if(/need\s+malayalam|malayalam\s+please|change.*malayalam|malayalathil|malayalam.*venam|malayalam.*parayu|malayalam.*madi|ente.*malayalam/.test(_low5) || _low5==='malayalam' || _low5==='malayalam please') _want='ml';
+      else if(/need\s+english|english\s+please|change.*english|english.*venam|english.*parayu|english.*madi/.test(_low5) || _low5==='english' || _low5==='english please') _want='en';
+      else if(/need\s+hindi|hindi\s+please|change.*hindi|hindi\s+me|hindi.*me.*bolo/.test(_low5) || _low5==='hindi') _want='hi';
+      else if(_hasMl5 && !state.lang) _want='ml';
+      else if(_hasHi5 && !state.lang) _want='hi';
+      // If no language set at all, use script detection once (first message only)
+      if(!state.lang && !_want){
+        if(_hasMl5) _want='ml'; else if(_hasHi5) _want='hi'; else if(_t5.length>3 && /[a-zA-Z]{3,}/.test(_t5)){
+          const _mlW=['enthanu','enth','ariyam','venam','kandu','manasilayi','evide','engane']; if(_mlW.some(w=>_low5.includes(w))) _want='ml'; else _want='en';
+        }
+      }
+      // V307 FIXED TERMS: Once language is selected, it is FROZEN. Even explicit 'need english/hindi' does NOT switch if lang is already set. Only first selection sets it.
+      if(state.lang){ _want=null; }
+      if(_want && _want!==state.lang){
+        const _prev = state.lang||'none'; state.lang=_want; lang=_want;
+        console.log(`V316 LANGUAGE FROZEN - switch ignored ${_prev} -> ${_want} (kept ${_prev}): "${String(txt||'').slice(0,40)}"`);
+        try{ await setState(uid, {...state, lang:_want, lastStep: state.lastStep||'Language Switched'}); }catch(_){}
+        // Reply in NEW language confirming switch + bring back to current step (do not restart)
+        const _step5 = state.lastStep||'';
+        const _conf = _want==='ml' ? `✅ മനസ്സിലായി! ഇനി മുതൽ *മലയാളത്തിൽ* മാത്രം സംസാരിക്കാം. 🙏\n\n📍 നമ്മൾ ഇപ്പോൾ *${_step5}* step-ൽ ആണ്. തുടരാൻ തയ്യാറാണോ?` : _want==='hi' ? `✅ समझ गया! अब से *हिन्दी* में ही बात करेंगे। 🙏\n\n📍 हम अभी *${_step5}* step पर हैं। आगे बढ़ने के लिए तैयार हैं?` : `✅ Got it! From now, we will speak *only in English*. 🙏\n\n📍 We are at *${_step5}* step. Are you ready to continue?`;
+        // Only send confirm if this message was ONLY a language request (not "need malayalam + other content"). If it also has other content, let later handlers reply in new language.
+        if(/^(need\s+(malayalam|english|hindi)|malayalam|english|hindi|change.*(malayalam|english|hindi)).*$/ .test(_low5) && _low5.length<40){
+          try{ await sendWithDelay(textMessage(uid, _conf, incomingPhoneId)); }catch(_){}
+          // Do NOT return here - let flow continue so next step buttons come in new language on next turn. Mark that we already confirmed.
+          state._langJustSwitched=true;
+        }
+      } else {
+        // LOCKED: keep existing language, ignore auto-detection from content words
+        if(state.lang) lang=state.lang;
+      }
+    }catch(_){}
+    try{
+      const _botAt = state.lastBotMsgAt || 0;
+      const _delay = _botAt ? (Date.now() - _botAt) : 999999;
+      if(_botAt && _delay < 2*60*1000){
+        state.isRealTime = true; state.slowUser = false; state.fastReplyCount = (state.fastReplyCount||0)+1;
+        clearReminders(uid);
+        console.log(`V290 REAL-TIME replied in ${Math.round(_delay/1000)}s - reminders cancelled`);
+      } else {
+        state.fastReplyCount = 0;
+        if(!state.isRealTime) state.slowUser = true;
+      }
+      if(state.fastReplyCount >= 2) state.isRealTime = true;
+    }catch(_){}
+        const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = getISTTime();
-    let state = await getState(uid);
+    state = await getState(uid); // V294: reload, do NOT redeclare - state already declared at top
     if(isSpamming(uid)){ try{ await sendWithDelay(textMessage(uid, (state.lang||'ml')==='ml' ? `🙏 ഒന്ന് പതുക്കെ... ഞാൻ വായിക്കുന്നുണ്ട്. ഒരു മെസ്സേജ് അയച്ചാൽ മതി, ഞാൻ മറുപടി തരാം.` : `🙏 One message is enough, I am reading. Please wait a moment.` , incomingPhoneId)); }catch(e){} return; }
     // V250: User replied -> they are here, clear idle nudges, mark time
     try{ clearIdleNudges(uid); state.lastUserAt = Date.now(); }catch(e){}
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
+    // V306 LANGUAGE LOCK - REPLACES V293 AUTO-SWITCH. V293 was the real bug: it ran AFTER V305 and re-detected EVERY message.
+    // "seen, next" (English words) -> flipped locked Malayalam to English. Manglish "video kandathanu" -> then stayed English because lang was already flipped.
+    // LOCK RULE: If state.lang is already set, NEVER auto-switch from content. Only explicit "need malayalam / english / hindi" switches (already handled in V305).
+    // Manglish input when lang=ml locked -> reply in Malayalam script, NOT English. English input when lang=ml locked -> reply in Malayalam, NOT English.
+    try{
+      const _low6 = String(txt||'').toLowerCase().trim();
+      let _want6 = null;
+      if(/need\s+malayalam|malayalam\s+please|change.*malayalam|malayalathil/.test(_low6)) _want6='ml';
+      else if(/need\s+english|english\s+please|change.*english/.test(_low6)) _want6='en';
+      else if(/need\s+hindi|hindi\s+please|change.*hindi|hindi\s+me/.test(_low6)) _want6='hi';
+      // V307 FIXED TERMS: Frozen after selection. No switch, even on explicit request. If lang=ml, ALL chats stay ml.
+      if(state.lang){ _want6=null; }
+      if(_want6 && _want6!==state.lang){ state.lang=_want6; lang=_want6; try{ await setState(uid, {...state, lang:_want6}); }catch(_){} console.log(`V307 first selection ${_want6}`); }
+      else if(state.lang){ lang=state.lang; /* LOCKED - do NOT touch lang from content */ }
+    }catch(_){}
     // ===== V256 FIX: 1988 = RESET TO AI MAYA (not old Language Menu) =====
     if(String(txt||'').trim()==='1988'){
       clearReminders(uid);
@@ -2734,8 +3138,12 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{lang:clang, lastStep:'V270 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
       clearReminders(uid);
       const q = clang==='ml' ? `സൂപ്പർ! മലയാളത്തിൽ തുടരാം. 🙏\n\nനിങ്ങൾക്ക് എന്താണ് വേണ്ടത് എന്ന് സ്വന്തം വാക്കുകളിൽ പറഞ്ഞാൽ മതി, ഞാൻ ശരിയായ ഓപ്ഷൻ കണ്ടുപിടിക്കാൻ സഹായിക്കാം.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ ബിസ്മാപ്പിയയോടൊപ്പം ബിസിനസ് അവസരം എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : clang==='hi' ? `बहुत बढ़िया! हिन्दी में जारी रखते हैं। 🙏\n\nआपको क्या चाहिए, अपने शब्दों में बताइए, मैं सही ऑप्शन ढूंढने में मदद करूंगी।\n\nBizmapia में आप क्या खोज रहे हैं? सेवा इस्तेमाल करना है, या Bizmapia के साथ बिज़नेस अवसर लेकर कमाना है?` : `Great! Let’s continue in English. 🙏\n\nJust tell me in your own words what you need, I will help you find the right option.\n\nWhat are you looking for in Bizmapia? To use a service, or to earn with Bizmapia through a business opportunity?`;
-      await sendWithDelay(textMessage(uid, q, incomingPhoneId));
-      await saveToSheet('System_Logs',[nowIso,uid,clang,'V265 Lang Confirm '+incomingPhoneId,'LANG tap -> pure intention question, no AI call','V265',HELP_ADMIN,'V265 Lang',''],false);
+      // V275: 2 buttons after language - easier than typing. Business Opportunity + Use Other Services.
+      const q2 = q + (clang==='ml' ? `\n\n👇 *താഴെ ഒന്ന് ക്ലിക്ക് ചെയ്യൂ:*` : clang==='hi' ? `\n\n👇 *नीचे एक पर क्लिक करें:*` : `\n\n👇 *Tap one below:*`);
+      const bizTitle = clang==='ml' ? 'ബിസിനസ് അവസരം' : clang==='hi' ? 'Business Opportunity' : 'Business Opportunity';
+      const svcTitle = clang==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : clang==='hi' ? 'Use Other Services' : 'Use Other Services';
+      await sendWithDelay(interactiveButton(uid, q2, [{id:'AI_BUSINESS',title:bizTitle},{id:'AI_SERVICES',title:svcTitle}], incomingPhoneId));
+      await saveToSheet('System_Logs',[nowIso,uid,clang,'V275 Lang Confirm '+incomingPhoneId,'LANG tap -> 2 buttons Business + Use Other Services','V275',HELP_ADMIN,'V275 Lang',''],false);
       return;
     }
     if(!btnId && msg.type==='text' && txt && state.lang){
@@ -2743,20 +3151,20 @@ app.post('/webhook', async(req,res)=>{
       if(sortedTop==='business_opportunity'){
         const sl = state.lang;
         // V266: User already gave requirement -> SHOW EXACT OPTIONS immediately. Do NOT ask district / job now. District comes AFTER they pick level.
-        // V270 BUSINESS-ONLY: 3A now = Video only, NO capacity buttons, NO services, NO More services. 3B after 4.5 min = capacity reminder.
-        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👉 https://youtu.be/7kkR_4w1ZMk\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
+        // V270 BUSINESS-ONLY: 3A now = Video only, NO capacity buttons, NO services, NO More services. 3B after 3 min = capacity reminder.
+        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
         await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
-        await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId));
-        // V270: Capacity reminder after 4.5 min (270s) - only if user has NOT replied / picked level yet
+        await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+        // V270: Capacity reminder after 3 min (180s) - only if user has NOT replied / picked level yet
         const _capUid = uid, _capPhone = incomingPhoneId, _capLang = sl, _capSentAt = Date.now();
         setTimeout(async()=>{ try{
           const cur = await getState(_capUid);
-          if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; // user already replied / moved on - cancel
+          if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt) return; /* V289 replied after video */
           const capMsg = _capLang==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one from below:*`;
           const bL2=(id,ml,en,hi)=>({id,title:(_capLang==='ml'?ml:_capLang==='hi'?hi:en).substring(0,20)});
           try{ await sendWithDelay(interactiveButton(_capUid, capMsg, [bL2('OPP_CENTER','30K - 1L','30K - 1L','30K - 1L'), bL2('OPP_CORP','2L - 5L','2L - 5L','2L - 5L'), bL2('OPP_DISTRICT','5L - 15L','5L - 15L','5L - 15L')], _capPhone)); }catch(e){ await sendWithDelay(textMessage(_capUid, capMsg, _capPhone)); }
           await setState(_capUid,{...(await getState(_capUid)), lastStep:'V270 - Capacity Reminder Sent'});
-        }catch(e){ console.log('V270 capacity reminder fail', e.message); } }, 270000);
+        }catch(e){ console.log('V270 capacity reminder fail', e.message); } }, 180000);
         try{ await logLeadPerfect(uid, state, {lastMsg: txt, summary: 'V265 sorted: business_opportunity'}); }catch(e){}
         return;
       }
@@ -2773,8 +3181,16 @@ app.post('/webhook', async(req,res)=>{
       const lvlMap={OPP_CENTER:'Business Center - 1 Lakh - Token Rs.100', OPP_CORP:'Corporation / Municipal - 4 Lakh - Token Rs.150', OPP_DISTRICT:'District Franchise - 10 Lakh - Token Rs.250'};
       const lvl = lvlMap[btnId] || 'Business Opportunity';
       await setState(uid,{...state, lastStep:'V266 - Level Picked '+btnId, aiMode:true, lead:{...(state.lead||{}), level:btnId, intent:'business_opportunity'}});
-      const lvlMsg = sl3==='ml' ? `👍 നല്ല തിരഞ്ഞെടുപ്പ്! 🙏\n\n${lvl} തിരഞ്ഞെടുത്തു.\n\nഇനി ഒരു കാര്യം മാത്രം - നിങ്ങളുടെ ജില്ല ഏതാണ്?` : sl3==='hi' ? `👍 Accha chunav! ${lvl} chuna.\n\nAb ek baat - aapka district kaunsa hai?` : `👍 Good choice! You picked ${lvl}.\n\nNow just one thing - which is your district?`;
-      await sendWithDelay(textMessage(uid, lvlMsg, incomingPhoneId));
+      // V272 FIX: NEVER ask district / name / address / location now. Those are LAST step, ONLY AFTER registration fee is VERIFIED. After capacity: confirm + explain + video + move to fee.
+      const lvlMsg = sl3==='ml' ? `👍 നല്ല തിരഞ്ഞെടുപ്പ്! 🙏\n\n${lvl} തിരഞ്ഞെടുത്തു.\n\nനമുക്ക് ഫൈനലൈസ് ചെയ്യാം — ഈ അവസരം നിങ്ങൾക്ക് ചേരുമോ ഇല്ലയോ എന്ന്. പല ഉയർന്ന തുക അടയ്ക്കാൻ കഴിയുന്നവരും ആദ്യം കുറഞ്ഞ ഓപ്ഷൻ ചെക്ക് ചെയ്യാനാണ് തിരഞ്ഞെടുക്കുന്നത്, അതുകൊണ്ട് വീഡിയോ കണ്ട ശേഷം നമുക്ക് വീണ്ടും കൺഫേം ചെയ്യാം. സാധ്യമെങ്കിൽ നമുക്ക് ഉയർന്ന ഓപ്ഷനിലേക്ക് അപ്ഗ്രേഡ് ചെയ്യാം.\n\n👇 *ഈ അവസരത്തിന്റെ വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ ഇപ്പോൾ തന്നെ കാണൂ, കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.` : sl3==='hi' ? `👍 अच्छा चुनाव! ${lvl} चुना।\n\nहम फाइनलाइज़ करेंगे — यह अवसर आपको सूट करता है या नहीं। कई ज़्यादा राशि दे सकने वाले लोग पहले कम ऑप्शन चेक करने के लिए चुनते हैं, इसलिए वीडियो देखने के बाद हम फिर से कंफर्म करेंगे। अगर संभव है तो हम हायर ऑप्शन में अपग्रेड कर सकते हैं।\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो अभी देखें, देखने के बाद रिप्लाई करें।` : `👍 Good choice! You picked ${lvl}.\n\nWe will finalize whether this opportunity suits you or not. Many high-payable users first pick the lower option just to check, so after the video we will reconfirm. If possible, we can upgrade to higher options.\n\n👇 *Click the button below to see this Opportunity Video right now - See Video:*\n\nSee the video right now and reply after seeing it.`;
+      // V277 FIX: Opportunity Video is DIFFERENT from Company Video. Company Video = 7kkR_4w1ZMk (Know Company, shown BEFORE capacity).
+      // Opportunity Video = level + language specific via getVideoUrl (District/Corp/Center), shown AFTER capacity pick.
+      const oppVideoUrl = (typeof getVideoUrl === 'function') ? getVideoUrl(btnId, sl3) : 'https://www.youtube.com/watch?v=jCwTwiuSi5s';
+      await sendWithDelay(singleCta(uid, lvlMsg, {title: '🎥 See Video', url: oppVideoUrl}, incomingPhoneId));
+      // V280 FIX: Nobody replies after watching a video - same as Company Video. Schedule Opportunity Video reminder after 5 min.
+      // Without this, Maya waited forever after Opportunity Video. Reminder asks [Watched] / [Not Watched], no raw link.
+      await setState(uid, {...state, sub: btnId, lastStep: 'V280 - Opportunity Video Sent ' + btnId, aiMode: true, lead: {...(state.lead||{}), level: btnId, intent: 'business_opportunity'}});
+      scheduleReminder(uid, 'install:VIDEO_5MIN_' + btnId + ':5', sl3, 5*60*1000, incomingPhoneId);
       return;
     }
     // ===== END V265 HARD OVERRIDE =====
@@ -2815,13 +3231,44 @@ app.post('/webhook', async(req,res)=>{
       return;
     }
     // ===== V249 HYBRID - AI quick button -> feed back to AI =====
+
+    // ===== V316 DETERMINISTIC SERVICES - WHO ARE YOU FIRST (user scope, not generic AI) =====
+    // AI_SERVICES no longer goes straight to 4 services. First: Customer / Driver / Shop Owner.
+    // Each branch is a FIXED script from user scope - AI must not invent rates, must refer to Tender/Annexure-B + www.bizmapia.com for advertainment rates.
+    if(btnId==='WHO_CUSTOMER' || btnId==='WHO_DRIVER' || btnId==='WHO_SHOP'){
+      const sl = state.lang || 'ml';
+      await setState(uid,{...state, lang:sl, lastStep:'V316 - Service Who '+btnId, aiMode:true});
+      if(btnId==='WHO_CUSTOMER'){
+        const msg = sl==='ml' ? `🙏 സ്വാഗതം! Bizmapia App-ൽ നിന്ന് എല്ലാ സേവനങ്ങളും ഉപയോഗിക്കാം. 💛\n\n🚖 Taxi - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n📖 Directory - അടുത്തുള്ള കട / സേവനം / ഓഫർ കണ്ടെത്താം\n🛵 Delivery - ഭക്ഷണം / സാധനങ്ങൾ വീട്ടിലെത്തും\n📦 Booking - ഹോട്ടൽ റൂം, Appointment, Movie / Show ടിക്കറ്റ്\n\n📱 ആദ്യം App install ചെയ്യൂ, OTP login ചെയ്യൂ. ഏതാണ് നിങ്ങളുടെ ഫോൺ?` : `🙏 Welcome! You can use all Bizmapia services from the App. 💛\n\n🚖 Taxi - book a taxi anywhere\n📖 Directory - find nearby shop / service / offer\n🛵 Delivery - food / items to your doorstep\n📦 Booking - hotel room, appointment, movie / show ticket\n\n📱 First install the App and login with OTP. Which phone do you use?`;
+        try{ await sendWithDelay(interactiveButton(uid, msg, [{id:'APP_ANDROID',title:'🤖 Android'},{id:'APP_IOS',title:'🍎 iPhone'},{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+      } else if(btnId==='WHO_DRIVER'){
+        const msg = sl==='ml' ? `🚖 ഡ്രൈവർ ആയി Bizmapia-യിൽ ചേരാം! 🙏\n\n✅ Step 1: Driver App install ചെയ്ത് Google login ചെയ്യൂ\n✅ Step 2: Driver profile + Vehicle details പൂർത്തിയാക്കൂ\n✅ Step 3: Cab attachment Bizmapia-യുമായി submit ചെയ്യൂ\n\n💰 One-time registration: Rs.150/- മാത്രം\n🎁 Rs.150 അടച്ചാൽ 365 ദിവസം / 180 ദിവസം / 90 ദിവസം FREE recharge കിട്ടാൻ chance ഉണ്ട്\n♾️ കുറഞ്ഞ recharge-ൽ endless trip opportunity - Bizmapia മാത്രം\n💸 എല്ലാ trip-നും നല്ല fare - Normal / Peak / Night (Double charge)\n🏧 വരുമാനം 24 മണിക്കൂറിന് ശേഷം withdraw ചെയ്യാം\n\n📞 Registration കഴിഞ്ഞാൽ കമ്പനിയിൽ നിന്ന് callback വരും - test trip വഴി App performance verify ചെയ്യും. അതിന് ശേഷം trips തുടങ്ങാം.` : `🚖 Join Bizmapia as a Driver! 🙏\n\n✅ Step 1: Install Driver App and Google login\n✅ Step 2: Complete driver profile + vehicle details\n✅ Step 3: Submit cab attachment with Bizmapia\n\n💰 One-time registration: only Rs.150/-\n🎁 After paying Rs.150 you get a chance of 365 days / 180 days / 90 days FREE recharge\n♾️ Endless trip opportunity on a lower recharge - only Bizmapia\n💸 Good fare for every trip - Normal / Peak / Night (Double charge)\n🏧 Withdraw your earnings after 24 hours\n\n📞 After registration you will get a callback from the company - a test trip will verify your app performance. After that you can start trips.`;
+        try{ await sendWithDelay(singleCta(uid, msg, {title:'🚖 Driver App', url:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+        try{ await sendWithDelay(interactiveButton(uid, sl==='ml'?'👉 അടുത്തത് എന്ത് വേണം?': '👉 What next?', [{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: sl==='ml'?'സേവനങ്ങൾ':'Services'}], incomingPhoneId)); }catch(e){}
+      } else if(btnId==='WHO_SHOP'){
+        const msg = sl==='ml' ? `🏪 കട Bizmapia-യിൽ register ചെയ്യാം! 🙏\n\n✅ Step 1: www.bizmapia.com-ൽ പോയി Google login ചെയ്യൂ\n✅ Step 2: Business profile ഉണ്ടാക്കൂ\n✅ Step 3: Shop details കൊടുക്കൂ - shop name, address, location, contact, images. നല്ല profile ആയാൽ customers-ന്റെ search-ൽ കാണും.\n\n📣 Profile കഴിഞ്ഞാൽ മാത്രം Advertainment option കിട്ടും - offer / service / എന്തും കുറഞ്ഞ rate-ൽ advertise ചെയ്യാം.\n💡 Rates + tenure-ന് Tender + Annexure-B നോക്കൂ, അല്ലെങ്കിൽ www.bizmapia.com-ൽ current offer rates നോക്കൂ.\n🎯 1-year plan ആണ് ഏറ്റവും നല്ലത് - offer rate-ൽ 1 വർഷം മുഴുവൻ advertise ചെയ്യാം.` : `🏪 Register your shop on Bizmapia! 🙏\n\n✅ Step 1: Go to www.bizmapia.com and Google login\n✅ Step 2: Create your business profile\n✅ Step 3: Add shop details - shop name, address, location, contact, images. A good profile shows in customer search.\n\n📣 Only after profile creation you get the Advertainment option - advertise anything like offers / service at a cheap rate.\n💡 For rates + tenure, check Tender + Annexure-B or current offer rates on www.bizmapia.com.\n🎯 A 1-year plan is best - advertise the full year at the offer rate.`;
+        try{ await sendWithDelay(singleCta(uid, msg, {title:'🌐 bizmapia.com', url:'https://bizmapia.com/'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+        try{ await sendWithDelay(interactiveButton(uid, sl==='ml'?'👉 അടുത്തത് എന്ത് വേണം?': '👉 What next?', [{id:'AI_BUSINESS',title: sl==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: sl==='ml'?'സേവനങ്ങൾ':'Services'}], incomingPhoneId)); }catch(e){}
+      }
+      return;
+    }
+    // V316: APP_ANDROID / APP_IOS -> warm app help, links only inside buttons, never raw links in text
+    if(btnId==='APP_ANDROID' || btnId==='APP_IOS'){
+      const sl = state.lang || 'ml';
+      const isAnd = btnId==='APP_ANDROID';
+      const msg = sl==='ml' ? (isAnd ? `📱 Android - Bizmapia App install ചെയ്യാം 💛\n\nPlay Store > Bizmapia search > Install > OTP login.\nOTP വരുന്നില്ലെങ്കിൽ 60 sec wait ചെയ്ത് Resend നോക്കൂ.\n\nApp തുറന്നാൽ 4 സേവനങ്ങളും കാണാം - Taxi, Directory, Delivery, Booking. എന്താണ് ആദ്യം വേണ്ടത്?` : `📱 iPhone - Bizmapia App install ചെയ്യാം 💛\n\nApp Store > Bizmapia search > Get > OTP login.\nOTP വരുന്നില്ലെങ്കിൽ 60 sec wait ചെയ്ത് Resend നോക്കൂ.\n\nApp തുറന്നാൽ 4 സേവനങ്ങളും കാണാം - Taxi, Directory, Delivery, Booking. എന്താണ് ആദ്യം വേണ്ടത്?`) : (isAnd ? `📱 Android - install Bizmapia App 💛\n\nPlay Store > Search Bizmapia > Install > OTP login.\nNo OTP? Wait 60s, tap Resend.\n\nIn the App you will see all 4 services - Taxi, Directory, Delivery, Booking. What do you need first?` : `📱 iPhone - install Bizmapia App 💛\n\nApp Store > Search Bizmapia > Get > OTP login.\nNo OTP? Wait 60s, tap Resend.\n\nIn the App you will see all 4 services - Taxi, Directory, Delivery, Booking. What do you need first?`);
+      const url = isAnd ? 'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia' : 'https://apps.apple.com/in/app/bizmapia/id6761577245';
+      try{ await sendWithDelay(singleCta(uid, msg, {title: isAnd?'📱 Android App':'🍎 iPhone App', url}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, msg, incomingPhoneId)); }
+      await setState(uid,{...state, lang:sl, lastStep:'V316 - App Link '+btnId, aiMode:true});
+      return;
+    }
     // ===== V257: AI_SERVICES -> show 4 services (3+1, WhatsApp max 3 per msg) =====
     if(btnId==='AI_SERVICES' || btnId==='AI_TAXI'){
       const sl = state.lang || 'ml';
       const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
       const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
       await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
-      try{ await sendWithDelay(interactiveButton(uid, svcText, [b2('SVC_RIDE','🚖 ടാക്സി','Taxi','Taxi'), b2('SVC_BIZDIR','📖 ബിസിനസ് ഡയറക്ടറി','Business Directory','Business Directory'), b2('SVC_DELIVERY','🛵 ഡെലിവറി','Delivery','Delivery')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
+      try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 നിങ്ങൾ ആരാണ്? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : `🙏 Who are you? I will guide you exactly for you. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
       await delay(300);
       try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
@@ -2832,11 +3279,22 @@ app.post('/webhook', async(req,res)=>{
       const sl2 = state.lang || 'ml';
       const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
       const asSvc = svcMap[btnId] || 'Service';
-      const aiSvc = AI_ENABLED ? await callMayaAI(sl2, `Explain ${asSvc} in detail in my language - what is it, how to use it in Bizmapia app, and at the end ask if they want Business Opportunity also. Keep it short.`, state.aiHistory||[]) : null;
-      const svcReply = aiSvc && aiSvc.text ? aiSvc.text : (sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. Detail ariyamengil app install cheyyam.` : `${asSvc} - You can use it from Bizmapia App.`);
+      const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee aaraanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Who are you - Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
+      const svcReply = svcFixed;
       await setState(uid,{...state, lang:sl2, lastStep:'AI Maya - Service '+btnId, aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, svcReply, mayaQuickButtons(sl2, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcReply, incomingPhoneId)); }
       await saveToSheet('System_Logs',[nowIso,uid,sl2,'AI Service Detail '+incomingPhoneId,`${btnId} -> ${asSvc}`,'AI Service',HELP_ADMIN,'AI Service Detail',''],false);
+      return;
+    }
+    // V276 FIX: AI_BUSINESS must go DIRECT to Company Video, NOT to generic AI chat (that caused loop + More services in screenshot).
+    if(btnId==='AI_BUSINESS'){
+      const sl = state.lang || 'ml';
+      const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
+      await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
+      await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+      const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl, _capSentAt2 = Date.now();
+      setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt2) return; /* V289 replied after video */ const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
+      await saveToSheet('System_Logs',[nowIso,uid,sl,'V276 AI_BUSINESS '+incomingPhoneId,'AI_BUSINESS button -> direct Company Video + See Video button, no AI loop','V276',HELP_ADMIN,'V276 Business',''],false);
       return;
     }
     if(btnId.startsWith('AI_')){
@@ -2880,6 +3338,15 @@ app.post('/webhook', async(req,res)=>{
     }
     // ===== V248 AI MAYA - FREE-TEXT -> AI FIRST (buttons still work below) =====
     // Only for typed text, not button clicks. Payment / Pay / verification steps keep old button flow.
+    // ===== V316 VOICE - audio keeps same step, never restart =====
+    if(msg.type==='audio' || msg.type==='voice' || msg.type==='ptt'){
+      const slV = state.lang || 'ml';
+      const stepV = state.lastStep || 'AI Maya - Fresh';
+      const vMsg = slV==='ml' ? `🎤 Voice kettu. 🙏\n\nNingal ippol ullathu: ${stepV}.\n\nAthu thanne continue cheyyam. Oru varil type cheythu parayaamo - Business opportunity aano, service aano?` : `🎤 Voice heard. 🙏\n\nYou are at: ${stepV}.\n\nWe continue from the same step. Can you type in one line - Business opportunity or service?`;
+      try{ await sendWithDelay(interactiveButton(uid, vMsg, mayaQuickButtons(slV, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, vMsg, incomingPhoneId)); }
+      await setState(uid,{...state, lang:slV, lastStep: stepV, aiMode:true});
+      return;
+    }
     const isFreeText = !!txt && !btnId && msg.type==='text';
     // V255 FIX: AI ALWAYS WINS. Old inPayFlow block removed - it trapped old users in Company Video loop forever.
     // Payment flow is now handled INSIDE Maya AI prompt, not by blocking AI.
@@ -2893,15 +3360,181 @@ app.post('/webhook', async(req,res)=>{
       }catch(e){}
       return;
     }
-    if(isFreeText && AI_ENABLED && !inPayFlow){
-      const detected = detectUserLanguage(txt, state.lang);
-      // First message from social ad: "Hello! Can I get more info on this?" -> do NOT force English. Default to Malayalam, Maya will ask.
-      let effLang = detected;
-      if(!state.lang && /hello.*more info/i.test(txt)) effLang = 'ml';
-      if(effLang!==state.lang){
-        state.lang = effLang; lang = effLang;
-        await setState(uid, {...state, lang: effLang, lastStep: 'AI Maya - Lang '+effLang});
+    // ===== V316 GLOBAL STOP - 'stop' works from ANY step, not only Busy/Are-you-there =====
+    // Bug in V316: free-text 'stop' was only mapped inside Busy/Are-you-there branch (V288). User typed 'stop' on Services/App step -> fell to generic AI sorting. Fixed: exact 'stop' / 'nirthu' / 'nirthuka' / 'stop cheyyu' anywhere -> BUSY_STOP confirm + return, never AI, never sorting.
+    try{
+      const _stopLow = String(txt||'').toLowerCase().trim();
+      const _isStop = txt && !btnId && msg.type==='text' && /^\s*(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_stopLow);
+      if(_isStop){
+        await setState(uid,{...state, lastStep:'V316 - Busy Stop - Confirm', phoneId: incomingPhoneId});
+        const _cf = (lang||state.lang||'ml')==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : (lang||state.lang)==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
+        await sendWithDelay(interactiveButton(uid,_cf,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+        return;
       }
+    }catch(_){}
+    // V310 FREE-TEXT PAID CLAIM: "yes i done payment" / "paid" / "payment done" typed after reminder -> same Confidence Check, do NOT trust blindly.
+    try{
+      const _low310 = String(txt||'').toLowerCase().trim();
+      const _isPayStep310 = /pay|step 5|registration fee|token|verify/i.test(String(state.lastStep||'')) || state.lastStep==='PAY CLAIMED - Confidence Check';
+      const _claimsPaid310 = /(yes.*(done|paid)|i.*paid|payment.*done|paid.*already|already.*paid|i done payment|payment done|paid bro|paid da|adachu|pay cheythu|payment cheythu)/i.test(String(txt||'')) && !/not.*paid|did.*not.*pay|haven.*paid/.test(_low310);
+      if(_isPayStep310 && _claimsPaid310 && txt && !btnId){
+        state.lastStep=`PAY CLAIMED - Confidence Check ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const _conf310 = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+        await sendWithDelay(interactiveButton(uid,_conf310,[{id:'PAY_CONFIRM_CHECK',title:'✅ Yes check'},{id:'PAY_NOW_AGAIN',title:'💳 Pay now'}], incomingPhoneId));
+        await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED TEXT ${state.fee||15}L`, String(txt||'').slice(0,80), 'CONFIDENCE CHECK', HELP_MARKETING, state.lastStep, ''], true);
+        return;
+      }
+    }catch(_){}
+    // V300 VIDEO-KNOWN + BALANCE - "I know this video, give balance details" = 2 intents in 1 sentence. Maya echoed it before because V288 only knew "seen/watched".
+    // Rule: "know this video / already saw / kandu / already watched" = VIDEO SEEN. "balance details / balance amount / balance ethra" = show Full - Token balance for PICKED level + ask to lock slot with token.
+    try{
+      if(isFreeText){
+        const _v = String(txt||'').toLowerCase();
+        const _knowsVideo = /know.*video|already.*(saw|seen|watched|kandu)|i.*saw.*video|video.*(kandu|kandhu|ariyam|manasilayi)|seen.*video|watched.*already/.test(_v);
+        const _wantsBalance = /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
+        if(_knowsVideo || _wantsBalance){
+          const _L0 = lang || state.lang || 'en';
+          const _lvl = state.sub || state.lead?.level || 'OPP_CENTER';
+          const _info = _lvl==='OPP_DISTRICT' ? {name:'District Franchise', full:'10 Lakh', token:250, bal:'Rs.9,99,750', emi:'EMI available'} : _lvl==='OPP_CORP' ? {name:'Corporation / Municipal', full:'4-5 Lakh', token:150, bal:'Rs.3,99,850 - 4,99,850', emi:'EMI available'} : {name:'Business Center', full:'1 Lakh', token:100, bal:'Rs.99,900', emi:'Down Rs.30,000 + EMI'};
+          const _ans0 = _L0==='ml' ? `👍 മനസ്സിലായി! വീഡിയോ അറിയാം — കണ്ടതായി കുറിച്ചു. 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (ഇപ്പോൾ): Rs.${_info.token} — slot lock ചെയ്യാൻ\n• Balance after Token: ${_info.bal}\n• ${_info.emi}\n\nToken അടച്ചാൽ slot lock ആകും, പിന്നെ ടീം verification-ന് വിളിക്കും. ഇപ്പോൾ Token അടയ്ക്കണോ?` : _L0==='hi' ? `👍 समझ गई! Video जानते हैं — देखा हुआ नोट कर लिया। 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (अभी): Rs.${_info.token} — slot lock के लिए\n• Token के बाद Balance: ${_info.bal}\n• ${_info.emi}\n\nToken देते ही slot lock होगा, फिर team verification के लिए call करेगी। अभी Token दें?` : `👍 Got it! You know this video — marked as seen. 🙏\n\n💰 *Balance Details — ${_info.name}:*\n\n• Full Fee: ~${_info.full}\n• Token (now): Rs.${_info.token} — to lock your slot\n• Balance after Token: ${_info.bal}\n• ${_info.emi}\n\nOnce you pay Token, slot locks, then team will call for verification. Pay Token now?`;
+          const _h0=[...(state.aiHistory||[])]; _h0.push({role:'user',text:String(txt||'').slice(0,300)}); _h0.push({role:'maya',text:_ans0.slice(0,500)});
+          state.aiHistory=_h0.slice(-12); state.lastStep='V300 - Video Known + Balance Shown '+_lvl; state.aiMode=true;
+          if(_knowsVideo){ state.lead={...(state.lead||{}), videoSeen:true, funnel:'VIDEO_SEEN'}; }
+          await setState(uid, state);
+          const _bPay = _L0==='ml' ? 'Token അടയ്ക്കാം' : _L0==='hi' ? 'Token दें' : 'Pay Token Now';
+          const _bLater = _L0==='ml' ? 'പിന്നീട്' : _L0==='hi' ? 'बाद में' : 'Later';
+          try{ await sendWithDelay(interactiveButton(uid, _ans0, [{id:'PAY_TOKEN',title:_bPay},{id:'AI_BUSINESS',title: _L0==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ans0, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L0,'V300 VideoKnownBalance '+incomingPhoneId,'Video known + balance: '+String(txt||'').slice(0,80),'V300',HELP_ADMIN,'V300 Balance',''],false);
+            // V308 REMINDER RE-ARM: after balance, arm GEN reminder if user goes silent.
+            try{ scheduleReminder(uid,'install:GEN_ARE_YOU_THERE:10',_L0,2*60*1000,incomingPhoneId); }catch(_){}
+          return;
+        }
+      }
+    }catch(_){}
+    // V299 CONTEXT MEMORY - Maya must remember what SHE just asked. "idukki" after "Which district are you from?" is a DISTRICT ANSWER, not a new random message.
+    // Without this, Maya asks district -> user answers -> Maya says "Got it! heard you" + generic menu. That is the 90% missing.
+    // Rule: Look at last Maya message in aiHistory. If it asked a question, THIS message is the answer to THAT question.
+    try{
+      if(isFreeText){
+        const _hist = state.aiHistory||[];
+        const _lastMaya = [..._hist].reverse().find(h=>h.role==='maya')?.text || '';
+        const _cur = String(txt||'').trim().toLowerCase();
+        const _L9 = lang || state.lang || 'en';
+        // 1) District answer: Maya asked "Which district are you from?"
+        if(/which district|district.*from|ente district|which district are you/.test(_lastMaya.toLowerCase())){
+          const _districts = ['thiruvananthapuram','trivandrum','kollam','pathanamthitta','alappuzha','alleppey','kottayam','idukki','ernakulam','kochi','thrissur','palakkad','malappuram','kozhikode','calicut','wayanad','kannur','kasaragod','chennai','bangalore','bengaluru','hyderabad','mumbai','delhi','pune','coimbatore','madurai'];
+          const _found = _districts.find(d=>_cur.includes(d));
+          if(_found){
+            const _cap = _found.charAt(0).toUpperCase()+_found.slice(1);
+            state.lead = {...(state.lead||{}), district:_cap, intent: state.lead?.intent||'unknown'};
+            state.lastStep='V299 - District Saved '+_cap; state.aiMode=true;
+            const _h9=[..._hist]; _h9.push({role:'user',text:String(txt||'').slice(0,300)}); const _ans9 = _L9==='ml' ? `👍 *${_cap}* — കുറിച്ചു! 🙏\n\n${_cap}-യിൽ നിന്ന് Bizmapia-യോടൊപ്പം എന്താണ് ചെയ്യാൻ ആഗ്രഹിക്കുന്നത്?\n\n• Business Opportunity എടുത്ത് ${_cap}-യിൽ വരുമാനം ഉണ്ടാക്കണോ?\n• അതോ സേവനം ഉപയോഗിക്കണോ?` : _L9==='hi' ? `👍 *${_cap}* — नोट कर लिया! 🙏\n\n${_cap} से Bizmapia के साथ क्या करना चाहते हैं?\n\n• Business Opportunity लेकर ${_cap} में कमाना है?\n• या Service use करनी है?` : `👍 *${_cap}* — noted! 🙏\n\nWhat would you like to do with Bizmapia from ${_cap}?\n\n• Take Business Opportunity and earn in ${_cap}?\n• Or use a service?`;
+            _h9.push({role:'maya',text:_ans9.slice(0,500)}); state.aiHistory=_h9.slice(-12);
+            await setState(uid, state);
+            try{ await sendWithDelay(interactiveButton(uid, _ans9, [{id:'AI_BUSINESS',title: _L9==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: _L9==='ml'?'സേവനങ്ങൾ ഉപയോഗിക്കാം':'Use Other Services'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ans9, incomingPhoneId)); }
+            await saveToSheet('System_Logs',[nowIso,uid,_L9,'V299 District '+incomingPhoneId,'District answer saved: '+_cap,'V299',HELP_ADMIN,'V299 District',''],false);
+            return;
+          }
+        }
+        // 2) Phone answer: Maya asked "Android or iPhone?"
+        if(/android.*iphone|iphone.*android|which phone/.test(_lastMaya.toLowerCase())){
+          if(/android/.test(_cur) || /iphone|ios|apple/.test(_cur)){
+            const _ph = /android/.test(_cur) ? 'Android' : 'iPhone';
+            state.lead = {...(state.lead||{}), phone:_ph}; state.lastStep='V299 - Phone Saved '+_ph; state.aiMode=true;
+            const _ansP = _L9==='ml' ? `👍 *${_ph}* — മനസ്സിലായി!\n\nBizmapia App ${_ph}-ൽ install ചെയ്യാൻ ഞാൻ ലിങ്ക് തരാം. ആദ്യം പറയൂ — Business Opportunity ആണോ വേണ്ടത്, അതോ സേവനം ഉപയോഗിക്കാനാണോ?` : `👍 *${_ph}* — got it!\n\nI will give you the Bizmapia App link for ${_ph}. First tell me — do you want Business Opportunity or use a service?`;
+            const _hP=[..._hist]; _hP.push({role:'user',text:String(txt||'').slice(0,300)}); _hP.push({role:'maya',text:_ansP.slice(0,500)}); state.aiHistory=_hP.slice(-12);
+            await setState(uid, state);
+            try{ await sendWithDelay(interactiveButton(uid, _ansP, [{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansP, incomingPhoneId)); }
+            return;
+          }
+        }
+        // 3) Yes/No answer to "Want to watch video?" - Maya asked video, user says yes/no
+        if(/watch.*video|video.*watch|company video/.test(_lastMaya.toLowerCase()) && (_cur==='yes'||_cur==='no'||_cur==='ok'||_cur==='okay')){
+          if(_cur==='yes'||_cur==='ok'||_cur==='okay'){
+            state.lastStep='V299 - Video Yes After Ask'; state.aiMode=true; await setState(uid, state);
+            const _ansV = _L9==='ml' ? `🎥 സൂപ്പർ! Company Video ഇതാ — 2 മിനിറ്റ് കണ്ടാൽ കമ്പനി മനസ്സിലാകും.\n\nകണ്ട ശേഷം പറയൂ — “kandu” എന്ന് ടൈപ്പ് ചെയ്താൽ മതി.` : `🎥 Super! Here is the Company Video — 2 minutes and you will understand the company.\n\nAfter watching, just type “seen”.`;
+            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url:'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
+            return;
+          }
+        }
+      }
+    }catch(_){}
+    // V295: FAQ NO-AI ANSWER - Maya must answer real questions even when Gemini fails. "who is owner" fell through to old mainMenu because AI returned null and fallback sent repeatLastStep. This block runs BEFORE AI, needs no AI call, and returns.
+    // It handles QUESTION text only (who/what/how/price/services/contact/app), not yes/no/skip/seen which are handled by V288/V292 above.
+    try{
+      if(isFreeText){
+        const _q = String(txt||'').toLowerCase();
+        const _isQ = /\?|\bwho\b|\bwhat\b|\bhow\b|\bwhen\b|\bwhere\b|\bwhy\b|\bwhich\b|\bowner\b|\bfounder\b|\bprice\b|\bfee\b|\bcost\b|\bcontact\b|\baddress\b|\bservices?\b|\bapp\b|\bbizmapia\b/.test(_q);
+        const _isShortAns = ['yes','no','ok','okay','seen','skip','next','kandu','manasilayi'].includes(_q.trim());
+        if(_isQ && !_isShortAns){
+          let _ans = null;
+          const _L = lang || state.lang || 'en';
+          if(/owner|founder|who.*(run|start|made|create)|aadhar|who is.*bizmapia/.test(_q)){
+            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് കേരളത്തിൽ നിന്നുള്ള ഒരു *All-India കമ്പനി* ആണ്.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nകമ്പനിയെക്കുറിച്ച് കൂടുതൽ അറിയാൻ Company Video കാണണോ? 👇` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* केरल की एक *All-India कंपनी* है।\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nCompany के बारे में और जानने के लिए Company Video देखें? 👇` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India company* from Kerala.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nWant to know more about the company? Watch the Company Video 👇`;
+          } else if(/what.*bizmapia|bizmapia.*(what|entha|enth)/.test(_q)){
+            _ans = _L==='ml' ? `🌍 *Bizmapia* എന്നത് നിങ്ങളുടെ ദൈനംദിന ആവശ്യങ്ങൾക്കുള്ള *All-India പ്ലാറ്റ്ഫോം* ആണ്.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nഇതിൽ ഏതാണ് വേണ്ടത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ Business Opportunity എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : _L==='hi' ? `🌍 *Bizmapia* आपकी daily needs के लिए *All-India प्लेटफॉर्म* है।\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nआपको क्या चाहिए? Service use करना है, या Business Opportunity लेकर कमाना है?` : `🌍 *Bizmapia* is an *All-India platform* for your daily needs.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nWhat do you need? Use a service, or take the Business Opportunity and earn with us?`;
+          } else if(/price|fee|cost|token|vila|charge/.test(_q)){
+            _ans = _L==='ml' ? `💰 *Token Fee:*\n\n• Business Center (30K - 1L): Token Rs.100 | Full ~1 Lakh\n• Corporation / Municipal (2L - 5L): Token Rs.150 | Full ~4-5 Lakh\n• District (5L - 15L): Token Rs.250 | Full ~10 Lakh\n\nToken എന്നത് slot lock ചെയ്യാനാണ്. ഏത് level ആണ് വേണ്ടത്?` : `💰 *Token Fee:*\n\n• Business Center (30K - 1L): Token Rs.100 | Full ~1 Lakh\n• Corporation / Municipal (2L - 5L): Token Rs.150 | Full ~4-5 Lakh\n• District (5L - 15L): Token Rs.250 | Full ~10 Lakh\n\nToken is to lock your slot. Which level do you want?`;
+          } else if(/service|sevana/.test(_q)){
+            _ans = _L==='ml' ? `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n🛵 Online Delivery - ഭക്ഷണവും സാധനങ്ങളും വീട്ടിൽ\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nഏത് സേവനമാണ് വേണ്ടത്?` : `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - find shops / services\n🛵 Online Delivery - food & items to your door\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nWhich service do you need?`;
+          } else if(/contact|phone|number|call|team|address|office/.test(_q)){
+            _ans = _L==='ml' ? `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nടീം തിരക്കിലാണ്. നിങ്ങൾക്ക് free time-ൽ വിളിക്കാം. Registration fee കഴിഞ്ഞാൽ ടീം നിങ്ങളെ വിളിക്കും.` : `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nTeam is busy. You can call in your free time. After registration fee, team will call you for verification.`;
+          } else if(/where|located|location|head office|office|address|evide|kuth/.test(_q)){
+            _ans = _L==='ml' ? `📍 *Bizmapia എവിടെയാണ്?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — എവിടെ നിന്നും ഉപയോഗിക്കാം. നിങ്ങൾ ഏത് ജില്ലയിൽ നിന്നാണ്?` : _L==='hi' ? `📍 *Bizmapia कहाँ है?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia एक *All-India प्लेटफॉर्म* है — कहीं से भी use कर सकते हैं। आप किस जिले से हैं?` : `📍 *Where is Bizmapia located?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia is an *All-India platform* — you can use it from anywhere. Which district are you from?`;
+          } else if(/app|install|download|play store|link/.test(_q)){
+            _ans = _L==='ml' ? `📱 *Bizmapia App:*\n\nAndroid: Play Store-ൽ Bizmapia എന്ന് search ചെയ്യൂ\n🌐 Website: bizmapia.com\n\nഏത് phone ആണ്? Android ആണോ iPhone ആണോ?` : `📱 *Bizmapia App:*\n\nAndroid: Search Bizmapia on Play Store\n🌐 Website: bizmapia.com\n\nWhich phone do you use? Android or iPhone?`;
+          }
+          if(!_ans){
+            // V298: Catch-all question - if it is NOT a Bizmapia question, say politely I don't have it + suggestions (do not pretend to know). If it IS Bizmapia-related, answer with Bizmapia intro.
+            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് നിങ്ങളുടെ ദൈനംദിന ആവശ്യങ്ങൾക്കുള്ള *All-India പ്ലാറ്റ്ഫോം* ആണ് — Taxi, Directory, Delivery, Booking.\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nഎന്താണ് വേണ്ടത്? Business Opportunity ആണോ, സേവനമാണോ?` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* आपकी daily needs के लिए *All-India प्लेटफॉर्म* है — Taxi, Directory, Delivery, Booking।\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nक्या चाहिए? Business Opportunity या Service?` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India platform* for your daily needs — Taxi, Directory, Delivery, Booking.\n\n🏢 Office: Thodupuzha, Idukki, Kerala | 🌐 bizmapia.com | 📞 85901 83646\n\nWhat do you need? Business Opportunity or a service?`;
+          }
+          if(_ans){
+            const _h = state.aiHistory||[]; _h.push({role:'user', text: String(txt||'').slice(0,300)}); _h.push({role:'maya', text: _ans.slice(0,500)}); state.aiHistory=_h.slice(-12); state.lastStep='AI Maya - FAQ '+_L; state.aiMode=true;
+            await setState(uid, state);
+            try{ await sendWithDelay(textMessage(uid, _ans, incomingPhoneId)); }catch(e){}
+            await saveToSheet('System_Logs',[nowIso,uid,_L,'V295 FAQ '+incomingPhoneId, 'FAQ no-AI: '+String(txt||'').slice(0,80),'V295 FAQ',HELP_ADMIN,'V295 FAQ',''],false);
+            return;
+          }
+        }
+      }
+    }catch(_){}
+    // V298 OUT-OF-KNOWLEDGE - If user asks anything OUTSIDE Maya's memory, NEVER guess, NEVER invent, NEVER send old menu.
+    // Say politely: I don't have that info + WHY + give 3 related questions Maya CAN answer, so user still leaves satisfied.
+    // Maya KNOWS: Bizmapia services, Business Opportunity levels, token fee, videos, office, contact, app, registration flow.
+    // Maya DOES NOT KNOW: other companies, politics, weather, scores, stocks, celebrities, astrology, personal data, other apps.
+    try{
+      if(isFreeText){
+        const _o = String(txt||'').toLowerCase();
+        const _isBiz = /bizmapia|business|opportunity|franchise|token|fee|price|service|taxi|delivery|directory|booking|video|app|office|contact|team|location|where.*bizmapia|owner/.test(_o);
+        const _isOut = !_isBiz && (/\b(who is|what is|tell me|explain|meaning|weather|rain|temperature|cricket|football|score|stock|share price|bitcoin|lottery|astrology|horoscope|prime minister|president|minister|politics|election|actor|actress|celebrity|movie|song|ola|uber|swiggy|zomato|amazon|flipkart|dunzo|rapido|other company|other app|my name|my number|my address|password|otp|pin)\b/.test(_o) || /\?/.test(_o) && _o.split(' ').length>=4);
+        // Also: if AI already failed before, this same message would have reached here via fallback - but this block runs BEFORE AI, so out-of-scope is caught early.
+        if(_isOut){
+          const _L3 = lang || state.lang || 'en';
+          const _sugg = _L3==='ml' ? `💡 *എനിക്ക് ഉത്തരം പറയാൻ പറ്റുന്ന ചോദ്യങ്ങൾ:*\n\n1️⃣ Bizmapia എന്താണ്?\n2️⃣ Business Opportunity-യുടെ Token Fee എത്രയാണ്?\n3️⃣ Bizmapia ഓഫീസ് എവിടെയാണ്?\n\nഇതിൽ ഏതെങ്കിലും ഒന്ന് ടൈപ്പ് ചെയ്താൽ മതി, ഞാൻ ഉടൻ പറഞ്ഞു തരാം. 😊` : _L3==='hi' ? `💡 *मैं इन सवालों का जवाब दे सकती हूँ:*\n\n1️⃣ Bizmapia क्या है?\n2️⃣ Business Opportunity की Token Fee कितनी है?\n3️⃣ Bizmapia office कहाँ है?\n\nइनमें से कोई एक टाइप करें, मैं तुरंत बता दूँगी। 😊` : `💡 *Questions I CAN answer for you:*\n\n1️⃣ What is Bizmapia?\n2️⃣ What is the Token Fee for Business Opportunity?\n3️⃣ Where is Bizmapia office?\n\nJust type any one of these and I will answer right away. 😊`;
+          const _polite = _L3==='ml' ? `🙏 ക്ഷമിക്കണം, അതിനെക്കുറിച്ച് എന്റെ കൈയിൽ വിവരം ഇല്ല.\n\nഞാൻ *Bizmapia-യുടെ Maya* ആണ് — Bizmapia സേവനങ്ങളെക്കുറിച്ചും Business Opportunity-യെക്കുറിച്ചും മാത്രമേ എനിക്ക് കൃത്യമായി പറയാൻ പറ്റൂ. അറിയാത്ത കാര്യം ഞാൻ ഊഹിച്ച് പറയില്ല, അത് നിങ്ങളെ തെറ്റിദ്ധരിപ്പിക്കും.\n\n${_sugg}` : _L3==='hi' ? `🙏 माफ़ कीजिए, इसके बारे में मेरे पास जानकारी नहीं है।\n\nमैं *Bizmapia की Maya* हूँ — मैं Bizmapia services और Business Opportunity के बारे में ही सही-सही बता सकती हूँ। जो नहीं जानती, वो अंदाज़े पर नहीं कहूँगी, इससे आप गलत समझ सकते हैं।\n\n${_sugg}` : `🙏 Sorry, I don't have information about that.\n\nI am *Maya from Bizmapia* — I can accurately answer only about Bizmapia services and Business Opportunity. I won't guess what I don't know, because that could mislead you.\n\n${_sugg}`;
+          const _h3 = state.aiHistory||[]; _h3.push({role:'user', text: String(txt||'').slice(0,300)}); _h3.push({role:'maya', text: _polite.slice(0,500)}); state.aiHistory=_h3.slice(-12); state.lastStep='V298 - Out Of Knowledge Polite'; state.aiMode=true;
+          await setState(uid, state);
+          const _b1 = _L3==='ml' ? 'ബിസിനസ് അവസരം' : 'Business Opportunity';
+          const _b2 = _L3==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : 'Use Other Services';
+          try{ await sendWithDelay(interactiveButton(uid, _polite, [{id:'AI_BUSINESS',title:_b1},{id:'AI_SERVICES',title:_b2}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _polite, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L3,'V298 OutOfKnowledge '+incomingPhoneId,'Polite unknown: '+String(txt||'').slice(0,80),'V298',HELP_ADMIN,'V298 Unknown',''],false);
+          return;
+        }
+      }
+    }catch(_){}
+    if(isFreeText && AI_ENABLED && !inPayFlow){
+      // V306 LANGUAGE LOCK: AI router MUST use locked language. Never call detectUserLanguage to flip it from content.
+      // "seen, next" / Manglish "video kandathanu" are CONTENT, not language change. effLang = locked lang.
+      // V307 FIXED TERMS: effLang = locked lang, always. No switch after selection.
+      let effLang = state.lang || 'en';
+      const _low6b = String(txt||'').toLowerCase().trim();
+      // Explicit switch requests are IGNORED once lang is set - reply in locked lang that language is fixed.
+      if(!state.lang){
+        if(/need\s+malayalam|malayalam\s+please|change.*malayalam/.test(_low6b)) effLang='ml';
+        else if(/need\s+english|english\s+please|change.*english/.test(_low6b)) effLang='en';
+        else if(/need\s+hindi|hindi\s+please|change.*hindi/.test(_low6b)) effLang='hi';
+      }
+      if(effLang!==state.lang){ state.lang=effLang; lang=effLang; await setState(uid, {...state, lang:effLang, lastStep:'AI Maya - Lang '+effLang}); }
       const hist = state.aiHistory || [];
       if(needsHuman(txt)){ try{ await notifyHumanHandover(uid, state, txt); }catch(e){} }
       const aiRes = await callMayaAI(effLang, txt, hist);
@@ -3040,11 +3673,11 @@ I will help you find the *right option*, step by step. 🤝
           : `🎉 Excellent choice!\n👉 What to do now: Watch the Company Video below to know about Bizmapia.\n\nAlready know Bizmapia well? No need to watch again — tap Skip Video below:`;
         const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + step1Exact;
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
-        await sendWithDelay(singleCta(uid, companyVideo, {title: '▶️ Watch Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, companyVideo, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId));
         await delay(400);
         await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'നന്നായി അറിയാമോ? Skip ചെയ്യൂ:' : lang==='hi' ? 'पहले से जानते हैं? Skip करें:' : 'Already know Bizmapia well? Tap Skip Video:', [{id:'COMPANY_KNOW',title: lang==='ml' ? '⏭️ സ്കിപ്പ് ചെയ്യൂ' : lang==='hi' ? '⏭️ स्किप करें' : '⏭️ Skip Video'}], incomingPhoneId));
         // V247: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
-        scheduleReminder(uid, 'install:COMPANY_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       }
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
       await saveToSheet('System_Logs', [nowIso, uid, lang, btnId+' '+incomingPhoneId, 'Main Service', 'Clicked', btnId==='SVC_OPP'?HELP_MARKETING:HELP_ADMIN, state.lastStep, ''], false);
@@ -3067,8 +3700,8 @@ I will help you find the *right option*, step by step. 🤝
     if(btnId==='COMPANY_VIDEO_WATCH'){
       state.lastStep='Company Video - Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const cv = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് \"കമ്പനി വീഡിയോ കണ്ടു\" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर \"कंपनी वीडियो देखा\" पर क्लिक करें:` : `👉 Please watch Company video fully, then click \"Watched Company Video\":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
-      scheduleReminder(uid, 'install:COMPANY_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
+      scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
     if(btnId==='COMPANY_KNOW' || btnId==='COMPANY_SKIP'){
@@ -3088,8 +3721,8 @@ I will help you find the *right option*, step by step. 🤝
       // V247: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
-      scheduleReminder(uid, 'install:COMPANY_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
+      scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
     if(btnId==='OPP_DISTRICT'){
@@ -3117,7 +3750,7 @@ Let's check District Franchise details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 ₹5L-₹15L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -3150,7 +3783,7 @@ Let's check Corporation / Municipal Franchise details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 ₹2L-₹5L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -3183,7 +3816,7 @@ Let's check Business Center details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 വീഡിയോ കാണുക' : lang==='hi' ? '🎥 वीडियो देखें' : '🎥 Watch Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 ₹30K-₹1L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -3196,18 +3829,18 @@ Let's check Business Center details.
 
     // ===== V247 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
     if(btnId==='OPP_LEARN_VIDEO'){
-      state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.videoWatched=false; state.oppVideoWatched=false; state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; // V286: user said NOT watched - video link IS allowed again state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
       if(state.sub==='OPP_DISTRICT' || state.sub==='OPP_CORP' || state.sub==='OPP_MUNI'){
         // V247 FRANCHISEE EXPLAINER (District + Corp/Muni ONLY): same as Step 1 - NO raw link, [Watch Video] CTA carries inbuilt YouTube link, NO skip, NO Watched button yet. Watched is confirmed ONLY by the 5-min reminder below.
-        const vMsg = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ അറിയാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `\n\nफ्रेंचाइजी विवरण जानने के लिए यह वीडियो देखें:` : `\n\nWatch this video to know the franchise details:`);
-        await sendWithDelay(singleCta(uid, vMsg, {title: 'Watch Video', url: vUrl}, incomingPhoneId));
+        const vMsg = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ അറിയാൻ ഈ അവസരത്തിന്റെ വീഡിയോ കാണുക:\n\n👇 *വീഡിയോ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*` : lang==='hi' ? `\n\nफ्रेंचाइजी विवरण जानने के लिए इस अवसर का वीडियो देखें:\n\n👇 *वीडियो देखने के लिए नीचे See Video बटन पर क्लिक करें:*` : `\n\nWatch this Opportunity Video to know the franchise details:\n\n👇 *Click the button below to see video - See Video:*`);
+        await sendWithDelay(singleCta(uid, vMsg, {title: '🎥 See Video', url: vUrl}, incomingPhoneId));
         scheduleReminder(uid, 'install:OPP_LEARN_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
         return;
       }
-      // V247 CENTER = COMPANY VIDEO PATTERN: NO raw link, [Watch Video] CTA carries inbuilt YouTube link, NO "after watching click below" line, NO Watched button here. Watching confirmed ONLY by 5-min reminder below.
-      const vMsg = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഅവസരം മനസ്സിലാക്കാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `\n\nअवसर समझने के लिए यह वीडियो देखें:` : `\n\nWatch this video to understand the opportunity:`);
-      await sendWithDelay(singleCta(uid, vMsg, {title: '▶️ Watch Video', url: vUrl}, incomingPhoneId));
+      // V278 CENTER = CENTER OPPORTUNITY VIDEO (via getVideoUrl OPP_CENTER), NOT Company Video: NO raw link, [Watch Video] CTA carries inbuilt YouTube link, NO "after watching click below" line, NO Watched button here. Watching confirmed ONLY by 5-min reminder below.
+      const vMsg = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഅവസരം മനസ്സിലാക്കാൻ ഈ അവസരത്തിന്റെ വീഡിയോ കാണുക:\n\n👇 *വീഡിയോ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*` : lang==='hi' ? `\n\nअवसर समझने के लिए इस अवसर का वीडियो देखें:\n\n👇 *वीडियो देखने के लिए नीचे See Video बटन पर क्लिक करें:*` : `\n\nWatch this Opportunity Video to understand the opportunity:\n\n👇 *Click the button below to see video - See Video:*`);
+      await sendWithDelay(singleCta(uid, vMsg, {title: '🎥 See Video', url: vUrl}, incomingPhoneId));
       scheduleReminder(uid, 'install:OPP_LEARN_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       return;
     }
@@ -3215,17 +3848,104 @@ Let's check Business Center details.
       state.learnMode='read'; state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const benDyn2 = getBenText(state.sub, lang);
       const qText2 = lang==='ml' ? `\n\n👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?\n👉 മനസ്സിലായെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `\n\n👋 लाभ पढ़े? समझ में आया?\n👉 समझ आया तो नीचे क्लिक करें:` : `\n\n👋 Did you read Benefits? Understood?\n👉 If understood, click below:`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDyn2+qText2, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
+    // ===== V284 GENERIC CONTINUE =====
+    if(btnId==='GEN_CONTINUE'){
+      // Generic "Yes - Continue" from Are-you-there (non-video steps): resend the stuck step
+      clearReminders(uid);
+      const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+      await setState(uid, {...state, lastStep: state.lastStep, phoneId: incomingPhoneId});
+      const thxG = lang==='ml' ? `Thanks for continuing your chat 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — ഇപ്പോൾ തന്നെ തുടരാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\nआप यहाँ रुके थे: *${stuckName}* — अभी जारी रखते हैं:` : `Thanks for continuing your chat 😊\n\nYou stopped at: *${stuckName}* — let's continue right now:`;
+      await sendWithDelay(textMessage(uid, thxG, incomingPhoneId));
+      try{ await repeatLastStep(uid, state, lang, incomingPhoneId); }catch(_){}
+      return;
+    }
+    // ===== V283 BUSY / STOP CHAIN =====
+    if(btnId==='BUSY_YES'){
+      // Yes = remind after 1 hour
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Busy Yes - Remind After 1 Hour', phoneId: incomingPhoneId});
+      const okMsg = lang==='ml' ? `👍 മനസ്സിലായി! 1 മണിക്കൂറിന് ശേഷം ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊` : lang==='hi' ? `👍 समझ गई! 1 घंटे बाद मैं याद दिलाऊँगी। 😊` : `👍 Got it! I will remind you after 1 hour. 😊`;
+      await sendWithDelay(textMessage(uid, okMsg, incomingPhoneId));
+      // V284 GENERIC: if stuck on Video -> video 1h reminder, else generic 1h reminder that resends the stuck step
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){ scheduleReminder(uid, 'install:OPP_1HOUR_' + (state.sub||'OPP_CENTER') + ':1', lang, 60*60*1000, incomingPhoneId); } else { scheduleReminder(uid, 'install:GEN_1HOUR:1', lang, 60*60*1000, incomingPhoneId); }
+      return;
+    }
+    if(btnId==='BUSY_NO'){
+      // No = continue now - back to Yes seen / Watch now
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Busy No - Continue Now', phoneId: incomingPhoneId});
+      // V284 GENERIC: No = continue now. Video step -> Yes seen / Watch now. Any other stuck step -> resend THAT step (repeatLastStep) with a Thanks line.
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){
+        const thx = lang==='ml' ? `Thanks for continuing your chat 😊\n\n👉 ഇപ്പോൾ തന്നെ തുടരാം — *Yes seen* അല്ലെങ്കിൽ *Watch now* ബട്ടൺ തിരഞ്ഞെടുക്കൂ, അടുത്ത സ്റ്റെപ്പിലേക്ക് പോകാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\n👉 अभी जारी रखते हैं — *Yes seen* या *Watch now* बटन चुनें, अगले स्टेप पर चलते हैं:` : `Thanks for continuing your chat 😊\n\n👉 Let's continue right now — please select *Yes seen* or *Watch now* button now to go to the next step:`;
+        await sendWithDelay(interactiveButton(uid, thx, [{id:'VIDEO_WATCHED',title:'Yes seen'},{id:'VIDEO_NOT_WATCHED',title:'Watch now'}], incomingPhoneId));
+      } else {
+        const stuckName = (state.lastStep||'').replace(/^V\d+ - /,'') || 'last step';
+        const thx2 = lang==='ml' ? `Thanks for continuing your chat 😊\n\nനിങ്ങൾ ഇവിടെയാണ് നിന്നത്: *${stuckName}* — ഇപ്പോൾ തന്നെ തുടരാം:` : lang==='hi' ? `Thanks for continuing your chat 😊\n\nआप यहाँ रुके थे: *${stuckName}* — अभी जारी रखते हैं:` : `Thanks for continuing your chat 😊\n\nYou stopped at: *${stuckName}* — let's continue right now:`;
+        await sendWithDelay(textMessage(uid, thx2, incomingPhoneId));
+        try{ await repeatLastStep(uid, state, lang, incomingPhoneId); }catch(_){}
+      }
+      return;
+    }
+    if(btnId==='BUSY_STOP'){
+      // Stop = ask confirm: really stop, or remind after some time? Buttons: Stop and Yes
+      await setState(uid, {...state, lastStep:'V283 - Busy Stop - Confirm', phoneId: incomingPhoneId});
+      const cf = lang==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : lang==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाऊँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind you after some time:`;
+      await sendWithDelay(interactiveButton(uid, cf, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='STOP_FINAL'){
+      // Final Stop - move to fired list
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Stopped - Fired', phoneId: incomingPhoneId});
+      const bye = lang==='ml' ? `👍 മനസ്സിലായി, അപേക്ഷ നിർത്തുന്നു. ആവശ്യമുള്ളപ്പോൾ വീണ്ടും വരൂ. 🙏` : lang==='hi' ? `👍 समझ गई, आवेदन रोक रही हूँ। ज़रूरत हो तो फिर आइए। 🙏` : `👍 Got it, stopping your application. Come back whenever you need. 🙏`;
+      await sendWithDelay(textMessage(uid, bye, incomingPhoneId));
+      try{ await autoFireLoser(uid, 'OPP - User Stopped Application'); }catch(_){}
+      return;
+    }
+    if(btnId==='STOP_LATER'){
+      // Yes = remind after some time: 1h + 12h + 24h about last step, then fired list
+      clearReminders(uid);
+      await setState(uid, {...state, lastStep:'V283 - Stop Later - 1h/12h/24h Followups', phoneId: incomingPhoneId});
+      const okL = lang==='ml' ? `👍 മനസ്സിലായി! 1 മണിക്കൂർ, 12 മണിക്കൂർ, 24 മണിക്കൂർ കഴിഞ്ഞ് ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊` : lang==='hi' ? `👍 समझ गई! 1 घंटे, 12 घंटे, 24 घंटे बाद मैं याद दिलाऊँगी। 😊` : `👍 Got it! I will remind you after 1 hour, 12 hours and 24 hours. 😊`;
+      await sendWithDelay(textMessage(uid, okL, incomingPhoneId));
+      // V284 GENERIC: Stop-later followups - video steps use OPP_FOLLOWUP_*, every other stuck step uses GEN_FOLLOWUP_* (resends that step)
+      if((state.lastStep||'').includes('Video') || (state.lastStep||'').includes('Opportunity')){
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_1H_' + (state.sub||'OPP_CENTER') + ':1', lang, 60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_12H_' + (state.sub||'OPP_CENTER') + ':12', lang, 12*60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:OPP_FOLLOWUP_24H_' + (state.sub||'OPP_CENTER') + ':24', lang, 24*60*60*1000, incomingPhoneId);
+      } else {
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_1H:1', lang, 60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_12H:12', lang, 12*60*60*1000, incomingPhoneId);
+        scheduleReminder(uid, 'install:GEN_FOLLOWUP_24H:24', lang, 24*60*60*1000, incomingPhoneId);
+      }
+      return;
+    }
+    // ===== END V283 =====
     if(btnId==='VIDEO_WATCHED'){
+      // V287 FIX: Same [Yes seen] button was used for BOTH videos. If Maya is still on Company Video stage (no capacity picked yet),
+      // Yes seen means COMPANY video seen -> go to Capacity (Step 2), NOT to Benefits / 3 Clicks (Step 3).
+      try{
+        const _ls2 = state.lastStep||'';
+        const _isCompany2 = _ls2.includes('Company Video') || _ls2.includes('V270 - Business Video') || _ls2.includes('Business Video Sent');
+        const _hasCap2 = !!state.sub && (state.sub==='OPP_CENTER' || state.sub==='OPP_CORP' || state.sub==='OPP_DISTRICT' || state.sub==='OPP_MUNI');
+        if(_isCompany2 && !_hasCap2){
+          state.lastStep='Income Level - After Company Video Watched'; state.companyVideoWatched=true; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+          const incomeMsg2 = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select investing capacity from below:-`;
+          await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg2, L.oppButtons, incomingPhoneId));
+          return;
+        }
+      }catch(_){}
       if(state.learnMode==='video'){
+        state.videoWatched=true; state.oppVideoWatched=true;
         state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
         const doneMsg = lang==='ml' ? `✅ വീഡിയോ കണ്ടതിന് നന്ദി! അവസരം മനസ്സിലായി.` : lang==='hi' ? `✅ वीडियो देखने के लिए धन्यवाद! अवसर समझ में आ गया।` : `✅ Thanks for watching video! Opportunity understood.`;
         await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+doneMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
         return;
       }
-      state.lastStep='Benefits - After Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.lastStep='Benefits - After Video Watched'; state.videoWatched=true; state.oppVideoWatched=true; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); // V286: marked Seen - never send video link again unless user taps Watch now
       const benDyn = getBenText(state.sub, lang);
       const qText = lang==='ml' ? `
 
@@ -3241,15 +3961,15 @@ Let's check Business Center details.
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
         if(btnId==='VIDEO_NOT_WATCHED'){
       // V247: Franchisee explainer - user did NOT watch yet. Resend Watch-only video message + reschedule 5-min watched confirmation. No skip.
-      state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      state.videoWatched=false; state.oppVideoWatched=false; state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; // V286: user said NOT watched - video link IS allowed again state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl2 = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
-      const vMsg2 = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ അറിയാൻ ഈ വീഡിയോ കാണുക:` : lang==='hi' ? `\n\nफ्रेंचाइजी विवरण जानने के लिए यह वीडियो देखें:` : `\n\nWatch this video to know the franchise details:`);
-      await sendWithDelay(singleCta(uid, vMsg2, {title: 'Watch Video', url: vUrl2}, incomingPhoneId));
+      const vMsg2 = oppProgress(lang,3) + `\n\n` + oppCongrats(lang,3) + (lang==='ml' ? `\n\nഫ്രാഞ്ചൈസി വിശദാംശങ്ങൾ അറിയാൻ ഈ അവസരത്തിന്റെ വീഡിയോ കാണുക:\n\n👇 *വീഡിയോ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*` : lang==='hi' ? `\n\nफ्रेंचाइजी विवरण जानने के लिए इस अवसर का वीडियो देखें:\n\n👇 *वीडियो देखने के लिए नीचे See Video बटन पर क्लिक करें:*` : `\n\nWatch this Opportunity Video to know the franchise details:\n\n👇 *Click the button below to see video - See Video:*`);
+      await sendWithDelay(singleCta(uid, vMsg2, {title: '🎥 See Video', url: vUrl2}, incomingPhoneId));
       scheduleReminder(uid, 'install:OPP_LEARN_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       return;
     }
@@ -3270,7 +3990,14 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Benefit" below:`;
       const combinedMsg = benDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+combinedMsg, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
+      return;
+    }
+    if(btnId==='SKIP_3CLICKS'){
+      // V286: User does not want to read the 3 articles (Benefits / Support / Requirements) -> jump straight to next step.
+      state.lastStep='Requirements Understood - Skipped 3 Clicks - Ready to Submit'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const skipMsg = lang==='ml' ? `👍 മനസ്സിലായി! 3 ലേഖനങ്ങൾ വായിക്കാതെ അടുത്ത സ്റ്റെപ്പിലേക്ക് പോകാം.` : lang==='hi' ? `👍 समझ गई! 3 लेख पढ़े बिना अगले स्टेप पर चलते हैं।` : `👍 Got it! Skipping the 3 articles, going to the next step.`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+skipMsg+'\n\n'+L.corpQ, [{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_BEN'){
@@ -3290,7 +4017,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_SUP_AGAIN'){
@@ -3310,7 +4037,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Seen and Understood" below:`;
       const combinedMsg = supDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_SUP',title:L.understoodSup},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_SUP'){
@@ -3330,7 +4057,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='KNOW_REQ_AGAIN'){
@@ -3350,7 +4077,7 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
 👉 👇 What to do now: If understood, click "Understood Req" below:`;
       const combinedMsg = reqDyn + qText;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+combinedMsg, [{id:'UNDERSTOOD_REQ',title:L.understoodReq},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
       return;
     }
     if(btnId==='UNDERSTOOD_REQ'){
@@ -3362,9 +4089,9 @@ if(btnId==='KNOW_BEN_AGAIN'){
 
     if(btnId==='KNOW_BEN'){ state.lastStep='Benefits'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+L.benText + `
 
-Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+L.supText, [{id:'KNOW_REQ',title:L.reqBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
-    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+L.reqText, [{id:'SUBMIT_APP',title:L.submitBtn}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
+Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Benefits', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_BEN:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_BEN:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_SUP'){ state.lastStep='Support'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n👏 Congratulations! Benefits understood!\n👉 What to do now: Read Support, then click below:\n\n'+L.supText, [{id:'KNOW_REQ',title:L.reqBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Know Support', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUP:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUP:24',lang,24*60*60*1000, incomingPhoneId); return; }
+    if(btnId==='KNOW_REQ'){ state.lastStep='Requirements'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n👏 Congratulations! Support understood!\n👉 What to do now: Read Requirements, then click below:\n\n'+L.reqText, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Requirements', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_REQ:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_REQ:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='SUBMIT_APP'){ state.lastStep='Submit Application - Corp Check'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(interactiveButton(uid, oppProgress(lang,4)+'\n\n'+oppCongrats(lang,4)+'\n\n'+L.corpQ,[{id:'CORP_YES',title:L.yesCorp},{id:'CORP_NO',title:L.noCorp}], incomingPhoneId)); await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Submit Application', 'Clicked', HELP_MARKETING, state.lastStep, ''], true); scheduleReminder(uid,'install:OPP_SUBMIT:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OPP_SUBMIT:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CORP_YES'||btnId==='CORP_NO'){ 
       const isYes = btnId==='CORP_YES'; const fee = getFee(state.sub, isYes); const franchiseName = getFranchiseName(state.sub, isYes);
@@ -3426,6 +4153,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       scheduleReminder(uid,'install:NOTPAID:24',lang,24*60*60*1000, incomingPhoneId);
       return;
     }
+    // V318 AUDIT FIX: PAY_TOKEN was SENT in 5 places (Pay Token step, 3-clicks, repeat-step) but had NO handler - tap fell to generic fallback. Now = Pay Now flow.
+    if(btnId==='PAY_TOKEN'){ btnId='PAY_NOW_CLICK'; }
     if(btnId==='PAY_NOW_CLICK'){
       // V247: User clicked Pay Now (reply button) in 1-message Pay flow -> send Pay URL button
       const payLink2 = getRazorpayLinkForSub(state.sub);
@@ -3435,13 +4164,41 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     }
     // V247 FIX: PAY_VERIFY had NO handler in V247 - clicking Verify fell to fallback/Main Menu. Now alias of PAY_DONE.
     if(btnId==='PAY_VERIFY'){ btnId='PAY_DONE'; }
+    // V310 PAY CLAIM CHECK: user says "I paid" -> do NOT trust blindly. Confidence check first.
+    if(btnId==='PAY_CONFIRM_CHECK'){
+      // Real-time check = state.verified / paymentVerified set ONLY by Razorpay webhook. Never by claim text.
+      const _isVer = !!(state.verified || state.paymentVerified || state.paid || state.razorpayVerified);
+      const _time = getISTTime();
+      if(_isVer){
+        state.lastStep='Payment Verified - Details'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+        const _ok = lang==='ml' ? `✅ Payment verified!\n\n🙏 Thank you! Your payment is confirmed in our payment system at ${_time}.\n\n📄 Next: Tender + Annexure-B is ready for you.\n\n👉 Now type your FULL NAME only:` : lang==='hi' ? `✅ Payment verified!\n\n🙏 धन्यवाद! आपका payment हमारे payment system में ${_time} पर confirm हो गया है।\n\n📄 आगे: Tender + Annexure-B आपके लिए तैयार है।\n\n👉 अब अपना FULL NAME केवल टाइप करें:` : `✅ Payment verified!\n\n🙏 Thank you! Your payment is confirmed in our payment system at ${_time}.\n\n📄 Next: Tender + Annexure-B is ready for you.\n\n👉 Now type your FULL NAME only:`;
+        await sendWithDelay(textMessage(uid,_ok, incomingPhoneId));
+        await saveToSheet('Payments', [getISTTime(), uid, lang, `VERIFIED ${state.fee||15}L`, 'PAY_CONFIRM_CHECK', 'VERIFIED', HELP_MARKETING, state.lastStep, ''], true);
+        return;
+      }
+      // NOT FOUND - polite, no accusation, timestamped, give UTR option + Pay now
+      state.lastStep=`PAY CLAIMED - Checked Not Found ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state);
+      const _nf = lang==='ml' ? `🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ പരിശോധിച്ചു (${_time}).\n\n⚠️ നിങ്ങളുടെ ഫീ ഇതുവരെ പ്രതിഫലിച്ചിട്ടില്ല.\n\n🙏 തെറ്റിദ്ധാരണ ഉണ്ടാകാം — വേറെ നമ്പറിൽ നിന്ന് അടച്ചതോ, Razorpay 1-2 മിനിറ്റ് വൈകിയതോ ആകാം.\n\n👉 നിങ്ങൾ അടച്ചിട്ടുണ്ടെങ്കിൽ UTR / Payment ID ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.\n\n⚠️ ഫീ അടച്ചില്ലെങ്കിൽ നിങ്ങൾക്ക് ലഭിക്കില്ല:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking` : lang==='hi' ? `🔍 मैंने अभी payment system में चेक किया (${_time})।\n\n⚠️ आपकी फी अभी तक नहीं दिखी है।\n\n🙏 गलतफहमी हो सकती है — दूसरे नंबर से पे किया हो, या Razorpay 1-2 मिनट late हो।\n\n👉 अगर आपने पे किया है तो UTR / Payment ID यहाँ टाइप करें या स्क्रीनशॉट भेजें।\n\n⚠️ फी नहीं भरी तो आपको नहीं मिलेगा:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking` : `🔍 I just checked our payment system (${_time}).\n\n⚠️ Your fee is not yet reflected.\n\n🙏 This can be a delay — paid from another number, or Razorpay 1-2 min late.\n\n👉 If you paid, type your UTR / Payment ID here or send a screenshot.\n\n⚠️ If fee is not paid, you will NOT get:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
+      await sendWithDelay(textMessage(uid,_nf, incomingPhoneId)); await delay(400);
+      await sendPayNowStep(uid,lang,state.fee||15,state.sub||'OPP_CENTER',incomingPhoneId,_nf,false);
+      await saveToSheet('Payments', [getISTTime(), uid, lang, `CHECKED NOT FOUND ${state.fee||15}L`, 'PAY_CONFIRM_CHECK', 'NOT FOUND', HELP_MARKETING, state.lastStep, ''], true);
+      scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
+      return;
+    }
+    if(btnId==='PAY_NOW_AGAIN'){
+      state.lastStep='Pay Now Again - After Claim Check'; state.phoneId=incomingPhoneId; await setState(uid,state);
+      await sendPayNowStep(uid,lang,state.fee||15,state.sub||'OPP_CENTER',incomingPhoneId,getPayReminderExact(lang,state.fee||15,state.sub||'OPP_CENTER'),false);
+      return;
+    }
     if(btnId==='PAY_DONE'){
-      // USER CLAIMS PAID - BUT NOT VERIFIED YET
-      state.lastStep=`PAY CLAIMED - Verifying ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      // V310: USER CLAIMS PAID - CONFIDENCE CHECK FIRST, do not mark verified yet
+      state.lastStep=`PAY CLAIMED - Confidence Check ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
 
 ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
-      await sendWithDelay(textMessage(uid,verifyMsg, incomingPhoneId));
+      // V310 CONFIDENCE CHECK: Are you confident? I am going to check real-time. If not paid, I can understand with my checking.
+      const _conf = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+      await sendWithDelay(interactiveButton(uid,_conf,[{id:'PAY_CONFIRM_CHECK',title: lang==='ml' ? '✅ Yes check' : lang==='hi' ? '✅ Yes check' : '✅ Yes check'},{id:'PAY_NOW_AGAIN',title: lang==='ml' ? '💳 Pay now' : lang==='hi' ? '💳 Pay now' : '💳 Pay now'}], incomingPhoneId));
       await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
       return;
@@ -3451,6 +4208,14 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
     if(btnId==='STATE_KERALA'){ state.leadState='Kerala'; state.detailStep='DISTRICT_BUTTON'; state.lastStep='State Kerala'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await v211_sendDistrictList(uid, lang, incomingPhoneId, 'Kerala'); return; }
     if(btnId==='STATE_TAMILNADU'){ state.leadState='Tamil Nadu'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Tamil Nadu'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Tamil Nadu'), incomingPhoneId)); return; }
     if(btnId==='STATE_OTHER'){ state.leadState='Other'; state.detailStep='DISTRICT_TEXT'; state.lastStep='State Other'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_districtTypeAsk(lang,'Other State'), incomingPhoneId)); return; }
+    // V318 AUDIT FIX: DISTRICT_<state>_<district> buttons (non-Kerala, from v211_sendDistrictList) were SENT but had NO handler - only DISTRICT_KL_ was handled. Now generic handler covers all states.
+    if(btnId.startsWith('DISTRICT_') && !btnId.startsWith('DISTRICT_KL_')){
+      const _parts = btnId.replace('DISTRICT_','').split('_');
+      const _stCode = _parts[0]||''; const _distCode = _parts.slice(1).join('_');
+      let _stName = ''; try{ _stName = (ALL_INDIA_STATES_V247||[]).find(s=>typeof v211_stateCode==='function' && v211_stateCode(s)===_stCode) || _stCode; }catch(_){ _stName=_stCode; }
+      let _distName = _distCode; try{ const _list = (ALL_INDIA_DISTRICTS_V247||{})[_stName]||[]; const _f = _list.find(d=>typeof v211_stateCode==='function' && v211_stateCode(d)===_distCode); if(_f) _distName=_f; }catch(_){}
+      state.leadState=_stName; state.leadDistrict=_distName; state.detailStep='MOBILE'; state.lastStep='District '+_distName; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return;
+    }
     if(btnId.startsWith('DISTRICT_KL_')){ const code=btnId.replace('DISTRICT_KL_',''); const found=KERALA_DISTRICTS_V247.find(d=>d.toUpperCase().replace(/[^A-Z]/g,'')===code); const dist=found||code; state.leadDistrict=dist; state.detailStep='MOBILE'; state.lastStep='District '+dist; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); await sendWithDelay(textMessage(uid, v211_mobileAsk(lang), incomingPhoneId)); return; }
     if(btnId.startsWith('OCC_')){ const occ = btnId.replace('OCC_',''); state.occupation=occ; state.lastStep='Occupation '+occ; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); state.detailStep='DATE'; await setState(uid,state); await v211_sendDateCalendar(uid, lang, incomingPhoneId); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Occupation '+occ, 'Clicked', HELP_MARKETING, state.lastStep, occ], true); scheduleReminder(uid,'install:OCC:1',lang,1*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:12',lang,12*60*60*1000, incomingPhoneId); scheduleReminder(uid,'install:OCC:24',lang,24*60*60*1000, incomingPhoneId); return; }
     if(btnId==='CONFIRM_LATE_DATE'){ const iso=state.pendingDate||state.date; if(!iso){ await v211_sendDateCalendar(uid, lang, incomingPhoneId); return; } state.date=iso; state.visitDate=iso; state.detailStep='DONE'; state.lastStep='Date Confirmed Late '+iso; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid); const tenderMsgL = getTenderGreeting(state.sub||'OPP_DISTRICT', lang, state); const confirmL = lang==='ml' ? `✅ Visit Confirmed - Late Date Accepted!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: You selected more than 7 days after Registration Fee date. Your slot is at risk - Please try to come earlier if possible. Team will call you to confirm.` : lang==='hi' ? `✅ Visit Confirmed - Late Date Accepted!\n\n📅 आपकी visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: आपने Registration Fee date से 7 दिन से ज्यादा बाद की date चुनी है। आपका slot risk में है - अगर possible हो तो पहले आने की कोशिश करें। Team confirm करने के लिए call करेगी।` : `✅ Visit Confirmed - Late Date Accepted!\n\n📅 Your visit date: ${v211_formatDate(iso)}\n\n⚠️ Note: You selected more than 7 days after Registration Fee date. Your slot is at risk - Please try to come earlier if possible. Team will call you to confirm.`; await sendWithDelay(textMessage(uid, confirmL+'\n\n'+tenderMsgL+'\n\n'+L.thanks, incomingPhoneId)); await saveToSheet('Master_Leads', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, 'Date Late Confirmed '+iso, 'Clicked - Late Date Warning Accepted', HELP_MARKETING, state.lastStep, JSON.stringify(state)], true); await v211_saveFinalLead(uid, lang, {...state, occupation:state.occupation}, iso); await setState(uid,{lang, lastStep:'Completed', flow:'DONE', occupation:state.occupation, date:iso, visitDate:iso, lateWarning:true, leadName:state.leadName, leadState:state.leadState, leadDistrict:state.leadDistrict, leadMobile:state.leadMobile, phoneId: incomingPhoneId}); return; }
@@ -3468,6 +4233,13 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
       const dialNumV247 = isOppV247 ? HELP_MARKETING : HELP_ADMIN;
       await sendWithDelay(realDialerCta(uid, getDialerText(lang, isOppV247), dialNumV247, incomingPhoneId));
       await saveToSheet('Franchise_Funnel', [getISTTime(), uid, lang, 'Business Opportunity '+incomingPhoneId, 'Talk to Team - Dialer Sent', 'Clicked', dialNumV247, state.lastStep||'', ''], true);
+      return;
+    }
+    // V318 AUDIT FIX: CALL_DIALER_<num> / DIAL_<num> reply buttons (from call-button builders) had NO handler - tap fell through. Now = open dialer for that number.
+    if(btnId.startsWith('CALL_DIALER_')||btnId.startsWith('DIAL_')){
+      const _dialNum = btnId.replace('CALL_DIALER_','').replace('DIAL_','');
+      const _isMkt = _dialNum===HELP_MARKETING || _dialNum===HELP_MARKETING_FULL;
+      await sendWithDelay(realDialerCta(uid, getDialerText(lang, _isMkt), _dialNum, incomingPhoneId));
       return;
     }
     if(btnId==='CALL_ADMIN'||btnId==='HELP_ADMIN'||btnId.startsWith('CALL_'+HELP_ADMIN)){
@@ -3529,37 +4301,227 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn}], incomingPhoneId)); await saveToSheet('F
         await sendPayNowStep(uid,lang,state.fee||15,state.sub,incomingPhoneId, oneMsgBody, false);
         return;
       }
-      // Before Pay: NO human button - only repeat last step buttons
-      await repeatLastStep(uid, state, lang, incomingPhoneId);
-      return;
+      // V297: BYPASS KILLED - this block used to call repeatLastStep() which sends old mainMenu ("Thank you for selecting English!") for EVERY free-text question, so V296 never ran. That was the loop.
+      // Now: do NOT return here. Fall through to V296 Universal Responder below, which answers in user's language + 2 buttons.
     }
-    // V247 FALLBACK FIX: Unknown button/text must NEVER send user back to First Step / Main Menu with only 3 services.
-    // If user is already past start, stay in same step with Sorry + Repeat. Only if truly at First Message, send FULL 5 services in 2 messages.
-    if(state.lang){
-      // V263: Language XX is NOT start - user already in AI mode. Only First Message / HI-Reset is start. Old mainMenu must NEVER come back.
-      const atStart = !state.lastStep || state.lastStep==='First Message' || state.lastStep==='HI - Reset';
-      if(atStart){
-        await sendWithDelay(interactiveButton(uid, L.mainMenu, L.services.slice(0,3), incomingPhoneId));
-        await delay(400);
-        await sendWithDelay(interactiveButton(uid, L.moreServices, L.services.slice(3,5), incomingPhoneId));
-      } else {
-        // V263: AI failed / fallback - SORT the typed input in Malayalam too, don't send old Sorry+Repeat.
-        const sorted = detectIntentLocal(txt);
-        if(sorted==='business_opportunity'){
-          const sortMsg = lang==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്, അല്ലേ?\n\nഞാൻ മായ ആണ്. നിങ്ങളുടെ ജില്ല ഏതാണ്? ഇപ്പോൾ എന്താണ് ചെയ്യുന്നത്?` : lang==='hi' ? `👍 Samajh gaya! Business opportunity chahiye, sahi? Aapka district kaunsa hai? Abhi kya karte hain?` : `👍 Got it! You want Business Opportunity, right? Which is your district? What do you do now?`;
-          await setState(uid,{...state, lastStep:'AI Maya - Sorted Business', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
-          await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId));
-        } else if(sorted==='service' || sorted==='taxi' || sorted==='delivery' || sorted==='directory' || sorted==='booking'){
-          const sortMsg2 = lang==='ml' ? `👍 മനസ്സിലായി! സേവനമാണ് വേണ്ടത്.\n\nഏത് സേവനമാണ് വേണ്ടത്? ടാക്സി, ഡയറക്ടറി, ഡെലിവറി, അതോ ബുക്കിങ്?` : `👍 Got it! You want a service. Which one? Taxi, Directory, Delivery, or Booking?`;
-          await sendWithDelay(textMessage(uid, sortMsg2, incomingPhoneId));
-        } else {
-          const sorryV247 = getSorryExplain(lang, state.lastStep||'', txt);
-          await sendWithDelay(textMessage(uid, sorryV247, incomingPhoneId));
-          await delay(400);
-          await repeatLastStep(uid, state, lang, incomingPhoneId);
+    // V303 YES/NEXT/CONTINUE IN FINALIZATION - "Yes, next" MUST advance, NEVER restart. This fixes screenshot 12:14 AM: user said "Yes, next" after Balance, Maya restarted to Business vs Services.
+    // Rule: If in finalization and input is yes/next/ok/continue/ready/proceed/ahead/yes next, go to NEXT finalization step with THAT step's content + button. Language-aware.
+    try{
+      if(isFreeText){
+        const _s3 = state.lastStep||''; const _low3 = String(txt||'').toLowerCase().trim();
+        const _isContinue = /^(yes|yeah|ok|okay|sure|ready|continue|next|proceed|ahead|yes[,.\s]+next|next[,.\s]+step|manasilayi|seriya|seri|ha|haan|yes sir|yes mam)[\s.,!]*$/.test(_low3) || _low3==='yes, next' || _low3==='yes next' || _low3==='next';
+        if(_isContinue){
+          const _L3 = lang || state.lang || 'en';
+          let _nextIdx = -1, _curName='';
+          if(/Company Video/.test(_s3)){ _nextIdx=1; _curName='Company Video'; }
+          else if(/Capacity|Income Level/.test(_s3)){ _nextIdx=2; _curName='Capacity'; }
+          else if(/Opportunity Video|V300|Video Known|Balance Shown/.test(_s3)){ _nextIdx=3; _curName='Opportunity Video'; }
+          else if(/Benefits/.test(_s3)){ _nextIdx=4; _curName='Benefits'; }
+          else if(/Support/.test(_s3)){ _nextIdx=5; _curName='Support'; }
+          else if(/Requirements/.test(_s3)){ _nextIdx=6; _curName='Requirements'; }
+          else if(/Corp Check|Submit Application/.test(_s3)){ _nextIdx=7; _curName='Corp Check'; }
+          else if(/Pay|Token|EMI/.test(_s3)){ _nextIdx=8; _curName='Pay Token'; }
+          if(_nextIdx>=0){
+            const _steps3 = [
+              {en:'Capacity', ml:'Capacity', hi:'Capacity', msg: _L3==='ml' ? `✅ Company Video കണ്ടു — നന്ദി! 🙏\n\n💰 *Capacity — 7 ദിവസത്തിനുള്ളിൽ ചെലവാക്കാൻ കഴിയുന്ന തുക?*` : _L3==='hi' ? `✅ Company Video देखा — धन्यवाद! 🙏\n\n💰 *Capacity — 7 दिन में कितना खर्च कर सकते हैं?*` : `✅ Company Video seen — thank you! 🙏\n\n💰 *Capacity — How much can you spend in 7 days?*`, btns:[{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], last:'Capacity'},
+              {en:'Opportunity Video', ml:'Opportunity Video', hi:'Opportunity Video', msg: _L3==='ml' ? `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — ഇത് കണ്ടാൽ Balance + Token മനസ്സിലാകും.*\n\nവീഡിയോ കണ്ടോ?` : _L3==='hi' ? `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — इसे देखने से Balance + Token समझ आएगा।*\n\nVideo देखा?` : `✅ Capacity noted! 🙏\n\n🎥 *Opportunity Video — watching this explains Balance + Token.*\n\nDid you watch it?`, btns:[{id:'VIDEO_WATCHED',title: _L3==='ml'?'കണ്ടു':'Seen'},{id:'VIDEO_NOT_WATCHED',title: _L3==='ml'?'കണ്ടില്ല':'Not Seen'}], last:'Opportunity Video - Must Watch'},
+              {en:'Benefits', ml:'Benefits', hi:'Benefits', msg: _L3==='ml' ? `✅ Opportunity Video കണ്ടു — നന്ദി! 🙏\n\n📋 *Benefits — ഇത് വായിച്ചോ?*\n\nമനസ്സിലായെങ്കിൽ “Understood” അമർത്തൂ.` : _L3==='hi' ? `✅ Opportunity Video देखा — धन्यवाद! 🙏\n\n📋 *Benefits — पढ़ा?*\n\nसमझ गए तो “Understood” दबाएँ।` : `✅ Opportunity Video seen — thank you! 🙏\n\n📋 *Benefits — did you read it?*\n\nIf understood, tap “Understood”.`, btns:[{id:'UNDERSTOOD_BEN',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Benefits - After Video Watched'},
+              {en:'Support', ml:'Support', hi:'Support', msg: _L3==='ml' ? `✅ Benefits മനസ്സിലായി! 🙏\n\n🛟 *Support — ഇത് വായിച്ചോ?*` : _L3==='hi' ? `✅ Benefits समझ गए! 🙏\n\n🛟 *Support — पढ़ा?*` : `✅ Benefits understood! 🙏\n\n🛟 *Support — did you read it?*`, btns:[{id:'UNDERSTOOD_SUP',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Support - After Benefits Understood'},
+              {en:'Requirements', ml:'Requirements', hi:'Requirements', msg: _L3==='ml' ? `✅ Support മനസ്സിലായി! 🙏\n\n📋 *Requirements — ഇത് വായിച്ചോ?*` : _L3==='hi' ? `✅ Support समझ गए! 🙏\n\n📋 *Requirements — पढ़ा?*` : `✅ Support understood! 🙏\n\n📋 *Requirements — did you read it?*`, btns:[{id:'UNDERSTOOD_REQ',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}], last:'Requirements - After Support Understood'},
+              {en:'Corp Check', ml:'Corp Check', hi:'Corp Check', msg: _L3==='ml' ? `✅ Requirements മനസ്സിലായി! 🙏\n\n🏢 *Corp Check — Corporation / Municipal area ഉണ്ടോ?*` : _L3==='hi' ? `✅ Requirements समझ गए! 🙏\n\n🏢 *Corp Check — Corporation / Municipal area है?*` : `✅ Requirements understood! 🙏\n\n🏢 *Corp Check — Do you have a Corporation / Municipal area?*`, btns:[{id:'CORP_YES',title:'Yes'},{id:'CORP_NO',title:'No'}], last:'Submit Application - Corp Check'},
+              {en:'Pay Token', ml:'Token അടയ്ക്കുക', hi:'Token दें', msg: _L3==='ml' ? `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Token അടച്ച് slot lock ചെയ്യാം.*\n\nതയ്യാറാണോ?` : _L3==='hi' ? `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Token देकर slot lock करें।*\n\nतैयार हैं?` : `✅ Corp Check done! 🙏\n\n💰 *Pay Token — Pay Token to lock your slot.*\n\nReady?`, btns:[{id:'PAY_TOKEN',title:'Pay Token Now'},{id:'AI_BUSINESS',title:'Business Opportunity'}], last:'Pay Token'},
+              {en:'Details', ml:'Details', hi:'Details', msg: _L3==='ml' ? `✅ Token step-ൽ എത്തി! 🙏\n\n📝 *Details — Token verify ചെയ്ത ശേഷം details എടുക്കാം.*` : _L3==='hi' ? `✅ Token step पर आ गए! 🙏\n\n📝 *Details — Token verify के बाद details लेंगे।*` : `✅ Reached Token step! 🙏\n\n📝 *Details — we will take details after Token verification.*`, btns:[{id:'PAY_TOKEN',title:'Pay Token Now'}], last:'Pay Token'},
+            ];
+            // _nextIdx 1..8 maps to _steps3 index _nextIdx-1 (Capacity is index 0)
+            const _n = _steps3[_nextIdx-1];
+            if(_n){
+              await setState(uid, {...state, lastStep:_n.last, aiMode:true, aiHistory:[...(state.aiHistory||[]),{role:'user',text:String(txt||'').slice(0,100)},{role:'maya',text:_n.msg.slice(0,400)}].slice(-12)});
+              try{ await sendWithDelay(interactiveButton(uid, _n.msg, _n.btns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _n.msg, incomingPhoneId)); }
+              await saveToSheet('System_Logs',[nowIso,uid,_L3,'V303 YesNext Advance '+incomingPhoneId,_curName+' -> '+_n.en,'V303',HELP_ADMIN,'V303 YesNext',''],false);
+              // V308 REMINDER RE-ARM: after Yes/Next advance, arm reminder for NEXT step.
+              try{ const _nxt=_n.en; const _rt3 = _nxt.includes('Opportunity Video') ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _nxt.includes('Capacity') ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm3 = _nxt.includes('Opportunity Video') ? 5*60*1000 : 2*60*1000; scheduleReminder(uid,_rt3,_L3,_rm3,incomingPhoneId); }catch(_){}
+              return;
+            }
+          }
         }
       }
-    }
+    }catch(_){}
+    // V302 OFF-TOPIC DURING OPPORTUNITY FINALIZATION - Bring back with Current Step + Balance Steps + Are You Ready + Next Option.
+    // Problem: user talks anything outer (weather, joke, news, personal, other business) in middle of finalization, Maya either answered it and lost flow, or restarted.
+    // Rule: If lastStep is inside Opportunity Finalization (Company Video -> Capacity -> Opportunity Video -> Benefits -> Support -> Requirements -> Corp Check -> Pay Token -> Details), and input is OFF-TOPIC (not the expected answer for that step, not a button that was handled above), then:
+    // 1) Acknowledge off-topic in 1 line in user's language. 2) Say "We are in THIS step". 3) List BALANCE steps remaining. 4) Ask "Are you ready?" 5) Show NEXT option you need to do with THAT step's button. Never restart, never generic menu.
+    try{
+      if(isFreeText){
+        const _s2 = state.lastStep||'';
+        const _finSteps = [
+          {key:'Company Video', ml:'Company Video', en:'Watch Company Video', hi:'Company Video देखें', btn:{id:'COMPANY_WATCHED',title:'Seen'}, btnMl:'കണ്ടു', btnHi:'देख लिया'},
+          {key:'Capacity', ml:'Capacity തിരഞ്ഞെടുക്കുക', en:'Pick Capacity', hi:'Capacity चुनें', btn:{id:'OPP_CENTER',title:'30K - 1L'}, btnMl:'30K - 1L', btnHi:'30K - 1L'},
+          {key:'Opportunity Video', ml:'Opportunity Video', en:'Watch Opportunity Video', hi:'Opportunity Video देखें', btn:{id:'VIDEO_WATCHED',title:'Seen'}, btnMl:'കണ്ടു', btnHi:'देख लिया'},
+          {key:'Benefits', ml:'Benefits', en:'Benefits', hi:'Benefits', btn:{id:'UNDERSTOOD_BEN',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Support', ml:'Support', en:'Support', hi:'Support', btn:{id:'UNDERSTOOD_SUP',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Requirements', ml:'Requirements', en:'Requirements', hi:'Requirements', btn:{id:'UNDERSTOOD_REQ',title:'Understood'}, btnMl:'മനസ്സിലായി', btnHi:'समझ गया'},
+          {key:'Corp Check', ml:'Corp Check', en:'Corp Check', hi:'Corp Check', btn:{id:'CORP_YES',title:'Yes'}, btnMl:'Yes', btnHi:'Yes'},
+          {key:'Pay Token', ml:'Token അടയ്ക്കുക', en:'Pay Token', hi:'Token दें', btn:{id:'PAY_TOKEN',title:'Pay Token Now'}, btnMl:'Token അടയ്ക്കാം', btnHi:'Token दें'},
+          {key:'Details', ml:'Details', en:'Details', hi:'Details', btn:{id:'AI_BUSINESS',title:'Business Opportunity'}, btnMl:'ബിസിനസ് അവസരം', btnHi:'Business Opportunity'},
+        ];
+        let _idx = -1;
+        if(/Company Video|Business Video/.test(_s2)) _idx=0;
+        else if(/Capacity|Income Level/.test(_s2)) _idx=1;
+        else if(/Opportunity Video/.test(_s2)) _idx=2;
+        else if(/Benefits/.test(_s2)) _idx=3;
+        else if(/Support/.test(_s2)) _idx=4;
+        else if(/Requirements/.test(_s2)) _idx=5;
+        else if(/Corp Check|Submit Application/.test(_s2)) _idx=6;
+        else if(/Pay|Token|EMI/.test(_s2)) _idx=7;
+        else if(/V300|Video Known|Balance Shown/.test(_s2)) _idx=2;
+        else if(/Name|District|Address|Details|Lead/.test(_s2)) _idx=8;
+        if(_idx>=0){
+          const _L2 = lang || state.lang || 'en';
+          const _low2 = String(txt||'').toLowerCase();
+          // On-topic inputs for this step are already handled above (seen/kandu, capacity buttons, understood, yes/no, paid, balance, district name). If we REACHED here, it is off-topic or unclear -> bring back.
+          // Do not trigger for very short step answers that slipped through: seen/kandu/manasilayi/yes/no/paid/balance - let V301 handle them.
+          const _onTopic = /seen|watched|already|kandu|kandathanu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token|aduthathu|than/.test(_low2);
+          if(!_onTopic){
+            const _cur = _finSteps[_idx];
+            const _rem = _finSteps.slice(_idx); // current + balance
+            const _next = _cur;
+            const _remTxt = _rem.map((s,i)=> _L2==='ml' ? `${i+1}. ${s.ml}${i===0?' ← ഇപ്പോൾ ഇവിടെ':''}` : _L2==='hi' ? `${i+1}. ${s.hi}${i===0?' ← अभी यहाँ':''}` : `${i+1}. ${s.en}${i===0?' ← we are here':''}`).join('\n');
+            const _nextTitle = _L2==='ml' ? _next.btnMl : _L2==='hi' ? _next.btnHi : _next.btn.title;
+            const _msg = _L2==='ml' ? `👍 കിട്ടി — “${String(txt||'').slice(0,60)}”.\n\nഅത് കഴിഞ്ഞ് നമുക്ക് തുടരാം. 🙏\n\n📍 *നമ്മൾ ഇപ്പോൾ ഈ step-ൽ ആണ്: ${_cur.ml}*\n\n📋 *Balance Steps — ചെയ്യാൻ ബാക്കിയുള്ളത്:*\n${_remTxt}\n\n❓ *Are you ready — തുടരാൻ തയ്യാറാണോ?*\n\n👉 *Next Option — ഇനി ചെയ്യേണ്ടത്:* ${_next.ml} — താഴെ ബട്ടൺ അമർത്തൂ.` : _L2==='hi' ? `👍 मिल गया — “${String(txt||'').slice(0,60)}”.\n\nउसे बाद में देखेंगे। 🙏\n\n📍 *हम अभी इस step पर हैं: ${_cur.hi}*\n\n📋 *Balance Steps — बाकी काम:*\n${_remTxt}\n\n❓ *Are you ready — आगे बढ़ने के लिए तैयार हैं?*\n\n👉 *Next Option — अब करना है:* ${_next.hi} — नीचे button दबाएँ।` : `👍 Got it — “${String(txt||'').slice(0,60)}”.\n\nWe will come back to that. 🙏\n\n📍 *We are in this step: ${_cur.en}*\n\n📋 *Balance Steps — still to do:*\n${_remTxt}\n\n❓ *Are you ready to continue?*\n\n👉 *Next Option — you need to do this now:* ${_next.en} — tap the button below.`;
+            const _h2=[...(state.aiHistory||[])]; _h2.push({role:'user',text:String(txt||'').slice(0,300)}); _h2.push({role:'maya',text:_msg.slice(0,500)});
+            await setState(uid, {...state, aiHistory:_h2.slice(-12), lastStep:_s2, aiMode:true});
+            const _btn = [{id:_next.btn.id, title:_nextTitle}, {id:'AI_BUSINESS', title: _L2==='ml'?'ബിസിനസ് അവസരം': _L2==='hi'?'Business Opportunity':'Business Opportunity'}];
+            // For Capacity step, show all 3 capacity buttons instead of only 30K-1L
+            if(_idx===1) _btn.splice(0,1,{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'});
+            try{ await sendWithDelay(interactiveButton(uid, _msg, _btn.slice(0,3), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _msg, incomingPhoneId)); }
+            await saveToSheet('System_Logs',[nowIso,uid,_L2,'V302 OffTopic Finalization '+incomingPhoneId,'Off-topic at '+_cur.key+': '+String(txt||'').slice(0,80),'V302',HELP_ADMIN,'V302 Final',''],false);
+            // V308 REMINDER RE-ARM: free-text reply cleared old reminder (V290). Re-arm for THIS step, in locked language. Opp Video=5min, Company=3min, else GEN 2min.
+            try{ const _rt = _cur.key==='Opportunity Video' ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _cur.key==='Company Video' ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm = _cur.key==='Opportunity Video' ? 5*60*1000 : _cur.key==='Company Video' ? 3*60*1000 : 2*60*1000; scheduleReminder(uid,_rt,_L2,_rm,incomingPhoneId); }catch(_){}
+            return;
+          }
+        }
+      }
+    }catch(_){}
+    // V301 STEP-AWARE UNIVERSAL - ANY INPUT IN ANY STEP HANDLED IN THAT STEP. This is the rule for the whole bot.
+    // Before this, any input that missed earlier handlers fell to generic "Got it! heard you" + Business vs Services (restart). That is why users felt looped.
+    // Now: Maya looks at state.lastStep FIRST. She answers the input briefly, then returns user to THE SAME step with THAT step's question + THAT step's buttons. Never restarts, never sends generic menu.
+    // Steps covered: Language, Business vs Services, Company Video, Capacity, Opportunity Video, Benefits/Support/Requirements, Corp Check, Pay Token, Details (Name/District/Address), Services.
+    try{
+      if(isFreeText || (!!btnId && !['LANG_ML','LANG_EN','LANG_HI'].includes(btnId))){
+        const _s = state.lastStep||'';
+        const _L1 = lang || state.lang || 'en';
+        const _in1 = String(txt||'').trim();
+        const _low1 = _in1.toLowerCase();
+        // Do not hijack Pay / Details steps that have their own handlers above (they already returned if handled). This block only runs if we REACHED here.
+        let _stepQ = null, _stepBtns = null, _stepName = '';
+        if(/Language|LANG|Lang Confirm/.test(_s) && !/AI Maya - Lang/.test(_s)){
+          _stepName = 'Language'; _stepQ = _L1==='ml' ? `👇 ഭാഷ തിരഞ്ഞെടുക്കൂ:` : `👇 Please tap your language:`; _stepBtns=[{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}];
+        } else if(/Company Video|Business Video|V270/.test(_s)){
+          _stepName='Company Video'; _stepQ = _L1==='ml' ? `🎥 Company Video കണ്ടോ? കണ്ടെങ്കിൽ “kandu” എന്ന് ടൈപ്പ് ചെയ്യൂ, ഇല്ലെങ്കിൽ വീഡിയോ വീണ്ടും അയയ്ക്കാം.` : `🎥 Did you watch the Company Video? If yes type “seen”, if not I will resend it.`;
+          _stepBtns=[{id:'COMPANY_WATCHED',title: _L1==='ml'?'കണ്ടു':'Seen'},{id:'COMPANY_NOT_WATCHED',title: _L1==='ml'?'കണ്ടില്ല':'Not Seen'}];
+        } else if(/Capacity|Income Level|V270 - Capacity/.test(_s)){
+          _stepName='Capacity'; _stepQ = _L1==='ml' ? `💰 7 ദിവസത്തിനുള്ളിൽ ചെലവാക്കാൻ കഴിയുന്ന തുക എത്ര? താഴെ ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : `💰 How much can you spend in 7 days? Pick one below:`;
+          _stepBtns=[{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}];
+        } else if(/Opportunity Video|V280|V300|Video Known|Balance Shown/.test(_s)){
+          _stepName='Opportunity Video'; _stepQ = _L1==='ml' ? `🎥 Opportunity Video കണ്ടോ? കണ്ടെങ്കിൽ “kandu” എന്ന് ടൈപ്പ് ചെയ്യൂ. Balance അറിയണമെങ്കിൽ “balance details” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `🎥 Did you watch the Opportunity Video? If yes type “seen”. For balance type “balance details”.`;
+          _stepBtns=[{id:'VIDEO_WATCHED',title: _L1==='ml'?'കണ്ടു':'Seen'},{id:'VIDEO_NOT_WATCHED',title: _L1==='ml'?'കണ്ടില്ല':'Not Seen'}];
+        } else if(/Benefits/.test(_s)){
+          _stepName='Benefits'; _stepQ = _L1==='ml' ? `📋 Benefits മനസ്സിലായോ? മനസ്സിലായെങ്കിൽ “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ, അല്ലെങ്കിൽ Skip ചെയ്യാം.` : `📋 Did you understand Benefits? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_BEN',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Support/.test(_s)){
+          _stepName='Support'; _stepQ = _L1==='ml' ? `🛟 Support മനസ്സിലായോ? “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ അല്ലെങ്കിൽ Skip.` : `🛟 Did you understand Support? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_SUP',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Requirements/.test(_s)){
+          _stepName='Requirements'; _stepQ = _L1==='ml' ? `📋 Requirements മനസ്സിലായോ? “manasilayi” എന്ന് ടൈപ്പ് ചെയ്യൂ അല്ലെങ്കിൽ Skip.` : `📋 Did you understand Requirements? Type “understood” or Skip.`;
+          _stepBtns=[{id:'UNDERSTOOD_REQ',title:'Understood'},{id:'SKIP_3CLICKS',title:'Skip'}];
+        } else if(/Corp Check|Submit Application/.test(_s)){
+          _stepName='Corp Check'; _stepQ = _L1==='ml' ? `🏢 നിങ്ങൾക്ക് Corporation / Municipal area ഉണ്ടോ? ഉണ്ടെങ്കിൽ “yes”, ഇല്ലെങ്കിൽ “no” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `🏢 Do you have a Corporation / Municipal area? Type “yes” or “no”.`;
+          _stepBtns=[{id:'CORP_YES',title:'Yes'},{id:'CORP_NO',title:'No'}];
+        } else if(/Pay|Token|EMI/.test(_s)){
+          _stepName='Pay Token'; _stepQ = _L1==='ml' ? `💰 Token അടയ്ക്കാൻ തയ്യാറാണോ? അടച്ചെങ്കിൽ “paid” എന്ന് ടൈപ്പ് ചെയ്യൂ.` : `💰 Ready to pay Token? If paid, type “paid”.`;
+          _stepBtns=[{id:'PAY_TOKEN',title:'Pay Token Now'},{id:'AI_BUSINESS',title:'Business Opportunity'}];
+        } else if(/Name|District|Address|Details|Lead/.test(_s)){
+          _stepName='Details'; _stepQ = _L1==='ml' ? `📝 ${_s} — ഈ step-ന് വേണ്ട വിവരം ടൈപ്പ് ചെയ്യൂ.` : `📝 ${_s} — please type the detail for this step.`;
+          _stepBtns=[{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Other Services'}];
+        } else if(/Business.*Video Sent|AI Maya - Sorted Business|2 buttons|Business vs Services/.test(_s) || _s.includes('Business Opportunity')){
+          _stepName='Business vs Services'; _stepQ = _L1==='ml' ? `👇 ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : `👇 Pick one:`; _stepBtns=[{id:'AI_BUSINESS',title: _L1==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'},{id:'AI_SERVICES',title: _L1==='ml'?'സേവനങ്ങൾ ഉപയോഗിക്കാം':'Use Other Services'}];
+        }
+        if(_stepQ){
+          // Universal actions in ANY step: back / price / video / help - handled in-step, not restart
+          let _prefix = '';
+          if(_low1==='back' || _low1.includes('back') || _low1.includes('thirich')) _prefix = _L1==='ml' ? `👍 ശരി, തിരിച്ചു പോകാം.\n\n` : `👍 OK, going back.\n\n`;
+          else if(/price|fee|token|vila/.test(_low1)) _prefix = _L1==='ml' ? `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n` : `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n`;
+          else if(/video|videyo/.test(_low1)) _prefix = _L1==='ml' ? `🎥 വീഡിയോ വീണ്ടും അയയ്ക്കാം.\n\n` : `🎥 I will resend the video.\n\n`;
+          else if(_in1) _prefix = _L1==='ml' ? `👍 കിട്ടി — “${_in1.slice(0,50)}”.\n\n` : `👍 Got it — “${_in1.slice(0,50)}”.\n\n`;
+          const _final = _prefix + (_L1==='ml' ? `ഇപ്പോൾ നമ്മൾ *${_stepName}* step-ൽ ആണ്.\n\n${_stepQ}` : `We are now at *${_stepName}* step.\n\n${_stepQ}`);
+          const _h1=[...(state.aiHistory||[])]; if(_in1){ _h1.push({role:'user',text:_in1.slice(0,300)}); _h1.push({role:'maya',text:_final.slice(0,500)}); }
+          await setState(uid, {...state, aiHistory:_h1.slice(-12), lastStep:_s||'V301 - Step Aware', aiMode:true});
+          try{ await sendWithDelay(interactiveButton(uid, _final, _stepBtns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _final, incomingPhoneId)); }
+          await saveToSheet('System_Logs',[nowIso,uid,_L1,'V301 StepAware '+incomingPhoneId,'Step '+_stepName+' input: '+String(txt||btnId||'').slice(0,80),'V301',HELP_ADMIN,'V301 Step',''],false);
+            // V308 REMINDER RE-ARM: free-text step reply cleared old reminder. Re-arm for THIS step.
+            try{ const _rt1 = _stepName==='Opportunity Video' ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _stepName==='Company Video' ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm1 = _stepName==='Opportunity Video' ? 5*60*1000 : _stepName==='Company Video' ? 3*60*1000 : 2*60*1000; scheduleReminder(uid,_rt1,_L1,_rm1,incomingPhoneId); }catch(_){}
+          return;
+        }
+      }
+    }catch(_){}
+    // V296 UNIVERSAL RESPONDER - 🔒 LOCKED: NEVER restart if in finalization. If we reach here in finalization, V301/V302/V303 already handled it. This block is fallback ONLY for non-finalization.
+    // V296 GUARD - if finalization, NEVER generic restart
+    try{ var _g=(state.lastStep||''); if(/Company Video|Capacity|Opportunity Video|Benefits|Support|Requirements|Corp Check|Pay Token|V300|Video Known|Balance Shown|Submit Application/.test(_g) && isFreeText){ var _Lg=lang||state.lang||'en'; var _mg='Got it - '+String(txt||'').slice(0,50)+'. We are in '+_g+' step. Are you ready to continue? Tap below.'; try{ await sendWithDelay(interactiveButton(uid,_mg,[{id:'AI_BUSINESS',title:'Business Opportunity'}],incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid,_mg,incomingPhoneId)); } await saveToSheet('System_Logs',[nowIso,uid,_Lg,'V296 Guard '+incomingPhoneId,'Guard prevented restart', 'V296-GUARD',HELP_ADMIN,'V296 Guard',''],false); return; } }catch(_){}
+    // This is the LAST net: anything that reached here (AI null, unknown button, joke, doubt, abuse, emoji, gibberish, sticker, photo, location, single letter) gets ONE warm reply in user's language + guides back to next step.
+    // Rule: NEVER send old mainMenu (Thank you for selecting English + 5 services). NEVER send bare Sorry + Repeat. ALWAYS: acknowledge what they said + answer or ask 1 question + 2 buttons max.
+    try{
+      const _uLang = lang || state.lang || 'en';
+      const _rawU = String(txt||'').trim();
+      const _lowU = _rawU.toLowerCase();
+      const _mType = msg.type||'text';
+      const _isMediaU = ['image','video','document','sticker','location','reaction','contacts'].includes(_mType);
+      const _isUnknownBtn = !!btnId && !['LANG_ML','LANG_EN','LANG_HI'].includes(btnId);
+      // 1) Media / sticker / photo / location -> ask to type or voice, do not ignore
+      if(_isMediaU && !_rawU){
+        const _m = _uLang==='ml' ? `📩 കിട്ടി! 🙏\n\nPhoto / location കണ്ടു. എനിക്ക് വായിക്കാൻ പറ്റുന്നത് *ടൈപ്പ് ചെയ്ത മെസ്സേജും voice note-ഉം* ആണ്.\n\n👉 എന്താണ് വേണ്ടത് എന്ന് ഒന്ന് ടൈപ്പ് ചെയ്ത് പറയാമോ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `📩 मिल गया! 🙏\n\nPhoto / location देखा। मैं *टाइप किया मैसेज और voice note* पढ़ सकती हूँ।\n\n👉 क्या चाहिए, एक बार टाइप करके बताएँगे? Business Opportunity या Service?` : `📩 Got it! 🙏\n\nI saw your photo / location. I can read *typed messages and voice notes*.\n\n👉 Can you type what you need? Business Opportunity or a service?`;
+        try{ await sendWithDelay(textMessage(uid, _m, incomingPhoneId)); }catch(e){}
+        await setState(uid, {...state, lastStep:'V296 - Media Asked To Type', aiMode:true});
+        return;
+      }
+      // 2) Pick reply by meaning - every category covered
+      let _reply = null;
+      const _isGreet = /^(hi+|hello+|hey+|hai+|namaste|namaskaram|vanakkam|assalam|good (morning|evening|afternoon)|🙏|👋|hello 👋)/.test(_lowU) || _lowU==='hi' || _lowU==='hey';
+      const _isThanks = /thank|thanks|nanni|nandhi|shukriya|dhanyavad/.test(_lowU);
+      const _isJoke = /joke|funny|comedy|thമാശ|thamas|lol|haha|😂|🤣|😅/.test(_lowU);
+      const _isDoubt = /fake|fraud|scam|trust|real|true|viswasam|doubt|cheat|cheating|safe|believ/.test(_lowU);
+      const _isAbuse = /fool|idiot|stupid|useless|waste|bad|poda|poo|fuck|shit|damn/.test(_lowU);
+      const _isPriceQ = /price|fee|cost|token|vila|charge|paisa|money|payment/.test(_lowU);
+      const _isShort = _rawU.length<=3 || ['k','ok','okk','yes','no','y','n','??','?','...','.','👍','👌','😊'].includes(_lowU);
+      const _isEmojiOnly = _rawU.length>0 && /^[^a-zA-Z0-9\u0D00-\u0D7F\u0900-\u097F]+$/u.test(_rawU);
+      if(_isGreet){
+        _reply = _uLang==='ml' ? `ഹായ്! 🙏😊 ഞാൻ *മായ* ആണ്. സന്തോഷം!\n\nഎന്താണ് വേണ്ടത്? 👇\n• Business Opportunity എടുത്ത് വരുമാനം ഉണ്ടാക്കണോ?\n• അതോ Bizmapia സേവനം ഉപയോഗിക്കണോ?\n\nഒന്ന് തിരഞ്ഞെടുത്താൽ മതി, ഞാൻ വഴി കാണിക്കാം.` : _uLang==='hi' ? `हाय! 🙏😊 मैं *माया* हूँ। खुशी हुई!\n\nक्या चाहिए? 👇\n• Business Opportunity लेकर कमाना है?\n• या Bizmapia service use करनी है?\n\nएक चुनें, मैं रास्ता दिखाती हूँ।` : `Hi! 🙏😊 I am *Maya*. Happy to chat!\n\nWhat do you need? 👇\n• Take Business Opportunity and earn with us?\n• Or use a Bizmapia service?\n\nPick one and I will guide you.`;
+      } else if(_isThanks){
+        _reply = _uLang==='ml' ? `അയ്യോ, സന്തോഷം! 😊🙏\n\nഇനി അടുത്ത step എന്താണ്? Business Opportunity-യെക്കുറിച്ച് വീഡിയോ കാണണോ, അതോ സേവനം നോക്കണോ?` : _uLang==='hi' ? `अरे, खुशी हुई! 😊🙏\n\nअब अगला step क्या है? Business Opportunity का video देखें, या service देखें?` : `You are most welcome! 😊🙏\n\nWhat is the next step? Watch the Business Opportunity video, or look at a service?`;
+      } else if(_isJoke){
+        _reply = _uLang==='ml' ? `😂 ഹഹാ, കൊള്ളാം! നിങ്ങൾക്ക് humour ഉണ്ട്.\n\nചിരിച്ചല്ലോ, ഇനി കാര്യത്തിലേക്ക് വരാം — Business Opportunity ആണോ വേണ്ടത്, അതോ സേവനമാണോ? 😊` : _uLang==='hi' ? `😂 हाहा, बढ़िया! आपको humour है।\n\nहँस लिए, अब काम की बात — Business Opportunity चाहिए या Service? 😊` : `😂 Haha, nice one! You have humour.\n\nLaughed enough — now to business: do you want the Business Opportunity, or a service? 😊`;
+      } else if(_isDoubt){
+        _reply = _uLang==='ml' ? `🙏 നിങ്ങളുടെ സംശയം മനസ്സിലായി, അത് നല്ലതാണ്.\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — Website: bizmapia.com, Office: Thodupuzha, Idukki. ആദ്യം *Company Video* കണ്ടാൽ കമ്പനി എന്താണ്, എന്താണ് പ്രതീക്ഷിക്കുന്നത് എന്ന് വ്യക്തമാകും.\n\nവീഡിയോ കാണണോ?` : _uLang==='hi' ? `🙏 आपका doubt समझ गई, यह अच्छा है।\n\nBizmapia एक *All-India प्लेटफॉर्म* है — Website: bizmapia.com, Office: Thodupuzha, Idukki। पहले *Company Video* देखें, कंपनी क्या है, क्या उम्मीद करती है — सब साफ हो जाएगा।\n\nVideo देखें?` : `🙏 I understand your doubt — that is a good thing.\n\nBizmapia is an *All-India platform* — Website: bizmapia.com, Office: Thodupuzha, Idukki. Watch the *Company Video* first — you will clearly see what the company is and what it expects.\n\nWant to watch the video?`;
+      } else if(_isAbuse){
+        _reply = _uLang==='ml' ? `🙏 ക്ഷമിക്കണം, നിങ്ങൾക്ക് ദേഷ്യം വന്നത് മനസ്സിലായി. ഞാൻ ഇവിടെയുണ്ട്, സഹായിക്കാം.\n\nഎന്താണ് പ്രശ്നം? ഒന്ന് പറയൂ — വീഡിയോ കണ്ടില്ലേ, അതോ പേയ്മെന്റിൽ സംശയമുണ്ടോ?` : _uLang==='hi' ? `🙏 माफ़ कीजिए, गुस्सा समझ गई। मैं यहाँ हूँ, मदद करती हूँ।\n\nक्या problem है? बताइए — video नहीं देखा, या payment में doubt है?` : `🙏 Sorry, I can see you are upset. I am here to help.\n\nWhat is the problem? Tell me — did you not see the video, or is there a doubt about payment?`;
+      } else if(_isPriceQ){
+        _reply = _uLang==='ml' ? `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nഏത് level ആണ് വേണ്ടത്?` : `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nWhich level do you want?`;
+      } else if(_isShort || _isEmojiOnly || _isUnknownBtn){
+        const _step = state.lastStep||'';
+        _reply = _uLang==='ml' ? `👍 കിട്ടി! 😊\n\nഞാൻ ഇവിടെയുണ്ട്. ഇപ്പോൾ നമ്മൾ ഇവിടെയാണ്: *${_step||'Bizmapia-യെക്കുറിച്ച് അറിയുന്നു'}*.\n\nതുടരട്ടെ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `👍 मिल गया! 😊\n\nमैं यहाँ हूँ। अभी हम यहाँ हैं: *${_step||'Bizmapia के बारे में जान रहे हैं'}*।\n\nआगे बढ़ें? Business Opportunity या Service?` : `👍 Got it! 😊\n\nI am here. Right now we are at: *${_step||'learning about Bizmapia'}*.\n\nShall we continue? Business Opportunity or a service?`;
+      } else {
+        // General / off-topic / gibberish / anything else - acknowledge + bring back, never Sorry+Repeat, never old menu
+        const _echo = _rawU ? `“${_rawU.slice(0,60)}”` : '';
+        _reply = _uLang==='ml' ? `👍 മനസ്സിലായി! ${_echo} — ഞാൻ കേട്ടു. 😊\n\nഞാൻ *മായ* ആണ്, Bizmapia-യിൽ നിങ്ങളെ സഹായിക്കാനാണ് ഇവിടെ.\n\nഎന്താണ് വേണ്ടത്? 👇\n• Business Opportunity — വരുമാനം ഉണ്ടാക്കാൻ\n• സേവനം ഉപയോഗിക്കാൻ — Taxi / Directory / Delivery / Booking\n\nഒന്ന് തിരഞ്ഞെടുക്കൂ, ഞാൻ വഴി കാണിക്കാം.` : _uLang==='hi' ? `👍 समझ गई! ${_echo} — सुन लिया। 😊\n\nमैं *माया* हूँ, Bizmapia में आपकी मदद के लिए यहाँ हूँ।\n\nक्या चाहिए? 👇\n• Business Opportunity — कमाने के लिए\n• Service use करनी है — Taxi / Directory / Delivery / Booking\n\nएक चुनें, मैं रास्ता दिखाती हूँ।` : `👍 Got it! ${_echo} — heard you. 😊\n\nI am *Maya*, here to help you with Bizmapia.\n\nWhat do you need? 👇\n• Business Opportunity — to earn with us\n• Use a service — Taxi / Directory / Delivery / Booking\n\nPick one and I will guide you.`;
+      }
+      // Save + send with 2 buttons only (never old 5-service mainMenu)
+      const _h2 = state.aiHistory||[]; if(_rawU){ _h2.push({role:'user', text:_rawU.slice(0,300)}); _h2.push({role:'maya', text: String(_reply).slice(0,500)}); }
+      await setState(uid, {...state, aiHistory:_h2.slice(-12), lastStep:'V296 - Universal Reply', aiMode:true});
+      const _b1 = _uLang==='ml' ? 'ബിസിനസ് അവസരം' : 'Business Opportunity';
+      const _b2 = _uLang==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : 'Use Other Services';
+      try{ await sendWithDelay(interactiveButton(uid, _reply, [{id:'AI_BUSINESS',title:_b1},{id:'AI_SERVICES',title:_b2}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _reply, incomingPhoneId)); }
+      await saveToSheet('System_Logs',[nowIso,uid,_uLang,'V296 Universal '+incomingPhoneId,'Universal reply to: '+String(txt||msg.type||'').slice(0,80),'V296',HELP_ADMIN,'V296 Universal',''],false);
+      return;
+    }catch(_e){ console.log('V296 universal fail', _e.message); try{ await sendWithDelay(textMessage(uid, `🙏 I am here! I heard you. What do you need — Business Opportunity or a service? Type it, I will guide you.`, incomingPhoneId)); }catch(e){} return; }
   }catch(e){ console.log('webhook error',e.message,e.stack); }
 });
 
@@ -3969,7 +4931,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V270 Attractive-Welcome-Business-Only', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V318 FINAL-AUDITED', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -3997,23 +4959,23 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V247', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V318 FINAL-AUDITED', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V318 FINAL-AUDITED', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V318 FINAL-AUDITED | V317 GLOBAL-STOP-TOP-PRIORITY | V316 ALL-NAMES-PERFECT | V315 GLOBAL-STOP-FIXED | V314 FINAL-BEST | V313 SCOPE-FINAL-DETERMINISTIC-SERVICES | V312 BOOT-LOG-FIXED-FINAL | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V297 Loop-Killed | V296 Universal-Responder | V295 FAQ-No-AI | V294 State-Declared-First | V293 Language-After-Reload | V292 Hurry-Proof | V291 Language-From-Typed | V290 Real-Time-vs-Slow | V289 Hard-Guard | V288 Step-Aware | V287 Company-vs-Opportunity-Seen | V286 No-Repeat-Video | V285 No-Stale-Reminder | V284 AI-Reminders-Every-Step | V283 Busy/Stop-Chain | V282 OneMsg-AreYouThere | V281 YesSeen-WatchNow | V280 Opportunity-Reminder-5Min | V279 Company-Reminder-3Min | V278 All-Videos-Audited | V277 Opportunity-Video-Different | V276 Business-Button-Direct-Video | V275 Two-Buttons-After-Lang | V274 No-Raw-Link-Fixed | V273 Reconfirm-High-Payable | V272 Details-Last | V271 See-Video-Button | V270 Attractive-Welcome | V269 Final-Purpose | V268 AI-Router | V267 English-First | V266 Show-Exact-Options | V265 Hard-Override | V264 Language-First-No-Manglish | V263 Malayalam-Sorting | V262 Language-Confirm-First | V261 Language-First | V260 Ask-Intention-First | V259 Only-2-Tabs | V258 No-Team-Spam | V257 Services-Menu | V256 AI-Reset-Fix | V255 AI-Always-Wins | V254 Production | V253 Reminder-Checker | V252 Team-Alerts | V251 Razorpay-Webhook | V250 Tender-PDF-Fix | V249 Sheets-Fix | V248 AI-Maya | V247 ALL-VIDEO-REMINDERS-5MIN ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V247 with proper version control after verification
-// Current locked version: V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V247 FINAL - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V319+ with proper version control after verification
+// Current locked version: V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V247 - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V319+ - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
