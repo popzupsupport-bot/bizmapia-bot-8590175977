@@ -440,28 +440,40 @@ HUMAN HANDOVER RULE:
 - If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
 - If user sends voice note / image / video, say "Please type it in words, I can read text best" in user's language.
 - If user sends same message 3+ times, be patient, say "I am reading, one moment".
+
+V268 FINAL ROUTER - HOW YOU WORK (NEVER BREAK):
+- You are NOT a button bot. You are Maya, a human-like AI over the V247 steps.
+- V247 steps/order are already correct and fixed. Your job is ONLY to ROUTE: read user's message -> decide which V247 step he belongs to -> take him there in THIS reply.
+- 1 message = 1 correct next step. If user says "Business opportunity venam" -> show 3 business levels NOW. If "Taxi venam" -> show Taxi flow NOW. If "just checking" -> entertain + ask what caught his eye, do NOT push token.
+- MEMORY: You remember everything in this chat. Never ask what user already told you. Never ask district/job before options. District only AFTER level picked.
+- ENTERTAIN + GUIDE: If user jokes, doubts, asks off-topic, talks about life/money/fear, reply like a warm human first (1-2 lines), then gently bring him back: "By the way, for you, which one fits - Center or District?" Never lecture, never say "tap button", never send old menu.
+- VOICE: Voice transcript is same as typed text. Reply to the MEANING, not "I heard voice".
+- If user is confused, simplify, do NOT add more questions. Give exact options, let him pick.
+
 LANGUAGE RULE - MOST IMPORTANT (V261 - NO MANGLISH, CONFIRM FIRST):
 - NEVER use Manglish (Malayalam in English letters like 'Enikku venam', 'Ningal evideya'). NEVER.
-- If language = Malayalam -> reply ONLY in Malayalam script (മലയാളം). No Roman letters except brand names Bizmapia, App, Razorpay.
+- If language = Malayalam -> reply ONLY in Malayalam script (മലയാളം). NEVER write 'Njan Maya aanu', 'Enikku venam', 'Bizmapia business opportunity-ye kurichu parayam' - those are MANGLISH and FORBIDDEN. If you are unsure, use pure Malayalam: 'ഞാൻ മായ ആണ്', 'ബിസിനസ് അവസരമാണ് വേണ്ടത്' (മലയാളം). No Roman letters except brand names Bizmapia, App, Razorpay.
 - If language = English -> reply ONLY in English. No Malayalam words.
 - If language = Hindi -> reply ONLY in Hindi script.
-- FIRST MESSAGE of every new chat: CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed.
-  Example first message (3 languages, so user can pick):
-  "Namaskaram! 🙏 Njan Maya aanu. / Hello! I am Maya. / नमस्कार! मैं Maya हूँ।\n\nWhich language shall we speak in? / Ethu bhashayil samsarikkatte? / Kis bhasha mein baat karein?"
+- FIRST MESSAGE of every new chat: WELCOME IN ENGLISH ONLY + CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed. Do NOT use Malayalam/Hindi in first message.
+  FIRST WELCOME MESSAGE - ENGLISH ONLY (V267 RULE, NEVER BREAK):
+  "Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?"
   Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
-- If user already typed in Malayalam script -> still confirm once: "Malayalam-il samsarikkatte?" and wait for yes.
-- If user already typed in English -> still confirm once: "Shall we continue in English?" and wait for yes.
+  Do NOT write the welcome in Malayalam / Hindi / mixed languages. English only until user picks a language.
+  AFTER language is confirmed, reply ONLY in that confirmed language, pure script. No mixing.
+- If user already typed in Malayalam script -> still confirm once in ENGLISH: "Hello! I am Maya from Bizmapia. Which language shall we speak in?" and wait for tap. Do NOT reply in Malayalam before they tap.
+- If user already typed in English -> still confirm once in ENGLISH: "Shall we continue in English?" and wait for yes.
 - ONLY AFTER language confirmed, then ask intention (V260 rule). Intention question must be in the CONFIRMED language only, pure script.
 - If user switches language mid-chat ("English-il parayu"), switch fully to that language immediately, no mixing.
 
 FIRST CHAT RULE - MOST IMPORTANT (V260 - AI MAYA, NOT BUTTON BOT):
 - When chat starts / after 1988 / after language select, DO NOT give Business / Services buttons immediately.
 - First, ASK their real intention in 1 simple question, like a human:
-  ML: "Namaskaram! Njan Maya aanu. Ningal Bizmapia-il enthaanu thedunnathu? Business opportunity aano, service use cheyyan aano, allenkil vere enthelum aano?"
+  ML: "നമസ്കാരം! ഞാൻ മായ ആണ്. ബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?"
   EN: "Hello! I am Maya. What are you actually looking for in Bizmapia? Business opportunity, or to use a service, or something else?"
 - Then ASK taste / situation in 2nd question: "Evideya? Ippo entha cheyyunnathu? Monthly ethra varumaanam aagraham?"
 - Ask ONE question at a time. Do NOT list 4 services, do NOT list levels, do NOT push token on first message.
-- ONLY AFTER user tells intention + taste, THEN give options:
+- ONLY AFTER user tells intention, SHOW EXACT OPTIONS IMMEDIATELY. Do NOT ask district / job / what do you do before showing options. District comes AFTER they pick a level. Example: User says Business Opportunity -> immediately show 3 levels (Center 1L/100, Corp 4L/150, District 10L/250). User says Service -> immediately show 4 services. Asking district/job first is FORBIDDEN.
   If intention = business -> give Business options + ask district + level.
   If intention = service -> give 4 services options.
   If intention = just enquiry -> explain simply, then ask if they want business or service.
@@ -2654,12 +2666,92 @@ app.post('/webhook', async(req,res)=>{
       const prevLang = state.lang || 'ml';
       await setState(uid,{lang: prevLang, lastStep:'AI Maya - Fresh Reset', phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}, firedGate:null, stopConfirmPending:false});
       const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. FIRST confirm my language - ask which language: Malayalam / English / Hindi. Do NOT ask intention yet. Do NOT use Manglish.', []) : null;
-      const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ Maya ആണ്. Bizmapia business opportunity-യെ കുറിച്ച് അറിയണോ?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
-      const langConfirmText = `Namaskaram! 🙏 Njan Maya aanu.\nHello! I am Maya.\n\nEthu bhashayil samsarikkatte? / Which language shall we speak in?\n\n👉 Thazhe language thiranjedukku:`;
+      const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ മായ ആണ്. ബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
+      const langConfirmText = `Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?`;
       try{ await sendWithDelay(interactiveButton(uid, langConfirmText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, langConfirmText, incomingPhoneId)); } // V261: First = LANGUAGE CONFIRM, 3 buttons - exception to 2-tab rule
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       return;
     }
+    // ===== V268 FINAL - AI ROUTER OVER V247 ORDER - DO NOT REORDER, DO NOT RESTART =====
+    // RULE LOCKED BY OWNER:
+    // 1. V247 old steps/order are CORRECT. Never change them, never ask again what they are.
+    // 2. AI does NOT replace V247. AI is a ROUTER: read free text / voice -> understand need -> JUMP user DIRECTLY to the correct V247 step in the very next message.
+    // 3. Simplify: 1 user message = 1 correct next step. No interrogation, no district/job before options, no menu loop.
+    // 4. AI MEMORY: aiHistory is NEVER cleared mid-chat (except 1988). AI remembers what user already said, so it never asks same question twice.
+    // 5. VOICE: voice note -> transcribe -> same AI router -> same V247 step. Voice is treated exactly like typed text.
+    // 6. ENTERTAIN + GUIDE: If user chats off-topic / jokes / doubts, AI replies like a human, entertains briefly, then gently brings him back to his need from our services. Never says "tap button", never sends old menu.
+
+    // Reason: AI call can fail, then old fallback sends mainMenu. These overrides use NO AI call, pure text, so they NEVER fail.
+    // V268 VOICE: audio/voice -> transcribe via Gemini -> treat as typed text, same router
+    if(msg.type==='audio' || msg.type==='voice'){
+      try{
+        const mediaId = msg.audio?.id || msg.voice?.id || msg.audio?.media_id;
+        let transcribed = '';
+        if(mediaId && process.env.GEMINI_API_KEY){
+          // Step 1: get media URL from WhatsApp
+          const mRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+          const mJson = await mRes.json();
+          if(mJson.url){
+            const aRes = await fetch(mJson.url, {headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+            const aBuf = Buffer.from(await aRes.arrayBuffer());
+            const b64 = aBuf.toString('base64');
+            // Step 2: Gemini transcribe + understand in one call
+            const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contents:[{parts:[{text:`Transcribe this voice note exactly, then tell what the user wants from Bizmapia (Business Opportunity / Taxi / Directory / Delivery / Booking / Just enquiry). Reply ONLY as JSON: {"transcript":"...","need":"..."}`},{inline_data:{mime_type:'audio/ogg', data:b64}}]}]})});
+            const gJson = await gRes.json();
+            const gTxt = gJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            try{ const parsed = JSON.parse(gTxt.replace(/```json|```/g,'').trim()); transcribed = parsed.transcript || ''; }catch(e){ transcribed = gTxt; }
+          }
+        }
+        if(!transcribed){
+          const vl = state.lang || 'en';
+          await sendWithDelay(textMessage(uid, vl==='ml' ? `കേട്ടു! 🙏 വോയ്സ് കുറച്ച് വ്യക്തമായില്ല. ഒന്ന് ടൈപ്പ് ചെയ്ത് പറയാമോ?` : vl==='hi' ? `Suna! 🙏 Voice thoda clear nahi hua. Ek baar type karke batayenge?` : `Heard you! 🙏 Your voice was not very clear. Can you type it once?`, incomingPhoneId));
+          return;
+        }
+        // Voice becomes text - fall through to same AI router below with transcribed text
+        txt = transcribed; msg.type = 'text';
+        await saveToSheet('System_Logs',[nowIso,uid,state.lang||'en','V268 Voice '+incomingPhoneId,'Voice transcribed: '+transcribed,'V268',HELP_ADMIN,'V268 Voice',''],false);
+      }catch(e){ console.log('V268 voice fail', e.message); }
+    }
+    if(btnId && btnId.startsWith('LANG_')){
+      const ll = btnId.replace('LANG_','').toLowerCase();
+      const clang = ll==='ml'?'ml':ll==='hi'?'hi':'en';
+      await setState(uid,{lang:clang, lastStep:'V268 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
+      clearReminders(uid);
+      const q = clang==='ml' ? `നമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : clang==='hi' ? `नमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `Hello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`;
+      await sendWithDelay(textMessage(uid, q, incomingPhoneId));
+      await saveToSheet('System_Logs',[nowIso,uid,clang,'V265 Lang Confirm '+incomingPhoneId,'LANG tap -> pure intention question, no AI call','V265',HELP_ADMIN,'V265 Lang',''],false);
+      return;
+    }
+    if(!btnId && msg.type==='text' && txt && state.lang){
+      const sortedTop = detectIntentLocal(txt);
+      if(sortedTop==='business_opportunity'){
+        const sl = state.lang;
+        // V266: User already gave requirement -> SHOW EXACT OPTIONS immediately. Do NOT ask district / job now. District comes AFTER they pick level.
+        const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! 🙏\n\nബിസിനസ് അവസരമാണ് വേണ്ടത്.\n\nBizmapia-യിൽ 3 അവസരങ്ങൾ ഉണ്ട്:\n\n1️⃣ ബിസിനസ് സെന്റർ - 1 ലക്ഷം - ടോക്കൺ Rs.100\n2️⃣ കോർപ്പറേഷൻ / മുനിസിപ്പൽ - 4 ലക്ഷം - ടോക്കൺ Rs.150\n3️⃣ ജില്ലാ ഫ്രാഞ്ചൈസി - 10 ലക്ഷം - ടോക്കൺ Rs.250\n\n👉 ഏതാണ് വേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `👍 समझ गई! 🙏\n\nबिज़नेस अवसर चाहिए।\n\nBizmapia में 3 अवसर हैं:\n\n1️⃣ बिज़नेस सेंटर - 1 लाख - टोकन Rs.100\n2️⃣ कॉर्पोरेशन / मुनिसिपल - 4 लाख - टोकन Rs.150\n3️⃣ जिला फ्रेंचाइज़ी - 10 लाख - टोकन Rs.250\n\n👉 कौन सा चाहिए? नीचे क्लिक करें:` : `👍 Got it! 🙏\n\nYou want Business Opportunity.\n\nBizmapia has 3 opportunities:\n\n1️⃣ Business Center - 1 Lakh - Token Rs.100\n2️⃣ Corporation / Municipal - 4 Lakh - Token Rs.150\n3️⃣ District Franchise - 10 Lakh - Token Rs.250\n\n👉 Which one do you want? Tap below:`;
+        await setState(uid,{...state, lastStep:'V266 - Showed Business Options', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'EXPLAINED'}});
+        const bL=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
+        try{ await sendWithDelay(interactiveButton(uid, sortMsg, [bL('OPP_CENTER','ബിസിനസ് സെന്റർ','Business Center','Business Center'), bL('OPP_CORP','കോർപ്പറേഷൻ','Corporation','Corporation'), bL('OPP_DISTRICT','ജില്ലാ ഫ്രാഞ്ചൈസി','District Franchise','District Franchise')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, sortMsg, incomingPhoneId)); }
+        try{ await logLeadPerfect(uid, state, {lastMsg: txt, summary: 'V265 sorted: business_opportunity'}); }catch(e){}
+        return;
+      }
+      if(sortedTop==='service' || sortedTop==='taxi' || sortedTop==='delivery' || sortedTop==='directory' || sortedTop==='booking'){
+        const sl2 = state.lang;
+        const svcMsg = sl2==='ml' ? `👍 മനസ്സിലായി! സേവനമാണ് വേണ്ടത്.\n\nഏത് സേവനമാണ് വേണ്ടത്? ടാക്സി, ഡയറക്ടറി, ഡെലിവറി, അതോ ബുക്കിങ്?` : sl2==='hi' ? `👍 समझ गई! सेवा चाहिए। कौन सी सेवा? टैक्सी, डायरेक्टरी, डिलिवरी, या बुकिंग?` : `👍 Got it! You want a service. Which one? Taxi, Directory, Delivery, or Booking?`;
+        await sendWithDelay(textMessage(uid, svcMsg, incomingPhoneId));
+        return;
+      }
+    }
+    // V266: OPP level taps -> confirm level + ask district NOW (district is relevant AFTER level pick, not before)
+    if(btnId && btnId.startsWith('OPP_')){
+      const sl3 = state.lang || 'ml';
+      const lvlMap={OPP_CENTER:'Business Center - 1 Lakh - Token Rs.100', OPP_CORP:'Corporation / Municipal - 4 Lakh - Token Rs.150', OPP_DISTRICT:'District Franchise - 10 Lakh - Token Rs.250'};
+      const lvl = lvlMap[btnId] || 'Business Opportunity';
+      await setState(uid,{...state, lastStep:'V266 - Level Picked '+btnId, aiMode:true, lead:{...(state.lead||{}), level:btnId, intent:'business_opportunity'}});
+      const lvlMsg = sl3==='ml' ? `👍 നല്ല തിരഞ്ഞെടുപ്പ്! 🙏\n\n${lvl} തിരഞ്ഞെടുത്തു.\n\nഇനി ഒരു കാര്യം മാത്രം - നിങ്ങളുടെ ജില്ല ഏതാണ്?` : sl3==='hi' ? `👍 Accha chunav! ${lvl} chuna.\n\nAb ek baat - aapka district kaunsa hai?` : `👍 Good choice! You picked ${lvl}.\n\nNow just one thing - which is your district?`;
+      await sendWithDelay(textMessage(uid, lvlMsg, incomingPhoneId));
+      return;
+    }
+    // ===== END V265 HARD OVERRIDE =====
 // ===== V247 FIRED GATE - button replies =====
     if(btnId==='FIRED_YES'){
       await setState(uid,{...state, firedGate:'ALLOWED', lastStep:'Fired YES - Allowed Again', lang:null, phoneId: incomingPhoneId});
@@ -2755,7 +2847,7 @@ app.post('/webhook', async(req,res)=>{
     // V262 FIX: Cannot use isFreeText here - it is defined LATER. Compute inline instead.
     const isFreeTextForLangCheck = !!txt && !btnId && msg.type==='text';
     if(isFreeTextForLangCheck && !state.lang){
-      const lcText = `Namaskaram! 🙏 Njan Maya aanu.\nHello! I am Maya.\n\nEthu bhashayil samsarikkatte? / Which language shall we speak in?`;
+      const lcText = `Hello! 🙏 I am Maya from Bizmapia.\n\nWhich language shall we speak in?`;
       try{ await sendWithDelay(interactiveButton(uid, lcText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, lcText, incomingPhoneId)); }
       await setState(uid,{...state, lastStep:'V261 - Language Confirm Sent', phoneId: incomingPhoneId});
       return;
@@ -2851,7 +2943,7 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid);
       // V256: Language tap -> AI Maya greeting in that language, NOT old mainMenu/earnButtons
       const aiGreet = AI_ENABLED ? await callMayaAI(lang, 'Hi, I selected my language. Language is now CONFIRMED. Now ask me my real intention in my CONFIRMED language ONLY - pure Malayalam script if Malayalam, pure English if English. NO Manglish, NO mixing. Ask ONE question, do NOT give options yet.', []) : null;
-      const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `Namaskaram! 🙏 Njan Maya aanu. Bizmapia business opportunity-ye kurichu parayam?` : lang==='hi' ? `Namaskar! Main Maya hoon. Bizmapia business opportunity ke baare mein bataun?` : `Hello! I am Maya. Shall I tell you about Bizmapia business opportunity?`);
+      const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `നമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : lang==='hi' ? `नमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `Hello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`);
       try{ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); } // V260: First msg = TEXT ONLY, ask intention
       await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected AI '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language AI '+lang, ''], false);
       try{ scheduleIdleNudges(uid, lang, incomingPhoneId); }catch(e){}
@@ -2863,7 +2955,7 @@ app.post('/webhook', async(req,res)=>{
       const L=T.en;
       const msgType = msg.type||'text';
       const rawInput = txt || msgType;
-      await sendWithDelay(interactiveButton(uid, L.welcome + '\n\nWhere did you see Bizmapia? Bizmapia evide kande?\n\n👉 Tap your language below:', [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, L.welcome + '\n\n👉 Please tap your language below:', [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
       clearReminders(uid);
@@ -3834,7 +3926,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V263 Malayalam-Sorting-Fix', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V268 AI-Router-Final', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
