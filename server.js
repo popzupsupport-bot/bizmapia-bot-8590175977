@@ -1,4 +1,4 @@
-// V247 FINAL - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
+// V248 AI-MAYA - CORRECT - GitHub file is 03-District-ONLY[SPACE]Muni-Tender.pdf - NOT hyphen, NOT underscore - Code now uses SPACE exactly - 12 TENDERS GUARANTEED AFTER PAYMENT
 // ==================== LOCKED - FINAL VERSION - DO NOT EDIT - V247
 // V247 FINAL - ONLY CHANGE vs V247: FIX Sheet stopped at 08:59 IST - getSheets() cached client forever, token dies, writes dropped silently. Now: recreate Google client every 45 min + retry save once with fresh client + /sheet-test + /sheet-status endpoints. NO other change. NO Tamil/Kannada/Telugu.
 // V247 FINAL - ONLY CHANGE vs V247: Fired check now handles INTERNATIONAL numbers (Qatar 974, UAE 971, Saudi 966, Kuwait 965, Oman 968, Bahrain 973, Malaysia 60, etc). NO other change. NO Tamil/Kannada/Telugu.
@@ -69,6 +69,406 @@ const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 const PORT = process.env.PORT || 10000;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const AI_MODEL = process.env.AI_MODEL || 'gemini-2.0-flash';
+const AI_ENABLED = !!(GEMINI_API_KEY || OPENAI_API_KEY);
+
+// ===== V248 AI MAYA - LANGUAGE RULE (HIGHEST PRIORITY) =====
+// Manglish OR Malayalam typed -> reply Malayalam ONLY (Malayalam script)
+// English typed -> English ONLY. Any other language -> same language.
+const MANGLISH_WORDS = ['entha','enth','evide','eppo','engane','cheyyan','nokkunnu','aano','alle','alla','und','illa','sheri','pattumo','kittumo','ethra','evidunnu','enthanu','arayan','thallparyam','kooduthal','details','vannu','cheyyanam','venam','evideya','eppol','njan','ningal','ningalkk','enik','onnu','parayamo','paranju','thara','kittum','cheyyan','nokkunnath','business','franchise'];
+function detectUserLanguage(text, fallbackLang){
+  const t = String(text||'');
+  if(!t.trim()) return fallbackLang||'ml';
+  if(/[\u0D00-\u0D7F]/.test(t)) return 'ml'; // Malayalam script
+  if(/[\u0900-\u097F]/.test(t)) return 'hi'; // Devanagari
+  if(/[\u0B80-\u0BFF]/.test(t)) return 'ta';
+  if(/[\u0C00-\u0C7F]/.test(t)) return 'te';
+  if(/[\u0C80-\u0CFF]/.test(t)) return 'kn';
+  const low = t.toLowerCase();
+  const words = low.split(/[^a-z]+/).filter(Boolean);
+  const manglishHits = words.filter(w=>MANGLISH_WORDS.includes(w)).length;
+  // Malayalam words in Latin + typical Manglish pattern = Malayalam output
+  if(manglishHits>=1) return 'ml';
+  if(/\b(entha|evide|eppo|engane|cheyy|nokk|alle|alla|und|illa)\b/.test(low)) return 'ml';
+  return fallbackLang && ['ml','hi','en'].includes(fallbackLang) ? fallbackLang : 'en';
+}
+function langInstruction(lang){
+  if(lang==='ml') return 'REPLY ONLY IN MALAYALAM SCRIPT (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02). Do NOT use Manglish. Do NOT use English except brand names Bizmapia, Taxi, App, Razorpay. Use pure Malayalam.';
+  if(lang==='hi') return 'REPLY ONLY IN HINDI (Devanagari).';
+  if(lang==='ta') return 'REPLY ONLY IN TAMIL.';
+  if(lang==='te') return 'REPLY ONLY IN TELUGU.';
+  if(lang==='kn') return 'REPLY ONLY IN KANNADA.';
+  return 'REPLY ONLY IN ENGLISH.';
+}
+const MAYA_BIZMAPIA_FACTS = `
+Bizmapia = Kerala's 4-in-1 platform: Ride Hailing (Taxi), Business Directory, Delivery, Booking. India's Largest Online Platform - First 4-in-1 App.
+Business Opportunity / Franchise levels (DO NOT invent other prices):
+- Business Center: Full fee 1 Lakh, Registration/Token Rs 100, EMI available.
+- Corporation / Municipal: Full fee 4 Lakh (some flows 5L), Token Rs 150.
+- District Franchise: Full fee 10 Lakh, Token Rs 250, EMI Options 10L.
+Registration fee is NOT refundable and NOT part of full fee.
+After payment verification, user gets 12 Tender PDFs guaranteed (District / Corporation / Municipal / Business Center).
+Steps: 1) Watch Company Video, 2) Choose Investment Capacity, 3) Benefits / Requirements / Support / Income, 4) Pay Token via Razorpay, 5) Give Name + State + District + Mobile + Visit Date, 6) Team verification.
+Never promise fixed/guaranteed income. Say income depends on area, effort, bookings.
+Never ask for OTP, card PIN, UPI PIN.
+If user wants to pay, say you will send the Pay button/link for their chosen level, do not paste fake links.
+If user asks for human, say team will call.
+`;
+
+const BIZMAPIA_OFFICIAL = {
+  website:'https://bizmapia.com/', playStore:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share',
+  appStore:'https://apps.apple.com/in/app/bizmapia/id6761577245', instagram:'https://www.instagram.com/bizmapia',
+  facebook:'https://www.facebook.com/bizmapia', threads:'https://www.threads.com/@bizmapia',
+  youtubeCompany:'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', email:'customercare@bizmapia.com',
+  office:'1st Floor Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584',
+  services:'4 Services: 1) Taxi / Ride Hailing, 2) Business Directory, 3) Delivery, 4) Booking',
+  proof:'5K+ downloads on Play Store (Customer + Driver App). Live across Kerala - Thiruvananthapuram, Kollam, Pathanamthitta, Kochi, Kottayam.'
+};
+function getBizmapiaGrounding(userText){
+  const low=String(userText||'').toLowerCase();
+  if(!/what is|enthanu|enth|bizmapia|website|app|install|download|instagram|facebook|youtube|video|reel|social|play store|app store|otp/.test(low)) return '';
+  return `\nGROUNDED FACTS - USE THESE LINKS, DO NOT INVENT:\nWebsite: ${BIZMAPIA_OFFICIAL.website} | Play Store: ${BIZMAPIA_OFFICIAL.playStore} | App Store: ${BIZMAPIA_OFFICIAL.appStore}\nInstagram: ${BIZMAPIA_OFFICIAL.instagram} | Facebook: ${BIZMAPIA_OFFICIAL.facebook}\nCompany Video: ${BIZMAPIA_OFFICIAL.youtubeCompany}\nServices: ${BIZMAPIA_OFFICIAL.services}\nProof: ${BIZMAPIA_OFFICIAL.proof}\nAPP HELP: Ask Android or iPhone first. Android: Play Store > Search Bizmapia > Install > OTP login. iPhone: App Store > Search Bizmapia > Get > OTP login. OTP not coming: wait 60s, Resend, check SMS spam, try Call OTP. App not opening: update, restart, clear cache, reinstall. One step at a time.\n`;
+}
+
+
+
+
+
+// ===== V252 TEAM ALERTS + DAY-END SUMMARY + TEAM CALL RULE =====
+// RULE (MOST IMPORTANT): Team calls user ONLY AFTER registration fee.
+// Before fee, Maya must NOT promise "team will call you". She must say:
+// "Team is busy with verifications. Please call us in your free time on 85901 83646 / 85901 75977. After you lock slot with token, team will call you for verification."
+// This protects team time + company busy schedule.
+// Daily stats kept in memory, reset at midnight IST
+const dailyStats = { date: new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}), newLeads:0, talkRequests:0, contactGiven:0, tokenReady:0, payments:0, paymentTotal:0, paymentsList:[], talkList:[], idleNoReply:0, notInterested:0 };
+function resetDailyIfNeeded(){
+  const today = new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'});
+  if(dailyStats.date!==today){ dailyStats.date=today; dailyStats.newLeads=0; dailyStats.talkRequests=0; dailyStats.contactGiven=0; dailyStats.tokenReady=0; dailyStats.payments=0; dailyStats.paymentTotal=0; dailyStats.paymentsList=[]; dailyStats.talkList=[]; dailyStats.idleNoReply=0; dailyStats.notInterested=0; }
+}
+function describeNature(state){
+  const L = state.lead||{};
+  const parts=[];
+  if(L.sentiment==='likes_it') parts.push('Likes it - positive, fast reply');
+  else if(L.sentiment==='considering') parts.push('Considering - thinking, needs follow-up');
+  else if(L.sentiment==='doubt') parts.push('Doubt - needs trust / proof, solve doubt first');
+  else if(L.sentiment==='price_doubt') parts.push('Price doubt - explain token vs full fee clearly');
+  else if(L.sentiment==='confused') parts.push('Confused - explain simple, 1 question at a time');
+  else if(L.sentiment==='not_interested') parts.push('Not interested - DO NOT CALL');
+  else parts.push('Nature not yet known');
+  if((L.avoidCount||0)>=3) parts.push(`Avoids replies ${L.avoidCount}x - busy / delaying`);
+  else if((L.avoidCount||0)>=1) parts.push(`Avoided ${L.avoidCount}x - needs soft reminder`);
+  if((L.reminderCount||0)>=1) parts.push(`Reminder set ${L.reminderCount}x`);
+  if((L.idleCount||0)>=2) parts.push(`No reply ${L.idleCount}x - idle, may be busy`);
+  return parts.join(' | ');
+}
+function whatHeNeeds(state){
+  const L = state.lead||{};
+  if(L.intent==='business_opportunity'){
+    const lvl = L.level ? `Level: ${L.level} (Center 1L / Corp 4L / District 10L)` : 'Level: not yet chosen';
+    const tok = L.tokenStatus||'NOT_ASKED';
+    return `FINALIZE: Business Opportunity - ${lvl} | Token: ${tok} | District: ${L.district||'not given'} | Next: ${tok==='READY'?'Send Pay link, lock slot':tok==='LATER'?'Remind at '+ (L.reminderAt||'evening'):'Explain + ask level + ask token'}`;
+  }
+  if(L.intent==='taxi') return 'NEEDS: Taxi booking - ask pickup/drop, send app link';
+  if(L.intent==='delivery') return 'NEEDS: Delivery - ask what / where';
+  if(L.intent==='directory') return 'NEEDS: Business Directory listing - ask shop details';
+  if(L.intent==='booking') return 'NEEDS: Booking - ask what booking';
+  if(L.intent==='job') return 'NEEDS: Job / Driver - explain no job, only business opportunity / driver registration in app';
+  return 'NEEDS: Not yet clear - ask Business or Service?';
+}
+async function notifyAdminTeamRequest(uid, state, reason){
+  resetDailyIfNeeded();
+  dailyStats.talkRequests++;
+  const L = state.lead||{};
+  const name = state?.leadData?.name || state?.name || 'Name not yet given';
+  const district = L.district || state?.district || 'Not yet given';
+  const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
+  try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
+  return msg;
+}
+async function notifyAdminContactGiven(uid, state, contactNumber){
+  resetDailyIfNeeded(); dailyStats.contactGiven++;
+  const L=state.lead||{};
+  const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  return msg;
+}
+async function sendDayEndSummary(){
+  resetDailyIfNeeded();
+  // Build summary from dailyStats + memoryStore scan for today's leads
+  let newToday=0, tokenReadyToday=0;
+  try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
+  const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
+  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${dailyStats.newLeads} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal}`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
+  console.log('DAY-END SUMMARY SENT');
+  return msg;
+}
+function scheduleDayEndSummary(){
+  // Next 9 PM IST, then every 24h
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const target=new Date(now); target.setHours(21,0,0,0);
+  if(target<=now) target.setDate(target.getDate()+1);
+  const ms=target-now;
+  console.log('Day-end summary in', Math.round(ms/60000), 'min');
+  setTimeout(async()=>{ try{ await sendDayEndSummary(); }catch(e){} setInterval(async()=>{ try{ await sendDayEndSummary(); }catch(e){} }, 24*60*60*1000); }, ms);
+}
+
+// ===== V251 INSTANT PAYMENT INTIMATION TO ADMIN - SAME SECOND AS RAZORPAY =====
+// How it works: Razorpay webhook -> verify signature + amount -> user gets Verified msg -> YOU get WhatsApp alert instantly
+// Admin numbers: from your existing HELP_ADMIN (8590183646) + HELP_MARKETING (8590175977)
+// Add more in Render: ADMIN_NOTIFY_NUMBERS=919590123456,919876543210 (comma separated, with 91)
+// Optional Telegram: set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID in Render for second channel
+const ADMIN_NOTIFY_NUMBERS = (process.env.ADMIN_NOTIFY_NUMBERS || '').split(',').map(s=>s.trim()).filter(Boolean);
+const DEFAULT_ADMIN_NUMBERS = ['918590183646','918590175977']; // HELP_ADMIN + HELP_MARKETING
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+const processedPaymentIds = new Set(); // prevent duplicate intimation if Razorpay retries webhook
+function isValidTokenAmount(amount){
+  // Perfect verification: Registration Token must be EXACTLY 100 / 150 / 250
+  return [100,150,250].includes(Number(amount));
+}
+function levelFromToken(amount){
+  if(Number(amount)===100) return 'Business Center (1 Lakh)';
+  if(Number(amount)===150) return 'Corporation / Municipal (4 Lakh)';
+  if(Number(amount)===250) return 'District (10 Lakh)';
+  return 'Unknown Level - CHECK MANUALLY';
+}
+async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, fee, verified}){
+  const level = levelFromToken(amount);
+  const name = state?.leadData?.name || state?.name || state?.lead?.name || 'Name not yet given';
+  const district = state?.lead?.district || state?.leadDistrict || state?.district || 'Not yet given';
+  const source = (state?.lead && state.lead.source) || 'unknown';
+  const intent = (state?.lead && state.lead.intent) || 'business_opportunity';
+  const time = getISTTime();
+  const statusEmoji = verified ? '✅ VERIFIED' : '⚠️ NOT VERIFIED - CHECK';
+  const msg = `💰 NEW PAYMENT - ${statusEmoji}\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n🏢 Level: ${level}\n💸 Amount: Rs ${amount} (Registration Token)\n🧾 Payment ID: ${paymentId}\n🕒 Time: ${time}\n📥 Source: ${source} | Intent: ${intent}\n📌 Event: ${event}\n\n✅ Maya already sent Tender PDFs + asked for Name/District/Mobile/Date.\n👉 Reply to user if needed. Check Sheet: Payments tab.`;
+  // 1) WhatsApp to YOU (same WhatsApp API, same token - most reliable)
+  const admins = [...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let admin of admins){
+    try{
+      // Do NOT send to the payer himself as admin alert (avoid duplicate)
+      if(admin===String(uid)) continue;
+      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
+      console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
+    }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
+  }
+  // 2) Telegram (optional, if you set token)
+  if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){
+    try{
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chat_id: TELEGRAM_CHAT_ID, text: msg})});
+      console.log('ADMIN NOTIFY SENT Telegram', paymentId);
+    }catch(e){ console.log('ADMIN NOTIFY Telegram fail', e.message); }
+  }
+  // 3) Sheet - extra clear row so you can filter
+  try{ await saveToSheet('System_Logs', [time, uid, lang||'en', 'ADMIN NOTIFY '+paymentId, `Rs ${amount} ${level} ${statusEmoji} -> Admins: ${admins.join(',')}`, 'Admin Notify', HELP_ADMIN, 'Payment Intimation', ''], false); }catch(e){}
+  return msg;
+}
+
+// ===== V250 IDLE CHECK - IF USER NOT SELECTING / NOT REPLYING =====
+// Maya does NOT go silent. She checks gently, step by step.
+// 5 min: Are you there? | 30 min: Still interested? Need time? | 2h: Remind after some time? | 24h: Last soft check
+function getIdleCheckText(lang, stage){
+  if(lang==='ml'){
+    if(stage===1) return `👋 ഇവിടെ ഉണ്ടോ? 😊\n\nഞാൻ ഇവിടെയുണ്ട്. മെസ്സേജ് കണ്ടോ?\n\nതുടരട്ടെ?`;
+    if(stage===2) return `🙏 ഇപ്പോഴും താല്പര്യം ഉണ്ടോ?\n\nReply ചെയ്യാൻ സമയം വേണോ? കുഴപ്പമില്ല.\n\nഎപ്പോൾ വേണമെങ്കിലും reply ചെയ്യാം. ഇപ്പോൾ തുടരണോ, അതോ കുറച്ച് കഴിഞ്ഞ് ഓർമ്മിപ്പിക്കണോ?`;
+    if(stage===3) return `🙏 കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കട്ടെ?\n\nഇന്ന് വൈകുന്നേരമോ, നാളെയോ?\n\nനിങ്ങൾ പറയുന്ന സമയത്ത് ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊`;
+    if(stage===4) return `🙏 അവസാനമായി ഒന്ന് ചോദിക്കട്ടെ — ഇപ്പോഴും താല്പര്യം ഉണ്ടോ?\n\nഇല്ലെങ്കിൽ "വേണ്ട" എന്ന് പറഞ്ഞാൽ മതി, ഞാൻ ശല്യം ചെയ്യില്ല.\n\nഉണ്ടെങ്കിൽ "ഉണ്ട്" എന്ന് പറയൂ, ഞാൻ ഇവിടെയുണ്ട്.`;
+  }
+  if(lang==='hi'){
+    if(stage===1) return `👋 Yahan hain? 😊\n\nMain yahin hoon. Message dekha?\n\nAage badhein?`;
+    if(stage===2) return `🙏 Abhi bhi interest hai?\n\nReply karne ke liye time chahiye? Koi baat nahi.\n\nAbhi continue karein, ya thodi der baad yaad dilau?`;
+    if(stage===3) return `🙏 Thodi der baad yaad dilau?\n\nAaj shaam ya kal?\n\nAapke bataye time par yaad dila dungi. 😊`;
+    return `🙏 Aakhri baar poochun — abhi bhi interest hai?\n\nNahi hai to "Nahi" bol dijiye, disturb nahi karungi.\n\nHai to "Haan" boliye, main yahin hoon.`;
+  }
+  if(stage===1) return `👋 Are you there? 😊\n\nI am here. Did you see my message?\n\nShall we continue?`;
+  if(stage===2) return `🙏 Still interested?\n\nNeed more time to reply? No problem.\n\nYou can reply anytime. Shall we continue now, or shall I remind you after some time?`;
+  if(stage===3) return `🙏 Shall I remind you after some time?\n\nThis evening or tomorrow?\n\nI will remind you at the time you say. 😊`;
+  return `🙏 One last check — are you still interested?\n\nIf not, just say "No", I will not disturb you.\n\nIf yes, say "Yes", I am here.`;
+}
+function mayaIdleButtons(lang, stage){
+  const L=lang||'ml';
+  const b=(id,ml,en,hi)=>({id,title:(L==='ml'?ml:L==='hi'?hi:en).substring(0,20)});
+  if(stage===1) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye'), b('AI_REMIND_LATER','പിന്നീട് ഓർമ്മിപ്പിക്കൂ','Remind Later','Baad Mein Yaad')];
+  if(stage===2) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye'), b('AI_REMIND_LATER','പിന്നീട് ഓർമ്മിപ്പിക്കൂ','Remind Later','Baad Mein Yaad')];
+  if(stage===3) return [b('AI_REMIND_EVENING','വൈകുന്നേരം','This Evening','Aaj Shaam'), b('AI_REMIND_TOMORROW','നാളെ','Tomorrow','Kal'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye')];
+  return [b('AI_STILL_HERE','ഉണ്ട്','Yes','Haan'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye'), b('AI_REMIND_LATER','പിന്നീട്','Later','Baad Mein')];
+}
+function scheduleIdleNudges(uid, lang, phoneId){
+  // Clear old idle nudges first, then schedule fresh 4 stages
+  try{
+    for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } }
+  }catch(e){}
+  try{
+    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, 5*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, 30*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, 2*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, 24*60*60*1000, phoneId);
+  }catch(e){ console.log('idle schedule fail', e.message); }
+}
+function clearIdleNudges(uid){
+  try{ for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } } }catch(e){}
+}
+
+// ===== V249 HYBRID + SORTING + TOKEN PUSH + SOFT REMINDER =====
+function mayaQuickButtons(lang, intent){
+  const L=lang||'ml';
+  const b=(id,ml,en,hi)=>({id,title:(L==='ml'?ml:L==='hi'?hi:en).substring(0,20)});
+  if(intent==='finalize') return [b('AI_PAY','പേ ചെയ്യാം','Pay Now','Pay करें'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात'), b('AI_LATER','പിന്നീട്','Later','Baad Mein')];
+  if(intent==='service') return [b('AI_TAXI','ടാക്സി ബുക്ക്','Book Taxi','Taxi Book'), b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात')];
+  if(intent==='app') return [b('AI_APP_ANDROID','Android App','Android App','Android App'), b('AI_APP_IPHONE','iPhone App','iPhone App','iPhone App'), b('AI_TALK','സഹായം വേണം','Need Help','Help Chahiye')];
+  return [b('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity'), b('AI_TAXI','ടാക്സി ബുക്ക്','Book Taxi','Taxi Book'), b('AI_TALK','ടീമിനോട് സംസാരിക്കാം','Talk to Team','Team से बात')];
+}
+function detectMayaIntent(userText, aiText){
+  const s=((userText||'')+' '+(aiText||'')).toLowerCase();
+  if(/pay|payment|token|registration|final|ready/.test(s)) return 'finalize';
+  if(/taxi|cab|ride|delivery|booking|room|movie|directory|service/.test(s)) return 'service';
+  if(/app|install|download|play store|app store|otp|login/.test(s)) return 'app';
+  return 'business';
+}
+function parseMayaAIOutput(raw){
+  if(!raw) return null; const txt=String(raw).trim();
+  try{ const m=txt.match(/\{[\s\S]*\}/); if(m){ const j=JSON.parse(m[0]); if(j.reply) return {text:String(j.reply).slice(0,1000), intent:j.intent||'', source:j.source||'', sentiment:j.sentiment||'', level:j.level||'', district:j.district||'', tokenStatus:j.tokenStatus||'', reminderWanted:!!j.reminderWanted, reminderTimeText:j.reminderTimeText||''}; } }catch{}
+  return {text:txt.slice(0,1000), intent:'', source:'', sentiment:'', level:'', district:'', tokenStatus:'', reminderWanted:false, reminderTimeText:''};
+}
+function detectSourceFromFirstMsg(txt){
+  const s=String(txt||'').toLowerCase();
+  if(/hello.*more info|can i get more info/.test(s)) return 'click_to_whatsapp_ad';
+  if(/instagram|insta/.test(s)) return 'instagram';
+  if(/facebook|\bfb\b/.test(s)) return 'facebook';
+  if(/google|search/.test(s)) return 'google_search';
+  if(/youtube|video/.test(s)) return 'youtube';
+  if(/friend|suhurth|koottukaran|relative|family/.test(s)) return 'friend_referral';
+  if(/app|play store/.test(s)) return 'app_store';
+  if(/website|bizmapia\.com/.test(s)) return 'website';
+  return 'unknown_ask';
+}
+function detectIntentLocal(txt){
+  const s=String(txt||'').toLowerCase();
+  if(/business|franchise|invest|opportunity|slot|avakasam|1l|4l|5l|10l|lakh/.test(s)) return 'business_opportunity';
+  if(/taxi|cab|auto|ride|car|vandi/.test(s)) return 'taxi';
+  if(/delivery|food|parcel/.test(s)) return 'delivery';
+  if(/directory|listing|shop.*list/.test(s)) return 'directory';
+  if(/booking|room|movie|appointment/.test(s)) return 'booking';
+  if(/job|work|driver|vacancy/.test(s)) return 'job';
+  return '';
+}
+function detectSentimentLocal(txt){
+  const s=String(txt||'').toLowerCase();
+  if(/super|great|nice|ishtam|kollam|good|interesting|like|nalla|best/.test(s)) return 'likes_it';
+  if(/think|consider|alochikk|nokkunnu|maybe|try/.test(s)) return 'considering';
+  if(/doubt|fake|real|fraud|trust|viswasam|scam/.test(s)) return 'doubt';
+  if(/costly|price|expensive|high|kooduthal|money.*illa|paisa/.test(s)) return 'price_doubt';
+  if(/not interested|vend|illa|no need|stop/.test(s)) return 'not_interested';
+  if(/confus|manassil|puriy|ariyilla/.test(s)) return 'confused';
+  return '';
+}
+function getSoftReminderText(lang, kind){
+  if(lang==='ml'){
+    if(kind==='finalize') return `🙏 ഓർമ്മപ്പെടുത്തട്ടെ — നിങ്ങൾ final ചെയ്യാനായി reminder വെച്ചതാണ്.\nഇപ്പോൾ ഇതിന് പറ്റിയ സമയമാണോ? 😊\n\nഅല്ലെങ്കിൽ എപ്പോൾ ഓർമ്മിപ്പിക്കണം എന്ന് പറയൂ — വൈകുന്നേരമോ, നാളെയോ?`;
+    if(kind==='serious') return `🙏 ഒരു കാര്യം മനസ്സിലാക്കിത്തരട്ടെ — Bizmapia All India പ്ലാറ്റ്ഫോമാണ്, ദിവസവും 10,000+ പേർ അന്വേഷിക്കുന്നുണ്ട്.\nനിങ്ങളുടെ ജില്ലയിലെ slot ഒരിക്കൽ പോയാൽ വീണ്ടും കിട്ടാൻ വളരെ പ്രയാസമാണ്.\nഅതുകൊണ്ടാണ് ഞാൻ ഓർമ്മിപ്പിക്കുന്നത്. ഇന്ന് Rs 100 കൊണ്ട് slot lock ചെയ്യാമോ?`;
+    if(kind==='last') return `🙏 അവസാനമായി ഒന്ന് പറയട്ടെ — നിങ്ങൾ താല്പര്യം കാണിച്ചതുകൊണ്ടാണ് ഞാൻ വീണ്ടും വരുന്നത്.\nഇന്ന് lock ചെയ്തില്ലെങ്കിൽ വേറെ ആരെങ്കിലും എടുത്തേക്കാം.\nഇപ്പോൾ ചെയ്യണോ, അതോ ഇന്ന് വൈകുന്നേരം ഓർമ്മിപ്പിക്കണോ?`;
+    return `ശരി, കുഴപ്പമില്ല. 😊 എപ്പോൾ ഓർമ്മിപ്പിക്കണം? ഇന്ന് വൈകുന്നേരം, നാളെ രാവിലെ, അതോ നിങ്ങൾ പറയുന്ന സമയത്ത്?`;
+  }
+  if(lang==='hi'){
+    if(kind==='finalize') return `🙏 Yaad dilau — aapne finalize karne ke liye reminder lagaya tha.\nKya abhi sahi samay hai? 😊\n\nNahi to kab yaad dilau — aaj shaam ya kal subah?`;
+    if(kind==='serious') return `🙏 Ek baat samjhaiye — Bizmapia All India platform hai, roz 10,000+ log poochte hain.\nAapke district ka slot ek baar gaya to dobara milna mushkil hai.\nIsliye yaad dila rahi hoon. Aaj Rs 100 se slot lock karein?`;
+    return `🙏 Reminder — is this the right time? If not, when should I remind you again?`;
+  }
+  if(kind==='finalize') return `🙏 Just reminding you — you set a reminder to finalize.\nIs this the right time? 😊\n\nIf not, when should I remind you again — this evening or tomorrow?`;
+  if(kind==='serious') return `🙏 Let me explain one thing — Bizmapia is an All India platform, 10,000+ people enquire daily.\nOnce your district slot is gone, it is very hard to get it back.\nThat is why I am reminding you. Can we lock your slot today with Rs 100?`;
+  if(kind==='last') return `🙏 One last thing — I am coming back because you showed interest.\nIf you don't lock today, someone else may take it.\nShall we do it now, or shall I remind you this evening?`;
+  return `No problem. 😊 When should I remind you? This evening, tomorrow morning, or a time you choose?`;
+}
+function parseReminderTime(txt){
+  const s=String(txt||'').toLowerCase();
+  if(/evening|vaikunneram|shaam|saayan|6 pm/.test(s)) return {label:'evening', ms:6*60*60*1000};
+  if(/tomorrow|naale|kal|tomorrow morning|naale ravile/.test(s)) return {label:'tomorrow_morning', ms:18*60*60*1000};
+  if(/morning|ravile|subah/.test(s)) return {label:'morning', ms:10*60*60*1000};
+  if(/1 hour|1 hr|oru mani|1 mani/.test(s)) return {label:'1h', ms:60*60*1000};
+  if(/2 hour|2 mani/.test(s)) return {label:'2h', ms:2*60*60*1000};
+  if(/30 min/.test(s)) return {label:'30m', ms:30*60*1000};
+  if(/night|ratri/.test(s)) return {label:'night', ms:8*60*60*1000};
+  return null;
+}
+async function logLeadPerfect(uid, state, extra){
+  try{
+    const L=state.lead||{};
+    await saveToSheet('Master_Leads', [getISTTime(), uid, state.lang||'ml', L.source||'unknown_ask', L.sourceDetail||'', L.intent||'', L.sentiment||'', L.level||'', L.district||'', L.funnel||'NEW', L.tokenStatus||'NOT_ASKED', `Rem:${L.reminderCount||0} Avoid:${L.avoidCount||0} Last:${(extra&&extra.lastMsg||'').slice(0,120)}`, (extra&&extra.summary||L.summary||'').slice(0,250), L.reminderAt||'', state.lastStep||''], false);
+    if(L.intent==='business_opportunity'){
+      await saveToSheet('Franchise_Funnel', [getISTTime(), uid, state.lang||'ml', `Source:${L.source||''} Intent:${L.intent} Sentiment:${L.sentiment} Level:${L.level||''}`, L.tokenStatus||'', L.funnel||'', HELP_ADMIN, (extra&&extra.summary||'').slice(0,150), `Rem:${L.reminderCount||0} Avoid:${L.avoidCount||0}`], false);
+    }
+  }catch(e){ console.log('logLeadPerfect fail', e.message); }
+}
+
+function buildMayaPrompt(lang, historyText){
+  return `You are Maya, friendly AI assistant of Bizmapia from Kerala.
+${langInstruction(lang)}
+STYLE: Warm, simple, local Kerala tone. Short replies: max 3 lines + 1 question. Never send 3 long paragraphs. Ask 1 question at a time.
+GOAL: Sort + Engage + Finalize.
+FIRST JOB (first 2 messages, for EVERY new user):
+1) If source unknown, ask: "Where did you see Bizmapia? Facebook ad / Instagram / Google / YouTube / Friend / App?" in user's language.
+2) Ask WHAT they want: Business Opportunity OR Service (Taxi / Delivery / Directory / Booking)?
+3) Sense if they LIKE it / CONSIDERING / DOUBT / PRICE DOUBT. If doubt, solve doubt first, never push pay.
+ALL INDIA + SCARCITY (say naturally once when explaining opportunity, once when reminding - NOT every message):
+"Bizmapia is an All India platform - First 4-in-1 App in India. Daily 10,000+ people enquire from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
+TEAM CALL RULE - VERY IMPORTANT, NEVER BREAK:
+- Team calls user ONLY AFTER registration fee (token) is PAID.
+- Before token, NEVER say "team will call you" or "I will ask team to call".
+- Instead say (in user's language): "Team is busy with verifications now. Please call us in your free time on 85901 83646 / 85901 75977. After you lock your slot with token, team will call you for verification."
+- If user insists "call me", say same rule softly + ask to lock token first, or call team himself.
+- If user taps Talk to Team button, Maya must explain this rule + send team alert, not promise a call.
+TOKEN PUSH - IF INTENT IS BUSINESS OPPORTUNITY, MAXIMUM EFFORT (soft, never rude):
+- After explaining + answering doubt, ALWAYS ask to lock slot: "Shall we lock your slot today with small registration token? Center Rs 100 / Corp Rs 150 / District Rs 250. This token locks your slot, it is not refundable and not part of full fee."
+- If user says later / think / tomorrow: DO NOT argue. Say "No problem. Shall I set a reminder for finalizing?" Ask WHEN: evening / tomorrow morning / their time.
+- If user says yes to reminder: Confirm "Done, I will remind you at [time]. Is that okay?"
+- If user avoids 2nd time: Remind softly: "You set a reminder, is this the right time?" + ask new time.
+- If user avoids 3rd+ time: Remind seriousness softly (All India + 10,000+ leads + slot may go) + ask "Now or this evening?" Never threaten.
+- If user says NOT INTERESTED / STOP: Stop pushing, say thanks, save as NOT_INTERESTED.
+OUTPUT FORMAT: Return ONLY valid JSON: {"reply":"short reply max 3 lines + 1 question","intent":"business|service|app|finalize","source":"...","sentiment":"likes_it|considering|doubt|price_doubt|not_interested|confused","level":"center|corp|district|","district":"...","tokenStatus":"NOT_ASKED|ASKED|READY|LATER|PAID","reminderWanted":true/false,"reminderTimeText":"..."} - Leave buttons null, code adds 3 quick buttons.
+FACTS (use only these):
+${MAYA_BIZMAPIA_FACTS}
+${globalThis.__mayaGrounding||''}
+CONVERSATION RULES:
+- If user is confused / hopping services, ask: business or service? Then stick to one.
+- If user types audio/image/video mention, ask them to type it in words.
+- If user says later / stop, be polite, save, do not push.
+- If user is ready to pay / finalize, ask: Name, Place/District, confirm level (Center 1L / Corp 4L / District 10L), then say "I will send Pay link".
+- If user asks Benefits/Requirements/Support/Income/EMI, answer that ONE topic in 2-3 lines, then ask next question. Do not dump all topics.
+- Keep language rule above for EVERY reply.
+Previous conversation (for context):
+${historyText}
+Reply as Maya now in JSON.`;
+}
+async function callMayaAI(lang, userText, history){
+  const historyText = (history||[]).slice(-8).map(h=>`${h.role}: ${h.text}`).join('\n');
+  globalThis.__mayaGrounding = getBizmapiaGrounding(userText);
+  const prompt = buildMayaPrompt(lang, historyText) + `\nUser: ${userText}\nMaya:`;
+  try{
+    if(GEMINI_API_KEY){
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.6,maxOutputTokens:400}})});
+      const j = await r.json();
+      const out = j?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('')||'';
+      if(out.trim()) return parseMayaAIOutput(out);
+    }
+    if(OPENAI_API_KEY){
+      const r = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4o-mini',messages:[{role:'system',content:buildMayaPrompt(lang,historyText)},{role:'user',content:userText}],temperature:0.6,max_tokens:400})});
+      const j = await r.json();
+      const out = j?.choices?.[0]?.message?.content||'';
+      if(out.trim()) return parseMayaAIOutput(out);
+    }
+  }catch(e){ console.log('Maya AI fail', e.message); }
+  return null;
+}
+
 
 const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share';
 const APP_STORE = 'https://apps.apple.com/in/app/bizmapia/id6761577245';
@@ -1423,6 +1823,173 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
       const actualPhoneId = state.phoneId || phoneId || PHONE_NUMBER_ID;
       const level = type.endsWith(':24') || type.includes('level-24') ? 24 : (type.endsWith(':12') || type.includes('level-12') ? 12 : 1);
       console.log(`REMINDER FIRING ${type} level=${level} to ${uid} via ${actualPhoneId} last=${state?.lastStep} - escalated`);
+      
+
+// ===== V252 TEAM ALERTS + DAY-END SUMMARY + TEAM CALL RULE =====
+// RULE (MOST IMPORTANT): Team calls user ONLY AFTER registration fee.
+// Before fee, Maya must NOT promise "team will call you". She must say:
+// "Team is busy with verifications. Please call us in your free time on 85901 83646 / 85901 75977. After you lock slot with token, team will call you for verification."
+// This protects team time + company busy schedule.
+// Daily stats kept in memory, reset at midnight IST
+const dailyStats = { date: new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}), newLeads:0, talkRequests:0, contactGiven:0, tokenReady:0, payments:0, paymentTotal:0, paymentsList:[], talkList:[], idleNoReply:0, notInterested:0 };
+function resetDailyIfNeeded(){
+  const today = new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'});
+  if(dailyStats.date!==today){ dailyStats.date=today; dailyStats.newLeads=0; dailyStats.talkRequests=0; dailyStats.contactGiven=0; dailyStats.tokenReady=0; dailyStats.payments=0; dailyStats.paymentTotal=0; dailyStats.paymentsList=[]; dailyStats.talkList=[]; dailyStats.idleNoReply=0; dailyStats.notInterested=0; }
+}
+function describeNature(state){
+  const L = state.lead||{};
+  const parts=[];
+  if(L.sentiment==='likes_it') parts.push('Likes it - positive, fast reply');
+  else if(L.sentiment==='considering') parts.push('Considering - thinking, needs follow-up');
+  else if(L.sentiment==='doubt') parts.push('Doubt - needs trust / proof, solve doubt first');
+  else if(L.sentiment==='price_doubt') parts.push('Price doubt - explain token vs full fee clearly');
+  else if(L.sentiment==='confused') parts.push('Confused - explain simple, 1 question at a time');
+  else if(L.sentiment==='not_interested') parts.push('Not interested - DO NOT CALL');
+  else parts.push('Nature not yet known');
+  if((L.avoidCount||0)>=3) parts.push(`Avoids replies ${L.avoidCount}x - busy / delaying`);
+  else if((L.avoidCount||0)>=1) parts.push(`Avoided ${L.avoidCount}x - needs soft reminder`);
+  if((L.reminderCount||0)>=1) parts.push(`Reminder set ${L.reminderCount}x`);
+  if((L.idleCount||0)>=2) parts.push(`No reply ${L.idleCount}x - idle, may be busy`);
+  return parts.join(' | ');
+}
+function whatHeNeeds(state){
+  const L = state.lead||{};
+  if(L.intent==='business_opportunity'){
+    const lvl = L.level ? `Level: ${L.level} (Center 1L / Corp 4L / District 10L)` : 'Level: not yet chosen';
+    const tok = L.tokenStatus||'NOT_ASKED';
+    return `FINALIZE: Business Opportunity - ${lvl} | Token: ${tok} | District: ${L.district||'not given'} | Next: ${tok==='READY'?'Send Pay link, lock slot':tok==='LATER'?'Remind at '+ (L.reminderAt||'evening'):'Explain + ask level + ask token'}`;
+  }
+  if(L.intent==='taxi') return 'NEEDS: Taxi booking - ask pickup/drop, send app link';
+  if(L.intent==='delivery') return 'NEEDS: Delivery - ask what / where';
+  if(L.intent==='directory') return 'NEEDS: Business Directory listing - ask shop details';
+  if(L.intent==='booking') return 'NEEDS: Booking - ask what booking';
+  if(L.intent==='job') return 'NEEDS: Job / Driver - explain no job, only business opportunity / driver registration in app';
+  return 'NEEDS: Not yet clear - ask Business or Service?';
+}
+async function notifyAdminTeamRequest(uid, state, reason){
+  resetDailyIfNeeded();
+  dailyStats.talkRequests++;
+  const L = state.lead||{};
+  const name = state?.leadData?.name || state?.name || 'Name not yet given';
+  const district = L.district || state?.district || 'Not yet given';
+  const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
+  try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
+  return msg;
+}
+async function notifyAdminContactGiven(uid, state, contactNumber){
+  resetDailyIfNeeded(); dailyStats.contactGiven++;
+  const L=state.lead||{};
+  const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  return msg;
+}
+async function sendDayEndSummary(){
+  resetDailyIfNeeded();
+  // Build summary from dailyStats + memoryStore scan for today's leads
+  let newToday=0, tokenReadyToday=0;
+  try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
+  const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
+  const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
+  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${dailyStats.newLeads} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal}`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
+  console.log('DAY-END SUMMARY SENT');
+  return msg;
+}
+function scheduleDayEndSummary(){
+  // Next 9 PM IST, then every 24h
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const target=new Date(now); target.setHours(21,0,0,0);
+  if(target<=now) target.setDate(target.getDate()+1);
+  const ms=target-now;
+  console.log('Day-end summary in', Math.round(ms/60000), 'min');
+  setTimeout(async()=>{ try{ await sendDayEndSummary(); }catch(e){} setInterval(async()=>{ try{ await sendDayEndSummary(); }catch(e){} }, 24*60*60*1000); }, ms);
+}
+
+// ===== V251 INSTANT PAYMENT INTIMATION TO ADMIN - SAME SECOND AS RAZORPAY =====
+// How it works: Razorpay webhook -> verify signature + amount -> user gets Verified msg -> YOU get WhatsApp alert instantly
+// Admin numbers: from your existing HELP_ADMIN (8590183646) + HELP_MARKETING (8590175977)
+// Add more in Render: ADMIN_NOTIFY_NUMBERS=919590123456,919876543210 (comma separated, with 91)
+// Optional Telegram: set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID in Render for second channel
+const ADMIN_NOTIFY_NUMBERS = (process.env.ADMIN_NOTIFY_NUMBERS || '').split(',').map(s=>s.trim()).filter(Boolean);
+const DEFAULT_ADMIN_NUMBERS = ['918590183646','918590175977']; // HELP_ADMIN + HELP_MARKETING
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+const processedPaymentIds = new Set(); // prevent duplicate intimation if Razorpay retries webhook
+function isValidTokenAmount(amount){
+  // Perfect verification: Registration Token must be EXACTLY 100 / 150 / 250
+  return [100,150,250].includes(Number(amount));
+}
+function levelFromToken(amount){
+  if(Number(amount)===100) return 'Business Center (1 Lakh)';
+  if(Number(amount)===150) return 'Corporation / Municipal (4 Lakh)';
+  if(Number(amount)===250) return 'District (10 Lakh)';
+  return 'Unknown Level - CHECK MANUALLY';
+}
+async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, fee, verified}){
+  const level = levelFromToken(amount);
+  const name = state?.leadData?.name || state?.name || state?.lead?.name || 'Name not yet given';
+  const district = state?.lead?.district || state?.leadDistrict || state?.district || 'Not yet given';
+  const source = (state?.lead && state.lead.source) || 'unknown';
+  const intent = (state?.lead && state.lead.intent) || 'business_opportunity';
+  const time = getISTTime();
+  const statusEmoji = verified ? '✅ VERIFIED' : '⚠️ NOT VERIFIED - CHECK';
+  const msg = `💰 NEW PAYMENT - ${statusEmoji}\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n🏢 Level: ${level}\n💸 Amount: Rs ${amount} (Registration Token)\n🧾 Payment ID: ${paymentId}\n🕒 Time: ${time}\n📥 Source: ${source} | Intent: ${intent}\n📌 Event: ${event}\n\n✅ Maya already sent Tender PDFs + asked for Name/District/Mobile/Date.\n👉 Reply to user if needed. Check Sheet: Payments tab.`;
+  // 1) WhatsApp to YOU (same WhatsApp API, same token - most reliable)
+  const admins = [...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
+  for(let admin of admins){
+    try{
+      // Do NOT send to the payer himself as admin alert (avoid duplicate)
+      if(admin===String(uid)) continue;
+      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
+      console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
+    }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
+  }
+  // 2) Telegram (optional, if you set token)
+  if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){
+    try{
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chat_id: TELEGRAM_CHAT_ID, text: msg})});
+      console.log('ADMIN NOTIFY SENT Telegram', paymentId);
+    }catch(e){ console.log('ADMIN NOTIFY Telegram fail', e.message); }
+  }
+  // 3) Sheet - extra clear row so you can filter
+  try{ await saveToSheet('System_Logs', [time, uid, lang||'en', 'ADMIN NOTIFY '+paymentId, `Rs ${amount} ${level} ${statusEmoji} -> Admins: ${admins.join(',')}`, 'Admin Notify', HELP_ADMIN, 'Payment Intimation', ''], false); }catch(e){}
+  return msg;
+}
+
+// ===== V250 IDLE CHECK =====
+      if(type.includes('maya_idle')){
+        // If user already replied / paid / done / stopped -> do NOT nudge
+        if(state.flow==='DONE' || state.verified || String(state.lastStep||'').includes('VERIFIED') || state.firedGate==='STOPPED') return;
+        // If user replied very recently (lastUserAt within 2 min), skip - they are typing
+        if(state.lastUserAt && (Date.now()-state.lastUserAt) < 2*60*1000) return;
+        const stage = type.includes('maya_idle_1')?1:type.includes('maya_idle_2')?2:type.includes('maya_idle_3')?3:4;
+        state.lead = state.lead || {};
+        state.lead.idleCount = (state.lead.idleCount||0)+1;
+        state.lead.lastIdleStage = stage;
+        // If user already said NOT_INTERESTED, stop idle nudges
+        if(state.lead.sentiment==='not_interested') return;
+        await setState(uid, state);
+        try{ await sendWithDelay(interactiveButton(uid, getIdleCheckText(actualLang, stage), mayaIdleButtons(actualLang, stage), actualPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, getIdleCheckText(actualLang, stage), actualPhoneId)); }
+        await saveToSheet('System_Logs',[getISTTime(), uid, actualLang, 'Idle Check Stage '+stage+' '+actualPhoneId, `No reply - Idle Stage ${stage} - Lead:${state.lead.intent||''} Sent:${state.lead.sentiment||''}`, 'Idle Check', HELP_ADMIN, 'Idle Check', ''], false);
+        await logLeadPerfect(uid, state, {lastMsg:'[IDLE] No reply stage '+stage, summary:'Idle check sent stage '+stage});
+        return;
+      }
+      // ===== V250 MAYA REMINDER (soft finalize reminder) =====
+      if(type.includes('maya_reminder')){
+        if(state.flow==='DONE' || state.verified || state.firedGate==='STOPPED') return;
+        const avoid = (state.lead&&state.lead.avoidCount)||0;
+        let kind = 'finalize'; if(avoid>=3) kind='last'; else if(avoid>=2) kind='serious';
+        const txtR = getSoftReminderText(actualLang, kind);
+        state.lead = state.lead||{}; state.lead.reminderCount=(state.lead.reminderCount||0)+1; await setState(uid, state);
+        try{ await sendWithDelay(interactiveButton(uid, txtR, mayaQuickButtons(actualLang,'finalize'), actualPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, txtR, actualPhoneId)); }
+        await saveToSheet('System_Logs',[getISTTime(), uid, actualLang, 'Soft Reminder '+kind+' '+actualPhoneId, `Reminder - Avoid:${avoid}`, 'Reminder', HELP_ADMIN, 'Soft Reminder', ''], false);
+        return;
+      }
       // V247 PAY5MIN: if still in Pay step and NOT verified/claimed, re-send Pay-Now CTA. If already paid/verified, do nothing.
       if(type.includes('PAY5MIN')){
         const ls=String(state.lastStep||'');
@@ -1911,6 +2478,8 @@ app.post('/webhook', async(req,res)=>{
     const isHi = ['hi','hello','hey','hai'].includes(txt.toLowerCase().trim());
     const nowIso = getISTTime();
     let state = await getState(uid);
+    // V250: User replied -> they are here, clear idle nudges, mark time
+    try{ clearIdleNudges(uid); state.lastUserAt = Date.now(); }catch(e){}
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
@@ -1953,6 +2522,99 @@ app.post('/webhook', async(req,res)=>{
     }
     // ===== END V247 FIRED GATE (buttons) =====
 
+    if(btnId==='AI_NOT_INTERESTED'){
+      state.lead = state.lead||{}; state.lead.sentiment='not_interested'; state.lead.funnel='CLOSED_NOT_INTERESTED';
+      await setState(uid, state); clearIdleNudges(uid); clearReminders(uid);
+      const bye = (state.lang||'ml')==='ml' ? `ശരി, മനസ്സിലായി. 🙏\n\nശല്യം ചെയ്യില്ല. എപ്പോൾ വേണമെങ്കിലും തിരിച്ചു വരാം.\n\nBizmapia - bizmapia.com` : (state.lang==='hi' ? `Theek hai, samajh gaya. 🙏\n\nDisturb nahi karungi. Kabhi bhi wapas aa sakte hain.` : `Okay, understood. 🙏\n\nI will not disturb you. You can come back anytime.\n\nBizmapia - bizmapia.com`);
+      await sendWithDelay(textMessage(uid, bye, incomingPhoneId));
+      await logLeadPerfect(uid, state, {lastMsg:'[BUTTON] Not Interested', summary:'User said not interested via idle button - stop nudges'});
+      return;
+    }
+    // ===== V249 HYBRID - AI quick button -> feed back to AI =====
+    if(btnId.startsWith('AI_')){
+      const map={AI_BUSINESS:'Business opportunity ariyam',AI_TAXI:'Taxi book cheyyanam',AI_TALK:'Team-inodu samsarikkanam',AI_PAY:'Pay cheyyan ready aanu',AI_LATER:'Pinneedu vilikkam',AI_APP_ANDROID:'Android app install cheyyanam',AI_APP_IPHONE:'iPhone app install cheyyanam',AI_STILL_HERE:'Und, thudarram - I am here, continue',AI_NEED_TIME:'Samayam venam, kurachu kazhinju reply cheyyam - need time',AI_REMIND_LATER:'Pinneedu ormmippikku - remind later',AI_REMIND_EVENING:'Vaikunneram ormmippikku - remind evening',AI_REMIND_TOMORROW:'Naale ormmippikku - remind tomorrow',AI_NOT_INTERESTED:'Thalparyam illa, venda - not interested'};
+      const asText=map[btnId]||'Hello';
+      const effLang2=state.lang||'ml'; const hist2=state.aiHistory||[];
+      const aiRes2=AI_ENABLED?await callMayaAI(effLang2, asText, hist2):null;
+      if(btnId==='AI_TALK'){ try{ await notifyAdminTeamRequest(uid, state, 'Tapped Talk to Team button'); }catch(e){} }
+      if(aiRes2 && aiRes2.text){
+        hist2.push({role:'user',text:asText}); hist2.push({role:'maya',text:aiRes2.text.slice(0,500)});
+        state.aiHistory=hist2.slice(-12); state.lastStep='AI Maya - '+effLang2; await setState(uid,state);
+        const intent2=aiRes2.intent||detectMayaIntent(asText, aiRes2.text);
+        try{ await sendWithDelay(interactiveButton(uid, aiRes2.text, mayaQuickButtons(effLang2, intent2), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, aiRes2.text, incomingPhoneId)); }
+        await saveToSheet('System_Logs',[nowIso,uid,effLang2,'AI Maya Button '+incomingPhoneId,`${btnId} -> ${asText}`,'AI Button',HELP_ADMIN,'AI Maya Button',''],false);
+        return;
+      }
+    }
+
+    // ===== V248 AI MAYA - FREE-TEXT -> AI FIRST (buttons still work below) =====
+    // Only for typed text, not button clicks. Payment / Pay / verification steps keep old button flow.
+    const isFreeText = !!txt && !btnId && msg.type==='text';
+    const inPayFlow = /Pay|VERIFIED|Lead Typed|Visit Date|Mobile|District|State/.test(state.lastStep||'');
+    if(isFreeText && AI_ENABLED && !inPayFlow && txt.trim()!=='1988'){
+      const detected = detectUserLanguage(txt, state.lang);
+      // First message from social ad: "Hello! Can I get more info on this?" -> do NOT force English. Default to Malayalam, Maya will ask.
+      let effLang = detected;
+      if(!state.lang && /hello.*more info/i.test(txt)) effLang = 'ml';
+      if(effLang!==state.lang){
+        state.lang = effLang; lang = effLang;
+        await setState(uid, {...state, lang: effLang, lastStep: 'AI Maya - Lang '+effLang});
+      }
+      const hist = state.aiHistory || [];
+      const aiRes = await callMayaAI(effLang, txt, hist);
+      if(aiRes && aiRes.text){
+        const aiReply = aiRes.text;
+        hist.push({role:'user', text: txt.slice(0,300)});
+        hist.push({role:'maya', text: aiReply.slice(0,500)});
+        state.aiHistory = hist.slice(-12);
+        state.lastStep = 'AI Maya - '+effLang;
+        state.aiMode = true;
+        // V249 SORT
+        state.lead = state.lead || {};
+        if(!state.lead.source || state.lead.source==='unknown_ask') state.lead.source = detectSourceFromFirstMsg(txt);
+        const li = detectIntentLocal(txt); if(li) state.lead.intent = li;
+        if(aiRes.intent) state.lead.intent = aiRes.intent;
+        const ls = detectSentimentLocal(txt); if(ls) state.lead.sentiment = ls;
+        if(aiRes.sentiment) state.lead.sentiment = aiRes.sentiment;
+        if(aiRes.level) state.lead.level = aiRes.level;
+        if(aiRes.district) state.lead.district = aiRes.district;
+        if(aiRes.tokenStatus) state.lead.tokenStatus = aiRes.tokenStatus;
+        if(!state.lead.funnel) state.lead.funnel='NEW';
+        if(state.lead.intent==='business_opportunity' && state.lead.funnel==='NEW') state.lead.funnel='EXPLAINED';
+        if(state.lead.tokenStatus==='READY') state.lead.funnel='TOKEN_READY';
+        state.lead.summary = aiReply.slice(0,200);
+        const rt = parseReminderTime(txt);
+        if(rt || aiRes.reminderWanted){
+          state.lead.reminderCount=(state.lead.reminderCount||0)+1;
+          const when = rt || {label: aiRes.reminderTimeText||'evening', ms:6*60*60*1000};
+          state.lead.reminderAt=when.label; state.lead.tokenStatus=state.lead.tokenStatus||'LATER';
+          try{ scheduleReminder(uid,'maya_reminder:'+Date.now(),effLang,when.ms,incomingPhoneId); }catch(e){}
+        }
+        if(/later|pinne|think|alochikk|tomorrow|naale|not now|ippol venda/.test(txt.toLowerCase())) state.lead.avoidCount=(state.lead.avoidCount||0)+1;
+        await setState(uid, state);
+        // HYBRID: AI text + max 3 buttons
+        const intent = aiRes.intent || detectMayaIntent(txt, aiReply);
+        try{ await sendWithDelay(interactiveButton(uid, aiReply, mayaQuickButtons(effLang, intent), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, aiReply, incomingPhoneId)); }
+        await logLeadPerfect(uid, state, {lastMsg: txt, summary: aiReply});
+        // V252 DAILY + TEAM ALERTS
+        try{
+          resetDailyIfNeeded();
+          if(!state.lead._countedNew){ state.lead._countedNew=true; dailyStats.newLeads++; }
+          if(state.lead.tokenStatus==='READY') dailyStats.tokenReady++;
+          if(/talk.*team|team.*call|call me|human|manushyan|call.*cheyy|vilikk/.test(txt.toLowerCase()) || btnId==='AI_TALK'){ await notifyAdminTeamRequest(uid, state, 'User asked to talk to team: '+txt.slice(0,80)); }
+          const mobMatch = txt.replace(/[^0-9]/g,'');
+          if(mobMatch.length===10 && state.lead.intent==='business_opportunity' && !state.lead._contactNotified){ state.lead._contactNotified=true; await notifyAdminContactGiven(uid, state, '91'+mobMatch); }
+          if(state.lead.sentiment==='not_interested') dailyStats.notInterested++;
+        }catch(e){ console.log('V252 alert fail', e.message); }
+        // V250: User may go silent after this reply -> schedule idle checks
+        try{ scheduleIdleNudges(uid, effLang, incomingPhoneId); }catch(e){}
+        await saveToSheet('System_Logs', [nowIso, uid, effLang, 'AI Maya '+incomingPhoneId, `AI+Buttons(${intent}) Source:${state.lead.source} Intent:${state.lead.intent} Sent:${state.lead.sentiment} Token:${state.lead.tokenStatus}`, 'AI Reply', HELP_ADMIN, 'AI Maya', ''], false);
+        return;
+      }
+      // If AI key missing / fails -> fall through to old button flow below (fail-safe)
+    }
+
+
 
     if(btnId.startsWith('LANG_')){
       const l = btnId.replace('LANG_','').toLowerCase();
@@ -1977,7 +2639,7 @@ app.post('/webhook', async(req,res)=>{
       const L=T.en;
       const msgType = msg.type||'text';
       const rawInput = txt || msgType;
-      await sendWithDelay(interactiveButton(uid, L.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, L.welcome + '\n\nWhere did you see Bizmapia? Bizmapia evide kande?\n\n👉 Tap your language below:', [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
       clearReminders(uid);
@@ -2558,6 +3220,11 @@ app.post('/razorpay-webhook', async(req,res)=>{
     let amount = amountPaise ? (amountPaise/100) : 0;
     if(!fee){ if(amount===250) fee='15'; else if(amount===150) fee='5'; else if(amount===100) fee='1'; else fee='15'; }
     const paymentId = payment.id || payment.payment_id || plink?.payment_id || ('pay_'+Date.now());
+    // V251: Duplicate webhook guard - Razorpay retries, don't notify twice
+    if(processedPaymentIds.has(paymentId)){ console.log('V251 DUPLICATE webhook ignored', paymentId); res.sendStatus(200); return; }
+    // V251: Perfect verification - only captured/authorized counts, amount must be 100/150/250
+    const isCaptured = ['payment.captured','payment.authorized','payment_link.paid','order.paid'].includes(event) || event==='' || payment.status==='captured' || payment.status==='authorized';
+    if(!isCaptured){ console.log('V251 IGNORE non-captured event', event, paymentId); res.sendStatus(200); return; }
     if(uid){
       let cleanUid = String(uid).replace(/[^0-9]/g,'');
       if(cleanUid.length===10) cleanUid='91'+cleanUid;
@@ -2573,6 +3240,17 @@ app.post('/razorpay-webhook', async(req,res)=>{
         await sendWithDelay(textMessage(cleanUid, `Now please continue:\n\n`+L.leadAsk, phoneId));
         await saveToSheet('Payments', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'VERIFIED Rs'+amount, HELP_MARKETING, 'Payment Verified - Webhook '+event, JSON.stringify(notes)], true);
         await saveToSheet('Franchise_Funnel', [getISTTime(), cleanUid, lang, `VERIFIED ${fee}L`, paymentId, 'PAID', HELP_MARKETING, 'Payment Verified - Webhook '+event, ''], false);
+        // V251: INSTANT INTIMATION TO YOU - same second
+        processedPaymentIds.add(paymentId); resetDailyIfNeeded(); dailyStats.payments++; dailyStats.paymentTotal+=Number(amount||0); dailyStats.paymentsList.push({phone:cleanUid, amount, level: levelFromToken(amount), time: getISTTime()});
+        try{
+          const verifiedOk = isValidTokenAmount(amount);
+          const finalState = await getState(cleanUid);
+          await notifyAdminPayment({uid: cleanUid, amount, paymentId, event, lang, state: finalState, fee, verified: verifiedOk});
+          if(!verifiedOk){
+            // Wrong amount - alert you specially, do NOT treat as normal token
+            console.log('V251 WRONG AMOUNT ALERT', paymentId, amount);
+          }
+        }catch(e){ console.log('V251 notify fail', e.message); }
       }
     }
     res.sendStatus(200);
@@ -2591,6 +3269,7 @@ app.get('/verify/:phone', async(req,res)=>{
     await sendWithDelay(textMessage(uid, `✅ Your payment has been manually verified by team!`, phoneId));
     try{ await sendTenderPdfsAfterVerification(uid, state?.sub || 'OPP_DISTRICT', lang, phoneId, state); }catch(e){ console.log('V247 Manual tender send fail', e.message); }
     await sendWithDelay(textMessage(uid, `Now please continue:\n\n`+L.leadAsk, phoneId));
+    try{ await notifyAdminPayment({uid, amount: state?.fee? 100:100, paymentId:'MANUAL-'+Date.now(), event:'manual_verify', lang, state, fee:'', verified:true}); }catch(e){}
     res.send(`✅ Manually verified ${uid}`);
   }catch(e){ res.send(`Error ${e.message}`); }
 });
@@ -2913,18 +3592,34 @@ app.get('/sheet-data', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
+
+
+app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSummary(); res.send(`✅ Day-end summary sent to admin numbers.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
+app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
+
+app.get('/test-payment-notify', async(req,res)=>{
+  try{
+    const phone = (req.query.phone||'919567742507').replace(/[^0-9]/g,'');
+    const amount = Number(req.query.amount||100);
+    const state = await getState('91'+phone).catch(()=>({}));
+    const msg = await notifyAdminPayment({uid:'91'+phone, amount, paymentId:'TEST-'+Date.now(), event:'test', lang:'ml', state: state||{}, fee:'', verified: isValidTokenAmount(amount)});
+    res.send(`✅ Test intimation sent to admin numbers. Check your WhatsApp.<br><br><pre>${msg}</pre>`);
+  }catch(e){ res.send('Error '+e.message); }
+});
+
 app.get('/render-stats', async(req,res)=>{
   try{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
 app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V247', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V247', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V247', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V247', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+try{ scheduleDayEndSummary(); }catch(e){}
 app.listen(PORT,'0.0.0.0',async()=>{ console.log(`V247 ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988 - listening on ${PORT} - OLD:${PHONE_ID_OLD} NEW:${PHONE_ID_NEW} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
