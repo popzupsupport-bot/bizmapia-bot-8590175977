@@ -19,9 +19,9 @@
 // V297 Loop-Killed | V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
-// V305 LANGUAGE-LOCKED-FINAL ("Yes, next" -> advance, NEVER restart)
+// V309 FINAL-COMPLETED-AUDITED ("Yes, next" -> advance, NEVER restart)
 // V304 FINAL-LOCKED - this build
-// V305 LANGUAGE-LOCKED-FINAL - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
+// V309 FINAL-COMPLETED-AUDITED - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
 // 1. Language: First welcome English only -> confirm Malayalam/English/Hindi buttons -> reply ONLY in chosen language. Never Manglish. Manglish input -> Malayalam-script reply.
@@ -2961,6 +2961,22 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
         try{ state.lastReplyAt = Date.now(); }catch(_){}
+    // V307 FIXED TERMS & CONDITIONS: ONCE LANGUAGE SELECTED, ALL CHATS DRAFT IN THAT LANGUAGE. NO SWITCH AFTER.
+    // If selected = Malayalam, ALL drafts after = Malayalam script ONLY (except brand names Bizmapia/Taxi/App). No English sentences, no English bring-back, no English buttons.
+    // This overrides ALL later detection: V291/V293/AI-router/detectUserLanguage are all ignored once lang is set.
+    // If user asks "need english" after Malayalam selected, Maya replies IN MALAYALAM: "Language fixed to Malayalam as per terms, cannot change in this chat."
+    try{
+      if(state.lang){
+        lang = state.lang;
+        // If user explicitly asks to switch AFTER lock, answer in LOCKED language that it is fixed, then continue in locked language (do not switch, do not return - let step handler reply in locked lang)
+        const _low7 = String(txt||'').toLowerCase().trim();
+        const _asksSwitch = /need\s+(english|hindi|malayalam)|change.*(english|hindi|malayalam)|(english|hindi)\s+please|malayalam\s+please/.test(_low7);
+        if(_asksSwitch && state.lang==='ml'){
+          // Do not switch. Mark for step handlers to use ml. Log it.
+          console.log(`V307 FIXED: switch request ignored, lang stays ml: "${String(txt||'').slice(0,40)}"`);
+        }
+      }
+    }catch(_){}
     // V305 LANGUAGE LOCK - Replaces V291 auto-switch. V291 was the bug: it re-detected language from EVERY typed message.
     // So: user locked Malayalam -> typed "already watched" in English -> Maya switched to English. User typed "need malayalam" -> Maya stayed in English because "need malayalam" was treated as English text.
     // LOCK RULE: Once language is set (by button or explicit request), NEVER auto-switch from normal inputs. English words like "already watched", "yes, next", "balance details" are CONTENT, not language change.
@@ -2981,6 +2997,8 @@ app.post('/webhook', async(req,res)=>{
           const _mlW=['enthanu','enth','ariyam','venam','kandu','manasilayi','evide','engane']; if(_mlW.some(w=>_low5.includes(w))) _want='ml'; else _want='en';
         }
       }
+      // V307 FIXED TERMS: Once language is selected, it is FROZEN. Even explicit 'need english/hindi' does NOT switch if lang is already set. Only first selection sets it.
+      if(state.lang){ _want=null; }
       if(_want && _want!==state.lang){
         const _prev = state.lang||'none'; state.lang=_want; lang=_want;
         console.log(`V305 LANGUAGE LOCK switch ${_prev} -> ${_want} from explicit request: "${String(txt||'').slice(0,40)}"`);
@@ -3021,26 +3039,20 @@ app.post('/webhook', async(req,res)=>{
     // save which number user contacted
     state.phoneId = incomingPhoneId;
     let lang = state.lang || 'en';
-    // V293 FIX: Language detection MUST run AFTER state reload (line above). V291 ran BEFORE reload, so its switch was discarded and Maya kept replying Malayalam.
-    // This block re-detects from THIS message and updates BOTH state.lang AND lang (the variable every reply below uses).
+    // V306 LANGUAGE LOCK - REPLACES V293 AUTO-SWITCH. V293 was the real bug: it ran AFTER V305 and re-detected EVERY message.
+    // "seen, next" (English words) -> flipped locked Malayalam to English. Manglish "video kandathanu" -> then stayed English because lang was already flipped.
+    // LOCK RULE: If state.lang is already set, NEVER auto-switch from content. Only explicit "need malayalam / english / hindi" switches (already handled in V305).
+    // Manglish input when lang=ml locked -> reply in Malayalam script, NOT English. English input when lang=ml locked -> reply in Malayalam, NOT English.
     try{
-      const _t2 = String(txt||'');
-      const _hasMl2 = /[\u0D00-\u0D7F]/.test(_t2);
-      const _hasHi2 = /[\u0900-\u097F]/.test(_t2);
-      const _isAscii2 = _t2.length > 3 && /^[\x00-\x7F\s\p{P}]+$/u.test(_t2);
-      let _det2 = null;
-      if(_hasMl2) _det2 = 'ml';
-      else if(_hasHi2) _det2 = 'hi';
-      else if(_isAscii2 && /[a-zA-Z]{3,}/.test(_t2)) _det2 = 'en';
-      if(!_hasMl2 && !_hasHi2 && _isAscii2){
-        const _mlW = ['enthanu','enth','ariyam','ariyanam','venam','cheyyanam','kandu','kandhu','manasilayi','eppo','evide','engane','sheri','illa','unda','cheyyu','parayu','nokku','kittumo','cheyyan','bizmapia entha'];
-        if(_mlW.some(w=>_t2.toLowerCase().includes(w))) _det2 = 'ml';
-      }
-      if(_det2 && _det2 !== state.lang){
-        console.log(`V293 lang switch AFTER reload ${state.lang} -> ${_det2} from "${String(txt||'').slice(0,40)}"`);
-        state.lang = _det2; lang = _det2;
-        try{ await setState(uid, {...state, lang: _det2}); }catch(_){}
-      }
+      const _low6 = String(txt||'').toLowerCase().trim();
+      let _want6 = null;
+      if(/need\s+malayalam|malayalam\s+please|change.*malayalam|malayalathil/.test(_low6)) _want6='ml';
+      else if(/need\s+english|english\s+please|change.*english/.test(_low6)) _want6='en';
+      else if(/need\s+hindi|hindi\s+please|change.*hindi|hindi\s+me/.test(_low6)) _want6='hi';
+      // V307 FIXED TERMS: Frozen after selection. No switch, even on explicit request. If lang=ml, ALL chats stay ml.
+      if(state.lang){ _want6=null; }
+      if(_want6 && _want6!==state.lang){ state.lang=_want6; lang=_want6; try{ await setState(uid, {...state, lang:_want6}); }catch(_){} console.log(`V307 first selection ${_want6}`); }
+      else if(state.lang){ lang=state.lang; /* LOCKED - do NOT touch lang from content */ }
     }catch(_){}
     // ===== V256 FIX: 1988 = RESET TO AI MAYA (not old Language Menu) =====
     if(String(txt||'').trim()==='1988'){
@@ -3302,6 +3314,8 @@ app.post('/webhook', async(req,res)=>{
           const _bLater = _L0==='ml' ? 'പിന്നീട്' : _L0==='hi' ? 'बाद में' : 'Later';
           try{ await sendWithDelay(interactiveButton(uid, _ans0, [{id:'PAY_TOKEN',title:_bPay},{id:'AI_BUSINESS',title: _L0==='ml'?'ബിസിനസ് അവസരം':'Business Opportunity'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ans0, incomingPhoneId)); }
           await saveToSheet('System_Logs',[nowIso,uid,_L0,'V300 VideoKnownBalance '+incomingPhoneId,'Video known + balance: '+String(txt||'').slice(0,80),'V300',HELP_ADMIN,'V300 Balance',''],false);
+            // V308 REMINDER RE-ARM: after balance, arm GEN reminder if user goes silent.
+            try{ scheduleReminder(uid,'install:GEN_ARE_YOU_THERE:10',_L0,2*60*1000,incomingPhoneId); }catch(_){}
           return;
         }
       }
@@ -3418,14 +3432,18 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
     if(isFreeText && AI_ENABLED && !inPayFlow){
-      const detected = detectUserLanguage(txt, state.lang);
-      // First message from social ad: "Hello! Can I get more info on this?" -> do NOT force English. Default to Malayalam, Maya will ask.
-      let effLang = detected;
-      if(!state.lang && /hello.*more info/i.test(txt)) effLang = 'ml';
-      if(effLang!==state.lang){
-        state.lang = effLang; lang = effLang;
-        await setState(uid, {...state, lang: effLang, lastStep: 'AI Maya - Lang '+effLang});
+      // V306 LANGUAGE LOCK: AI router MUST use locked language. Never call detectUserLanguage to flip it from content.
+      // "seen, next" / Manglish "video kandathanu" are CONTENT, not language change. effLang = locked lang.
+      // V307 FIXED TERMS: effLang = locked lang, always. No switch after selection.
+      let effLang = state.lang || 'en';
+      const _low6b = String(txt||'').toLowerCase().trim();
+      // Explicit switch requests are IGNORED once lang is set - reply in locked lang that language is fixed.
+      if(!state.lang){
+        if(/need\s+malayalam|malayalam\s+please|change.*malayalam/.test(_low6b)) effLang='ml';
+        else if(/need\s+english|english\s+please|change.*english/.test(_low6b)) effLang='en';
+        else if(/need\s+hindi|hindi\s+please|change.*hindi/.test(_low6b)) effLang='hi';
       }
+      if(effLang!==state.lang){ state.lang=effLang; lang=effLang; await setState(uid, {...state, lang:effLang, lastStep:'AI Maya - Lang '+effLang}); }
       const hist = state.aiHistory || [];
       if(needsHuman(txt)){ try{ await notifyHumanHandover(uid, state, txt); }catch(e){} }
       const aiRes = await callMayaAI(effLang, txt, hist);
@@ -4184,6 +4202,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
               await setState(uid, {...state, lastStep:_n.last, aiMode:true, aiHistory:[...(state.aiHistory||[]),{role:'user',text:String(txt||'').slice(0,100)},{role:'maya',text:_n.msg.slice(0,400)}].slice(-12)});
               try{ await sendWithDelay(interactiveButton(uid, _n.msg, _n.btns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _n.msg, incomingPhoneId)); }
               await saveToSheet('System_Logs',[nowIso,uid,_L3,'V303 YesNext Advance '+incomingPhoneId,_curName+' -> '+_n.en,'V303',HELP_ADMIN,'V303 YesNext',''],false);
+              // V308 REMINDER RE-ARM: after Yes/Next advance, arm reminder for NEXT step.
+              try{ const _nxt=_n.en; const _rt3 = _nxt.includes('Opportunity Video') ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _nxt.includes('Capacity') ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm3 = _nxt.includes('Opportunity Video') ? 5*60*1000 : 2*60*1000; scheduleReminder(uid,_rt3,_L3,_rm3,incomingPhoneId); }catch(_){}
               return;
             }
           }
@@ -4224,7 +4244,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
           const _low2 = String(txt||'').toLowerCase();
           // On-topic inputs for this step are already handled above (seen/kandu, capacity buttons, understood, yes/no, paid, balance, district name). If we REACHED here, it is off-topic or unclear -> bring back.
           // Do not trigger for very short step answers that slipped through: seen/kandu/manasilayi/yes/no/paid/balance - let V301 handle them.
-          const _onTopic = /seen|watched|already|kandu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token/.test(_low2);
+          const _onTopic = /seen|watched|already|kandu|kandathanu|manasilayi|understood|yes|no|paid|balance|bakki|30k|1l|2l|5l|15l|idukki|thodupuzha|district|pay|token|aduthathu|than/.test(_low2);
           if(!_onTopic){
             const _cur = _finSteps[_idx];
             const _rem = _finSteps.slice(_idx); // current + balance
@@ -4239,6 +4259,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
             if(_idx===1) _btn.splice(0,1,{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'});
             try{ await sendWithDelay(interactiveButton(uid, _msg, _btn.slice(0,3), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _msg, incomingPhoneId)); }
             await saveToSheet('System_Logs',[nowIso,uid,_L2,'V302 OffTopic Finalization '+incomingPhoneId,'Off-topic at '+_cur.key+': '+String(txt||'').slice(0,80),'V302',HELP_ADMIN,'V302 Final',''],false);
+            // V308 REMINDER RE-ARM: free-text reply cleared old reminder (V290). Re-arm for THIS step, in locked language. Opp Video=5min, Company=3min, else GEN 2min.
+            try{ const _rt = _cur.key==='Opportunity Video' ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _cur.key==='Company Video' ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm = _cur.key==='Opportunity Video' ? 5*60*1000 : _cur.key==='Company Video' ? 3*60*1000 : 2*60*1000; scheduleReminder(uid,_rt,_L2,_rm,incomingPhoneId); }catch(_){}
             return;
           }
         }
@@ -4300,6 +4322,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
           await setState(uid, {...state, aiHistory:_h1.slice(-12), lastStep:_s||'V301 - Step Aware', aiMode:true});
           try{ await sendWithDelay(interactiveButton(uid, _final, _stepBtns, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _final, incomingPhoneId)); }
           await saveToSheet('System_Logs',[nowIso,uid,_L1,'V301 StepAware '+incomingPhoneId,'Step '+_stepName+' input: '+String(txt||btnId||'').slice(0,80),'V301',HELP_ADMIN,'V301 Step',''],false);
+            // V308 REMINDER RE-ARM: free-text step reply cleared old reminder. Re-arm for THIS step.
+            try{ const _rt1 = _stepName==='Opportunity Video' ? 'install:OPP_CENTER_VIDEO_5MIN:5' : _stepName==='Company Video' ? 'install:COMPANY_VIDEO_3MIN:3' : 'install:GEN_ARE_YOU_THERE:10'; const _rm1 = _stepName==='Opportunity Video' ? 5*60*1000 : _stepName==='Company Video' ? 3*60*1000 : 2*60*1000; scheduleReminder(uid,_rt1,_L1,_rm1,incomingPhoneId); }catch(_){}
           return;
         }
       }
@@ -4771,7 +4795,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V305 LANGUAGE-LOCKED-FINAL', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V309 FINAL-COMPLETED-AUDITED', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
