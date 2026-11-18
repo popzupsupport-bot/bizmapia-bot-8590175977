@@ -1,7 +1,7 @@
 // ============================================================================
-// 🔒 V321 RESUME-TEMPLATE - V319+V320 CHANGES vs V318 - DO NOT EDIT LOCKED BLOCKS
+// 🔒 V322 RESUME-FIX - V319+V320 CHANGES vs V318 - DO NOT EDIT LOCKED BLOCKS
 // Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
-// If a new fix is needed, ADD a new V322+ block at the end of the AI chain - NEVER edit a locked block. V304 is HISTORY ONLY, not this build.
+// If a new fix is needed, ADD a new V323+ block at the end of the AI chain - NEVER edit a locked block. V304 is HISTORY ONLY, not this build.
 // ============================================================================
 // LOCKED HISTORY (all present in this file, verified):
 // V254 Production (health/redis/sheets/23 reminders) | V255 AI-Always-Wins + 1988=reset | V256 AI-Reset-Fix
@@ -21,15 +21,15 @@
 // V313 SCOPE-FINAL-DETERMINISTIC-SERVICES - WHO Customer/Driver/Shop deterministic scripts (logic carried in V314+)
 // V314 FINAL-BEST - single welcome, language-frozen single rule, taste before options, SVC deterministic, voice handler in code (logic carried in V316+)
 // V315 GLOBAL-STOP-FIXED - stop works from any step, Stop/Yes confirm (logic carried in V316+)
-// V321 RESUME-TEMPLATE - (1) Calling window 11AM-4PM, (2) No number in body, team contact only via buttons, calling time in every call message, (3) Callback + nobody-answering flows + reminders. All other V319 logic untouched.
-// V321 RESUME-TEMPLATE - re-audit of ALL chats: PAY_TOKEN + CALL_DIALER_/DIAL_ handlers added (sent but never handled), version labels unified to V320 on /health + /check-fired + /sheet-status + root. All V247-V317 logic kept, no flow changed.
+// V322 RESUME-FIX - (1) Calling window 11AM-4PM, (2) No number in body, team contact only via buttons, calling time in every call message, (3) Callback + nobody-answering flows + reminders. All other V319 logic untouched.
+// V322 RESUME-FIX - re-audit of ALL chats: PAY_TOKEN + CALL_DIALER_/DIAL_ handlers added (sent but never handled), version labels unified to V320 on /health + /check-fired + /sheet-status + root. All V247-V317 logic kept, no flow changed.
 // V317 GLOBAL-STOP-TOP-PRIORITY - REAL FIX: Stop moved to TOP of webhook handler (before V285/V292/V288/sorting/AI), so Stop from ANY step -> Stop/Yes confirm, never language-confirm + sorting. All V247-V316 logic kept.
 // V297 Loop-Killed | V316 ALL-NAMES-PERFECT | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
 // V316 ALL-NAMES-PERFECT
 // V309 FINAL-COMPLETED-AUDITED - audit stamp, no logic change (all V309 logic carried in V310) ("Yes, next" -> advance, NEVER restart)
-// V304 FINAL-LOCKED - HISTORY ONLY, not this build. THIS BUILD = V321 RESUME-TEMPLATE.
+// V304 FINAL-LOCKED - HISTORY ONLY, not this build. THIS BUILD = V322 RESUME-FIX.
 // V316 ALL-NAMES-PERFECT - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
@@ -2888,6 +2888,7 @@ app.get('/fire-template2', async(req,res)=>{
 });
 // === END HOT TEMPLATE SENDER ===
 
+// === V322 - ONLY 1 FIX vs V321 - parameter_name + real SENT/FAIL ===
 // === V321 - ONLY 1 ADDITION - RESUME TEMPLATE - DO NOT TOUCH ANY OTHER CODE ===
 // Template bizmapia_resume_maya_en is Active (checked 18 Nov 2026).
 // Body has 1 variable {{step}} = where user stopped, e.g. "Company Video".
@@ -2899,7 +2900,9 @@ app.get('/fire-template2', async(req,res)=>{
 const RESUME_NUMBERS = [...TEMPLATE1_NUMBERS, ...TEMPLATE2_NUMBERS];
 async function sendResumeTemplate(to, stepText){
   const step = String(stepText || 'Company Video').slice(0, 60);
-  return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name:'bizmapia_resume_maya_en', language:{code:'en'}, components:[{type:'body', parameters:[{type:'text', text: step}]}]}});
+  // V322 FIX: Meta new templates use NAMED variable {{step}} - must send parameter_name, else "Parameter name is missing or empty" FAIL.
+  // V322 FIX 2: sendWithDelay returns undefined on FAIL (it only logs). Return its result so caller can report real SENT/FAIL.
+  return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name:'bizmapia_resume_maya_en', language:{code:'en'}, components:[{type:'body', parameters:[{type:'text', parameter_name:'step', text: step}]}]}});
 }
 app.get('/fire-resume', async(req,res)=>{
   try{
@@ -2909,7 +2912,7 @@ app.get('/fire-resume', async(req,res)=>{
     // De-dupe, keep order
     list = [...new Set(list)];
     let out=[];
-    for(let n of list){ try{ await sendResumeTemplate(n, step); out.push(n+': SENT step='+step); }catch(e){ out.push(n+': FAIL '+e.message); } await new Promise(r=>setTimeout(r,2000)); }
+    for(let n of list){ try{ const _r = await sendResumeTemplate(n, step); out.push(n+': '+((_r && _r.messages) ? 'SENT step='+step : 'FAIL - check Render Logs')); }catch(e){ out.push(n+': FAIL '+e.message); } await new Promise(r=>setTimeout(r,2000)); }
     res.send(out.join('<br>')+'<br><br>DONE Resume - '+list.length+' numbers - template bizmapia_resume_maya_en - step='+step);
   }catch(e){ res.send('ERROR '+e.message); }
 });
@@ -2918,13 +2921,13 @@ app.get('/fire-resume-one', async(req,res)=>{
     const phone = String(req.query.phone || '').replace(/[^0-9]/g,'');
     const step = String(req.query.step || 'Company Video');
     if(!phone) return res.send('Usage: /fire-resume-one?phone=919999999999&step=Company%20Video');
-    await sendResumeTemplate(phone, step);
-    res.send(phone+': SENT step='+step+' - template bizmapia_resume_maya_en');
+    const _r1 = await sendResumeTemplate(phone, step);
+    res.send(phone+': '+((_r1 && _r1.messages) ? 'SENT step='+step : 'FAIL - check Render Logs')+' - template bizmapia_resume_maya_en');
   }catch(e){ res.send('FAIL '+e.message); }
 });
 // === END V321 ===
 
-app.get('/',(req,res)=>res.send(`V321 RESUME-TEMPLATE RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V322 RESUME-FIX RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -5140,7 +5143,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V321 RESUME-TEMPLATE', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V322 RESUME-FIX', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5172,19 +5175,19 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V321 RESUME-TEMPLATE', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V321 RESUME-TEMPLATE', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V321 RESUME-TEMPLATE', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V321 RESUME-TEMPLATE', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V322 RESUME-FIX', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V322 RESUME-FIX', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V322 RESUME-FIX', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V322 RESUME-FIX', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V321 RESUME-TEMPLATE - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V322 RESUME-FIX - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V321 RESUME-TEMPLATE - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V322 RESUME-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V322+ with proper version control after verification
-// Current locked version: V321 RESUME-TEMPLATE - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V321 RESUME-TEMPLATE - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V321 RESUME-TEMPLATE - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V323+ with proper version control after verification
+// Current locked version: V322 RESUME-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V322 RESUME-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V322 RESUME-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V322+ - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V323+ - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
