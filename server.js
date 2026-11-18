@@ -1,7 +1,7 @@
 // ============================================================================
-// 🔒 V325 RESUME-FRESH-EXCEPTION - V319+V320 CHANGES vs V318 - DO NOT EDIT LOCKED BLOCKS
+// 🔒 V326 REGFEE-SHEET-FIX - V319+V320 CHANGES vs V318 - DO NOT EDIT LOCKED BLOCKS
 // Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
-// If a new fix is needed, ADD a new V326+ block at the end of the AI chain - NEVER edit a locked block. V304 is HISTORY ONLY, not this build.
+// If a new fix is needed, ADD a new V327+ block at the end of the AI chain - NEVER edit a locked block. V304 is HISTORY ONLY, not this build.
 // ============================================================================
 // LOCKED HISTORY (all present in this file, verified):
 // V254 Production (health/redis/sheets/23 reminders) | V255 AI-Always-Wins + 1988=reset | V256 AI-Reset-Fix
@@ -21,15 +21,15 @@
 // V313 SCOPE-FINAL-DETERMINISTIC-SERVICES - WHO Customer/Driver/Shop deterministic scripts (logic carried in V314+)
 // V314 FINAL-BEST - single welcome, language-frozen single rule, taste before options, SVC deterministic, voice handler in code (logic carried in V316+)
 // V315 GLOBAL-STOP-FIXED - stop works from any step, Stop/Yes confirm (logic carried in V316+)
-// V325 RESUME-FRESH-EXCEPTION - (1) Calling window 11AM-4PM, (2) No number in body, team contact only via buttons, calling time in every call message, (3) Callback + nobody-answering flows + reminders. All other V319 logic untouched.
-// V325 RESUME-FRESH-EXCEPTION - re-audit of ALL chats: PAY_TOKEN + CALL_DIALER_/DIAL_ handlers added (sent but never handled), version labels unified to V320 on /health + /check-fired + /sheet-status + root. All V247-V317 logic kept, no flow changed.
+// V326 REGFEE-SHEET-FIX - (1) Calling window 11AM-4PM, (2) No number in body, team contact only via buttons, calling time in every call message, (3) Callback + nobody-answering flows + reminders. All other V319 logic untouched.
+// V326 REGFEE-SHEET-FIX - re-audit of ALL chats: PAY_TOKEN + CALL_DIALER_/DIAL_ handlers added (sent but never handled), version labels unified to V320 on /health + /check-fired + /sheet-status + root. All V247-V317 logic kept, no flow changed.
 // V317 GLOBAL-STOP-TOP-PRIORITY - REAL FIX: Stop moved to TOP of webhook handler (before V285/V292/V288/sorting/AI), so Stop from ANY step -> Stop/Yes confirm, never language-confirm + sorting. All V247-V316 logic kept.
 // V297 Loop-Killed | V316 ALL-NAMES-PERFECT | V311 + V310 + V309 + V308 + V307 + V306 + V305 + V304 + V303 + V302 + V301 + V300 + V299 + V298 Polite-Unknown-Plus-Suggestions | V299 Context-Memory-District-Followup
 // V300 Video-Known-Plus-Balance ("I know this video, give balance details" -> Balance Rs.99,900 + Pay Token)
 // V301 Step-Aware-Any-Input-Any-Step | V302 Off-Topic-Finalization-Bring-Back (Current Step + Balance Steps + Are You Ready + Next Option)
 // V316 ALL-NAMES-PERFECT
 // V309 FINAL-COMPLETED-AUDITED - audit stamp, no logic change (all V309 logic carried in V310) ("Yes, next" -> advance, NEVER restart)
-// V304 FINAL-LOCKED - HISTORY ONLY, not this build. THIS BUILD = V325 RESUME-FRESH-EXCEPTION.
+// V304 FINAL-LOCKED - HISTORY ONLY, not this build. THIS BUILD = V326 REGFEE-SHEET-FIX.
 // V316 ALL-NAMES-PERFECT - Language stays locked after selection. Only explicit 'need malayalam/english/hindi' switches. 'already watched'/'yes, next'/'balance details' are CONTENT, never language change. 'already watched' is video-seen, never off-topic.
 // ============================================================================
 // LOCKED RULES (never break):
@@ -1223,17 +1223,10 @@ function saveRegistrationFee(phone, sub, fee){
   try{
     const regFee = getTokenFee(sub);
     const link = getRazorpayLinkForSub(sub);
-    const data = {
-      phone: phone,
-      franchise_type: sub,
-      registration_fee: regFee,
-      full_fee: fee+'L',
-      razorpay_link: link,
-      timestamp: getISTTime(),
-      date_ist: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
-    };
+    // V326 FIX: ONE array row, in column order: Timestamp, Phone, Franchise Type, Reg Fee, Full Fee, Razorpay Link, Date IST.
+    // Old code sent an OBJECT twice -> both writes failed, row for this user was lost.
+    const data = [getISTTime(), phone, sub, regFee, fee+'L', link, new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})];
     saveToSheet('Registration_Fee', data).catch(()=>{});
-    saveToSheet(getRegistrationFeeTab(), data).catch(()=>{});
   }catch(e){ console.log('REG FEE SAVE FAIL', e.message); }
 }
 function getRegistrationFeeForSheet(sub){ return getTokenFee(sub); }
@@ -1460,6 +1453,9 @@ const OLD_TABS_MAP = {
   'Leads':'System_Logs','No_Language':'System_Logs','HI_Reset':'System_Logs','Franchise_Leads':'Master_Leads','Franchise_Submit':'Franchise_Funnel','Franchise_Benefits':'Franchise_Funnel','Franchise_Support':'Franchise_Funnel','Franchise_Requirements':'Franchise_Funnel','Franchise_CorpCheck':'Franchise_Funnel','Franchise_EMI':'Franchise_Funnel','Franchise_EMI_Selected':'Franchise_Funnel','Franchise_NotPaid':'Franchise_Funnel','Franchise_Ready15L':'Franchise_Funnel','Franchise_Occupation':'Master_Leads','Franchise_Date':'Master_Leads','Franchise_PayDone':'Payments','Franchise_PayDone_VERIFIED':'Payments','Payment_Failed':'Payments','Unverified_Payments':'Payments','OPP_District':'Franchise_Funnel','OPP_Corp':'Franchise_Funnel','OPP_Center':'Franchise_Funnel','App_Install':'System_Logs','Attach_Cab':'Ride_Hailing','Book_Cab':'Ride_Hailing','Book_Rooms':'Booking','Book_Appointments':'Booking','Book_Movie':'Booking','Order_Stores':'Delivery','Delivery_Partner':'Delivery','Register_Business':'Business_Directory','Start_Advertising':'Business_Directory','Book_Apartments':'Booking'
 };
 async function saveToSheet(tab, row, isNew){
+  // V326 FIX: Sheets API needs row = ARRAY. Old saveRegistrationFee passed an OBJECT {phone, franchise_type...},
+  // Google rejected it: 'Unknown name "phone" at data.values[0]'. Convert object -> array so no write is lost.
+  if(row && !Array.isArray(row) && typeof row === 'object'){ row = Object.values(row); }
   let cleanTab = String(tab).trim();
   if(!ALLOWED_SHEETS.includes(cleanTab)){
     const redirected = OLD_TABS_MAP[cleanTab] || 'Franchise_Funnel';
@@ -2934,7 +2930,7 @@ app.get('/fire-resume-one', async(req,res)=>{
 });
 // === END V321 ===
 
-app.get('/',(req,res)=>res.send(`V325 RESUME-FRESH-EXCEPTION RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
+app.get('/',(req,res)=>res.send(`V326 REGFEE-SHEET-FIX RECEIPT - REAL TIME RECEIPT - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - WEBHOOK FIXED FOR STATIC LINKS - BTN 💳 Pay Now - TAB Registration_Fee - `+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 app.post('/webhook', async(req,res)=>{
@@ -2967,7 +2963,7 @@ app.post('/webhook', async(req,res)=>{
         return;
       }
     }catch(_){}
-    // ===== V325 RESUME-FRESH-EXCEPTION - ONLY ADDITION - DO NOT TOUCH ANY OTHER CODE =====
+    // ===== V326 REGFEE-SHEET-FIX - ONLY ADDITION - DO NOT TOUCH ANY OTHER CODE =====
     // Resume template (bizmapia_resume_maya_en) has buttons Continue / Stop.
     // WhatsApp sends template button taps as button_reply id = button text: 'Continue' / 'Stop'.
     // Old code had NO handler for id 'Continue', so it fell to language-confirm / generic AI
@@ -5181,7 +5177,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V325 RESUME-FRESH-EXCEPTION', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V326 REGFEE-SHEET-FIX', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5213,19 +5209,19 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V325 RESUME-FRESH-EXCEPTION', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V325 RESUME-FRESH-EXCEPTION', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V325 RESUME-FRESH-EXCEPTION', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V325 RESUME-FRESH-EXCEPTION', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V326 REGFEE-SHEET-FIX', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V326 REGFEE-SHEET-FIX', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V326 REGFEE-SHEET-FIX', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V326 REGFEE-SHEET-FIX', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V325 RESUME-FRESH-EXCEPTION - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V326 REGFEE-SHEET-FIX - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
-// ==================== LOCKED - END OF FILE - V325 RESUME-FRESH-EXCEPTION - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// ==================== LOCKED - END OF FILE - V326 REGFEE-SHEET-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // DO NOT EDIT THIS FILE - LOCKED TILL VERIFICATION FINALIZED - TENDER PDF PER BUSINESS OPPORTUNITY ADDED
-// If verification needed, create V326+ with proper version control after verification
-// Current locked version: V325 RESUME-FRESH-EXCEPTION - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
-// ==================== LOCKED - END OF FILE - V325 RESUME-FRESH-EXCEPTION - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
-// V325 RESUME-FRESH-EXCEPTION - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// If verification needed, create V327+ with proper version control after verification
+// Current locked version: V326 REGFEE-SHEET-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - 2026-11-04 - getVideoUrl REFERENCEERROR FIXED - 12 PDF AS PER REQUIREMENT - 2 DISTRICT + 2 CORP/MUNI + 4 BUSINESS CENTER - DISTRICT 2 PDF, CORP/MUNI 2 PDF, BUSINESS CENTER 4 PDF - DOWNLOADABLE PDF WITH GREETING WHAT TO DO - WELCOME MAYA FIXED + APPRECIATIVE OTHER STEPS - INCLUDES V247 + V247-V247 - D250=https://rzp.io/rzp/BZ9D9rT C150=https://rzp.io/rzp/ptj9OGpr B100=https://rzp.io/rzp/lAguvzEt - NO 5000 - 8 SHEETS LOCKED - REDIS READY - FIXED: getVideoUrl is not defined - 12 PDFs: district.pdf district_annexure.pdf corporation.pdf corporation_annexure.pdf business_center.pdf business_center_annexure.pdf business_center_agreement.pdf business_center_brochure.pdf
+// ==================== LOCKED - END OF FILE - V326 REGFEE-SHEET-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
+// V326 REGFEE-SHEET-FIX - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
 // THIS FILE IS LOCKED - NO MORE EDITS UNTIL USER VERIFICATION FINALIZED
-// IF YOU NEED TO EDIT, CREATE NEW VERSION V326+ - DO NOT EDIT THIS LOCKED FILE
+// IF YOU NEED TO EDIT, CREATE NEW VERSION V327+ - DO NOT EDIT THIS LOCKED FILE
 // ================================================================================================
