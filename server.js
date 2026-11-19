@@ -2838,7 +2838,9 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID;
     const txt = msg.text?.body||'';
     const v330Referral = msg.referral || msg.context?.referral || null; // V330: Meta ad referral, survives edited prefill text
-    // ===== V331 FIRST-MESSAGE-ON-ARRIVAL - ONLY ADDITION vs V330 =====
+    // ===== V332 FIX: btnId declared BEFORE V331 block (was used at V331 line before its let at 2862 -> TDZ crash) =====
+    let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    // ===== V332 BTNID-FIX - FIRST-MESSAGE-ON-ARRIVAL - ONLY ADDITION vs V330 =====
     // BUG (proved by 19 Nov Render log): old First Message save lived at line ~3666, inside if(!state.lang),
     // AFTER V317 Stop / V285 watched / V292 hurry / LANG_ / many early-return handlers. Most new chats
     // never reached it, so Sheet had 0 First Message rows on 19 Nov while Meta counted 21 chats.
@@ -2855,11 +2857,11 @@ app.post('/webhook', async(req,res)=>{
         const _v331Source = detectMetaSourceV330(txt, v330Referral);
         await saveToSheet('System_Logs', [getISTTime(), uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${txt} (${_v331MsgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
         await saveToSheet('Master_Leads', [getISTTime(), uid, 'none', _v331Source, `First Input: ${txt} (${_v331MsgType})`, 'Received', '', '', '', 'NEW', 'NOT_ASKED', 'Rem:0 Avoid:0 Last:First Message', `First Message - Source:${_v331Source} Referral:${v330Referral ? (v330Referral.source_type||'ad') : 'none'}`, '', 'First Message'], false);
-        console.log('V331 FIRST MESSAGE SAVED ON ARRIVAL', uid, _v331Source);
+        console.log('V332 FIRST MESSAGE SAVED ON ARRIVAL', uid, _v331Source);
         state = { ...state, v331FirstSavedKey: _v331Key };
       }
-    }catch(_v331e){ console.log('V331 first-message save fail-open', _v331e.message); }
-    let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    }catch(_v331e){ console.log('V332 first-message save fail-open', _v331e.message); }
+    // V332: btnId already declared above, before V331 block - do not redeclare
     // ===== V317 GLOBAL STOP - TOP PRIORITY, BEFORE EVERYTHING =====
     // BUG (user correct, not user mistake): V315/V316 Stop was at line ~3345, AFTER V285/V292/V288/V307/V265-sorting/language-confirm blocks that return first.
     // So on many steps Stop never reached it and fell to AI sorting / language confirm - exactly the screenshot: Stop -> "Malayalam thiranjeduthathinu nandi" + Business/Service sorting.
@@ -3684,7 +3686,7 @@ I will help you find the *right option*, step by step. 🤝
 
 👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
-      // V331: skip duplicate - already saved on arrival above for this same WhatsApp msg.id
+      // V332: skip duplicate - already saved on arrival above for this same WhatsApp msg.id
       if(!((globalThis.__v331FirstSaved && globalThis.__v331FirstSaved.has(uid + '|' + (msg.id || rawInput))) || state.v331FirstSavedKey === (uid + '|' + (msg.id || rawInput)))){
         await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
         const v330Source = detectMetaSourceV330(rawInput, v330Referral); await saveToSheet('Master_Leads', [getISTTime(), uid, 'none', v330Source, `First Input: ${rawInput} (${msgType})`, 'Received', '', '', '', 'NEW', 'NOT_ASKED', 'Rem:0 Avoid:0 Last:First Message', `First Message - Source:${v330Source} Referral:${v330Referral ? (v330Referral.source_type||'ad') : 'none'}`, '', 'First Message'], false); // V330 referral-first source + V329 Master_Leads
@@ -5022,7 +5024,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V318 FINAL-AUDITED', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V331 FIRST-MESSAGE-ON-ARRIVAL - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V332 BTNID-FIX - FIRST-MESSAGE-ON-ARRIVAL - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
