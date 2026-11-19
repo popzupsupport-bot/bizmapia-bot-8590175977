@@ -420,6 +420,35 @@ function detectSourceFromFirstMsg(txt){
   if(/website|bizmapia\.com/.test(s)) return 'website';
   return 'unknown_ask';
 }
+
+// V330 META SOURCE - referral first, pattern family second. Previous fixes untouched.
+function detectMetaSourceV330(txt, referral){
+  try{
+    const ref = referral || {};
+    const refType = String(ref.source_type||ref.sourceType||'').toLowerCase();
+    const refUrl = String(ref.source_url||ref.sourceUrl||ref.cta_url||'');
+    const refId = String(ref.source_id||ref.sourceId||ref.ad_id||'');
+    if(refType==='ad' || refType==='ads' || /facebook|instagram|meta/.test(refUrl) || refId) return 'Meta Ads';
+    if(ref && (ref.source_url || ref.source_id || ref.source_type)) return 'Meta Ads';
+  }catch(e){}
+  const raw = String(txt||'');
+  const s = raw.toLowerCase();
+  // Meta starter family - user examples 19 Nov, all are Meta. NOT 1 exact text.
+  const metaPatterns = [
+    /can i get more info/, /more info/,
+    /\u0d39\u0d32\u0d4b.*\u0d15\u0d42\u0d1f\u0d7e\u0d7d.*\u0d35\u0d3f\u0d35\u0d30\u0d19\u0d7e\u0d7d/, // ഹലോ! ഇതേക്കുറിച്ച് കൂടുതൽ വിവരങ്ങൾ
+    /\u0d15\u0d42\u0d1f\u0d7e\u0d7d.*\u0d35\u0d3f\u0d35\u0d30\u0d19\u0d7e\u0d7d/, // കൂടുതൽ വിവരങ്ങൾ
+    /\u0d0e\u0d28\u0d4d\u0d24\u0d3e\u0d23\u0d4d.*\u0d2c\u0d3f\u0d38\u0d3f\u0d28\u0d38\u0d4d/, // എന്താണ് ബിസിനസ്
+    /\u0d2c\u0d3f\u0d38\u0d3f\u0d28\u0d38\u0d4d.*\u0d0e\u0d28\u0d4d\u0d24\u0d3e\u0d23\u0d4d/, // ബിസിനസ് എന്താണ്
+    /\u0d07\u0d24\u0d46\u0d15\u0d4d\u0d15\u0d41\u0d31\u0d3f\u0d1a\u0d4d.*\u0d35\u0d3f\u0d36\u0d26\u0d2e\u0d3e\u0d15\u0d4d\u0d15\u0d3e\u0d2e\u0d4b/, // ഇതെക്കുറിച്ച് വിശദമാക്കാമോ
+    /give me details/, /details pls/, /details please/
+  ];
+  for(const p of metaPatterns){ if(p.test(s)) return 'Meta Ads'; }
+  // If text contains the English prefill + any extra typed text, still Meta
+  if(s.includes('hello! can i get more info')) return 'Meta Ads';
+  return 'Direct';
+}
+
 function detectIntentLocal(txt){
   const raw=String(txt||'');
   const s=raw.toLowerCase();
@@ -2808,6 +2837,7 @@ app.post('/webhook', async(req,res)=>{
     let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID;
     const txt = msg.text?.body||'';
+    const v330Referral = msg.referral || msg.context?.referral || null; // V330: Meta ad referral, survives edited prefill text
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
     // ===== V317 GLOBAL STOP - TOP PRIORITY, BEFORE EVERYTHING =====
     // BUG (user correct, not user mistake): V315/V316 Stop was at line ~3345, AFTER V285/V292/V288/V307/V265-sorting/language-confirm blocks that return first.
@@ -3634,7 +3664,7 @@ I will help you find the *right option*, step by step. 🤝
 👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
-      await saveToSheet('Master_Leads', [getISTTime(), uid, 'none', 'First Message', `First Input: ${rawInput} (${msgType})`, 'Received', '', '', '', 'NEW', 'NOT_ASKED', 'Rem:0 Avoid:0 Last:First Message', 'First Message - Meta started', '', 'First Message'], false); // V329 every First Message writes Master_Leads
+      const v330Source = detectMetaSourceV330(rawInput, v330Referral); await saveToSheet('Master_Leads', [getISTTime(), uid, 'none', v330Source, `First Input: ${rawInput} (${msgType})`, 'Received', '', '', '', 'NEW', 'NOT_ASKED', 'Rem:0 Avoid:0 Last:First Message', `First Message - Source:${v330Source} Referral:${v330Referral ? (v330Referral.source_type||'ad') : 'none'}`, '', 'First Message'], false); // V330 referral-first source + V329 Master_Leads
       clearReminders(uid);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
@@ -4968,7 +4998,7 @@ app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhon
 app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V318 FINAL-AUDITED', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V318 FINAL-AUDITED', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V329 FIRST-MESSAGE-MASTER-LEADS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V330 META-SOURCE-REFERRAL - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V318 FINAL-AUDITED - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
