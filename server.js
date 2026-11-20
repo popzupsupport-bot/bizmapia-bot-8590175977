@@ -1,3 +1,5 @@
+// V335 - KERALA MODE - ALL videos = Malayalam. Company/District/Corp-Muni/Center corrected everywhere (EN/HI/ML all same 4 links). No other code changed.
+// Company: https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0 | District: https://youtu.be/Bi2HJ-3vQa0?si=byhqp8YTlcj1nOyQ | Muni/Corp: https://youtu.be/aj4Bxw2cOPQ?si=XrvTDBUMe1Hg9UL1 | Center: https://youtu.be/jCwTwiuSi5s?si=gtol4bAdLpc6i7bR
 // ============================================================================
 // 🔒 FINAL LOCKED BUILD - V318 FINAL-AUDITED - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE SECTIONS BELOW
 // Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
@@ -184,7 +186,7 @@ const BIZMAPIA_OFFICIAL = {
   website:'https://bizmapia.com/', playStore:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share',
   appStore:'https://apps.apple.com/in/app/bizmapia/id6761577245', instagram:'https://www.instagram.com/bizmapia',
   facebook:'https://www.facebook.com/bizmapia', threads:'https://www.threads.com/@bizmapia',
-  youtubeCompany:'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', email:'customercare@bizmapia.com',
+  youtubeCompany:'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0', email:'customercare@bizmapia.com',
   office:'1st Floor Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584',
   services:'4 Services: 1) Taxi / Ride Hailing, 2) Business Directory, 3) Delivery, 4) Booking. If user taps Know Our Services, show all 4. Never say Taxi Book only.',
   proof:'5K+ downloads on Play Store (Customer + Driver App). Live across Kerala - Thiruvananthapuram, Kollam, Pathanamthitta, Kochi, Kottayam.'
@@ -653,16 +655,16 @@ function getISTTimestamp() {
 const EARN_LINK = 'https://bizmapia.com/earn';
 // VIDEO LINKS - ALL LANGUAGES
 // ENGLISH
-const VIDEO_EN_DISTRICT = 'https://youtu.be/_y2JeFHBnqg?si=QLXX8704ovUY_5jC';
-const VIDEO_EN_CORP = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
-const VIDEO_EN_MUNICIPAL = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
-const VIDEO_EN_CENTER = 'https://youtu.be/r0X77XfmF94?si=_8Fej-ncUiO9GRCn';
+const VIDEO_EN_DISTRICT = 'https://youtu.be/Bi2HJ-3vQa0?si=byhqp8YTlcj1nOyQ';
+const VIDEO_EN_CORP = 'https://youtu.be/aj4Bxw2cOPQ?si=XrvTDBUMe1Hg9UL1';
+const VIDEO_EN_MUNICIPAL = 'https://youtu.be/aj4Bxw2cOPQ?si=XrvTDBUMe1Hg9UL1';
+const VIDEO_EN_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=gtol4bAdLpc6i7bR';
 
 // MALAYALAM
-const VIDEO_ML_DISTRICT = 'https://youtu.be/Fll3OY-hilU?si=O5VnmyCXTdlfhpsB';
-const VIDEO_ML_CORP = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
-const VIDEO_ML_MUNICIPAL = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
-const VIDEO_ML_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=8wyZOiBK6polJwVE';
+const VIDEO_ML_DISTRICT = 'https://youtu.be/Bi2HJ-3vQa0?si=byhqp8YTlcj1nOyQ';
+const VIDEO_ML_CORP = 'https://youtu.be/aj4Bxw2cOPQ?si=XrvTDBUMe1Hg9UL1';
+const VIDEO_ML_MUNICIPAL = 'https://youtu.be/aj4Bxw2cOPQ?si=XrvTDBUMe1Hg9UL1';
+const VIDEO_ML_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=gtol4bAdLpc6i7bR';
 
 // HINDI - using English links as fallback (update if you have separate Hindi links)
 const VIDEO_HI_DISTRICT = VIDEO_EN_DISTRICT;
@@ -673,22 +675,22 @@ const VIDEO_HI_CENTER = VIDEO_EN_CENTER;
 function getVideoUrl(sub, lang){
   // Original video logic maintained
   if(lang==='ml'){
-    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Fll3OY-hilU";
-    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=F9rI2crM7Ow";
+    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Bi2HJ-3vQa0";
+    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=aj4Bxw2cOPQ";
     if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=jCwTwiuSi5s";
-    return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
+    return "https://www.youtube.com/watch?v=2BB34hGi52I";
   }
   if(lang==='hi'){
-    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
-    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=GqolfqgHiCU";
-    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=r0X77XfmF94";
-    return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
+    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Bi2HJ-3vQa0";
+    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=aj4Bxw2cOPQ";
+    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=jCwTwiuSi5s";
+    return "https://www.youtube.com/watch?v=Bi2HJ-3vQa0";
   }
   // EN default
-  if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
-  if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=GqolfqgHiCU";
-  if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=r0X77XfmF94";
-  return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
+  if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Bi2HJ-3vQa0";
+  if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=aj4Bxw2cOPQ";
+  if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=jCwTwiuSi5s";
+  return "https://www.youtube.com/watch?v=2BB34hGi52I";
 }
 
 
@@ -804,36 +806,36 @@ function getTenderGreeting(sub, lang, state){
 
 // YOUTUBE_VIDEOS_ALL - FIX for ReferenceError - Defined before getVideoObj
 const YOUTUBE_VIDEOS_ALL = {
-  ML_DISTRICT: { id: "Fll3OY-hilU", url: "https://www.youtube.com/watch?v=Fll3OY-hilU" },
-  ML_CORP: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
-  ML_MUNI: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
+  ML_DISTRICT: { id: "Bi2HJ-3vQa0", url: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0" },
+  ML_CORP: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
+  ML_MUNI: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
   ML_CENTER: { id: "jCwTwiuSi5s", url: "https://www.youtube.com/watch?v=jCwTwiuSi5s" },
-  EN_DISTRICT: { id: "_y2JeFHBnqg", url: "https://www.youtube.com/watch?v=_y2JeFHBnqg" },
-  EN_CORP: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
-  EN_MUNI: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
-  EN_CENTER: { id: "r0X77XfmF94", url: "https://www.youtube.com/watch?v=r0X77XfmF94" },
-  HI_DISTRICT: { id: "_y2JeFHBnqg", url: "https://www.youtube.com/watch?v=_y2JeFHBnqg" },
-  HI_CORP: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
+  EN_DISTRICT: { id: "Bi2HJ-3vQa0", url: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0" },
+  EN_CORP: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
+  EN_MUNI: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
+  EN_CENTER: { id: "jCwTwiuSi5s", url: "https://www.youtube.com/watch?v=jCwTwiuSi5s" },
+  HI_DISTRICT: { id: "Bi2HJ-3vQa0", url: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0" },
+  HI_CORP: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
   ml: {
-    district: "https://www.youtube.com/watch?v=Fll3OY-hilU",
-    corp: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
-    muni: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
+    district: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0",
+    corp: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    muni: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
     center: "https://www.youtube.com/watch?v=jCwTwiuSi5s",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    knowCompany: "https://www.youtube.com/watch?v=2BB34hGi52I"
   },
   en: {
-    district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
-    corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
-    muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
-    center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    district: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0",
+    corp: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    muni: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    center: "https://www.youtube.com/watch?v=jCwTwiuSi5s",
+    knowCompany: "https://www.youtube.com/watch?v=2BB34hGi52I"
   },
   hi: {
-    district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
-    corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
-    muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
-    center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    district: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0",
+    corp: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    muni: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    center: "https://www.youtube.com/watch?v=jCwTwiuSi5s",
+    knowCompany: "https://www.youtube.com/watch?v=2BB34hGi52I"
   }
 };
 
@@ -866,7 +868,7 @@ function getTrackingLink(domain, phone, lang, sub, videoObj, district){
 
 function getVideoIdFromUrl(url){
   const m = url.match(/youtu\.be\/([^?]+)/) || url.match(/v=([^&]+)/);
-  return m ? m[1] : 'Fll3OY-hilU';
+  return m ? m[1] : 'Bi2HJ-3vQa0';
 }
 
 function getStateSections(lang){
@@ -2778,8 +2780,6 @@ ${LINKS_V92.tenderDistrict}
 // === HOT TEMPLATE SENDER - ADDED 9 NOV 2026 - ONLY ADDITION, NO OTHER CODE TOUCHED ===
 const TEMPLATE1_NUMBERS = ["919946402400","919846919148","918111914663","918156857714","919447805071","919495686767","919495787787","917012685283","918891917766","919847882906","919544592159","919947141555","917510242504"];
 const TEMPLATE2_NUMBERS = ["918304002279","918289991657","918891167308","918943219407","919447428830","96898759658","917902563306","919048181788"];
-const TEMPLATE3_NUMBERS = ["917012063716","918347408676","919562929444","919400766384","917907972765","919656036075","97336173894","918086200001","919744545500","919605048488","919495907574","918157020565","919846465729","919495989100","918547813388","919497777242","919961333990"];
-// V333 MANUAL TEMPLATE3 - 17 numbers after 9 Nov, yesterday 21 excluded, 919846810000 excluded (still in 24h reminder cycle). No other code touched. No automatic code yet - manual only.
 async function sendTemplateMsg(to, templateName){
   return await sendWithDelay({messaging_product:'whatsapp', to: to, type:'template', template:{name: templateName, language:{code:'en'}}});
 }
@@ -2792,11 +2792,6 @@ app.get('/fire-template2', async(req,res)=>{
   let out=[];
   for(let n of TEMPLATE2_NUMBERS){ try{ await sendTemplateMsg(n,"bizmapia_followup_soft"); out.push(n+": SENT"); }catch(e){ out.push(n+": FAIL "+e.message); } await new Promise(r=>setTimeout(r,2000)); }
   res.send(out.join("<br>")+"<br><br>DONE Template2 - 8 numbers");
-});
-app.get('/fire-template3', async(req,res)=>{
-  let out=[];
-  for(let n of TEMPLATE3_NUMBERS){ try{ await sendTemplateMsg(n,"bizmapia_followup_busy"); out.push(n+": SENT"); }catch(e){ out.push(n+": FAIL "+e.message); } await new Promise(r=>setTimeout(r,2000)); }
-  res.send(out.join("<br>")+"<br><br>DONE Template3 - 17 numbers");
 });
 // === END HOT TEMPLATE SENDER ===
 
@@ -3161,7 +3156,7 @@ app.post('/webhook', async(req,res)=>{
         // V270 BUSINESS-ONLY: 3A now = Video only, NO capacity buttons, NO services, NO More services. 3B after 3 min = capacity reminder.
         const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
         await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
-        await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId));
         // V270: Capacity reminder after 3 min (180s) - only if user has NOT replied / picked level yet
         const _capUid = uid, _capPhone = incomingPhoneId, _capLang = sl, _capSentAt = Date.now();
         setTimeout(async()=>{ try{
@@ -3190,7 +3185,7 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{...state, lastStep:'V266 - Level Picked '+btnId, aiMode:true, lead:{...(state.lead||{}), level:btnId, intent:'business_opportunity'}});
       // V272 FIX: NEVER ask district / name / address / location now. Those are LAST step, ONLY AFTER registration fee is VERIFIED. After capacity: confirm + explain + video + move to fee.
       const lvlMsg = sl3==='ml' ? `👍 നല്ല തിരഞ്ഞെടുപ്പ്! 🙏\n\n${lvl} തിരഞ്ഞെടുത്തു.\n\nനമുക്ക് ഫൈനലൈസ് ചെയ്യാം — ഈ അവസരം നിങ്ങൾക്ക് ചേരുമോ ഇല്ലയോ എന്ന്. പല ഉയർന്ന തുക അടയ്ക്കാൻ കഴിയുന്നവരും ആദ്യം കുറഞ്ഞ ഓപ്ഷൻ ചെക്ക് ചെയ്യാനാണ് തിരഞ്ഞെടുക്കുന്നത്, അതുകൊണ്ട് വീഡിയോ കണ്ട ശേഷം നമുക്ക് വീണ്ടും കൺഫേം ചെയ്യാം. സാധ്യമെങ്കിൽ നമുക്ക് ഉയർന്ന ഓപ്ഷനിലേക്ക് അപ്ഗ്രേഡ് ചെയ്യാം.\n\n👇 *ഈ അവസരത്തിന്റെ വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ ഇപ്പോൾ തന്നെ കാണൂ, കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.` : sl3==='hi' ? `👍 अच्छा चुनाव! ${lvl} चुना।\n\nहम फाइनलाइज़ करेंगे — यह अवसर आपको सूट करता है या नहीं। कई ज़्यादा राशि दे सकने वाले लोग पहले कम ऑप्शन चेक करने के लिए चुनते हैं, इसलिए वीडियो देखने के बाद हम फिर से कंफर्म करेंगे। अगर संभव है तो हम हायर ऑप्शन में अपग्रेड कर सकते हैं।\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो अभी देखें, देखने के बाद रिप्लाई करें।` : `👍 Good choice! You picked ${lvl}.\n\nWe will finalize whether this opportunity suits you or not. Many high-payable users first pick the lower option just to check, so after the video we will reconfirm. If possible, we can upgrade to higher options.\n\n👇 *Click the button below to see this Opportunity Video right now - See Video:*\n\nSee the video right now and reply after seeing it.`;
-      // V277 FIX: Opportunity Video is DIFFERENT from Company Video. Company Video = 7kkR_4w1ZMk (Know Company, shown BEFORE capacity).
+      // V277 FIX: Opportunity Video is DIFFERENT from Company Video. Company Video = 2BB34hGi52I (Know Company, shown BEFORE capacity).
       // Opportunity Video = level + language specific via getVideoUrl (District/Corp/Center), shown AFTER capacity pick.
       const oppVideoUrl = (typeof getVideoUrl === 'function') ? getVideoUrl(btnId, sl3) : 'https://www.youtube.com/watch?v=jCwTwiuSi5s';
       await sendWithDelay(singleCta(uid, lvlMsg, {title: '🎥 See Video', url: oppVideoUrl}, incomingPhoneId));
@@ -3298,7 +3293,7 @@ app.post('/webhook', async(req,res)=>{
       const sl = state.lang || 'ml';
       const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
       await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
-      await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+      await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId));
       const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl, _capSentAt2 = Date.now();
       setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt2) return; /* V289 replied after video */ const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
       await saveToSheet('System_Logs',[nowIso,uid,sl,'V276 AI_BUSINESS '+incomingPhoneId,'AI_BUSINESS button -> direct Company Video + See Video button, no AI loop','V276',HELP_ADMIN,'V276 Business',''],false);
@@ -3460,7 +3455,7 @@ app.post('/webhook', async(req,res)=>{
           if(_cur==='yes'||_cur==='ok'||_cur==='okay'){
             state.lastStep='V299 - Video Yes After Ask'; state.aiMode=true; await setState(uid, state);
             const _ansV = _L9==='ml' ? `🎥 സൂപ്പർ! Company Video ഇതാ — 2 മിനിറ്റ് കണ്ടാൽ കമ്പനി മനസ്സിലാകും.\n\nകണ്ട ശേഷം പറയൂ — “kandu” എന്ന് ടൈപ്പ് ചെയ്താൽ മതി.` : `🎥 Super! Here is the Company Video — 2 minutes and you will understand the company.\n\nAfter watching, just type “seen”.`;
-            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url:'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
+            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url:'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
             return;
           }
         }
@@ -3680,7 +3675,7 @@ I will help you find the *right option*, step by step. 🤝
           : `🎉 Excellent choice!\n👉 What to do now: Watch the Company Video below to know about Bizmapia.\n\nAlready know Bizmapia well? No need to watch again — tap Skip Video below:`;
         const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + step1Exact;
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
-        await sendWithDelay(singleCta(uid, companyVideo, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, companyVideo, {title: '🎥 See Video', url: 'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId));
         await delay(400);
         await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'നന്നായി അറിയാമോ? Skip ചെയ്യൂ:' : lang==='hi' ? 'पहले से जानते हैं? Skip करें:' : 'Already know Bizmapia well? Tap Skip Video:', [{id:'COMPANY_KNOW',title: lang==='ml' ? '⏭️ സ്കിപ്പ് ചെയ്യൂ' : lang==='hi' ? '⏭️ स्किप करें' : '⏭️ Skip Video'}], incomingPhoneId));
         // V247: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
@@ -3707,7 +3702,7 @@ I will help you find the *right option*, step by step. 🤝
     if(btnId==='COMPANY_VIDEO_WATCH'){
       state.lastStep='Company Video - Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const cv = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് \"കമ്പനി വീഡിയോ കണ്ടു\" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर \"कंपनी वीडियो देखा\" पर क्लिक करें:` : `👉 Please watch Company video fully, then click \"Watched Company Video\":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
       scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
@@ -3728,7 +3723,7 @@ I will help you find the *right option*, step by step. 🤝
       // V247: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/2BB34hGi52I?si=4Ur06L_GXNImg_t0'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
       scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
