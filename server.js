@@ -1,3 +1,4 @@
+// V350 - 4 FIXES ONLY (from V349, no other changes): 1) Short Welcome all 5 places 2) Language congratulation 3) Typed doubt 1-2 line answer before parking 4) Remaining steps Step X of 6 + balance names
 // ============================================================================
 // 🔒 FINAL LOCKED BUILD - V321 TRY-FREE-5PCT-24H - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE SECTIONS BELOW
 // Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
@@ -553,7 +554,12 @@ V270 RULES - NEVER BREAK:\n- Welcome: English only, attractive, Maya introduced 
 - If language = Hindi -> reply ONLY in Hindi script.
 - FIRST MESSAGE of every new chat: WELCOME IN ENGLISH ONLY + CONFIRM LANGUAGE FIRST. Do NOT ask intention before language is confirmed. Do NOT use Malayalam/Hindi in first message.
   FIRST WELCOME MESSAGE - ENGLISH ONLY (V267 RULE, NEVER BREAK):
-  "Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n📦 *Online Booking* — hotel rooms, appointments, movie / show tickets\n\nWhat do you want to experience — our services, or business opportunity to earn with Bizmapia? Tap language below:"
+  "Hi, I am Maya here to chat with you! 👋
+
+Welcome to Bizmapia! 🙏
+🇮🇳 India's Largest Online Platform - First 4-in-1 App in India
+
+👇 To start, please tap your language below:"
   Then show 3 language buttons: [മലയാളം] [English] [हिन्दी]
   Do NOT write the welcome in Malayalam / Hindi / mixed languages. English only until user picks a language.
   AFTER language is confirmed, reply ONLY in that confirmed language, pure script. No mixing.
@@ -1810,11 +1816,19 @@ function getSorryExplain(lang, lastStep, userText){
 
 // ===== V247 SINGLE-MESSAGE + STEPS-LEFT + CONGRATS + WHAT-TO-DO =====
 // 1 step = 1 message. Every opp message = Congrats (prev step done) + What to do now + Steps Left, all in SAME message.
+function oppBalanceNames(lang, step){
+  const names = lang==='ml' ? ['കമ്പനിയെ അറിയാം','നിക്ഷേപ ശേഷി','അവസരം മനസ്സിലാക്കൂ','തയ്യാറാണ്','രജിസ്ട്രേഷൻ ഫീ','എഗ്രിമെന്റ് തീയതി'] : lang==='hi' ? ['कंपनी जानें','निवेश क्षमता','अवसर समझें','तैयार हैं','रजिस्ट्रेशन फी','एग्रीमेंट डेट'] : ['Know Company','Investing Capacity','Understand Opportunity','Confirm Ready','Pay Registration Fee','Fix Agreement Date'];
+  const bal = names.slice(step);
+  if(!bal.length) return lang==='ml' ? `✅ എല്ലാ സ്റ്റെപ്പും പൂർത്തിയായി!` : lang==='hi' ? `✅ सभी स्टेप पूरे!` : `✅ All steps done!`;
+  const label = lang==='ml' ? `Balance Steps — ബാക്കി:` : lang==='hi' ? `Balance Steps — बाकी:` : `Balance Steps — remaining:`;
+  return `${label} ${bal.join(' → ')}`;
+}
 function oppProgress(lang, step){
   const left = 6 - step;
-  if(lang==='ml') return step>=6 ? `📍 Step 6 of 6 — അവസാന സ്റ്റെപ്പ്!` : `📍 Step ${step} of 6 — ${left} സ്റ്റെപ്പ് ബാക്കി`;
-  if(lang==='hi') return step>=6 ? `📍 Step 6 of 6 — आखिरी स्टेप!` : `📍 Step ${step} of 6 — ${left} स्टेप बाकी`;
-  return step>=6 ? `📍 Step 6 of 6 — Last step!` : `📍 Step ${step} of 6 — ${left} steps left`;
+  const bal = oppBalanceNames(lang, step);
+  if(lang==='ml') return step>=6 ? `📍 Step 6 of 6 — അവസാന സ്റ്റെപ്പ്!\n${bal}` : `📍 Step ${step} of 6 — ${left} സ്റ്റെപ്പ് ബാക്കി\n${bal}`;
+  if(lang==='hi') return step>=6 ? `📍 Step 6 of 6 — आखिरी स्टेप!\n${bal}` : `📍 Step ${step} of 6 — ${left} स्टेप बाकी\n${bal}`;
+  return step>=6 ? `📍 Step 6 of 6 — Last step!\n${bal}` : `📍 Step ${step} of 6 — ${left} steps left\n${bal}`;
 }
 function oppCongrats(lang, step){
   // step = CURRENT step. Congratulates PREVIOUS step done + tells What to do now. Pure language.
@@ -1999,7 +2013,7 @@ async function restoreRemindersFromRedis(){
   try{
     const keys = await redis.keys('reminder:*');
     let restored = 0;
-    // V349: DEDUPE maya_idle on boot - keep only NEWEST per uid+stage, drop stale overdue idle (cause of 10:32:17 + 10:32:20 double Stage-1)
+    // V350: DEDUPE maya_idle on boot - keep only NEWEST per uid+stage, drop stale overdue idle (cause of 10:32:17 + 10:32:20 double Stage-1)
     const _idleBest = {}; // uid:stage -> {key,d,remaining}
     const _idleDrop = [];
     for(let k of keys){
@@ -2030,7 +2044,7 @@ async function restoreRemindersFromRedis(){
         restored++;
       }catch(e){ console.log('V253 restore one fail', e.message); }
     }
-    console.log(`V349 restored ${restored} reminders from Redis`);
+    console.log(`V350 restored ${restored} reminders from Redis`);
     return restored;
   }catch(e){ console.log('V253 restore fail', e.message); return 0; }
 }
@@ -2103,7 +2117,7 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
-  // V349: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
+  // V350: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
     for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':'+_stage+':') && k!==`${uid}:${type}`){ try{ clearTimeout(reminders.get(k)); }catch(e){} reminders.delete(k); if(redisReady && redis){ redis.del(`reminder:${k}`).catch(()=>{}); } } }
@@ -3164,7 +3178,12 @@ app.post('/webhook', async(req,res)=>{
       await setState(uid,{lang: prevLang, lastStep:'AI Maya - Fresh Reset', phoneId: incomingPhoneId, aiMode:true, aiHistory:[], lead:{}, firedGate:null, stopConfirmPending:false});
       const aiReset = AI_ENABLED ? await callMayaAI(prevLang, 'Hi, start fresh. FIRST confirm my language - ask which language: Malayalam / English / Hindi. Do NOT ask intention yet. Do NOT use Manglish.', []) : null;
       const resetText = aiReset && aiReset.text ? aiReset.text : (prevLang==='ml' ? `🔄 ശരി, പുതിയത് തുടങ്ങാം. 🙏\n\nഞാൻ മായ ആണ്. ബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്?` : `🔄 Okay, fresh start. I am Maya. Want to know about Bizmapia business opportunity?`);
-      const langConfirmText = `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`;
+      const langConfirmText = `Hi, I am Maya here to chat with you! 👋
+
+Welcome to Bizmapia! 🙏
+🇮🇳 India's Largest Online Platform - First 4-in-1 App in India
+
+👇 To start, please tap your language below:`;
       try{ await sendWithDelay(interactiveButton(uid, langConfirmText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, langConfirmText, incomingPhoneId)); } // V261: First = LANGUAGE CONFIRM, 3 buttons - exception to 2-tab rule
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       try{ scheduleIdleNudges(uid, prevLang, incomingPhoneId); }catch(e){} // V344: Welcome must also schedule Are you there
@@ -3259,7 +3278,7 @@ app.post('/webhook', async(req,res)=>{
       const clang = ll==='ml'?'ml':ll==='hi'?'hi':'en';
       await setState(uid,{lang:clang, lastStep:'V270 - Lang Confirmed '+clang, phoneId: incomingPhoneId, aiMode:true, aiHistory:(state.aiHistory||[]), lead:(state.lead||{})}); // V268: NEVER wipe AI memory on lang tap
       clearReminders(uid);
-      const q = clang==='ml' ? `സൂപ്പർ! മലയാളത്തിൽ തുടരാം. 🙏\n\nനിങ്ങൾക്ക് എന്താണ് വേണ്ടത് എന്ന് സ്വന്തം വാക്കുകളിൽ പറഞ്ഞാൽ മതി, ഞാൻ ശരിയായ ഓപ്ഷൻ കണ്ടുപിടിക്കാൻ സഹായിക്കാം.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ ബിസ്മാപ്പിയയോടൊപ്പം ബിസിനസ് അവസരം എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : clang==='hi' ? `बहुत बढ़िया! हिन्दी में जारी रखते हैं। 🙏\n\nआपको क्या चाहिए, अपने शब्दों में बताइए, मैं सही ऑप्शन ढूंढने में मदद करूंगी।\n\nBizmapia में आप क्या खोज रहे हैं? सेवा इस्तेमाल करना है, या Bizmapia के साथ बिज़नेस अवसर लेकर कमाना है?` : `Great! Let’s continue in English. 🙏\n\nJust tell me in your own words what you need, I will help you find the right option.\n\nWhat are you looking for in Bizmapia? To use a service, or to earn with Bizmapia through a business opportunity?`;
+      const q = clang==='ml' ? `🙏 മലയാളം തിരഞ്ഞെടുത്തതിന് നന്ദി! Excellent choice! 👏\n\nസൂപ്പർ! മലയാളത്തിൽ തുടരാം. 🙏\n\nനിങ്ങൾക്ക് എന്താണ് വേണ്ടത് എന്ന് സ്വന്തം വാക്കുകളിൽ പറഞ്ഞാൽ മതി, ഞാൻ ശരിയായ ഓപ്ഷൻ കണ്ടുപിടിക്കാൻ സഹായിക്കാം.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ ബിസ്മാപ്പിയയോടൊപ്പം ബിസിനസ് അവസരം എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : clang==='hi' ? `🙏 हिन्दी चुनने के लिए धन्यवाद! Excellent choice! 👏\n\nबहुत बढ़िया! हिन्दी में जारी रखते हैं। 🙏\n\nआपको क्या चाहिए, अपने शब्दों में बताइए, मैं सही ऑप्शन ढूंढने में मदद करूंगी।\n\nBizmapia में आप क्या खोज रहे हैं? सेवा इस्तेमाल करना है, या Bizmapia के साथ बिज़नेस अवसर लेकर कमाना है?` : `🙏 Thank you for selecting English! Excellent choice! 👏\n\nGreat! Let’s continue in English. 🙏\n\nJust tell me in your own words what you need, I will help you find the right option.\n\nWhat are you looking for in Bizmapia? To use a service, or to earn with Bizmapia through a business opportunity?`;
       // V275: 2 buttons after language - easier than typing. Business Opportunity + Use Other Services.
       const q2 = q + (clang==='ml' ? `\n\n👇 *താഴെ ഒന്ന് ക്ലിക്ക് ചെയ്യൂ:*` : clang==='hi' ? `\n\n👇 *नीचे एक पर क्लिक करें:*` : `\n\n👇 *Tap one below:*`);
       const bizTitle = clang==='ml' ? 'ബിസിനസ് അവസരം' : clang==='hi' ? 'Business Opportunity' : 'Business Opportunity';
@@ -3495,7 +3514,12 @@ app.post('/webhook', async(req,res)=>{
     // V262 FIX: Cannot use isFreeText here - it is defined LATER. Compute inline instead.
     const isFreeTextForLangCheck = !!txt && !btnId && msg.type==='text';
     if(isFreeTextForLangCheck && !state.lang){
-      const lcText = `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`;
+      const lcText = `Hi, I am Maya here to chat with you! 👋
+
+Welcome to Bizmapia! 🙏
+🇮🇳 India's Largest Online Platform - First 4-in-1 App in India
+
+👇 To start, please tap your language below:`;
       try{ await sendWithDelay(interactiveButton(uid, lcText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, lcText, incomingPhoneId)); }
       await setState(uid,{...state, lastStep:'V261 - Language Confirm Sent', phoneId: incomingPhoneId});
       return;
@@ -3766,7 +3790,7 @@ app.post('/webhook', async(req,res)=>{
       clearReminders(uid);
       // V256: Language tap -> AI Maya greeting in that language, NOT old mainMenu/earnButtons
       const aiGreet = AI_ENABLED ? await callMayaAI(lang, 'Hi, I selected my language. Language is now CONFIRMED. Now ask me my real intention in my CONFIRMED language ONLY - pure Malayalam script if Malayalam, pure English if English. NO Manglish, NO mixing. Ask ONE question, do NOT give options yet.', []) : null;
-      const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `നമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : lang==='hi' ? `नमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `Hello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`);
+      const greetText = aiGreet && aiGreet.text ? aiGreet.text : (lang==='ml' ? `🙏 മലയാളം തിരഞ്ഞെടുത്തതിന് നന്ദി! Excellent choice! 👏\n\nനമസ്കാരം! 🙏 ഞാൻ മായ ആണ്.\n\nബിസ്മാപ്പിയയിൽ നിങ്ങൾ എന്താണ് തേടുന്നത്? ബിസിനസ് അവസരമാണോ, സേവനം ഉപയോഗിക്കാനാണോ, അതോ മറ്റെന്തെങ്കിലുമാണോ?` : lang==='hi' ? `🙏 हिन्दी चुनने के लिए धन्यवाद! Excellent choice! 👏\n\nनमस्कार! 🙏 मैं माया हूँ।\n\nबिज़मैपिया में आप क्या खोज रहे हैं? बिज़नेस अवसर, सेवा, या कुछ और?` : `🙏 Thank you for selecting English! Excellent choice! 👏\n\nHello! 🙏 I am Maya.\n\nWhat are you actually looking for in Bizmapia? Business opportunity, a service, or something else?`);
       try{ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, greetText, incomingPhoneId)); } // V260: First msg = TEXT ONLY, ask intention
       await saveToSheet('System_Logs', [nowIso, uid, lang, 'Language Selected AI '+incomingPhoneId, lang, 'Clicked', HELP_ADMIN, 'Language AI '+lang, ''], false);
       try{ scheduleIdleNudges(uid, lang, incomingPhoneId); }catch(e){}
@@ -3778,24 +3802,12 @@ app.post('/webhook', async(req,res)=>{
       const L=T.en;
       const msgType = msg.type||'text';
       const rawInput = txt || msgType;
-      await sendWithDelay(interactiveButton(uid, `Hello! Welcome to *Bizmapia!* 🙏✨
+      await sendWithDelay(interactiveButton(uid, `Hi, I am Maya here to chat with you! 👋
 
-I am *_Maya_*, your personal guide here. 💁‍♀️
+Welcome to Bizmapia! 🙏
+🇮🇳 India's Largest Online Platform - First 4-in-1 App in India
 
-🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —
-
-🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel
-🔍 *Business Search* — find _shops, services, products & offers_ near you
-🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_
-🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time
-
-💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*
-
-🎙️ I am here to understand *what YOU need* —
-Just _type in your own words_ or send a *voice note* 🎤
-I will help you find the *right option*, step by step. 🤝
-
-👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+👇 To start, please tap your language below:`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'First Message '+incomingPhoneId, `First Input: ${rawInput} (${msgType})`, 'Received', HELP_ADMIN, 'First', ''], true);
       clearReminders(uid);
@@ -3810,7 +3822,12 @@ I will help you find the *right option*, step by step. 🤝
       const L=T.en;
       clearReminders(uid);
       await setState(uid,{first:true, lastStep:'HI - Reset', lang:null, phoneId: incomingPhoneId});
-      await sendWithDelay(interactiveButton(uid, `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+      await sendWithDelay(interactiveButton(uid, `Hi, I am Maya here to chat with you! 👋
+
+Welcome to Bizmapia! 🙏
+🇮🇳 India's Largest Online Platform - First 4-in-1 App in India
+
+👇 To start, please tap your language below:`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Hi Received '+incomingPhoneId, 'Welcome Reset', 'Clicked', HELP_ADMIN, 'HI', ''], true);
       scheduleReminder(uid,'noLang:'+Date.now(),'en',1*60*60*1000, incomingPhoneId);
       scheduleReminder(uid,'noLang2:'+Date.now(),'en',12*60*60*1000, incomingPhoneId);
@@ -4510,6 +4527,20 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
         }
       }
     }catch(_){}
+
+// V350 FIX3: Typed doubt -> answer in 1-2 lines from LOCKED facts BEFORE parking. Never invent numbers. If doubt not in list, return null and V302/V301 park as before.
+function v350DoubtAnswer(low, L){
+  const s = String(low||'').toLowerCase();
+  const pick = (ml,hi,en)=> L==='ml'?ml : L==='hi'?hi : en;
+  if(/fraud|scam|fake|cheat|thattip|fraud| विश्वास|धोखा/.test(s)) return pick(`✅ ഇത് തട്ടിപ്പല്ല — Bizmapia രജിസ്റ്റർ ചെയ്ത കമ്പനിയാണ്. വിശദാംശങ്ങൾ Tender / Annexure B-യിൽ ഉണ്ട്.`, `✅ यह धोखा नहीं है — Bizmapia रजिस्टर्ड कंपनी है। विवरण Tender / Annexure B में है।`, `✅ This is not fraud — Bizmapia is a registered company. Details are in Tender / Annexure B.`);
+  if(/profit|income|earn|varumanam|labham|kamai|कमाई|लाभ/.test(s)) return pick(`💰 വരുമാനം നിങ്ങളുടെ ഏരിയ + നിക്ഷേപം അനുസരിച്ച് മാറും. കൃത്യമായ കണക്ക് Annexure B - Income Opportunity-യിൽ ഉണ്ട്.`, `💰 कमाई आपके एरिया + निवेश पर निर्भर है। सही हिसाब Annexure B - Income Opportunity में है।`, `💰 Income depends on your area + investment. Exact figures are in Annexure B - Income Opportunity.`);
+  if(/emi|installment|thav ana|किस्त/.test(s)) return pick(`💳 EMI ലഭ്യമാണ് — വിശദാംശങ്ങൾ Tender-ൽ ഉണ്ട്. താഴെ EMI ബട്ടൺ നോക്കൂ.`, `💳 EMI उपलब्ध है — विवरण Tender में है। नीचे EMI बटन देखें।`, `💳 EMI is available — details are in Tender. See EMI button below.`);
+  if(/refund|money back|return|പണം തിരികെ|रिफंड/.test(s)) return pick(`💳 Refund / Terms Tender-ൽ വ്യക്തമായി എഴുതിയിട്ടുണ്ട്. അത് വായിച്ച ശേഷം തീരുമാനിക്കൂ.`, `💳 Refund / Terms Tender में साफ लिखे हैं। उसे पढ़कर फैसला करें।`, `💳 Refund / Terms are clearly written in Tender. Please read it before deciding.`);
+  if(/office|address|location|evide|कहाँ|office/.test(s)) return pick(`📍 ഓഫീസ് / വിലാസം Tender-ൽ ഉണ്ട്. കൂടുതൽ വിവരത്തിന് ടീം വിളിക്കും.`, `📍 ऑफिस / पता Tender में है। अधिक जानकारी के लिए टीम कॉल करेगी।`, `📍 Office / address is in Tender. Team will call you for more details.`);
+  if(/how.*work|how.*start|entha|cheyyanam|कैसे/.test(s)) return pick(`👉 ഈ step പൂർത്തിയാക്കൂ, അടുത്ത step-ൽ എല്ലാം മനസ്സിലാകും.`, `👉 यह step पूरा करें, अगले step में सब समझ आ जाएगा।`, `👉 Complete this step, everything will be clear in the next step.`);
+  if(/price|fee|token|vila|charge|कीमत|फीस/.test(s)) return pick(`💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.`, `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.`, `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.`);
+  return null;
+}
     // V302 OFF-TOPIC DURING OPPORTUNITY FINALIZATION - Bring back with Current Step + Balance Steps + Are You Ready + Next Option.
     // Problem: user talks anything outer (weather, joke, news, personal, other business) in middle of finalization, Maya either answered it and lost flow, or restarted.
     // Rule: If lastStep is inside Opportunity Finalization (Company Video -> Capacity -> Opportunity Video -> Benefits -> Support -> Requirements -> Corp Check -> Pay Token -> Details), and input is OFF-TOPIC (not the expected answer for that step, not a button that was handled above), then:
@@ -4549,9 +4580,9 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
             const _cur = _finSteps[_idx];
             const _rem = _finSteps.slice(_idx); // current + balance
             const _next = _cur;
-            const _remTxt = _rem.map((s,i)=> _L2==='ml' ? `${i+1}. ${s.ml}${i===0?' ← ഇപ്പോൾ ഇവിടെ':''}` : _L2==='hi' ? `${i+1}. ${s.hi}${i===0?' ← अभी यहाँ':''}` : `${i+1}. ${s.en}${i===0?' ← we are here':''}`).join('\n');
+            const _sixIdx = _idx<=0?0 : _idx===1?1 : _idx<=5?2 : _idx===6?3 : _idx===7?4 : 5; const _sixProg = (typeof oppProgress==='function' ? oppProgress(_L2, _sixIdx+1) : ''); const _doubtAns = (typeof v350DoubtAnswer==='function' ? v350DoubtAnswer(_low2, _L2) : null); const _remTxt = (typeof oppBalanceNames==='function' ? oppBalanceNames(_L2, _sixIdx) : '') + '\n' + _rem.map((s,i)=> _L2==='ml' ? `${i+1}. ${s.ml}${i===0?' ← ഇപ്പോൾ ഇവിടെ':''}` : _L2==='hi' ? `${i+1}. ${s.hi}${i===0?' ← अभी यहाँ':''}` : `${i+1}. ${s.en}${i===0?' ← we are here':''}`).join('\n');
             const _nextTitle = _L2==='ml' ? _next.btnMl : _L2==='hi' ? _next.btnHi : _next.btn.title;
-            const _msg = _L2==='ml' ? `👍 കിട്ടി — “${String(txt||'').slice(0,60)}”.\n\nഅത് കഴിഞ്ഞ് നമുക്ക് തുടരാം. 🙏\n\n📍 *നമ്മൾ ഇപ്പോൾ ഈ step-ൽ ആണ്: ${_cur.ml}*\n\n📋 *Balance Steps — ചെയ്യാൻ ബാക്കിയുള്ളത്:*\n${_remTxt}\n\n❓ *Are you ready — തുടരാൻ തയ്യാറാണോ?*\n\n👉 *Next Option — ഇനി ചെയ്യേണ്ടത്:* ${_next.ml} — താഴെ ബട്ടൺ അമർത്തൂ.` : _L2==='hi' ? `👍 मिल गया — “${String(txt||'').slice(0,60)}”.\n\nउसे बाद में देखेंगे। 🙏\n\n📍 *हम अभी इस step पर हैं: ${_cur.hi}*\n\n📋 *Balance Steps — बाकी काम:*\n${_remTxt}\n\n❓ *Are you ready — आगे बढ़ने के लिए तैयार हैं?*\n\n👉 *Next Option — अब करना है:* ${_next.hi} — नीचे button दबाएँ।` : `👍 Got it — “${String(txt||'').slice(0,60)}”.\n\nWe will come back to that. 🙏\n\n📍 *We are in this step: ${_cur.en}*\n\n📋 *Balance Steps — still to do:*\n${_remTxt}\n\n❓ *Are you ready to continue?*\n\n👉 *Next Option — you need to do this now:* ${_next.en} — tap the button below.`;
+            const _msg = _L2==='ml' ? `${_sixProg}${_doubtAns ? '\n\n'+_doubtAns : ''}\n\n👍 കിട്ടി — “${String(txt||'').slice(0,60)}”.\n\nഅത് കഴിഞ്ഞ് നമുക്ക് തുടരാം. 🙏\n\n📍 *നമ്മൾ ഇപ്പോൾ ഈ step-ൽ ആണ്: ${_cur.ml}*\n\n📋 *Balance Steps — ചെയ്യാൻ ബാക്കിയുള്ളത്:*\n${_remTxt}\n\n❓ *Are you ready — തുടരാൻ തയ്യാറാണോ?*\n\n👉 *Next Option — ഇനി ചെയ്യേണ്ടത്:* ${_next.ml} — താഴെ ബട്ടൺ അമർത്തൂ.` : _L2==='hi' ? `${_sixProg}${_doubtAns ? '\n\n'+_doubtAns : ''}\n\n👍 मिल गया — “${String(txt||'').slice(0,60)}”.\n\nउसे बाद में देखेंगे। 🙏\n\n📍 *हम अभी इस step पर हैं: ${_cur.hi}*\n\n📋 *Balance Steps — बाकी काम:*\n${_remTxt}\n\n❓ *Are you ready — आगे बढ़ने के लिए तैयार हैं?*\n\n👉 *Next Option — अब करना है:* ${_next.hi} — नीचे button दबाएँ।` : `${_sixProg}${_doubtAns ? '\n\n'+_doubtAns : ''}\n\n👍 Got it — “${String(txt||'').slice(0,60)}”.\n\nWe will come back to that. 🙏\n\n📍 *We are in this step: ${_cur.en}*\n\n📋 *Balance Steps — still to do:*\n${_remTxt}\n\n❓ *Are you ready to continue?*\n\n👉 *Next Option — you need to do this now:* ${_next.en} — tap the button below.`;
             const _h2=[...(state.aiHistory||[])]; _h2.push({role:'user',text:String(txt||'').slice(0,300)}); _h2.push({role:'maya',text:_msg.slice(0,500)});
             await setState(uid, {...state, aiHistory:_h2.slice(-12), lastStep:_s2, aiMode:true});
             const _btn = [{id:_next.btn.id, title:_nextTitle}, {id:'AI_BUSINESS', title: _L2==='ml'?'ബിസിനസ് അവസരം': _L2==='hi'?'Business Opportunity':'Business Opportunity'}];
@@ -4615,6 +4646,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
           let _prefix = '';
           if(_low1==='back' || _low1.includes('back') || _low1.includes('thirich')) _prefix = _L1==='ml' ? `👍 ശരി, തിരിച്ചു പോകാം.\n\n` : `👍 OK, going back.\n\n`;
           else if(/price|fee|token|vila/.test(_low1)) _prefix = _L1==='ml' ? `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n` : `💰 Token: Center Rs.100 | Corp Rs.150 | District Rs.250.\n\n`;
+          else if(typeof v350DoubtAnswer==='function' && v350DoubtAnswer(_low1,_L1)) _prefix = v350DoubtAnswer(_low1,_L1) + '\n\n';
           else if(/video|videyo/.test(_low1)) _prefix = _L1==='ml' ? `🎥 വീഡിയോ വീണ്ടും അയയ്ക്കാം.\n\n` : `🎥 I will resend the video.\n\n`;
           else if(_in1) _prefix = _L1==='ml' ? `👍 കിട്ടി — “${_in1.slice(0,50)}”.\n\n` : `👍 Got it — “${_in1.slice(0,50)}”.\n\n`;
           const _final = _prefix + (_L1==='ml' ? `ഇപ്പോൾ നമ്മൾ *${_stepName}* step-ൽ ആണ്.\n\n${_stepQ}` : `We are now at *${_stepName}* step.\n\n${_stepQ}`);
@@ -5133,13 +5165,13 @@ app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets()
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V349 IDLE-REDIS-DEDUP', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V350 IDLE-REDIS-DEDUP', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V349 IDLE-REDIS-DEDUP - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V350 IDLE-REDIS-DEDUP - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
