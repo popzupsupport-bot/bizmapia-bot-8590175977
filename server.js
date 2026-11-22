@@ -69,6 +69,10 @@ let google = null;
 try { google = require('googleapis').google; } catch(e) { console.log('googleapis not installed'); }
 
 const app = express();
+
+// ===== V341 CORS FIX - Allow Team Inbox HTML (file://) to call Render =====
+app.use((req,res,next)=>{ res.setHeader('Access-Control-Allow-Origin','*'); res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS'); res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization'); if(req.method==='OPTIONS') return res.sendStatus(200); next(); });
+// ===== END V341 CORS =====
 app.use(bodyParser.json({ verify: (req,res,buf)=>{ req.rawBody = buf; } }));
 
 // ===== V247 - TENDER SERVING - ONLY TENDER/ANNEXURE EDIT - 12 FINAL PDFs - GUARANTEED AFTER PAYMENT =====
@@ -2798,12 +2802,12 @@ app.get('/',(req,res)=>res.send(`V321 TRY-FREE-5PCT-24H RECEIPT - REAL TIME RECE
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN){ res.send(req.query['hub.challenge']); } else res.sendStatus(403); });
 
 
-// ===== V340 TEAM INBOX LIVE - ADDED ONLY, NO LOCKED LOGIC CHANGED =====
+// ===== V341 TEAM INBOX LIVE - ADDED ONLY, NO LOCKED LOGIC CHANGED =====
 globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 function teamInboxPush(phone, who, text, step){ try{ globalThis.__teamInboxLog.push({time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}); if(globalThis.__teamInboxLog.length>500) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-500); }catch(e){} }
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
-// ===== END V340 TEAM INBOX STORE =====
+// ===== END V341 TEAM INBOX STORE =====
 
 app.post('/webhook', async(req,res)=>{
   res.sendStatus(200);
@@ -5020,14 +5024,14 @@ app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TES
 app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V321 TRY-FREE-5PCT-24H', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V321 TRY-FREE-5PCT-24H', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
-// ===== V340 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V340 TEAM-INBOX-LIVE', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+// ===== V341 TEAM INBOX ENDPOINTS =====
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V341 TEAM-INBOX-LIVE-CORS', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); await sendWithDelay(textMessage(phone, text, PHONE_NUMBER_ID)); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V340 TEAM-INBOX-LIVE - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V341 TEAM-INBOX-LIVE-CORS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
