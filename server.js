@@ -343,45 +343,69 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
 // Maya does NOT go silent. She checks gently, step by step.
 // 5 min: Are you there? | 30 min: Still interested? Need time? | 2h: Remind after some time? | 24h: Last soft check
 function getIdleCheckText(lang, stage){
+  // V348: 1=Are you there (reading-time), 2=+2min Are you still there, 3=+2min Still not replied Stop/Talk later, 4=1H, 5=12H, 6=24H
   if(lang==='ml'){
-    if(stage===1) return `👋 ഇവിടെ ഉണ്ടോ? 😊\n\nഞാൻ ഇവിടെയുണ്ട്. മെസ്സേജ് കണ്ടോ?\n\nതുടരട്ടെ?`;
-    if(stage===2) return `🙏 ഇപ്പോഴും താല്പര്യം ഉണ്ടോ?\n\nReply ചെയ്യാൻ സമയം വേണോ? കുഴപ്പമില്ല.\n\nഎപ്പോൾ വേണമെങ്കിലും reply ചെയ്യാം. ഇപ്പോൾ തുടരണോ, അതോ കുറച്ച് കഴിഞ്ഞ് ഓർമ്മിപ്പിക്കണോ?`;
-    if(stage===3) return `🙏 കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കട്ടെ?\n\nഇന്ന് വൈകുന്നേരമോ, നാളെയോ?\n\nനിങ്ങൾ പറയുന്ന സമയത്ത് ഞാൻ ഓർമ്മിപ്പിക്കാം. 😊`;
-    if(stage===4) return `🙏 അവസാനമായി ഒന്ന് ചോദിക്കട്ടെ — ഇപ്പോഴും താല്പര്യം ഉണ്ടോ?\n\nഇല്ലെങ്കിൽ "വേണ്ട" എന്ന് പറഞ്ഞാൽ മതി, ഞാൻ ശല്യം ചെയ്യില്ല.\n\nഉണ്ടെങ്കിൽ "ഉണ്ട്" എന്ന് പറയൂ, ഞാൻ ഇവിടെയുണ്ട്.`;
+    if(stage===1) return `👋 Are you there? 😊\n\nഞാൻ ഇവിടെയുണ്ട്. മെസ്സേജ് കണ്ടോ?\n\nതുടരട്ടെ?`;
+    if(stage===2) return `👋 Are you still there? 😊\n\nഞാൻ ഇവിടെയുണ്ട്, Bizmapia-യിൽ നിങ്ങൾക്ക് ശരിയായ അവസരം കണ്ടെത്താൻ സഹായിക്കാൻ.\n\nനിങ്ങളുടെ അന്വേഷണത്തെക്കുറിച്ച് എന്തും ചാറ്റ് ചെയ്യൂ, ഞാൻ ഉടൻ മറുപടി തരാം.`;
+    if(stage===3) return `🙏 Still you not replied to me!\n\nDo you really want to stop this chat and need time for chatting with me?\n\nനിർത്തണോ, അതോ പിന്നീട് സംസാരിക്കണോ?`;
+    if(stage===4) return `👋 Hi, 1 hour ആയി.\n\nBizmapia അവസരം നോക്കുകയായിരുന്നല്ലോ. തുടരട്ടെ? ഞാൻ ഇവിടെയുണ്ട്.`;
+    if(stage===5) return `👋 Hi, 12 hours ആയി.\n\nഇപ്പോഴും Bizmapia അവസരത്തിൽ താല്പര്യം ഉണ്ടോ? തുടരട്ടെ?`;
+    return `🙏 അവസാനമായി — 24 hours ആയി.\n\nഇപ്പോഴും താല്പര്യം ഉണ്ടോ? ഇല്ലെങ്കിൽ "Stop" പറഞ്ഞാൽ മതി, ഞാൻ ശല്യം ചെയ്യില്ല.`;
   }
   if(lang==='hi'){
-    if(stage===1) return `👋 Yahan hain? 😊\n\nMain yahin hoon. Message dekha?\n\nAage badhein?`;
-    if(stage===2) return `🙏 Abhi bhi interest hai?\n\nReply karne ke liye time chahiye? Koi baat nahi.\n\nAbhi continue karein, ya thodi der baad yaad dilau?`;
-    if(stage===3) return `🙏 Thodi der baad yaad dilau?\n\nAaj shaam ya kal?\n\nAapke bataye time par yaad dila dungi. 😊`;
-    return `🙏 Aakhri baar poochun — abhi bhi interest hai?\n\nNahi hai to "Nahi" bol dijiye, disturb nahi karungi.\n\nHai to "Haan" boliye, main yahin hoon.`;
+    if(stage===1) return `👋 Are you there? 😊\n\nMain yahin hoon. Message dekha?\n\nAage badhein?`;
+    if(stage===2) return `👋 Are you still there? 😊\n\nMain yahin hoon, Bizmapia me aapke liye sahi option dhoondhne me madad karne ke liye.\n\nApni enquiry se judi koi bhi baat chat kijiye, main jaldi reply dungi.`;
+    if(stage===3) return `🙏 Still you not replied to me!\n\nDo you really want to stop this chat and need time for chatting with me?`;
+    if(stage===4) return `👋 Hi, 1 hour ho gaya.\n\nAap Bizmapia opportunity dekh rahe the. Aage badhein?`;
+    if(stage===5) return `👋 Hi, 12 hours ho gaye.\n\nAbhi bhi Bizmapia opportunity me interest hai?`;
+    return `🙏 Aakhri baar — 24 hours ho gaye.\n\nAbhi bhi interest hai? Nahi to "Stop" bol dijiye.`;
   }
   if(stage===1) return `👋 Are you there? 😊\n\nI am here. Did you see my message?\n\nShall we continue?`;
-  if(stage===2) return `🙏 Still interested?\n\nNeed more time to reply? No problem.\n\nYou can reply anytime. Shall we continue now, or shall I remind you after some time?`;
-  if(stage===3) return `🙏 Shall I remind you after some time?\n\nThis evening or tomorrow?\n\nI will remind you at the time you say. 😊`;
-  return `🙏 One last check — are you still interested?\n\nIf not, just say "No", I will not disturb you.\n\nIf yes, say "Yes", I am here.`;
+  if(stage===2) return `👋 Are you still there? I am here to help you to find your right option with Bizmapia. Chat anything related to your enquiry, I will give you the reply soon.`;
+  if(stage===3) return `🙏 Still you not replied to me! Do you really want to stop this chat and need time for chatting with me?`;
+  if(stage===4) return `👋 Hi, it has been 1 hour.\n\nYou were checking Bizmapia opportunity. Shall we continue? I am here.`;
+  if(stage===5) return `👋 Hi, it has been 12 hours.\n\nStill interested in Bizmapia opportunity? Shall we continue?`;
+  return `🙏 One last check — it has been 24 hours.\n\nStill interested? If not, just say "Stop", I will not disturb you.`;
 }
 function mayaIdleButtons(lang, stage){
   const L=lang||'ml';
   const b=(id,ml,en,hi)=>({id,title:(L==='ml'?ml:L==='hi'?hi:en).substring(0,20)});
-  if(stage===1) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye'), b('AI_REMIND_LATER','പിന്നീട് ഓർമ്മിപ്പിക്കൂ','Remind Later','Baad Mein Yaad')];
-  if(stage===2) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye'), b('AI_REMIND_LATER','പിന്നീട് ഓർമ്മിപ്പിക്കൂ','Remind Later','Baad Mein Yaad')];
-  if(stage===3) return [b('AI_REMIND_EVENING','വൈകുന്നേരം','This Evening','Aaj Shaam'), b('AI_REMIND_TOMORROW','നാളെ','Tomorrow','Kal'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye')];
-  return [b('AI_STILL_HERE','ഉണ്ട്','Yes','Haan'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye'), b('AI_REMIND_LATER','പിന്നീട്','Later','Baad Mein')];
+  if(stage===1) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye')];
+  if(stage===2) return [b('AI_STILL_HERE','ഉണ്ട്, തുടരാം','Yes, Continue','Haan, Continue'), b('AI_NEED_TIME','സമയം വേണം','Need Time','Time Chahiye')];
+  // V348 Stage 3+ : ONLY Stop + Talk later (user spec)
+  return [b('IDLE_STOP','Stop','Stop','Stop'), b('IDLE_TALK_LATER','Talk later','Talk later','Talk later')];
 }
 // V345: Reading-time based Are-you-there. Wait = reading time + half of reading time.
 // Reading speed ~210 words/min (~3.5 words/sec). Clamped 60s - 300s so short msgs don't spam and long msgs get time.
 function readingWaitMs(text){ try{ const words=String(text||'').trim().split(/\s+/).filter(Boolean).length||1; const readingSec=words/3.5; const waitSec=readingSec*1.5; return Math.round(Math.min(300, Math.max(60, waitSec))*1000); }catch(e){ return 120000; } }
-function scheduleIdleNudges(uid, lang, phoneId, firstDelayMs){
-  // Clear old idle nudges first, then schedule fresh 4 stages
+async function scheduleIdleNudges(uid, lang, phoneId, firstDelayMs){
+  // V348 chain: 1=reading-time, 2=+2min after 1st, 3=+2min after 2nd, 4=1H after 3rd, 5=12H after 3rd, 6=24H after 3rd. Reply cancels all.
   try{
     for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } }
+    if(redisReady && redis){ try{ const _rk=await redis.keys(`reminder:${uid}:maya_idle*`); if(_rk.length) await redis.del(..._rk); }catch(e){} }
   }catch(e){}
   try{
-    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, firstDelayMs||2*60*1000, phoneId); // V345+V346: 1st = reading time + half
-    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, 1*60*60*1000, phoneId); // V346: 2nd = 1 HOUR - Still interested?
-    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, 12*60*60*1000, phoneId); // V346: 3rd = 12 HOUR - Shall I remind?
-    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, 24*60*60*1000, phoneId); // V346: 4th = 24 HOUR - One last check
+    const base = firstDelayMs||2*60*1000;
+    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, base, phoneId);
+    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, base+2*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, base+4*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, base+4*60*1000+1*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_5:'+Date.now(), lang, base+4*60*1000+12*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_6:'+Date.now(), lang, base+4*60*1000+24*60*60*1000, phoneId);
   }catch(e){ console.log('idle schedule fail', e.message); }
+}
+function parseTalkLaterTime(text){
+  // V348: parse "after 30 minutes", "after 1 hour", "after 2 hours", "tomorrow 10 am", "today 5 pm", "in 45 min", "after 90 min"
+  try{
+    const s=String(text||'').toLowerCase().trim();
+    let m=s.match(/after\s*(\d+)\s*(min|mins|minute|minutes)/); if(m) return {ms:Number(m[1])*60*1000, label:`after ${m[1]} minutes`};
+    m=s.match(/(?:after|in)\s*(\d+)\s*(hr|hrs|hour|hours)/); if(m) return {ms:Number(m[1])*60*60*1000, label:`after ${m[1]} hour(s)`};
+    m=s.match(/(tomorrow|naale|kal)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/); if(m){ const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); let h=Number(m[2]); const ap=m[4]; if(ap==='pm'&&h<12) h+=12; if(ap==='am'&&h===12) h=0; const t=new Date(now); t.setDate(t.getDate()+1); t.setHours(h, Number(m[3]||0),0,0); return {ms:Math.max(60000, t-now), label:`tomorrow ${m[2]} ${ap||''}`}; }
+    m=s.match(/(today|innu|aaj)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/); if(m){ const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); let h=Number(m[2]); const ap=m[4]; if(ap==='pm'&&h<12) h+=12; if(ap==='am'&&h===12) h=0; const t=new Date(now); t.setHours(h, Number(m[3]||0),0,0); if(t<=now) t.setDate(t.getDate()+1); return {ms:Math.max(60000, t-now), label:`today ${m[2]} ${ap||''}`}; }
+    m=s.match(/^(\d+)\s*(min|mins|minute|minutes)$/); if(m) return {ms:Number(m[1])*60*1000, label:`after ${m[1]} minutes`};
+    m=s.match(/^(\d+)\s*(hr|hrs|hour|hours)$/); if(m) return {ms:Number(m[1])*60*60*1000, label:`after ${m[1]} hour(s)`};
+    return null;
+  }catch(e){ return null; }
 }
 function clearIdleNudges(uid){
   try{ for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } } }catch(e){}
@@ -1727,7 +1751,7 @@ async function sendWithDelay(msg){
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
-    try{ if(!msg._fromTeam && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
+    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -2224,19 +2248,27 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
 }
 
 // ===== V250 IDLE CHECK =====
+      if(type.includes('talk_later')){
+        if(state.flow==='DONE' || state.verified || state.firedGate==='STOPPED') return;
+        const _tl = state.lead?.talkLaterLabel||'later';
+        const _msg = (actualLang==='ml') ? `👋 Hi! നിങ്ങൾ പറഞ്ഞ സമയമായി. 😊\n\n${_tl} കഴിഞ്ഞ് സംസാരിക്കാം എന്ന് പറഞ്ഞിരുന്നു. ഇപ്പോൾ തുടരട്ടെ?` : (actualLang==='hi') ? `👋 Hi! Aapne bola tha ${_tl} baad baat karenge. 😊\n\nAb aage badhein?` : `👋 Hi! You asked me to talk ${_tl}. 😊\n\nShall we continue now?`;
+        try{ const _m=interactiveButton(uid,_msg,[{id:'AI_STILL_HERE',title: actualLang==='ml'?'ഉണ്ട്, തുടരാം': actualLang==='hi'?'Haan, Continue':'Yes, Continue'},{id:'IDLE_TALK_LATER',title:'Talk later'},{id:'IDLE_STOP',title:'Stop'}], actualPhoneId); _m._isIdle=true; await sendWithDelay(_m); }catch(e){ const _m2=textMessage(uid,_msg,actualPhoneId); _m2._isIdle=true; await sendWithDelay(_m2); }
+        try{ await saveToSheet('System_Logs',[getISTTime(),uid,actualLang,'Talk Later Fired '+actualPhoneId,`Talk later fired - ${_tl}`,'Talk Later',HELP_ADMIN,'Talk Later',''],false); }catch(e){}
+        return;
+      }
       if(type.includes('maya_idle')){
         // If user already replied / paid / done / stopped -> do NOT nudge
         if(state.flow==='DONE' || state.verified || String(state.lastStep||'').includes('VERIFIED') || state.firedGate==='STOPPED') return;
         // If user replied very recently (lastUserAt within 2 min), skip - they are typing
         if(state.lastUserAt && (Date.now()-state.lastUserAt) < 2*60*1000) return;
-        const stage = type.includes('maya_idle_1')?1:type.includes('maya_idle_2')?2:type.includes('maya_idle_3')?3:4;
+        const stage = type.includes('maya_idle_1')?1:type.includes('maya_idle_2')?2:type.includes('maya_idle_3')?3:type.includes('maya_idle_4')?4:type.includes('maya_idle_5')?5:6; // V348 6 stages
         state.lead = state.lead || {};
         state.lead.idleCount = (state.lead.idleCount||0)+1;
         state.lead.lastIdleStage = stage;
         // If user already said NOT_INTERESTED, stop idle nudges
         if(state.lead.sentiment==='not_interested') return;
         await setState(uid, state);
-        try{ await sendWithDelay(interactiveButton(uid, getIdleCheckText(actualLang, stage), mayaIdleButtons(actualLang, stage), actualPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, getIdleCheckText(actualLang, stage), actualPhoneId)); }
+        try{ const _im=interactiveButton(uid, getIdleCheckText(actualLang, stage), mayaIdleButtons(actualLang, stage), actualPhoneId); _im._isIdle=true; await sendWithDelay(_im); }catch(e){ const _tm2=textMessage(uid, getIdleCheckText(actualLang, stage), actualPhoneId); _tm2._isIdle=true; await sendWithDelay(_tm2); } // V347: idle msgs must NOT reschedule idle
         await saveToSheet('System_Logs',[getISTTime(), uid, actualLang, 'Idle Check Stage '+stage+' '+actualPhoneId, `No reply - Idle Stage ${stage} - Lead:${state.lead.intent||''} Sent:${state.lead.sentiment||''}`, 'Idle Check', HELP_ADMIN, 'Idle Check', ''], false);
         await logLeadPerfect(uid, state, {lastMsg:'[IDLE] No reply stage '+stage, summary:'Idle check sent stage '+stage});
         return;
@@ -3115,6 +3147,50 @@ app.post('/webhook', async(req,res)=>{
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
       try{ scheduleIdleNudges(uid, prevLang, incomingPhoneId); }catch(e){} // V344: Welcome must also schedule Are you there
       return;
+    // ===== V348 IDLE STOP / TALK LATER / TALK 1H / 2H / MANUAL =====
+    if(btnId==='IDLE_STOP'){
+      try{ clearReminders(uid); }catch(e){}
+      await setState(uid,{...state, lastStep:'V348 - Stopped by user', phoneId: incomingPhoneId, firedGate:'STOPPED'});
+      const _sm = (state.lang||'ml')==='ml' ? `👍 ശരി, നിർത്തി. 🙏\n\nഇനി ഞാൻ മെസ്സേജ് അയക്കില്ല. വേണമെങ്കിൽ എപ്പോൾ വേണമെങ്കിലും "Hi" അയച്ചാൽ മതി, ഞാൻ ഇവിടെയുണ്ടാകും.` : (state.lang||'ml')==='hi' ? `👍 Theek hai, rok diya. 🙏\n\nAb main message nahi bhejungi. Jab chaho "Hi" bhej dena, main yahin hoon.` : `👍 Okay, stopped. 🙏\n\nI will not send more messages. Anytime you want, just send "Hi" and I will be here.`;
+      const _mm=textMessage(uid,_sm,incomingPhoneId); _mm._isIdle=true; await sendWithDelay(_mm);
+      try{ await saveToSheet('System_Logs',[nowIso,uid,state.lang||'ml','V348 Idle Stop '+incomingPhoneId,'User tapped Stop on 3rd reminder - stopped','V348 Stop',HELP_ADMIN,'V348 Stop',''],false); }catch(e){}
+      return;
+    }
+    if(btnId==='IDLE_TALK_LATER'){
+      await setState(uid,{...state, lastStep:'V348 - Talk Later - Choose Time', phoneId: incomingPhoneId, lead:{...(state.lead||{}), talkLaterPending:true}});
+      const _lm = (state.lang||'ml')==='ml' ? `👍 ശരി, പിന്നീട് സംസാരിക്കാം. 😊\n\nഎപ്പോൾ ഓർമ്മിപ്പിക്കണം? താഴെ തിരഞ്ഞെടുക്കൂ, അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യൂ: "after 30 minutes" / "tomorrow 10 am"` : (state.lang||'ml')==='hi' ? `👍 Theek hai, baad me baat karte hain. 😊\n\nKab yaad dilau? Neeche chunein, ya type karein: "after 30 minutes" / "tomorrow 10 am"` : `👍 Okay, talk later. 😊\n\nWhen should I remind you? Choose below, or type like: "after 30 minutes" / "tomorrow 10 am"`;
+      try{ const _lm2=interactiveButton(uid,_lm,[{id:'TALK_1H',title:'After 1 hour'},{id:'TALK_2H',title:'After 2 hours'},{id:'TALK_MANUAL',title:'Type time'}], incomingPhoneId); _lm2._isIdle=true; await sendWithDelay(_lm2); }catch(e){ const _lm3=textMessage(uid,_lm,incomingPhoneId); _lm3._isIdle=true; await sendWithDelay(_lm3); }
+      return;
+    }
+    if(btnId==='TALK_1H' || btnId==='TALK_2H'){
+      const _ms = btnId==='TALK_1H' ? 1*60*60*1000 : 2*60*60*1000;
+      const _label = btnId==='TALK_1H' ? 'after 1 hour' : 'after 2 hours';
+      await setState(uid,{...state, lastStep:'V348 - Talk Later Scheduled '+_label, phoneId: incomingPhoneId, lead:{...(state.lead||{}), talkLaterPending:false, talkLaterLabel:_label, talkLaterAt: Date.now()+_ms}});
+      try{ scheduleReminder(uid,'talk_later:'+Date.now(), state.lang||'ml', _ms, incomingPhoneId); }catch(e){}
+      const _cm = (state.lang||'ml')==='ml' ? `✅ ശരി, ${_label} കഴിഞ്ഞ് ഞാൻ മെസ്സേജ് അയക്കാം. 😊\n\nഅതുവരെ ശല്യം ചെയ്യില്ല.` : (state.lang||'ml')==='hi' ? `✅ Theek hai, ${_label} baad main message bhejungi. 😊\n\nTab tak disturb nahi karungi.` : `✅ Done, I will message you ${_label}. 😊\n\nNo disturbance till then.`;
+      const _cm2=textMessage(uid,_cm,incomingPhoneId); _cm2._isIdle=true; await sendWithDelay(_cm2);
+      try{ await saveToSheet('System_Logs',[nowIso,uid,state.lang||'ml','V348 Talk Later '+_label,'Talk later scheduled '+_label,'V348 Talk Later',HELP_ADMIN,'V348 Talk Later',''],false); }catch(e){}
+      return;
+    }
+    if(btnId==='TALK_MANUAL'){
+      await setState(uid,{...state, lastStep:'V348 - Talk Later - Waiting Manual Time', phoneId: incomingPhoneId, lead:{...(state.lead||{}), talkLaterPending:true}});
+      const _tm = (state.lang||'ml')==='ml' ? `✍️ സമയം ടൈപ്പ് ചെയ്യൂ.\n\nഉദാഹരണം: "after 30 minutes" / "after 2 hours" / "tomorrow 10 am"` : (state.lang||'ml')==='hi' ? `✍️ Time type kijiye.\n\nExample: "after 30 minutes" / "after 2 hours" / "tomorrow 10 am"` : `✍️ Type your time.\n\nExample: "after 30 minutes" / "after 2 hours" / "tomorrow 10 am"`;
+      const _tm2=textMessage(uid,_tm,incomingPhoneId); _tm2._isIdle=true; await sendWithDelay(_tm2);
+      return;
+    }
+    // V348: Manual talk-later time typed as free text
+    if(!btnId && msg.type==='text' && state.lead?.talkLaterPending && txt){
+      const _parsed = parseTalkLaterTime(txt);
+      if(_parsed){
+        await setState(uid,{...state, lastStep:'V348 - Talk Later Manual Scheduled', phoneId: incomingPhoneId, lead:{...(state.lead||{}), talkLaterPending:false, talkLaterLabel:_parsed.label, talkLaterAt: Date.now()+_parsed.ms, talkLaterRaw: txt}});
+        try{ scheduleReminder(uid,'talk_later:'+Date.now(), state.lang||'ml', _parsed.ms, incomingPhoneId); }catch(e){}
+        const _cm = (state.lang||'ml')==='ml' ? `✅ ശരി, ${_parsed.label} കഴിഞ്ഞ് ഞാൻ മെസ്സേജ് അയക്കാം. 😊\n\nനിങ്ങൾ ടൈപ്പ് ചെയ്തത് റെക്കോർഡ് ചെയ്തു: "${txt}"` : (state.lang||'ml')==='hi' ? `✅ Theek hai, ${_parsed.label} baad main message bhejungi. 😊\n\nAapne likha: "${txt}"` : `✅ Done, I will message you ${_parsed.label}. 😊\n\nRecorded what you typed: "${txt}"`;
+        const _cm2=textMessage(uid,_cm,incomingPhoneId); _cm2._isIdle=true; await sendWithDelay(_cm2);
+        try{ await saveToSheet('System_Logs',[nowIso,uid,state.lang||'ml','V348 Talk Later Manual '+incomingPhoneId,`Manual time: ${txt} -> ${_parsed.label}`,'V348 Talk Later',HELP_ADMIN,'V348 Talk Later',''],false); }catch(e){}
+        return;
+      }
+    }
+
     }
     // ===== V268 FINAL - AI ROUTER OVER V247 ORDER - DO NOT REORDER, DO NOT RESTART =====
     // RULE LOCKED BY OWNER:
@@ -5035,13 +5111,13 @@ app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets()
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V346 READING-TIME-1H-12H-24H', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V348 IDLE-3STEP-TALK-LATER', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V346 READING-TIME-1H-12H-24H - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V348 IDLE-3STEP-TALK-LATER - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
