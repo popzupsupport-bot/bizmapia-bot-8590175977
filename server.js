@@ -1,4 +1,6 @@
-// V350 - 4 FIXES ONLY (from V349, no other changes): 1) Short Welcome all 5 places 2) Language congratulation 3) Typed doubt 1-2 line answer before parking 4) Remaining steps Step X of 6 + balance names
+// V352 - INBOX PERSIST (from V351, no other logic changed): Team Inbox saved to Redis (team_inbox_log 2000 msgs + team_inbox_paused set), restored on boot. Old chats survive deploys.
+// V352 - IDLE FIX ONLY (from V350, no other changes): 1) clearIdleNudges clears Redis too 2) One chainId for all 6 idle timers 3) Firing guards: test-number skip + stale-chain skip + strict Stage order 4) Never restore/re-fire maya_idle from Redis
+// V352 - 4 FIXES ONLY (from V349, no other changes): 1) Short Welcome all 5 places 2) Language congratulation 3) Typed doubt 1-2 line answer before parking 4) Remaining steps Step X of 6 + balance names
 // ============================================================================
 // 🔒 FINAL LOCKED BUILD - V321 TRY-FREE-5PCT-24H - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE SECTIONS BELOW
 // Checked against ALL chats up to 2026-11-18. Every version below is FINAL and LOCKED.
@@ -387,12 +389,15 @@ async function scheduleIdleNudges(uid, lang, phoneId, firstDelayMs){
   }catch(e){}
   try{
     const base = firstDelayMs||2*60*1000;
-    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, base, phoneId);
-    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, base+2*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, base+4*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, base+4*60*1000+1*60*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_5:'+Date.now(), lang, base+4*60*1000+12*60*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_6:'+Date.now(), lang, base+4*60*1000+24*60*60*1000, phoneId);
+    // V352: ONE chainId for all 6 timers. V352 used a different Date.now() per timer, so stale-chain check could never work and chains overlapped.
+    const _chainId = Date.now();
+    try{ const _st = await getState(uid); _st.idleChainId = _chainId; _st.lead = _st.lead||{}; _st.lead.lastIdleStage = 0; await setState(uid, _st); }catch(e){}
+    scheduleReminder(uid,'maya_idle_1:'+_chainId, lang, base, phoneId);
+    scheduleReminder(uid,'maya_idle_2:'+_chainId, lang, base+2*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_3:'+_chainId, lang, base+4*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_4:'+_chainId, lang, base+4*60*1000+1*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_5:'+_chainId, lang, base+4*60*1000+12*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_6:'+_chainId, lang, base+4*60*1000+24*60*60*1000, phoneId);
   }catch(e){ console.log('idle schedule fail', e.message); }
 }
 function parseTalkLaterTime(text){
@@ -409,7 +414,9 @@ function parseTalkLaterTime(text){
   }catch(e){ return null; }
 }
 function clearIdleNudges(uid){
+  // V352: clear memory AND Redis. V352 cleared memory only, so checkDueReminders (60s) re-fired Redis idle after user replied - cause of Idle after reply.
   try{ for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } } }catch(e){}
+  try{ if(redisReady && redis){ redis.keys(`reminder:${uid}:maya_idle*`).then(keys=>{ if(keys && keys.length) redis.del(...keys).catch(()=>{}); }).catch(()=>{}); } }catch(e){}
 }
 
 // ===== V249 HYBRID + SORTING + TOKEN PUSH + SOFT REMINDER =====
@@ -1744,7 +1751,7 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
 
 async function sendWithDelay(msg){
   // V342: Log Maya outgoing to Team Inbox so team can see what Maya replied
-  try{ if(globalThis.__teamInboxLog && !msg._fromTeam && msg.to){ let t=''; if(msg.type==='text') t=msg.text?.body||''; else if(msg.type==='interactive') t=(msg.interactive?.body?.text||'')+' [Buttons: '+(msg.interactive?.action?.buttons||[]).map(b=>b.reply?.title||b.title||'').join(' | ')+']'; else if(msg.type==='image') t='[Image] '+(msg.image?.caption||''); else if(msg.type==='video') t='[Video] '+(msg.video?.caption||''); else if(msg.type==='template') t='[Template: '+(msg.template?.name||'')+']'; else t='['+(msg.type||'message')+']'; if(t){ globalThis.__teamInboxLog.push({time:getISTTime(), phone:String(msg.to), who:'maya', text:String(t).slice(0,500), step:'V342 Maya Reply'}); if(globalThis.__teamInboxLog.length>800) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-800); } } }catch(e){}
+  try{ if(!msg._fromTeam && msg.to){ let t=''; if(msg.type==='text') t=msg.text?.body||''; else if(msg.type==='interactive') t=(msg.interactive?.body?.text||'')+' [Buttons: '+(msg.interactive?.action?.buttons||[]).map(b=>b.reply?.title||b.title||'').join(' | ')+']'; else if(msg.type==='image') t='[Image] '+(msg.image?.caption||''); else if(msg.type==='video') t='[Video] '+(msg.video?.caption||''); else if(msg.type==='template') t='[Template: '+(msg.template?.name||'')+']'; else t='['+(msg.type||'message')+']'; if(t) teamInboxPush(String(msg.to),'maya',t,'V342 Maya Reply'); } }catch(e){}
   const now = Date.now();
   if(now < blockUntil){ console.log(`BLOCKED till ${new Date(blockUntil)}`); return; }
   if(now - lastSendTime < 500){ await delay(500-(now-lastSendTime)); }
@@ -2013,7 +2020,7 @@ async function restoreRemindersFromRedis(){
   try{
     const keys = await redis.keys('reminder:*');
     let restored = 0;
-    // V350: DEDUPE maya_idle on boot - keep only NEWEST per uid+stage, drop stale overdue idle (cause of 10:32:17 + 10:32:20 double Stage-1)
+    // V352: DEDUPE maya_idle on boot - keep only NEWEST per uid+stage, drop stale overdue idle (cause of 10:32:17 + 10:32:20 double Stage-1)
     const _idleBest = {}; // uid:stage -> {key,d,remaining}
     const _idleDrop = [];
     for(let k of keys){
@@ -2040,11 +2047,13 @@ async function restoreRemindersFromRedis(){
         if(reminders.has(memKey)) continue; // already has in-memory timer
         const remaining = (d.due || 0) - Date.now();
         const ms = remaining <= 0 ? 5000 : Math.min(remaining, 24*60*60*1000);
+        // V352: NEVER restore maya_idle from Redis. Old idle timers (34 restored in V352 boot) fire out-of-order. Fresh idle chain is re-armed on next user message.
+        if(String(d.type||'').includes('maya_idle')){ try{ await redis.del(k); }catch(e){} continue; }
         scheduleReminder(d.uid, d.type, d.lang||'ml', ms, d.phoneId||PHONE_NUMBER_ID);
         restored++;
       }catch(e){ console.log('V253 restore one fail', e.message); }
     }
-    console.log(`V350 restored ${restored} reminders from Redis`);
+    console.log(`V352 restored ${restored} reminders from Redis`);
     return restored;
   }catch(e){ console.log('V253 restore fail', e.message); return 0; }
 }
@@ -2064,6 +2073,8 @@ async function checkDueReminders(){
         if(reminders.has(memKey)) continue; // in-memory timer will fire it, don't double-fire
         // Due + no in-memory timer = Render restarted while waiting -> re-fire now
         console.log(`V253 CHECKER re-firing due reminder ${d.type} for ${d.uid}`);
+        // V352: NEVER re-fire maya_idle from Redis checker. Idle is owned by in-memory timers only. Redis copy is stale after user replied.
+        if(String(d.type||'').includes('maya_idle')){ try{ await redis.del(k); }catch(e){} continue; }
         scheduleReminder(d.uid, d.type, d.lang||'ml', 2000, d.phoneId||PHONE_NUMBER_ID);
         fired++;
       }catch(e){}
@@ -2117,7 +2128,7 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
-  // V350: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
+  // V352: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
     for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':'+_stage+':') && k!==`${uid}:${type}`){ try{ clearTimeout(reminders.get(k)); }catch(e){} reminders.delete(k); if(redisReady && redis){ redis.del(`reminder:${k}`).catch(()=>{}); } } }
@@ -2293,11 +2304,17 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         return;
       }
       if(type.includes('maya_idle')){
+        // V352: test number NEVER gets idle. 918590175977 is team test number.
+        if(String(uid).endsWith('8590175977')){ console.log(`V352 SKIP idle - test number ${uid}`); return; }
         // If user already replied / paid / done / stopped -> do NOT nudge
         if(state.flow==='DONE' || state.verified || String(state.lastStep||'').includes('VERIFIED') || state.firedGate==='STOPPED') return;
         // If user replied very recently (lastUserAt within 2 min), skip - they are typing
         if(state.lastUserAt && (Date.now()-state.lastUserAt) < 2*60*1000) return;
         const stage = type.includes('maya_idle_1')?1:type.includes('maya_idle_2')?2:type.includes('maya_idle_3')?3:type.includes('maya_idle_4')?4:type.includes('maya_idle_5')?5:6; // V348 6 stages
+        // V352 STALE-CHAIN: timer's chainId (after :) must equal state's current idleChainId. Old chain firing after new chain started = Stage 2 before Stage 1 bug.
+        try{ const _chain = String(type).split(':')[1]||''; if(state.idleChainId && _chain && String(state.idleChainId)!==String(_chain)){ console.log(`V352 SKIP idle stale chain stage=${stage} timerChain=${_chain} current=${state.idleChainId} uid=${uid}`); return; } }catch(e){}
+        // V352 ORDER: stage must be exactly lastIdleStage+1. Stage 2 before Stage 1, or duplicate Stage, is dropped.
+        try{ const _last = (state.lead&&state.lead.lastIdleStage)||0; if(stage!==_last+1){ console.log(`V352 SKIP idle out-of-order stage=${stage} last=${_last} uid=${uid}`); return; } }catch(e){}
         state.lead = state.lead || {};
         state.lead.idleCount = (state.lead.idleCount||0)+1;
         state.lead.lastIdleStage = stage;
@@ -2880,7 +2897,10 @@ app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN)
 // ===== V341 TEAM INBOX LIVE - ADDED ONLY, NO LOCKED LOGIC CHANGED =====
 globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
-function teamInboxPush(phone, who, text, step){ try{ globalThis.__teamInboxLog.push({time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}); if(globalThis.__teamInboxLog.length>500) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-500); }catch(e){} }
+// V352: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
+function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -2000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
+function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); teamInboxSaveRedis(_e); }catch(e){} }
+async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V352 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { globalThis.__teamInboxLog.push(_e); _n++; } }catch(e){} } if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V352 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V352 inbox restore fail', e.message); return 0; } }
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
@@ -4528,7 +4548,7 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
       }
     }catch(_){}
 
-// V350 FIX3: Typed doubt -> answer in 1-2 lines from LOCKED facts BEFORE parking. Never invent numbers. If doubt not in list, return null and V302/V301 park as before.
+// V352 FIX3: Typed doubt -> answer in 1-2 lines from LOCKED facts BEFORE parking. Never invent numbers. If doubt not in list, return null and V302/V301 park as before.
 function v350DoubtAnswer(low, L){
   const s = String(low||'').toLowerCase();
   const pick = (ml,hi,en)=> L==='ml'?ml : L==='hi'?hi : en;
@@ -5165,13 +5185,13 @@ app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets()
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V350 IDLE-REDIS-DEDUP', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
-app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V352 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V352', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V350 IDLE-REDIS-DEDUP - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V352 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
