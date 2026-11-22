@@ -1710,6 +1710,8 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
 }
 
 async function sendWithDelay(msg){
+  // V342: Log Maya outgoing to Team Inbox so team can see what Maya replied
+  try{ if(globalThis.__teamInboxLog && !msg._fromTeam && msg.to){ let t=''; if(msg.type==='text') t=msg.text?.body||''; else if(msg.type==='interactive') t=(msg.interactive?.body?.text||'')+' [Buttons: '+(msg.interactive?.action?.buttons||[]).map(b=>b.reply?.title||b.title||'').join(' | ')+']'; else if(msg.type==='image') t='[Image] '+(msg.image?.caption||''); else if(msg.type==='video') t='[Video] '+(msg.video?.caption||''); else if(msg.type==='template') t='[Template: '+(msg.template?.name||'')+']'; else t='['+(msg.type||'message')+']'; if(t){ globalThis.__teamInboxLog.push({time:getISTTime(), phone:String(msg.to), who:'maya', text:String(t).slice(0,500), step:'V342 Maya Reply'}); if(globalThis.__teamInboxLog.length>800) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-800); } } }catch(e){}
   const now = Date.now();
   if(now < blockUntil){ console.log(`BLOCKED till ${new Date(blockUntil)}`); return; }
   if(now - lastSendTime < 500){ await delay(500-(now-lastSendTime)); }
@@ -5025,13 +5027,13 @@ app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets()
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V341 TEAM-INBOX-LIVE-CORS', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V342 TEAM-INBOX-MAYA-REPLIES', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); await sendWithDelay(textMessage(phone, text, PHONE_NUMBER_ID)); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V341 TEAM-INBOX-LIVE-CORS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V342 TEAM-INBOX-MAYA-REPLIES - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
