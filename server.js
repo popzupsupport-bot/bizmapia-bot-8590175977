@@ -368,16 +368,19 @@ function mayaIdleButtons(lang, stage){
   if(stage===3) return [b('AI_REMIND_EVENING','വൈകുന്നേരം','This Evening','Aaj Shaam'), b('AI_REMIND_TOMORROW','നാളെ','Tomorrow','Kal'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye')];
   return [b('AI_STILL_HERE','ഉണ്ട്','Yes','Haan'), b('AI_NOT_INTERESTED','വേണ്ട','Not Interested','Nahi Chahiye'), b('AI_REMIND_LATER','പിന്നീട്','Later','Baad Mein')];
 }
-function scheduleIdleNudges(uid, lang, phoneId){
+// V345: Reading-time based Are-you-there. Wait = reading time + half of reading time.
+// Reading speed ~210 words/min (~3.5 words/sec). Clamped 60s - 300s so short msgs don't spam and long msgs get time.
+function readingWaitMs(text){ try{ const words=String(text||'').trim().split(/\s+/).filter(Boolean).length||1; const readingSec=words/3.5; const waitSec=readingSec*1.5; return Math.round(Math.min(300, Math.max(60, waitSec))*1000); }catch(e){ return 120000; } }
+function scheduleIdleNudges(uid, lang, phoneId, firstDelayMs){
   // Clear old idle nudges first, then schedule fresh 4 stages
   try{
     for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } }
   }catch(e){}
   try{
-    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, 5*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, 30*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, 2*60*60*1000, phoneId);
-    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, 24*60*60*1000, phoneId);
+    scheduleReminder(uid,'maya_idle_1:'+Date.now(), lang, firstDelayMs||2*60*1000, phoneId); // V345+V346: 1st = reading time + half
+    scheduleReminder(uid,'maya_idle_2:'+Date.now(), lang, 1*60*60*1000, phoneId); // V346: 2nd = 1 HOUR - Still interested?
+    scheduleReminder(uid,'maya_idle_3:'+Date.now(), lang, 12*60*60*1000, phoneId); // V346: 3rd = 12 HOUR - Shall I remind?
+    scheduleReminder(uid,'maya_idle_4:'+Date.now(), lang, 24*60*60*1000, phoneId); // V346: 4th = 24 HOUR - One last check
   }catch(e){ console.log('idle schedule fail', e.message); }
 }
 function clearIdleNudges(uid){
@@ -1723,6 +1726,8 @@ async function sendWithDelay(msg){
     const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
+    // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
+    try{ if(!msg._fromTeam && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -3108,6 +3113,7 @@ app.post('/webhook', async(req,res)=>{
       const langConfirmText = `Hello! Welcome to *Bizmapia!* 🙏✨\n\nI am *_Maya_*, your personal guide here. 💁‍♀️\n\n🌍 *Bizmapia* is an _All-India platform_ for your *daily life needs* —\n\n🚕 *Real-time Taxi Booking* — any taxi, any time, for your travel\n🔍 *Business Search* — find _shops, services, products & offers_ near you\n🛵 *Online Delivery* — food + anything from your nearby town stores, _to your doorstep_\n🏨 *Online Booking* — hotel rooms, appointments, _movie / show tickets_ in real time\n\n💰 And yes — you can also *earn with Bizmapia* through a *Business Opportunity!*\n\n🎙️ I am here to understand *what YOU need* —\nJust _type in your own words_ or send a *voice note* 🎤\nI will help you find the *right option*, step by step. 🤝\n\n👇 *To start, please tap your language below:*`;
       try{ await sendWithDelay(interactiveButton(uid, langConfirmText, [{id:'LANG_ML',title:'മലയാളം'},{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'}], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, langConfirmText, incomingPhoneId)); } // V261: First = LANGUAGE CONFIRM, 3 buttons - exception to 2-tab rule
       await saveToSheet('System_Logs', [nowIso, uid, prevLang, '1988 Reset to AI '+incomingPhoneId, '1988 - Reset to AI Maya', 'Clicked', HELP_ADMIN, '1988 Reset AI', ''], false);
+      try{ scheduleIdleNudges(uid, prevLang, incomingPhoneId); }catch(e){} // V344: Welcome must also schedule Are you there
       return;
     }
     // ===== V268 FINAL - AI ROUTER OVER V247 ORDER - DO NOT REORDER, DO NOT RESTART =====
@@ -3353,6 +3359,8 @@ app.post('/webhook', async(req,res)=>{
       const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl, _capSentAt2 = Date.now();
       setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt2) return; /* V289 replied after video */ const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
       await saveToSheet('System_Logs',[nowIso,uid,sl,'V276 AI_BUSINESS '+incomingPhoneId,'AI_BUSINESS button -> direct Company Video + See Video button, no AI loop','V276',HELP_ADMIN,'V276 Business',''],false);
+      // V343 FIX: Business Opportunity tap itself must also write to Franchise_Funnel, not only System_Logs - user found Nov 22 test missing
+      try{ await saveToSheet('Franchise_Funnel',[nowIso,uid,sl,'Business Opportunity '+incomingPhoneId,'Business Opportunity - Tapped','Clicked',HELP_MARKETING,'V343 Business Tapped',''],true); }catch(e){}
       return;
     }
     if(btnId.startsWith('AI_')){
@@ -5027,13 +5035,13 @@ app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets()
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V342 TEAM-INBOX-MAYA-REPLIES', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V346 READING-TIME-1H-12H-24H', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false) globalThis.__teamPaused.delete(phone); else globalThis.__teamPaused.add(phone); teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V340', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V342 TEAM-INBOX-MAYA-REPLIES - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V346 READING-TIME-1H-12H-24H - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
