@@ -1,5 +1,5 @@
-// V363 COMPLETE FLOW - TRUE FINAL - DO NOT DEPLOY IF THIS LINE IS MISSING
-// CHECK BEFORE DEPLOY: search this file for V363 - boot line + /health + this header must all say V363 - BASE = V362 ONLY
+// V364 COMPLETE FLOW - TRUE FINAL - DO NOT DEPLOY IF THIS LINE IS MISSING
+// CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
 // ============================================================================
@@ -338,7 +338,7 @@ async function sendDayEndSummary(){
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
   for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
-  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${dailyStats.newLeads} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal}`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
+  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
   return msg;
 }
@@ -1646,6 +1646,82 @@ async function sendFiredWarning(uid, phoneId){
 }
 // ===== END V247 FIRED GATE =====
 
+
+// ===== V364 LANGUAGE LOCK + AI MEMORY + FREE-TEXT - LOCKED PDF =====
+function v364_lockedLang(state, incomingLang){
+  // If lang already locked, NEVER switch, even if user types other language.
+  if(state && state.lang) return state.lang;
+  return incomingLang || state?.lang || 'ml';
+}
+function v364_saveMemory(state, patch){
+  // AI MEMORY: catch out-of-order info, never ask again. patch = {name, district, town, capacity, contact, level, service, agreementDate}
+  try{
+    state.lead = state.lead || {};
+    state.leadData = state.leadData || {};
+    for(let k of ['name','district','town','capacity','contact','level','service','agreementDate','stateName']){
+      if(patch && patch[k]){ state.lead[k]=patch[k]; state.leadData[k]=patch[k]; }
+    }
+    // correction handling: if patch has correction flag, overwrite (already done above)
+    return state;
+  }catch(e){ return state; }
+}
+function v364_extractFreeText(text, state){
+  // Free-text AI-memory extraction: nearly-button + out-of-order. Best-effort, never overwrites with guess if ambiguous.
+  const t = String(text||'').toLowerCase();
+  const out = {};
+  // capacity
+  let m = t.match(/(5\s*l|5\s*lakh|anje\s*lakh)/); if(m) out.capacity='5L-15L';
+  m = t.match(/(2\s*l|2\s*lakh|rand.*lakh)/); if(m && !out.capacity) out.capacity='2L-5L';
+  m = t.match(/(1\s*l|1\s*lakh|oru\s*lakh|30\s*k)/); if(m && !out.capacity) out.capacity='30K-1L';
+  // level
+  if(/district/.test(t)) out.level='District';
+  if(/business\s*center|business\s*centre/.test(t)) out.level='Business Center';
+  if(/municipal|corporation|corp/.test(t)) out.level='Municipal/Corp';
+  // service
+  if(/ride|taxi|cab/.test(t)) out.service='Ride Hailing';
+  if(/directory/.test(t)) out.service='Business Directory';
+  // district Kerala - only if word present
+  const districts=['thiruvananthapuram','kollam','pathanamthitta','alappuzha','kottayam','idukki','ernakulam','thrissur','palakkad','malappuram','kozhikode','wayanad','kannur','kasaragod'];
+  for(let d of districts){ if(t.includes(d)){ out.district = d.charAt(0).toUpperCase()+d.slice(1); break; } }
+  // phone 10-digit
+  let ph = String(text||'').replace(/[^0-9]/g,''); let phm = ph.match(/(?:91)?([6-9][0-9]{9})/); if(phm) out.contact=phm[1];
+  // town: if "town" + word, or "my town is X"
+  let tm = String(text||'').match(/town\s*(is|:)?\s*([A-Za-z]+)/i); if(tm) out.town=tm[2];
+  return out;
+}
+function v364_isNearlyButton(text, buttonId){
+  const t = String(text||'').toLowerCase().trim();
+  const map = {
+    'WATCHED_COMPANY': ['video kandu','kandu','knd','seen','watched','done','kaanichu','kanditt'],
+    'WATCHED_SELECTED': ['video kandu','kandu','seen','watched','done'],
+    'PAY': ['pay cheyyam','i will pay','pay now','payd','paid','i paid','pay cheythu'],
+    'EMI': ['emi venam','emi','emi is ok'],
+    'FULL': ['full aanu','full payment','full'],
+    'PAUSE': ['samayam venam','samayam tharumo','alochikkanam','pinne parayam','need time','think','later','tmrw','time chahiye','samayam vanam'],
+    'STOP': ['stop','nirthu','message ayakkanda','stop messages','no msg'],
+    'CALL': ['call','team','samsarikkanam','talk','call me'],
+  };
+  const arr = map[buttonId]||[];
+  return arr.some(a=> t.includes(a));
+}
+// State/District/Corp/Town lists - Appendix C
+const V364_STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttarakhand","Uttar Pradesh","West Bengal","Delhi","Jammu & Kashmir","Ladakh","Andaman & Nicobar","Chandigarh","Dadra & Nagar Haveli and Daman & Diu","Lakshadweep","Puducherry"];
+const V364_KERALA_DISTRICTS = ["Thiruvananthapuram","Kollam","Pathanamthitta","Alappuzha","Kottayam","Idukki","Ernakulam","Thrissur","Palakkad","Malappuram","Kozhikode","Wayanad","Kannur","Kasaragod"];
+const V364_KERALA_CORPS = ["Thiruvananthapuram","Kollam","Kochi","Thrissur","Kozhikode","Kannur"];
+// Agreement Date helpers - Calendar pop-up, >7 days, first-pay-wins
+function v364_daysBetween(a,b){ try{ return Math.round((new Date(b)-new Date(a))/(1000*60*60*24)); }catch(e){ return 0; } }
+function v364_agreementWarningText(lang, days){
+  if(lang==='ml') return `Warning: Agreement Date Registration Fee date-il ninnu ${days} divasam kazhinju aanu. 7 divasathil kooduthal aayal less chance aanu. Slot pokam. Mumpey date venamo? Oru aal ee area-il ningalkku munpe pay cheythal agreement avande mathram aakum, ningalude alla. Slot lock cheyyan early pay cheyyuka.`;
+  if(lang==='hi') return `Warning: Agreement Date Registration Fee date se ${days} din baad hai. 7 din se zyada hai to less chance hai. Slot ja sakta hai. Kya aap pehle ki date chahte hain? Agar koi aapke pehle isi area ke liye pay karta hai to agreement uska hi hoga, aapka nahi. Slot lock karne ke liye jaldi pay karein.`;
+  return `Warning: Your Agreement Date is ${days} days after Registration Fee date. More than 7 days = less chance. Slot may go. Do you want earlier date? If anybody pays for same area before your date, agreement will be his only, not yours. To lock your area, pay early.`;
+}
+function v364_payMessage(lang){
+  if(lang==='ml') return `Ee button upayogichu pay cheyyam. Njan company accounts-il ee samayam check cheythu ningalude payment acknowledge cheyyam.`;
+  if(lang==='hi') return `Aap is button se pay kar sakte hain. Main isi samay company accounts me check karke aapke payment ko acknowledge karunga.`;
+  return `You can pay using this button. I am ready to check it meanwhile with company accounts and acknowledge your payment.`;
+}
+// ===== END V364 HELPERS =====
+
 async function getState(uid){ if(redisReady){ try{ const v=await redis.get(`state:${uid}`); if(v) return JSON.parse(v);}catch{} } return memoryStore.get(uid)||{}; }
 async function setState(uid,s){ s.lastActive = Date.now(); memoryStore.set(uid,s); if(redisReady){ try{ await redis.set(`state:${uid}`, JSON.stringify(s), 'EX', 86400*7);}catch{} } }
 function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -1698,24 +1774,22 @@ function interactiveWithCallButtons(to, body, replyButtons, phoneNumber, phoneTi
 }
 
 function interactiveCallDialer(to, body, phoneNumber, phoneTitle, extraButtons, phoneId){
-  // V357: real native dialer button + up to 2 reply buttons. Number ONLY in button, never in body.
-  const clean = String(phoneNumber).replace(/[^0-9]/g,''); const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+  // V364: phone_number removed, reply Call Now only.
+  const clean = String(phoneNumber).replace(/[^0-9]/g,'');
   const btns = [];
   if(extraButtons){ for(let b of extraButtons.slice(0,2)){ btns.push({type:'reply', reply:{id:b.id, title:b.title}}); } }
-  btns.push({type:'phone_number', phone_number:full});
+  btns.push({type:'reply', reply:{id:'CALL_NOW', title:'Call Now'}});
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(body).substring(0,1024)}, action:{buttons:btns} }, _phoneId: phoneId };
 }
 
 // New: Direct CTA with phone_number button (real inbuilt dialer)
 function interactiveWithPhoneCTA(to, body, replyButtons, phoneNumber, phoneId){
-  // V357: real native dialer button. Number ONLY in button, never in body.
-  const clean = String(phoneNumber).replace(/[^0-9]/g,''); const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+  // V364: Meta interactive button allows ONLY type:reply. phone_number removed. Call = reply Call Now + contacts fallback in sendDialer.
   const btns = [];
   if(replyButtons){ for(let b of replyButtons.slice(0,2)){ btns.push({type:'reply', reply:{id:b.id, title:b.title}}); } }
-  btns.push({type:'phone_number', phone_number:full});
+  btns.push({type:'reply', reply:{id:'CALL_NOW', title:'Call Now'}});
   return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(body).substring(0,1024)}, action:{buttons:btns} }, _phoneId: phoneId };
 }
-
 function ctaButtons(to,body,ctaList, phoneId){
   return { messaging_product:'whatsapp', to, type:'text', text:{body:body.substring(0,4096)}, _phoneId: phoneId, _ctaList: ctaList };
 }
@@ -1724,10 +1798,8 @@ function singleCta(to,body,btn, phoneId){
 }
 // V247 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
 function realDialerCta(to, bodyText, phoneFull, phoneId){
-  // V357 REAL DIALER - Meta native phone_number button. NOT tel: in cta_url (Meta rejects tel:), NOT a reply button.
-  const clean = String(phoneFull).replace(/[^0-9]/g,'');
-  const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
-  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(bodyText).substring(0,1024)}, action:{ buttons:[{type:'phone_number', phone_number:full}] } }, _phoneId: phoneId };
+  // V364: Meta interactive button allows ONLY type:reply. phone_number was rejected 23 Nov 2:02 PM (919947097923). Use reply Call Now. sendDialer adds contacts fallback.
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(bodyText).substring(0,1024)}, action:{ buttons:[{type:'reply', reply:{id:'CALL_NOW', title:'Call Now'}}] } }, _phoneId: phoneId };
 }
 async function sendDialer(to, bodyText, phoneFull, phoneId){
   // V357: try native phone_number button first. If Meta rejects it, fallback = contacts message (tappable number) - never tel: cta_url.
@@ -1768,7 +1840,17 @@ async function sendWithDelay(msg){
   if(now < blockUntil){ console.log(`BLOCKED till ${new Date(blockUntil)}`); return; }
   if(now - lastSendTime < 500){ await delay(500-(now-lastSendTime)); }
   lastSendTime = Date.now();
+  // V364: sanitize + log BEFORE send + retry once
   try{
+    try{ console.log('SEND TO ' + (msg.to||'unknown') + ' : ' + (msg.type||'message')); }catch(e){}
+    if(!msg.messaging_product) msg.messaging_product='whatsapp';
+    if(msg.type==='text' && typeof msg.text==='string') msg.text={body: msg.text};
+    if(msg.type==='text' && msg.text && typeof msg.text.body!=='string') msg.text={body: String(msg.text.body||'')};
+    if(msg.type==='text' && (!msg.text || !String(msg.text.body||'').trim())){
+      // V364: never empty body - fallback in locked language (default Malayalam, caller should pass locked text)
+      msg.text={body:'Sorry, please tap button again.'};
+    }
+    delete msg._ctaList; delete msg._fromTeam; delete msg._isIdle;
     const phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
     delete msg._phoneId;
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
@@ -1781,9 +1863,23 @@ async function sendWithDelay(msg){
   }catch(e){
     const err = e.response?.data?.error;
     console.log('SEND FAIL', JSON.stringify(e.response?.data||e.message));
+    // V364: retry once as plain text, log number
+    try{
+      const retryBody = (msg.type==='text' ? (msg.text?.body||'') : (msg.interactive?.body?.text||'')) || 'Please tap button again.';
+      if(msg.to && retryBody){
+        console.log('SEND FAIL RETRY to ' + msg.to);
+        const retryMsg = { messaging_product:'whatsapp', to: msg.to, type:'text', text:{body: String(retryBody).substring(0,4096)} };
+        const phoneId2 = msg._phoneId || PHONE_ID_OLD;
+        const url2 = `https://graph.facebook.com/v20.0/${phoneId2}/messages`;
+        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+        console.log('SEND FAIL RETRY OK to ' + msg.to);
+        return {retry:true};
+      }
+    }catch(e2){ console.log('SEND FAIL FINAL to ' + (msg.to||'unknown') + ' : ' + (e2.message||e2)); }
     if(err?.code===130429 || JSON.stringify(err).includes('too many messages')){
       blockUntil = Date.now()+62*60*1000;
-      console.log(`130429 DETECTED BLOCKING 65 MIN`);
+      console.log(`130429 DETECTED BLOCKING 65 MIN - V364: alert both team numbers via Sheet + log`);
+      try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','130429 Alert','Too many messages - blocking 65 min - alert both team numbers','Alert',HELP_ADMIN,'Alert',''],false); }catch(e){}
     }
   }
 }
@@ -2065,7 +2161,7 @@ async function restoreRemindersFromRedis(){
         restored++;
       }catch(e){ console.log('V253 restore one fail', e.message); }
     }
-    console.log(`V363 restored ${restored} reminders from Redis`);
+    console.log(`V364 restored ${restored} reminders from Redis`);
     return restored;
   }catch(e){ console.log('V253 restore fail', e.message); return 0; }
 }
@@ -2241,7 +2337,7 @@ async function sendDayEndSummary(){
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
   for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
-  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${dailyStats.newLeads} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal}`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
+  try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
   return msg;
 }
@@ -2317,16 +2413,16 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
       }
       if(type.includes('maya_idle')){
         // V362: test number NEVER gets idle. 918590175977 is team test number.
-        if(String(uid).endsWith('8590175977')){ console.log(`V363 SKIP idle - test number ${uid}`); return; }
+        if(String(uid).endsWith('8590175977')){ console.log(`V364 SKIP idle - test number ${uid}`); return; }
         // If user already replied / paid / done / stopped -> do NOT nudge
         if(state.flow==='DONE' || state.verified || String(state.lastStep||'').includes('VERIFIED') || state.firedGate==='STOPPED') return;
         // If user replied very recently (lastUserAt within 2 min), skip - they are typing
         if(state.lastUserAt && (Date.now()-state.lastUserAt) < 2*60*1000) return;
         const stage = type.includes('maya_idle_1')?1:type.includes('maya_idle_2')?2:type.includes('maya_idle_3')?3:type.includes('maya_idle_4')?4:type.includes('maya_idle_5')?5:6; // V348 6 stages
         // V362 STALE-CHAIN: timer's chainId (after :) must equal state's current idleChainId. Old chain firing after new chain started = Stage 2 before Stage 1 bug.
-        try{ const _chain = String(type).split(':')[1]||''; if(state.idleChainId && _chain && String(state.idleChainId)!==String(_chain)){ console.log(`V363 SKIP idle stale chain stage=${stage} timerChain=${_chain} current=${state.idleChainId} uid=${uid}`); return; } }catch(e){}
+        try{ const _chain = String(type).split(':')[1]||''; if(state.idleChainId && _chain && String(state.idleChainId)!==String(_chain)){ console.log(`V364 SKIP idle stale chain stage=${stage} timerChain=${_chain} current=${state.idleChainId} uid=${uid}`); return; } }catch(e){}
         // V362 ORDER: stage must be exactly lastIdleStage+1. Stage 2 before Stage 1, or duplicate Stage, is dropped.
-        try{ const _last = (state.lead&&state.lead.lastIdleStage)||0; if(stage!==_last+1){ console.log(`V363 SKIP idle out-of-order stage=${stage} last=${_last} uid=${uid}`); return; } }catch(e){}
+        try{ const _last = (state.lead&&state.lead.lastIdleStage)||0; if(stage!==_last+1){ console.log(`V364 SKIP idle out-of-order stage=${stage} last=${_last} uid=${uid}`); return; } }catch(e){}
         state.lead = state.lead || {};
         state.lead.idleCount = (state.lead.idleCount||0)+1;
         state.lead.lastIdleStage = stage;
@@ -2926,7 +3022,7 @@ globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 // V362: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
 function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -2000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
 function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); teamInboxSaveRedis(_e); }catch(e){} }
-async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { globalThis.__teamInboxLog.push(_e); _n++; } }catch(e){} } if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V363 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
+async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { globalThis.__teamInboxLog.push(_e); _n++; } }catch(e){} } if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
@@ -5259,7 +5355,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V363', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5291,62 +5387,82 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V363', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V363', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V363', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V363', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V363 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V363', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
 // ============================================================================
-// V363 COMPLETE FLOW - BUILT FROM V362 ONLY - 23 Nov 2026
-// Adds ONLY the 9 missing pieces from BIZMAPIA-COMPLETE-FLOW-V363-PROFESSIONAL.pdf
+// V364 COMPLETE FLOW - BUILT FROM V362 ONLY - 23 Nov 2026
+// Adds ONLY the 9 missing pieces from BIZMAPIA-COMPLETE-FLOW-V364-PROFESSIONAL.pdf
 // 1 Language Auto-Lock  2 Full Payment / EMI step  3 Requirement 3-readings + Skip
 // 4 Services chain all 8 roles  5 App Review  6 Team Feedback Reminder
 // 7 Losers return confirm  8 Instant Team Notification  9 Day End Report 8 PM
 // NO other V362 logic touched. Button Only. No link / number in chat body.
 // ============================================================================
-const V363_VERSION = 'V363';
-const V363_TEAM_BO = '918590175977';
-const V363_TEAM_SERVICES = '918590183646';
-const V363_DAY_END_TO = ['918590175977','918590183646'];
+const V364_VERSION = 'V364';
+const V364_TEAM_BO = '918590175977';
+const V364_TEAM_SERVICES = '918590183646';
+const V364_DAY_END_TO = ['918590175977','918590183646'];
 function v363GetLockedLang(phone){ try{ const u = (typeof memoryStore!=='undefined' && memoryStore.get) ? memoryStore.get(phone) : null; return (u && (u.lockedLang||u.language||u.lang)) || null; }catch(e){ return null; } }
 function v363LockLanguage(phone, lang){ try{ if(!lang) return null; const l = String(lang).toLowerCase().startsWith('mal')?'ml':String(lang).toLowerCase().startsWith('hin')?'hi':'en'; if(typeof memoryStore!=='undefined' && memoryStore.get){ const u = memoryStore.get(phone)||{}; if(!u.lockedLang){ u.lockedLang=l; u.language=l; memoryStore.set(phone,u); } return u.lockedLang; } return l; }catch(e){ return null; } }
 function v363VideoFor(lang, kind){ const m = { company:'2BB34hGi52I', business_center:'jCwTwiuSi5s', municipal:'aj4Bxw2cOPQ', district:'Bi2HJ-3vQa0' }; if(lang==='ml') return m[kind]||null; return null; }
 function v363VideoNotReadyMsg(lang){ return lang==='ml' ? 'Ningalude bhashayile video ithuvare thayyaraayittilla. Team ningale sahayikkum. 🙏' : lang==='hi' ? 'Aapki bhasha me video abhi taiyaar nahi hai. Team aapki madad karegi. 🙏' : 'Video in your language is not ready yet. Team will help you. 🙏'; }
-const V363_PAYMENT_MODES = ['Full Payment','EMI Option'];
+const V364_PAYMENT_MODES = ['Full Payment','EMI Option'];
 function v363PaymentPrompt(lang){ return lang==='ml' ? 'Engane panamadakkan agrahikkunnu? 🙏' : lang==='hi' ? 'Aap kaise bhugtan karna chahenge? 🙏' : 'How do you want to pay? 🙏'; }
 function v363RequirementState(phone){ try{ const u = (memoryStore && memoryStore.get) ? (memoryStore.get(phone)||{}) : {}; u.reqReading = u.reqReading||1; if(memoryStore && memoryStore.set) memoryStore.set(phone,u); return u.reqReading; }catch(e){ return 1; } }
 function v363RequirementNext(phone, skipped){ try{ const u = (memoryStore && memoryStore.get) ? (memoryStore.get(phone)||{}) : {}; if(skipped){ u.reqReading=3; u.reqSkipped=true; } else { u.reqReading=Math.min(3,(u.reqReading||1)+1); } if(memoryStore && memoryStore.set) memoryStore.set(phone,u); return u.reqReading; }catch(e){ return 3; } }
-const V363_SERVICES_CHAIN = ['Installed/Opened','Logined','Completed','Approved/Checked Near You','Team','App Review'];
-function v363NextServiceStep(current){ const i = V363_SERVICES_CHAIN.indexOf(current); return i>=0 && i < V363_SERVICES_CHAIN.length-1 ? V363_SERVICES_CHAIN[i+1] : 'Done'; }
+const V364_SERVICES_CHAIN = ['Installed/Opened','Logined','Completed','Approved/Checked Near You','Team','App Review'];
+function v363NextServiceStep(current){ const i = V364_SERVICES_CHAIN.indexOf(current); return i>=0 && i < V364_SERVICES_CHAIN.length-1 ? V364_SERVICES_CHAIN[i+1] : 'Done'; }
 function v363ShouldAskReview(phone){ try{ const u = (memoryStore && memoryStore.get) ? (memoryStore.get(phone)||{}) : {}; return !u.reviewAsked; }catch(e){ return true; } }
 function v363MarkReviewAsked(phone){ try{ const u = (memoryStore && memoryStore.get) ? (memoryStore.get(phone)||{}) : {}; u.reviewAsked=true; if(memoryStore && memoryStore.set) memoryStore.set(phone,u); }catch(e){} }
 function v363TeamFeedbackMsg(lang){ return lang==='ml' ? 'Teemumayi samsarikkam kazhinjo? 🙏 Dayavayi parayu.' : lang==='hi' ? 'Kya aap team se baat kar paye? 🙏 Kripya batayein.' : 'Did you reach our team? 🙏 Please let me know.'; }
 function v363LosersReturnMsg(lang){ return lang==='ml' ? 'Veendum swagatham! Avassanam ningal marupadi nalgiyilla. Avassana ghattam thudarman ningal sherikkum agrahikkunnundo? 🙏' : lang==='hi' ? 'Wapas swagat hai! Pichhli baar aapne jawab nahi diya. Kya aap sach me apna aakhri step jaari rakhna chahte hain? 🙏' : 'Welcome back! Last time you did not reply to our reminders. Do you really want to continue your last step? 🙏'; }
-async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (flow==='Business Opportunity') ? V363_TEAM_BO : V363_TEAM_SERVICES; const msg = 'TEAM ALERT - Maya V363\nUser: '+phone+'\nFlow: '+flow+'\nStep: '+(step||'-')+'\nDoubt: '+((doubtText||'-').slice(0,300))+'\nTime: '+(typeof getISTTime==='function'?getISTTime():new Date().toISOString())+'\nPlease call back 11 AM - 4 PM, Mon-Sat.'; if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); try{ if(typeof saveToSheet==='function') await saveToSheet('System_Logs',[typeof getISTTime==='function'?getISTTime():'',phone,'en','V363 Team Notification','Flow:'+flow+' Step:'+step+' To:'+to,'Team',to,'V363 Team',''],false); }catch(e){} return to; }catch(e){ return null; } }
-async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V363\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V363_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
+async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (flow==='Business Opportunity') ? V364_TEAM_BO : V364_TEAM_SERVICES; const msg = 'TEAM ALERT - Maya V364\nUser: '+phone+'\nFlow: '+flow+'\nStep: '+(step||'-')+'\nDoubt: '+((doubtText||'-').slice(0,300))+'\nTime: '+(typeof getISTTime==='function'?getISTTime():new Date().toISOString())+'\nPlease call back 11 AM - 4 PM, Mon-Sat.'; if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); try{ if(typeof saveToSheet==='function') await saveToSheet('System_Logs',[typeof getISTTime==='function'?getISTTime():'',phone,'en','V364 Team Notification','Flow:'+flow+' Step:'+step+' To:'+to,'Team',to,'V364 Team',''],false); }catch(e){} return to; }catch(e){ return null; } }
+async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V363', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V363_TEAM_BO, teamServices:V363_TEAM_SERVICES }));
-// ===== END V363 =====
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+// ===== END V364 =====
 
 
-// V363 INBOX GUARANTEE - ONE FILE ONLY - Old chats must survive every deploy.
+// V364 INBOX GUARANTEE - ONE FILE ONLY - Old chats must survive every deploy.
 // Rule: NEVER clear __teamInboxLog on boot. Restore from Redis team_inbox_log (2000 msgs) + paused set.
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V363', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
-// ===== END V363 INBOX GUARANTEE =====
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+// ===== END V364 INBOX GUARANTEE =====
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V363 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+
+// ===== V364 /fire-batch1 - Batch 1 ONLY - 23 numbers - Template B - DO NOT resend Template 20 =====
+const V364_BATCH1 = []; // Owner fills 23 numbers here before firing - DO NOT invent numbers. Excludes manual 8+2 + own/team/malformed.
+app.post('/fire-batch1', async (req,res)=>{
+  try{
+    const key = req.headers['x-admin-key'] || req.query.key || '';
+    if(process.env.FIRE_KEY && key !== process.env.FIRE_KEY) return res.status(401).json({error:'unauthorized'});
+    const excluded = new Set(['918590175977','918590183646','37498355988']);
+    const list = (V364_BATCH1||[]).filter(n=> !excluded.has(String(n)));
+    console.log('V364 /fire-batch1 starting, count=' + list.length + ' - Batch 1 only, Template bizmapia_resume_maya_en');
+    let sent=0, failed=[];
+    for(let n of list){
+      try{ console.log('SEND TO ' + n + ' : template'); await sendWithDelay({messaging_product:'whatsapp', to:String(n), type:'template', template:{name:'bizmapia_resume_maya_en', language:{code:'en_US'}, components:[{type:'button', sub_type:'quick_reply', index:'0', parameters:[{type:'payload', payload:'CONTINUE'}]}, {type:'button', sub_type:'quick_reply', index:'1', parameters:[{type:'payload', payload:'STOP'}]}]}, _phoneId: PHONE_NUMBER_ID}); sent++; }catch(e){ failed.push(String(n)); console.log('SEND FAIL FINAL to ' + n); }
+      await delay(1000);
+    }
+    await saveToSheet('System_Logs',[getISTTime(),'BATCH1','all','Fire Batch1',`Batch1 sent:${sent} failed:${failed.length} template:bizmapia_resume_maya_en`,'Batch','Batch1','Batch',''],false).catch(()=>{});
+    return res.json({ok:true, sent, failed, note:'Batch 1 only. Batches 2-5 one per day, only if Stop<=2-3. Template 20 DO NOT resend.'});
+  }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
+});
+
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
