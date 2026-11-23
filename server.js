@@ -1,13 +1,14 @@
 // ============================================================================
-// 🔒 V358 MERGED - V357 + SEE VIDEO CTA FIX - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE
+// 🔒 V360 MERGED - V359 + FULL GREETING AUDIT - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE
 // BASE = V352 (V341 CORS + V340-343 Team Inbox + V343 Funnel + V345 reading-time + V348 6-stage idle + V349 dedupe + V350 Short Welcome/Doubt/Balance + V351 chainId + V352 Inbox Persist)
 // + V320 RESTORED (real code): Call window Mon-Sat 11AM-4PM, number ONLY in Call button, callback never promised, call reminders 11AM / +15min / 1:30PM / 3:45PM / After4
 // + V353 DOUBT-FIRST + V354 OUTER-STEP: Inner steps fast. Outer steps identify need, reply fast. If NOT in knowledge -> Call Team button + "Calling time: Monday to Saturday, 11 AM - 4 PM", no invent, stay on same step.
 // + V356 NUMBERS (user confirmed): Business Opportunity = 8590175977, Services = 85901 83646. + V356 VIDEOS (user confirmed exact URLs, see constants above).
+// + V359 TEXTING: NEVER say "Who are you?" / "Nee aaraanu" / "Ningal aaraanu" - that asks identity. Always "Which one are you? Customer / Driver / Shop Owner?" + "I will guide you exactly the way you need."
 // + V358 SEE VIDEO: every See Video button is singleCta (cta_url, https youtu.be?si=) with exact video inbuilt, auto-opens. Level-pick no longer sends reply-button See Video. getVideoUrl returns exact si URLs. HI fallback = Company Video ENHI.
 // + V357 DIALER: Meta native phone_number button via realDialerCta/sendDialer. tel: in cta_url REMOVED (Meta rejects it). Number only in button, never in body.
 // + V356 CHAT RULES: "Business Opportunity" NOT "Franchise Opportunity". "want to know about our service" for services entry.
-// VERIFY: /health must say V358. Test: ML user -> ML videos, EN/HI user -> EN videos, unknown question -> Call handoff with correct number.
+// VERIFY: /health must say V360. Test: ML user -> ML videos, EN/HI user -> EN videos, unknown question -> Call handoff with correct number.
 // ============================================================================
 // ==================== V320 - CALL WINDOW 11AM-4PM + NO NUMBER IN BODY ====================
 // (1) Calling window = 11 AM - 4 PM IST only. Checked from current IST time, every time.
@@ -406,22 +407,22 @@ function getIdleCheckText(lang, stage){
   if(lang==='ml'){
     if(stage===1) return `👋 Are you there? 😊\n\nഞാൻ ഇവിടെയുണ്ട്. മെസ്സേജ് കണ്ടോ?\n\nതുടരട്ടെ?`;
     if(stage===2) return `👋 Are you still there? 😊\n\nഞാൻ ഇവിടെയുണ്ട്, Bizmapia-യിൽ നിങ്ങൾക്ക് ശരിയായ അവസരം കണ്ടെത്താൻ സഹായിക്കാൻ.\n\nനിങ്ങളുടെ അന്വേഷണത്തെക്കുറിച്ച് എന്തും ചാറ്റ് ചെയ്യൂ, ഞാൻ ഉടൻ മറുപടി തരാം.`;
-    if(stage===3) return `🙏 Still you not replied to me!\n\nDo you really want to stop this chat and need time for chatting with me?\n\nനിർത്തണോ, അതോ പിന്നീട് സംസാരിക്കണോ?`;
-    if(stage===4) return `👋 Hi, 1 hour ആയി.\n\nBizmapia അവസരം നോക്കുകയായിരുന്നല്ലോ. തുടരട്ടെ? ഞാൻ ഇവിടെയുണ്ട്.`;
-    if(stage===5) return `👋 Hi, 12 hours ആയി.\n\nഇപ്പോഴും Bizmapia അവസരത്തിൽ താല്പര്യം ഉണ്ടോ? തുടരട്ടെ?`;
-    return `🙏 അവസാനമായി — 24 hours ആയി.\n\nഇപ്പോഴും താല്പര്യം ഉണ്ടോ? ഇല്ലെങ്കിൽ "Stop" പറഞ്ഞാൽ മതി, ഞാൻ ശല്യം ചെയ്യില്ല.`;
+    if(stage===3) return `🙏 You have not replied yet. No problem.\n\nShall I stop here, or talk later?\n\nനിർത്തണോ, അതോ പിന്നീട് സംസാരിക്കണോ?`;
+    if(stage===4) return `👋 Hi, one hour has passed.\n\nBizmapia അവസരം നോക്കുകയായിരുന്നല്ലോ. തുടരട്ടെ? ഞാൻ ഇവിടെയുണ്ട്.`;
+    if(stage===5) return `👋 Hi, twelve hours have passed.\n\nഇപ്പോഴും Bizmapia അവസരത്തിൽ താല്പര്യം ഉണ്ടോ? തുടരട്ടെ?`;
+    return `🙏 One last check — twenty four hours have passed.\n\nഇപ്പോഴും താല്പര്യം ഉണ്ടോ? ഇല്ലെങ്കിൽ "Stop" പറഞ്ഞാൽ മതി, ഞാൻ ശല്യം ചെയ്യില്ല.`;
   }
   if(lang==='hi'){
     if(stage===1) return `👋 Are you there? 😊\n\nMain yahin hoon. Message dekha?\n\nAage badhein?`;
     if(stage===2) return `👋 Are you still there? 😊\n\nMain yahin hoon, Bizmapia me aapke liye sahi option dhoondhne me madad karne ke liye.\n\nApni enquiry se judi koi bhi baat chat kijiye, main jaldi reply dungi.`;
-    if(stage===3) return `🙏 Still you not replied to me!\n\nDo you really want to stop this chat and need time for chatting with me?`;
-    if(stage===4) return `👋 Hi, 1 hour ho gaya.\n\nAap Bizmapia opportunity dekh rahe the. Aage badhein?`;
-    if(stage===5) return `👋 Hi, 12 hours ho gaye.\n\nAbhi bhi Bizmapia opportunity me interest hai?`;
-    return `🙏 Aakhri baar — 24 hours ho gaye.\n\nAbhi bhi interest hai? Nahi to "Stop" bol dijiye.`;
+    if(stage===3) return `🙏 You have not replied yet. No problem.\n\nShall I stop here, or talk later?`;
+    if(stage===4) return `👋 Hi, one hour has passed.\n\nAap Bizmapia opportunity dekh rahe the. Aage badhein?`;
+    if(stage===5) return `👋 Hi, twelve hours have passed.\n\nAbhi bhi Bizmapia opportunity me interest hai?`;
+    return `🙏 One last check — twenty four hours have passed.\n\nAbhi bhi interest hai? Nahi to "Stop" bol dijiye.`;
   }
   if(stage===1) return `👋 Are you there? 😊\n\nI am here. Did you see my message?\n\nShall we continue?`;
   if(stage===2) return `👋 Are you still there? I am here to help you to find your right option with Bizmapia. Chat anything related to your enquiry, I will give you the reply soon.`;
-  if(stage===3) return `🙏 Still you not replied to me! Do you really want to stop this chat and need time for chatting with me?`;
+  if(stage===3) return `🙏 You have not replied yet. No problem. Shall I stop here, or talk later?`;
   if(stage===4) return `👋 Hi, it has been 1 hour.\n\nYou were checking Bizmapia opportunity. Shall we continue? I am here.`;
   if(stage===5) return `👋 Hi, it has been 12 hours.\n\nStill interested in Bizmapia opportunity? Shall we continue?`;
   return `🙏 One last check — it has been 24 hours.\n\nStill interested? If not, just say "Stop", I will not disturb you.`;
@@ -549,17 +550,17 @@ function detectSentimentLocal(txt){
 function getSoftReminderText(lang, kind){
   if(lang==='ml'){
     if(kind==='finalize') return `🙏 ഓർമ്മപ്പെടുത്തട്ടെ — നിങ്ങൾ final ചെയ്യാനായി reminder വെച്ചതാണ്.\nഇപ്പോൾ ഇതിന് പറ്റിയ സമയമാണോ? 😊\n\nഅല്ലെങ്കിൽ എപ്പോൾ ഓർമ്മിപ്പിക്കണം എന്ന് പറയൂ — വൈകുന്നേരമോ, നാളെയോ?`;
-    if(kind==='serious') return `🙏 ഒരു കാര്യം മനസ്സിലാക്കിത്തരട്ടെ — Bizmapia All India പ്ലാറ്റ്ഫോമാണ്, ദിവസവും 10,000+ പേർ അന്വേഷിക്കുന്നുണ്ട്.\nനിങ്ങളുടെ ജില്ലയിലെ slot ഒരിക്കൽ പോയാൽ വീണ്ടും കിട്ടാൻ വളരെ പ്രയാസമാണ്.\nഅതുകൊണ്ടാണ് ഞാൻ ഓർമ്മിപ്പിക്കുന്നത്. ഇന്ന് Rs 100 കൊണ്ട് slot lock ചെയ്യാമോ?`;
+    if(kind==='serious') return `🙏 ഒരു കാര്യം മനസ്സിലാക്കിത്തരട്ടെ — Bizmapia All India പ്ലാറ്റ്ഫോമാണ്, ദിവസവും പലരും അന്വേഷിക്കുന്നുണ്ട്.\nനിങ്ങളുടെ ജില്ലയിലെ slot ഒരിക്കൽ പോയാൽ വീണ്ടും കിട്ടാൻ വളരെ പ്രയാസമാണ്.\nഅതുകൊണ്ടാണ് ഞാൻ ഓർമ്മിപ്പിക്കുന്നത്. ഇന്ന് Rs 100 കൊണ്ട് slot lock ചെയ്യാമോ?`;
     if(kind==='last') return `🙏 അവസാനമായി ഒന്ന് പറയട്ടെ — നിങ്ങൾ താല്പര്യം കാണിച്ചതുകൊണ്ടാണ് ഞാൻ വീണ്ടും വരുന്നത്.\nഇന്ന് lock ചെയ്തില്ലെങ്കിൽ വേറെ ആരെങ്കിലും എടുത്തേക്കാം.\nഇപ്പോൾ ചെയ്യണോ, അതോ ഇന്ന് വൈകുന്നേരം ഓർമ്മിപ്പിക്കണോ?`;
     return `ശരി, കുഴപ്പമില്ല. 😊 എപ്പോൾ ഓർമ്മിപ്പിക്കണം? ഇന്ന് വൈകുന്നേരം, നാളെ രാവിലെ, അതോ നിങ്ങൾ പറയുന്ന സമയത്ത്?`;
   }
   if(lang==='hi'){
     if(kind==='finalize') return `🙏 Yaad dilau — aapne finalize karne ke liye reminder lagaya tha.\nKya abhi sahi samay hai? 😊\n\nNahi to kab yaad dilau — aaj shaam ya kal subah?`;
-    if(kind==='serious') return `🙏 Ek baat samjhaiye — Bizmapia All India platform hai, roz 10,000+ log poochte hain.\nAapke district ka slot ek baar gaya to dobara milna mushkil hai.\nIsliye yaad dila rahi hoon. Aaj Rs 100 se slot lock karein?`;
+    if(kind==='serious') return `🙏 Ek baat samjhaiye — Bizmapia All India platform hai, roz kai log poochte hain.\nAapke district ka slot ek baar gaya to dobara milna mushkil hai.\nIsliye yaad dila rahi hoon. Aaj Rs 100 se slot lock karein?`;
     return `🙏 Reminder — is this the right time? If not, when should I remind you again?`;
   }
   if(kind==='finalize') return `🙏 Just reminding you — you set a reminder to finalize.\nIs this the right time? 😊\n\nIf not, when should I remind you again — this evening or tomorrow?`;
-  if(kind==='serious') return `🙏 Let me explain one thing — Bizmapia is an All India platform, 10,000+ people enquire daily.\nOnce your district slot is gone, it is very hard to get it back.\nThat is why I am reminding you. Can we lock your slot today with Rs 100?`;
+  if(kind==='serious') return `🙏 Let me explain one thing — Bizmapia is an All India platform, Many people enquire daily.\nOnce your district slot is gone, it is very hard to get it back.\nThat is why I am reminding you. Can we lock your slot today with Rs 100?`;
   if(kind==='last') return `🙏 One last thing — I am coming back because you showed interest.\nIf you don't lock today, someone else may take it.\nShall we do it now, or shall I remind you this evening?`;
   return `No problem. 😊 When should I remind you? This evening, tomorrow morning, or a time you choose?`;
 }
@@ -595,7 +596,7 @@ FIRST JOB (first 2 messages, for EVERY new user):
 3) Ask TASTE in 1 question before showing options: e.g. Business -> "What kind of earning are you looking for - small / medium / big?" Service -> "What do you need first - Taxi / shop search / delivery / booking?" Do NOT show full option list before taste.
 3) Sense if they LIKE it / CONSIDERING / DOUBT / PRICE DOUBT. If doubt, solve doubt first, never push pay.
 ALL INDIA + SCARCITY (say naturally once when explaining opportunity, once when reminding - NOT every message):
-"Bizmapia is an All India platform - First 4-in-1 App in India. Daily 10,000+ people enquire from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
+"Bizmapia is an All India platform - First 4-in-1 App in India. Many people enquire daily from all over India. So slots are limited. Once your district / area slot is taken, it is very hard to get it back. That is why locking early with a small token matters."
 HUMAN HANDOVER RULE:
 - If user says human / manager / complaint / fraud / police / refund-manager, do NOT argue. Say "I will inform team, team will check" + explain team call rule (only after token, else call team in free time). Code will alert team instantly.
 - If user sends voice note: treat it as heard, NEVER restart, NEVER send old menu. Reply in user's language: voice heard, continue the SAME step they were in (video/capacity/pay/details/service), ask ONE short typed line only if the voice point is unclear, then return to finalization. If user sends image/video, ask for 1-line typed note, keep same step.
@@ -661,7 +662,7 @@ TOKEN PUSH - IF INTENT IS BUSINESS OPPORTUNITY, MAXIMUM EFFORT (soft, never rude
 - If user says later / think / tomorrow: DO NOT argue. Say "No problem. Shall I set a reminder for finalizing?" Ask WHEN: evening / tomorrow morning / their time.
 - If user says yes to reminder: Confirm "Done, I will remind you at [time]. Is that okay?"
 - If user avoids 2nd time: Remind softly: "You set a reminder, is this the right time?" + ask new time.
-- If user avoids 3rd+ time: Remind seriousness softly (All India + 10,000+ leads + slot may go) + ask "Now or this evening?" Never threaten.
+- If user avoids 3rd+ time: Remind seriousness softly (All India + many leads daily + slot may go) + ask "Now or this evening?" Never threaten.
 - If user says NOT INTERESTED / STOP: Stop pushing, say thanks, save as NOT_INTERESTED.
 OUTPUT FORMAT: Return ONLY valid JSON: {"reply":"short reply max 3 lines + 1 question","intent":"business|service|app|finalize","source":"...","sentiment":"likes_it|considering|doubt|price_doubt|not_interested|confused","level":"center|corp|district|","district":"...","tokenStatus":"NOT_ASKED|ASKED|READY|LATER|PAID","reminderWanted":true/false,"reminderTimeText":"..."} - Leave buttons null, code adds 3 quick buttons.
 FACTS (use only these):
@@ -1824,7 +1825,7 @@ function getSorryExplain(lang, lastStep, userText){
     else if(last.includes('Pay') || last.includes('Not Paid')){ stepName='Registration Fee Payment'; whatToDo='Pay registration fee, then click "I Paid"'; }
     else if(last.includes('Language')){ stepName='Language Selection'; whatToDo='Select language from below'; }
     else { stepName='this step'; whatToDo='Click the button below'; }
-    return `😔 Sorry, I don't understand your reply "${safeText}".\n\n📄 You are in ${stepName} step.\n\n👉 What to do now: ${whatToDo}.\n\n💡 If you have any query, please complete this step first, then you can contact our team in next steps.`;
+    return `😔 Sorry, I did not understand your reply "${safeText}".\n\n📄 You are in ${stepName} step.\n\n👉 What to do now: ${whatToDo}.\n\n💡 If you have any query, please complete this step first, then you can contact our team in next steps.`;
   }
 }
 
@@ -2105,16 +2106,16 @@ function getEscalatedPayText(lang, fee, level, sub){ const token = getTokenFee(s
   // FOMO + Social Proof + Scarcity - V247
   if(lang==='ml'){
     if(level===1) return `👋 ഓർമ്മപ്പെടുത്തൽ: നിങ്ങൾ ${fee}L-ന് തയ്യാറായി!\n\n⚠️ ഇത് ${fee}L-ന്റെ ഭാഗമല്ല (Not refundable). Rs${token} അടച്ചാൽ 📄 Tender + Annexure-B ഉടൻ ലഭിക്കും.\n\n👇 ഇപ്പോൾ അടയ്ക്കൂ, സ്ലോട്ട് നഷ്ടപ്പെടാതിരിക്കാൻ:`;
-    if(level===12) return `⚠️ നിങ്ങളുടെ ${fee}L ഏരിയ ഇപ്പോഴും ലോക്ക് ആയിട്ടില്ല!\n\n🔥 ഇന്ന് ${fee}L-ന് 3 പേർ അന്വേഷിച്ചു. നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം!\n\nRs${token} (Not refundable, ${fee}L-ന്റെ ഭാഗമല്ല) അടച്ചാൽ 📄 Tender + Annexure-B + ⭐ Priority Verification ലഭിക്കും.\n\n👇 ഇപ്പോൾ ലോക്ക് ചെയ്യൂ:`;
-    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ ${fee}L ഏരിയ അടുത്ത ആളിന് പോകാൻ പോകുന്നു!\n\n🚨 നാളെ മുതൽ പുതിയ അപേക്ഷകർ queue-ൽ. ഇന്ന് Rs${token} (Not refundable) അടച്ചില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും!\n\n📄 Tender + Annexure-B ഇപ്പോൾ തന്നെ ലഭിക്കാൻ 👇 Pay ചെയ്യൂ അല്ലെങ്കിൽ Call ${'${HELP_MARKETING}'}:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
+    if(level===24) return `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! Hi, one gentle reminder. Your opportunity is waiting here.\n\n🚨 നാളെ മുതൽ പുതിയ അപേക്ഷകർ queue-ൽ. ഇന്ന് Rs${token} (Not refundable) അടച്ചില്ലെങ്കിൽ സ്ലോട്ട് നഷ്ടമാകും!\n\n📄 Tender + Annexure-B ഇപ്പോൾ തന്നെ ലഭിക്കാൻ 👇 Pay ചെയ്യൂ അല്ലെങ്കിൽ Call ${'${HELP_MARKETING}'}:`;
   } else if(lang==='hi'){
     if(level===1) return `👋 रिमाइंडर: आप ${fee}L के लिए तैयार!\n\n⚠️ यह ${fee}L का हिस्सा नहीं है (Not refundable). Rs${token} पर 📄 Tender + Annexure-B तुरंत मिलेगा।\n\n👇 अभी पे करें, स्लॉट न खोएं:`;
-    if(level===12) return `⚠️ आपका ${fee}L एरिया अभी भी लॉक नहीं!\n\n🔥 आज ${fee}L के लिए 3 लोगों ने पूछा। आपके जिले में स्लॉट लिमिटेड!\n\nRs${token} (Not refundable, ${fee}L का हिस्सा नहीं) पर 📄 Tender + Annexure-B + ⭐ Priority Verification मिलेगा।\n\n👇 अभी लॉक करें:`;
-    if(level===24) return `⏰ अंतिम रिमाइंडर! आपका ${fee}L एरिया अगले व्यक्ति को जाने वाला है!\n\n🚨 कल से नए आवेदक queue में। आज Rs${token} (Not refundable) नहीं भरा तो स्लॉट चला जाएगा!\n\n📄 Tender + Annexure-B अभी पाने के लिए 👇 Pay करें या Call ${'${HELP_MARKETING}'}:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
+    if(level===24) return `⏰ अंतिम रिमाइंडर! Hi, one gentle reminder. Your opportunity is waiting here.\n\n🚨 कल से नए आवेदक queue में। आज Rs${token} (Not refundable) नहीं भरा तो स्लॉट चला जाएगा!\n\n📄 Tender + Annexure-B अभी पाने के लिए 👇 Pay करें या Call ${'${HELP_MARKETING}'}:`;
   } else {
     if(level===1) return `👋 Reminder: You confirmed ${fee}L!\n\n⚠️ This is NOT part of ${fee}L (Not refundable). Pay Rs${token} to get 📄 Tender + Annexure-B instantly.\n\n👇 Pay now to secure your slot:`;
-    if(level===12) return `⚠️ Your ${fee}L area is still NOT locked!\n\n🔥 🔥 3 people enquired for ${fee}L today. ⚠️ Slots in your district are limited!\n\nPay Rs${token} (Not refundable, NOT part of ${fee}L) to get 📄 Tender + Annexure-B + ⭐ Priority Verification.\n\n👇 Lock it now:`;
-    if(level===24) return `⏰ FINAL Reminder! Your ${fee}L area is about to go to next person!\n\n🚨 🚨 New applicants in queue from tomorrow. If you don't pay Rs${token} (Not refundable) today, you'll lose your slot!\n\nGet 📄 Tender + Annexure-B now 👇 Pay or Call ${'${HELP_MARKETING}'}:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
+    if(level===24) return `⏰ FINAL Reminder! Hi, one gentle reminder. Your opportunity is waiting here.\n\n🚨 🚨 New applicants in queue from tomorrow. If you don't pay Rs${token} (Not refundable) today, you'll lose your slot!\n\nGet 📄 Tender + Annexure-B now 👇 Pay or Call ${'${HELP_MARKETING}'}:`;
   }
   return `💳 After Registration Fee Rs${token} (Not refundable, NOT part of fee) payment, please select:-`;
 }
@@ -2382,20 +2383,20 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         if(level===12){
           // 12h: Short FOMO version - don't repeat long welcome
           if(actualLang==='ml'){
-            welcomeText = `⚠️ നിങ്ങൾ ഇതുവരെ ഭാഷ തിരഞ്ഞെടുത്തില്ല!\n\n🔥 നിങ്ങളുടെ ജില്ലയിലെ സ്ലോട്ട് പരിമിതം! ഇന്ന് 3 പേർ ബിസിനസ് അവസരം നോക്കി.\n\n👇 ഇപ്പോൾ ഭാഷ തിരഞ്ഞെടുത്ത് തുടരൂ:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
           } else if(actualLang==='hi'){
-            welcomeText = `⚠️ आपने अभी तक भाषा नहीं चुनी!\n\n🔥 आपके जिले में स्लॉट लिमिटेड! आज 3 लोगों ने बिजनेस अवसर देखा।\n\n👇 अभी भाषा चुनकर जारी रखें:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
           } else {
-            welcomeText = `⚠️ You haven't selected language yet!\n\n🔥 ⚠️ Slots in your district are limited! 3 people checked Business Opportunity today.\n\n👇 Select language now to continue:`;
+            welcomeText = `🙏 Hi, you have not selected your language yet. 😊 Please select your language now, then we can continue:`;
           }
         }
         if(level===24){
           if(actualLang==='ml'){
-            welcomeText = `⏰ അവസാന ഓർമ്മപ്പെടുത്തൽ! നിങ്ങളുടെ സ്ലോട്ട് നാളെ മറ്റൊരാൾക്ക് പോകും!\n\n🚨 ഇന്ന് ഭാഷ തിരഞ്ഞെടുത്തില്ലെങ്കിൽ നിങ്ങളുടെ ഏരിയ queue-ൽ നിന്ന് നീക്കം ചെയ്യപ്പെടും!\n\n👇 ഇപ്പോൾ തന്നെ ഭാഷ തിരഞ്ഞെടുക്കൂ:`;
+            welcomeText = `⏰ Hi, one gentle reminder. 😊 Your opportunity is waiting here. Please select your language now, then we can continue:`;
           } else if(actualLang==='hi'){
-            welcomeText = `⏰ अंतिम रिमाइंडर! आपका स्लॉट कल दूसरे को चला जाएगा!\n\n🚨 आज भाषा नहीं चुनी तो आपका एरिया queue से हट जाएगा!\n\n👇 अभी भाषा चुनें:`;
+            welcomeText = `⏰ Hi, one gentle reminder. 😊 Your opportunity is waiting here. Please select your language now, then we can continue:`;
           } else {
-            welcomeText = `⏰ FINAL Reminder! Your slot goes to someone else tomorrow!\n\n🚨 If you don't select language today, your area will be removed from queue!\n\n👇 Select language NOW:`;
+            welcomeText = `⏰ Hi, one gentle reminder. 😊 Your opportunity is waiting here. Please select your language now, then we can continue:`;
           }
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], actualPhoneId));
@@ -3492,7 +3493,7 @@ Welcome to Bizmapia! 🙏
     }
     // ===== V249 HYBRID - AI quick button -> feed back to AI =====
 
-    // ===== V316 DETERMINISTIC SERVICES - WHO ARE YOU FIRST (user scope, not generic AI) =====
+    // ===== V316 DETERMINISTIC SERVICES - WHICH ONE ARE YOU FIRST (Customer/Driver/Shop Owner - NOT asking name/identity) (user scope, not generic AI) =====
     // AI_SERVICES no longer goes straight to 4 services. First: Customer / Driver / Shop Owner.
     // Each branch is a FIXED script from user scope - AI must not invent rates, must refer to Tender/Annexure-B + www.bizmapia.com for advertainment rates.
     if(btnId==='WHO_CUSTOMER' || btnId==='WHO_DRIVER' || btnId==='WHO_SHOP'){
@@ -3528,7 +3529,7 @@ Welcome to Bizmapia! 🙏
       const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
       const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
       await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
-      try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 നിങ്ങൾ ആരാണ്? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : `🙏 Who are you? I will guide you exactly for you. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
+      try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 സൂപ്പർ! സേവനങ്ങൾ കാണിക്കുന്നതിന് മുൻപ് ഒരു ചെറിയ ചോദ്യം — നിങ്ങൾ ഏത് കൂട്ടത്തിലാണ്? Customer ആണോ, Driver ആണോ, Shop Owner ആണോ? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : sl==='hi' ? `🙏 Super! Services dikhane se pehle ek chhota sawaal — aap kis category mein hain? Customer, Driver, ya Shop Owner? Us hisaab se main aapko bilkul sahi guide karungi. 💛\n\n` : `🙏 Super! Before I show you the services, one small question — which one are you? Customer, Driver, or Shop Owner? I will guide you exactly the way you need. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
       await delay(300);
       try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
@@ -3539,7 +3540,7 @@ Welcome to Bizmapia! 🙏
       const sl2 = state.lang || 'ml';
       const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
       const asSvc = svcMap[btnId] || 'Service';
-      const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee aaraanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Who are you - Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
+      const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee ethilaanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : sl2==='hi' ? `${asSvc} - Aap Bizmapia App se use kar sakte hain. 🙏\n\nApp install karke OTP login karein. Aap kis category mein hain — Customer, Driver, ya Shop Owner? Batayein, main aapko sahi guide karungi.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Which one are you — Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
       const svcReply = svcFixed;
       await setState(uid,{...state, lang:sl2, lastStep:'AI Maya - Service '+btnId, aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, svcReply, mayaQuickButtons(sl2, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcReply, incomingPhoneId)); }
@@ -3686,7 +3687,7 @@ Welcome to Bizmapia! 🙏
       const _claimsPaid310 = /(yes.*(done|paid)|i.*paid|payment.*done|paid.*already|already.*paid|i done payment|payment done|paid bro|paid da|adachu|pay cheythu|payment cheythu)/i.test(String(txt||'')) && !/not.*paid|did.*not.*pay|haven.*paid/.test(_low310);
       if(_isPayStep310 && _claimsPaid310 && txt && !btnId){
         state.lastStep=`PAY CLAIMED - Confidence Check ${state.fee||15}L`; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-        const _conf310 = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+        const _conf310 = lang==='ml' ? `🤔 Shall I check now?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Shall I check now?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Shall I check now?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
         await sendWithDelay(interactiveButton(uid,_conf310,[{id:'PAY_CONFIRM_CHECK',title:'✅ Yes check'},{id:'PAY_NOW_AGAIN',title:'💳 Pay now'}], incomingPhoneId));
         await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED TEXT ${state.fee||15}L`, String(txt||'').slice(0,80), 'CONFIDENCE CHECK', HELP_MARKETING, state.lastStep, ''], true);
         return;
@@ -4504,8 +4505,8 @@ Next:`,[{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '
       const verifyMsg = lang==='ml' ? `⚠️ നിങ്ങൾ പണം അടച്ചതായി ക്ലെയിം ചെയ്തു.
 
 ഞങ്ങൾ Razorpay-ൽ നിന്ന് ഓട്ടോമാറ്റിക്കായി പരിശോധിക്കുകയാണ്.\n\n✅ പേയ്മെന്റ് ശരിയാണെങ്കിൽ 2 മിനിറ്റിനുള്ളിൽ നിങ്ങൾക്ക് ഓട്ടോമാറ്റിക്കായി അടുത്ത സ്റ്റെപ്പ് ലഭിക്കും.\n\nദയവായി നിങ്ങളുടെ Payment ID / UTR ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ സ്ക്രീൻഷോട്ട് അയക്കുക.` : lang==='hi' ? `⚠️ आपने भुगतान का दावा किया है।\n\nहम Razorpay से ऑटो-वेरिफाई कर रहे हैं।\n\n✅ अगर भुगतान सही है तो 2 मिनट में अगला स्टेप ऑटो आएगा।\n\nकृपया अपना Payment ID / UTR टाइप करें या स्क्रीनशॉट भेजें।` : `⚠️ You claimed payment done.\n\nWe are auto-verifying with Razorpay...\n\n✅ If payment is genuine, you will get next step automatically in 2 mins.\n\nPlease also type your Payment ID / UTR or send screenshot for manual check.`;
-      // V310 CONFIDENCE CHECK: Are you confident? I am going to check real-time. If not paid, I can understand with my checking.
-      const _conf = lang==='ml' ? `🤔 Are you confident?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Are you confident?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Are you confident?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
+      // V310 CONFIDENCE CHECK: Shall I check now? I am going to check real-time. If not paid, I can understand with my checking.
+      const _conf = lang==='ml' ? `🤔 Shall I check now?\n\n🔍 ഞാൻ ഇപ്പോൾ തന്നെ payment system-ൽ real-time-ൽ പരിശോധിക്കാൻ പോകുന്നു.\n\n⚠️ അടച്ചിട്ടില്ലെങ്കിൽ എന്റെ പരിശോധനയിൽ എനിക്ക് മനസ്സിലാകും.\n\n👉 നിങ്ങൾ ഉറപ്പാണോ?` : lang==='hi' ? `🤔 Shall I check now?\n\n🔍 मैं अभी payment system में real-time में चेक करने जा रहा हूँ।\n\n⚠️ अगर नहीं भरा तो मेरी checking में मुझे समझ आ जाएगा।\n\n👉 क्या आप sure हैं?` : `🤔 Shall I check now?\n\n🔍 I am going to check with our payment system now in real time.\n\n⚠️ If not paid, I can understand with my checking.\n\n👉 Are you sure?`;
       await sendWithDelay(interactiveButton(uid,_conf,[{id:'PAY_CONFIRM_CHECK',title: lang==='ml' ? '✅ Yes check' : lang==='hi' ? '✅ Yes check' : '✅ Yes check'},{id:'PAY_NOW_AGAIN',title: lang==='ml' ? '💳 Pay now' : lang==='hi' ? '💳 Pay now' : '💳 Pay now'}], incomingPhoneId));
       await saveToSheet('Payments', [getISTTime(), uid, lang, `CLAIMED ${state.fee||15}L`, txt || btnId, 'NEEDS VERIFICATION', HELP_MARKETING, state.lastStep, ''], true);
       scheduleReminder(uid,'install:VERIFY:1',lang,2*60*1000, incomingPhoneId);
@@ -5254,7 +5255,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V358', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V360', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5286,16 +5287,16 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V358', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V358', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V358', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V358', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V360', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V360', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V360', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V360', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
 app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V352 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V358', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V360', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V352 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
