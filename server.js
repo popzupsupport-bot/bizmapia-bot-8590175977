@@ -1,3 +1,59 @@
+// ============================================================================
+// 🔒 V358 MERGED - V357 + SEE VIDEO CTA FIX - DO NOT EDIT / DO NOT REORDER / DO NOT REPLACE
+// BASE = V352 (V341 CORS + V340-343 Team Inbox + V343 Funnel + V345 reading-time + V348 6-stage idle + V349 dedupe + V350 Short Welcome/Doubt/Balance + V351 chainId + V352 Inbox Persist)
+// + V320 RESTORED (real code): Call window Mon-Sat 11AM-4PM, number ONLY in Call button, callback never promised, call reminders 11AM / +15min / 1:30PM / 3:45PM / After4
+// + V353 DOUBT-FIRST + V354 OUTER-STEP: Inner steps fast. Outer steps identify need, reply fast. If NOT in knowledge -> Call Team button + "Calling time: Monday to Saturday, 11 AM - 4 PM", no invent, stay on same step.
+// + V356 NUMBERS (user confirmed): Business Opportunity = 8590175977, Services = 85901 83646. + V356 VIDEOS (user confirmed exact URLs, see constants above).
+// + V358 SEE VIDEO: every See Video button is singleCta (cta_url, https youtu.be?si=) with exact video inbuilt, auto-opens. Level-pick no longer sends reply-button See Video. getVideoUrl returns exact si URLs. HI fallback = Company Video ENHI.
+// + V357 DIALER: Meta native phone_number button via realDialerCta/sendDialer. tel: in cta_url REMOVED (Meta rejects it). Number only in button, never in body.
+// + V356 CHAT RULES: "Business Opportunity" NOT "Franchise Opportunity". "want to know about our service" for services entry.
+// VERIFY: /health must say V358. Test: ML user -> ML videos, EN/HI user -> EN videos, unknown question -> Call handoff with correct number.
+// ============================================================================
+// ==================== V320 - CALL WINDOW 11AM-4PM + NO NUMBER IN BODY ====================
+// (1) Calling window = 11 AM - 4 PM IST only. Checked from current IST time, every time.
+// (2) NO company/team number in ANY message body. Team contact ONLY via buttons (Call button /
+//     WhatsApp button). Number lives ONLY in button payload (HELP_MARKETING_FULL constant),
+//     never as digits in body text. Every call message MUST also say "Calling time: 11 AM - 4 PM".
+// (3) Callback request -> no callback promise. Reply + Call button + calling time. Reminders:
+//     before 11 AM -> 11 AM "you can call now"; in window -> +15 min "did you call?";
+//     1:30 PM feedback; 3:45 PM closing; after 4 PM confirm + WhatsApp option.
+// (4) "Nobody answering" -> check window: in window = team busy, will respond on missed-call
+//     notification, try after 30 min + chat with Maya 24x7. Outside window = not calling time,
+//     wait till 11-4, or WhatsApp chat (slow reply) + chat with Maya 24x7.
+// (5) Maya fallback everywhere: "I can clear doubts, text or voice, 24x7." Nothing else changed.
+function v320InWindow(){
+  try{ const h = Number(new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour:'numeric',hour12:false})); return h>=11 && h<16; }catch(_){ return false; }
+}
+function v320MsUntil(hour, min){
+  try{
+    const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+    const target = new Date(now); target.setHours(hour, min||0, 0, 0);
+    if(target <= now) target.setDate(target.getDate()+1);
+    return target - now;
+  }catch(_){ return 30*60*1000; }
+}
+function v320Txt(lang, kind){
+  const ml = lang==='ml', hi = lang==='hi';
+  const callTime = ml ? 'Calling time: 11 AM - 4 PM' : hi ? 'Calling time: 11 AM - 4 PM' : 'Calling time: 11 AM - 4 PM';
+  const maya247 = ml ? 'ഇതിനിടയിൽ എന്നോട് ചാറ്റ് ചെയ്യൂ — നിങ്ങളുടെ എല്ലാ സംശയങ്ങളും ഞാൻ തീർക്കാം. Text അല്ലെങ്കിൽ voice അയക്കൂ, എനിക്ക് മനസ്സിലാകും. ഞാൻ 24x7 സഹായിക്കാം.' : hi ? 'इसी बीच मुझसे चैट कीजिए — मैं आपके सारे doubts दूर कर सकती हूँ। Text या voice भेजिए, मैं समझ सकती हूँ। मैं 24x7 मदद कर सकती हूँ।' : 'Meanwhile, chat with me — I can clear all your doubts. Send text or voice, I can understand. I can help you 24x7.';
+  switch(kind){
+    case 'CB_BEFORE': return (ml ? `ഞങ്ങൾ callback ചെയ്യാറില്ല 🙏\n\nഞങ്ങളുടെ calling time ആണ് 11 AM - 4 PM. ദയവായി 11 AM-ന് voice call ചെയ്യൂ.` : hi ? `हम callback नहीं करते 🙏\n\nहमारा calling time 11 AM - 4 PM है। कृपया 11 AM पर voice call कीजिए।` : `We don't do callback 🙏\n\nOur calling time is 11 AM - 4 PM. Please call us at 11 AM via voice call.`) + `\n\n${callTime}\n\n${maya247}`;
+    case 'CB_IN': return (ml ? `ഞങ്ങൾ callback ചെയ്യാറില്ല 🙏\n\nനിങ്ങൾക്ക് ഇപ്പോൾ വിളിക്കാം — calling time 4 PM വരെയാണ്. ദയവായി voice call ചെയ്യൂ.` : hi ? `हम callback नहीं करते 🙏\n\nआप अभी call कर सकते हैं — calling time 4 PM तक है। कृपया voice call कीजिए।` : `We don't do callback 🙏\n\nYou can call us now — calling time is till 4 PM. Please call via voice call.`) + `\n\n${callTime}\n\n${maya247}`;
+    case 'CB_AFTER': return (ml ? `ഇന്നത്തെ calling time കഴിഞ്ഞു. 11 AM - 4 PM ആണ് calling time.\n\nവേണമെങ്കിൽ WhatsApp-ൽ team-മായി chat ചെയ്യാം. Real-time reply കിട്ടാൻ സാധ്യത കുറവാണ് — team തിരക്കില്ലാത്തപ്പോൾ reply ചെയ്യും.` : hi ? `आज का calling time खत्म हो गया। Calling time 11 AM - 4 PM है।\n\nचाहें तो WhatsApp पर team से chat कर सकते हैं। Real-time reply की संभावना कम है — team फ्री होने पर reply करेगी।` : `Calling time for today is over. Calling time is 11 AM - 4 PM.\n\nIf you want, you can chat with the team on WhatsApp. Less chance of real-time reply — team will reply when free from other duties.`) + `\n\n${callTime}\n\n${maya247}`;
+    case 'NOANS_IN': return (ml ? `Team ഇപ്പോൾ busy ആണ്. നിങ്ങളുടെ missed call notification-ൽ അവർ respond ചെയ്യും. അല്ലെങ്കിൽ 30 മിനിറ്റിന് ശേഷം വീണ്ടും ശ്രമിക്കൂ.` : hi ? `Team अभी busy है। वे आपके missed call notification पर respond करेंगे। या 30 मिनट बाद फिर कोशिश कीजिए।` : `Our team is busy right now. They will respond on your missed call notification. Or you can try again after 30 minutes.`) + `\n\n${callTime}\n\n${maya247}`;
+    case 'NOANS_OUT': return (ml ? `ഇത് business calling time അല്ല. Calling time 11 AM - 4 PM ആണ്. 11 AM - 4 PM വരെ കാത്തിരിക്കൂ.` : hi ? `यह business calling time नहीं है। Calling time 11 AM - 4 PM है। 11 AM - 4 PM तक इंतज़ार कीजिए।` : `This is not business calling time. Our calling time is 11 AM - 4 PM. Please wait till 11 AM - 4 PM to call.`) + `\n\n${callTime}\n\n${maya247}`;
+    case 'REM_11AM': return (ml ? `നിങ്ങൾക്ക് ഇപ്പോൾ വിളിക്കാം 😊 Calling time 4 PM വരെയാണ്. ദയവായി voice call ചെയ്യൂ.` : hi ? `आप अभी call कर सकते हैं 😊 Calling time 4 PM तक है। कृपया voice call कीजिए।` : `You can call us now 😊 Calling time is till 4 PM. Please call via voice call.`) + `\n\n${callTime}`;
+    case 'REM_15MIN': return (ml ? `വിളിക്കാൻ പറ്റിയോ? 😊\n\n👉 Yes, called / Not yet` : hi ? `Call करने का मौका मिला? 😊\n\n👉 Yes, called / Not yet` : `Did you get a chance to call us? 😊\n\n👉 Yes, called / Not yet`);
+    case 'REM_130PM': return (ml ? `ഒരു feedback ചോദിക്കട്ടെ 😊 വിളിച്ചോ? എന്തെങ്കിലും സംശയം ഉണ്ടോ? തുടരാം:` : hi ? `एक feedback पूछूँ 😊 Call किया? कोई doubt है? जारी रखते हैं:` : `A quick feedback check 😊 Did you call? Any doubt? Let's continue:`);
+    case 'REM_345PM': return (ml ? `Calling time 4 PM-ന് തീരും. ഇന്ന് സംസാരിക്കണമെങ്കിൽ, ദയവായി ഇപ്പോൾ വിളിക്കൂ.` : hi ? `Calling time 4 PM पर खत्म होगा। आज बात करनी हो तो कृपया अभी call कीजिए।` : `Calling time ends at 4 PM. If you want to talk today, please call now.`) + `\n\n${callTime}`;
+    case 'REM_AFTER4': return (ml ? `ഇന്ന് വിളിച്ചോ? 😊\n\n👉 Yes / No\n\n4 PM കഴിഞ്ഞാൽ WhatsApp-ൽ chat ചെയ്യാം. Real-time reply കിട്ടാൻ സാധ്യത കുറവാണ്.` : hi ? `आज call किया? 😊\n\n👉 Yes / No\n\n4 PM के बाद WhatsApp पर chat कर सकते हैं। Real-time reply की संभावना कम है।` : `Did you call today? 😊\n\n👉 Yes / No\n\nAfter 4 PM, you can chat on WhatsApp. Less chance of real-time reply.`) + `\n\n${callTime}`;
+    case 'CALLED_YES': return (ml ? `Thank you 🙏 വിളിച്ചതിന് നന്ദി. എന്തെങ്കിലും സംശയം ബാക്കിയുണ്ടോ? എന്നോട് ചാറ്റ് ചെയ്യൂ, ഞാൻ 24x7 സഹായിക്കാം.` : hi ? `Thank you 🙏 Call करने के लिए धन्यवाद। कोई doubt बाकी है? मुझसे चैट कीजिए, मैं 24x7 मदद कर सकती हूँ।` : `Thank you 🙏 Thanks for calling. Any doubt still left? Chat with me, I can help you 24x7.`);
+    case 'CALLED_NO': return (ml ? `No problem 😊 Calling time 4 PM വരെയാണ്. പറ്റുമ്പോൾ വിളിക്കൂ, അല്ലെങ്കിൽ എന്നോട് ചാറ്റ് ചെയ്യൂ — ഞാൻ 24x7 സഹായിക്കാം.` : hi ? `No problem 😊 Calling time 4 PM तक है। मौका मिलने पर call कीजिए, या मुझसे चैट कीजिए — मैं 24x7 मदद कर सकती हूँ।` : `No problem 😊 Calling time is till 4 PM. Call when you get a chance, or chat with me — I can help you 24x7.`);
+    default: return '';
+  }
+}
+
+// --- END V320 HELPERS (real code) ---
 // V352 - INBOX PERSIST (from V351, no other logic changed): Team Inbox saved to Redis (team_inbox_log 2000 msgs + team_inbox_paused set), restored on boot. Old chats survive deploys.
 // V352 - IDLE FIX ONLY (from V350, no other changes): 1) clearIdleNudges clears Redis too 2) One chainId for all 6 idle timers 3) Firing guards: test-number skip + stale-chain skip + strict Stage order 4) Never restore/re-fire maya_idle from Redis
 // V352 - 4 FIXES ONLY (from V349, no other changes): 1) Short Welcome all 5 places 2) Language congratulation 3) Typed doubt 1-2 line answer before parking 4) Remaining steps Step X of 6 + balance names
@@ -191,7 +247,7 @@ const BIZMAPIA_OFFICIAL = {
   website:'https://bizmapia.com/', playStore:'https://play.google.com/store/apps/details?id=com.panditprogrammer.bizmapia&pcampaignid=web_share',
   appStore:'https://apps.apple.com/in/app/bizmapia/id6761577245', instagram:'https://www.instagram.com/bizmapia',
   facebook:'https://www.facebook.com/bizmapia', threads:'https://www.threads.com/@bizmapia',
-  youtubeCompany:'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b', email:'customercare@bizmapia.com',
+  youtubeCompany:'https://youtu.be/2BB34hGi52I?si=KLXcu-amOJkAgVsi', email:'customercare@bizmapia.com',
   office:'1st Floor Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584',
   services:'4 Services: 1) Taxi / Ride Hailing, 2) Business Directory, 3) Delivery, 4) Booking. If user taps Know Our Services, show all 4. Never say Taxi Book only.',
   proof:'5K+ downloads on Play Store (Customer + Driver App). Live across Kerala - Thiruvananthapuram, Kollam, Pathanamthitta, Kochi, Kottayam.'
@@ -209,7 +265,7 @@ function getBizmapiaGrounding(userText){
 // ===== V252 TEAM ALERTS + DAY-END SUMMARY + TEAM CALL RULE =====
 // RULE (MOST IMPORTANT): Team calls user ONLY AFTER registration fee.
 // Before fee, Maya must NOT promise "team will call you". She must say:
-// "Team is busy with verifications. Please call us in your free time on 85901 83646 / 85901 75977. After you lock slot with token, team will call you for verification."
+// "Team is busy with verifications. Please call us in your free time on 85901 83646. After you lock slot with token, team will call you for verification."
 // This protects team time + company busy schedule.
 // Daily stats kept in memory, reset at midnight IST
 const dailyStats = { date: new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}), newLeads:0, talkRequests:0, contactGiven:0, tokenReady:0, payments:0, paymentTotal:0, paymentsList:[], talkList:[], idleNoReply:0, notInterested:0 };
@@ -597,7 +653,7 @@ TEAM GATE RULE - VERY IMPORTANT (V258):
 TEAM CALL RULE - VERY IMPORTANT, NEVER BREAK:
 - Team calls user ONLY AFTER registration fee (token) is PAID.
 - Before token, NEVER say "team will call you" or "I will ask team to call".
-- Instead say (in user's language): "Team is busy with verifications now. Please call us in your free time on 85901 83646 / 85901 75977. After you lock your slot with token, team will call you for verification."
+- Instead say (in user's language): "Team is busy with verifications now. Please call us in your free time on 85901 83646. After you lock your slot with token, team will call you for verification."
 - If user insists "call me", say same rule softly + ask to lock token first, or call team himself.
 - If user taps Talk to Team button, Maya must explain this rule + send team alert, not promise a call.
 TOKEN PUSH - IF INTENT IS BUSINESS OPPORTUNITY, MAXIMUM EFFORT (soft, never rude):
@@ -698,16 +754,16 @@ function getISTTimestamp() {
 const EARN_LINK = 'https://bizmapia.com/earn';
 // VIDEO LINKS - ALL LANGUAGES
 // ENGLISH
-const VIDEO_EN_DISTRICT = 'https://youtu.be/_y2JeFHBnqg?si=QLXX8704ovUY_5jC';
-const VIDEO_EN_CORP = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
-const VIDEO_EN_MUNICIPAL = 'https://youtu.be/GqolfqgHiCU?si=ImdJxNRlg1TfSDxo';
-const VIDEO_EN_CENTER = 'https://youtu.be/r0X77XfmF94?si=_8Fej-ncUiO9GRCn';
+const VIDEO_EN_DISTRICT = 'https://youtu.be/_y2JeFHBnqg?si=2gcPhbdwncCoyvLy';
+const VIDEO_EN_CORP = 'https://youtu.be/GqolfqgHiCU?si=tNHr3wUQ4Vahwd4h';
+const VIDEO_EN_MUNICIPAL = 'https://youtu.be/GqolfqgHiCU?si=tNHr3wUQ4Vahwd4h';
+const VIDEO_EN_CENTER = 'https://youtu.be/r0X77XfmF94?si=J5dnIIhcVBb4lfBl';
 
 // MALAYALAM
-const VIDEO_ML_DISTRICT = 'https://youtu.be/Fll3OY-hilU?si=O5VnmyCXTdlfhpsB';
-const VIDEO_ML_CORP = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
-const VIDEO_ML_MUNICIPAL = 'https://youtu.be/F9rI2crM7Ow?si=zAIEKYNDZ2mv1BO_';
-const VIDEO_ML_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=8wyZOiBK6polJwVE';
+const VIDEO_ML_DISTRICT = 'https://youtu.be/Bi2HJ-3vQa0?si=4a5Log-QVSkZvYnT';
+const VIDEO_ML_CORP = 'https://youtu.be/aj4Bxw2cOPQ?si=EjfmlhnaZPXqzCNw';
+const VIDEO_ML_MUNICIPAL = 'https://youtu.be/aj4Bxw2cOPQ?si=EjfmlhnaZPXqzCNw';
+const VIDEO_ML_CENTER = 'https://youtu.be/jCwTwiuSi5s?si=SVqdh6u3QNwIzqV_';
 
 // HINDI - using English links as fallback (update if you have separate Hindi links)
 const VIDEO_HI_DISTRICT = VIDEO_EN_DISTRICT;
@@ -716,24 +772,18 @@ const VIDEO_HI_MUNICIPAL = VIDEO_EN_MUNICIPAL;
 const VIDEO_HI_CENTER = VIDEO_EN_CENTER;
 
 function getVideoUrl(sub, lang){
-  // Original video logic maintained
+  // V358: return EXACT youtu.be?si= URLs user gave. NOT watch?v= without si.
   if(lang==='ml'){
-    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=Fll3OY-hilU";
-    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=F9rI2crM7Ow";
-    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=jCwTwiuSi5s";
-    return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
+    if(sub==='OPP_DISTRICT') return VIDEO_ML_DISTRICT;
+    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return VIDEO_ML_CORP;
+    if(sub==='OPP_CENTER') return VIDEO_ML_CENTER;
+    return COMPANY_VIDEO_ML;
   }
-  if(lang==='hi'){
-    if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
-    if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=GqolfqgHiCU";
-    if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=r0X77XfmF94";
-    return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
-  }
-  // EN default
-  if(sub==='OPP_DISTRICT') return "https://www.youtube.com/watch?v=_y2JeFHBnqg";
-  if(sub==='OPP_CORP' || sub==='OPP_MUNI') return "https://www.youtube.com/watch?v=GqolfqgHiCU";
-  if(sub==='OPP_CENTER') return "https://www.youtube.com/watch?v=r0X77XfmF94";
-  return "https://www.youtube.com/watch?v=7kkR_4w1ZMk";
+  // Hindi gets English videos, English gets English videos
+  if(sub==='OPP_DISTRICT') return VIDEO_EN_DISTRICT;
+  if(sub==='OPP_CORP' || sub==='OPP_MUNI') return VIDEO_EN_CORP;
+  if(sub==='OPP_CENTER') return VIDEO_EN_CENTER;
+  return COMPANY_VIDEO_ENHI;
 }
 
 
@@ -849,9 +899,9 @@ function getTenderGreeting(sub, lang, state){
 
 // YOUTUBE_VIDEOS_ALL - FIX for ReferenceError - Defined before getVideoObj
 const YOUTUBE_VIDEOS_ALL = {
-  ML_DISTRICT: { id: "Fll3OY-hilU", url: "https://www.youtube.com/watch?v=Fll3OY-hilU" },
-  ML_CORP: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
-  ML_MUNI: { id: "F9rI2crM7Ow", url: "https://www.youtube.com/watch?v=F9rI2crM7Ow" },
+  ML_DISTRICT: { id: "Bi2HJ-3vQa0", url: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0" },
+  ML_CORP: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
+  ML_MUNI: { id: "aj4Bxw2cOPQ", url: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ" },
   ML_CENTER: { id: "jCwTwiuSi5s", url: "https://www.youtube.com/watch?v=jCwTwiuSi5s" },
   EN_DISTRICT: { id: "_y2JeFHBnqg", url: "https://www.youtube.com/watch?v=_y2JeFHBnqg" },
   EN_CORP: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
@@ -860,25 +910,25 @@ const YOUTUBE_VIDEOS_ALL = {
   HI_DISTRICT: { id: "_y2JeFHBnqg", url: "https://www.youtube.com/watch?v=_y2JeFHBnqg" },
   HI_CORP: { id: "GqolfqgHiCU", url: "https://www.youtube.com/watch?v=GqolfqgHiCU" },
   ml: {
-    district: "https://www.youtube.com/watch?v=Fll3OY-hilU",
-    corp: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
-    muni: "https://www.youtube.com/watch?v=F9rI2crM7Ow",
+    district: "https://www.youtube.com/watch?v=Bi2HJ-3vQa0",
+    corp: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
+    muni: "https://www.youtube.com/watch?v=aj4Bxw2cOPQ",
     center: "https://www.youtube.com/watch?v=jCwTwiuSi5s",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    knowCompany: "https://www.youtube.com/watch?v=2BB34hGi52I"
   },
   en: {
     district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
     corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    knowCompany: "https://www.youtube.com/watch?v=R9IEneHrUHE"
   },
   hi: {
     district: "https://www.youtube.com/watch?v=_y2JeFHBnqg",
     corp: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     muni: "https://www.youtube.com/watch?v=GqolfqgHiCU",
     center: "https://www.youtube.com/watch?v=r0X77XfmF94",
-    knowCompany: "https://www.youtube.com/watch?v=7kkR_4w1ZMk"
+    knowCompany: "https://www.youtube.com/watch?v=R9IEneHrUHE"
   }
 };
 
@@ -911,7 +961,7 @@ function getTrackingLink(domain, phone, lang, sub, videoObj, district){
 
 function getVideoIdFromUrl(url){
   const m = url.match(/youtu\.be\/([^?]+)/) || url.match(/v=([^&]+)/);
-  return m ? m[1] : 'Fll3OY-hilU';
+  return m ? m[1] : 'Bi2HJ-3vQa0';
 }
 
 function getStateSections(lang){
@@ -1338,8 +1388,8 @@ function getPayText(lang, fee, sub){
     return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 ${oppHi} चुनने के लिए धन्यवाद।\n\n👏 बधाई हो! आपका अवसर बुक होने जा रहा है!\n\n👉 अब क्या करें : 📄 अपने समझौता और आय दस्तावेज़ डाउनलोड करने के लिए, रजिस्ट्रेशन फी भरें, "Pay now" क्लिक करें:\n\n💳 रजिस्ट्रेशन फी Rs.${token} अभी भुगतान करें।`;
   }
   let oppName = 'Business Center opportunity';
-  if(sub==='OPP_DISTRICT') oppName = 'District Franchise opportunity';
-  else if(sub==='OPP_CORP') oppName = 'Corporation / Municipal Franchise opportunity';
+  if(sub==='OPP_DISTRICT') oppName = 'District Business Opportunity';
+  else if(sub==='OPP_CORP') oppName = 'Corporation / Municipal Business Opportunity';
   return `📍 Step 5 of 6 — 1 step left\n\n🙏 Thanks for choosing ${oppName}.\n\n👏 Congratulations! Your opportunity is about to be booked!\n\n👉 What to do now : 📄 To download your Agreement and Income documents, pay the Registration Fee, click "Pay now":\n\n💳 Pay Registration Fee Rs.${token} now.`;
 }
 function getPayNowTitle(lang){
@@ -1395,8 +1445,8 @@ function getPayReminderExact(lang,fee,sub){
     return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 आपका ${oppHi} अभी बुक नहीं हुआ है।\n\n🔍 मैंने अभी payment system में चेक किया — आपकी फी अभी तक नहीं दिखी है।\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।\n\n⚠️ फी नहीं भरी तो आपको नहीं मिलेगा:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
   }
   let oppName='Business Center opportunity';
-  if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
-  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
+  if(sub==='OPP_DISTRICT') oppName='District Business Opportunity';
+  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Business Opportunity';
   return `📍 Step 5 of 6 — 1 step left\n\n🙏 Your ${oppName} is not booked yet.\n\n🔍 I just checked our payment system — your fee is not yet reflected.\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.\n\n⚠️ If fee is not paid, you will NOT get:\n• Booking of your opportunity\n• 📄 Tender + Annexure-B documents\n• 📅 Agreement date booking`;
 }
 function getPay5MinChaseText(lang,fee,sub){ return getPayReminderExact(lang,fee,sub); }
@@ -1418,8 +1468,8 @@ function getCallFollowupReminderExact(lang, fee, sub){
     return `📍 Step 5 of 6 — 1 स्टेप बाकी\n\n🙏 क्या आपने हमारी टीम को कॉल किया था?\n\nजवाब मिला? doubts clear हुए? अब Pay करने के लिए तैयार हैं?\n\n💳 रजिस्ट्रेशन फी Rs.${token} भरने पर, आपके समझौता और आय दस्तावेज़ मिलेंगे।`;
   }
   let oppName='Business Center opportunity';
-  if(sub==='OPP_DISTRICT') oppName='District Franchise opportunity';
-  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Franchise opportunity';
+  if(sub==='OPP_DISTRICT') oppName='District Business Opportunity';
+  else if(sub==='OPP_CORP') oppName='Corporation / Municipal Business Opportunity';
   return `📍 Step 5 of 6 — 1 step left\n\n🙏 Did you call our team?\n\nDid you get a response? Doubts cleared? Ready to pay now?\n\n💳 Pay Registration Fee Rs.${token} to receive your Agreement and Income documents.`;
 }
 async function sendCallFollowupStep(uid, lang, fee, sub, phoneId){
@@ -1448,6 +1498,10 @@ const PAY_VERIFY_TEXT = { en: '✅ I Paid - Verify Now', hi: '✅ मैंन�
 const HUMAN_TALK_TEXT = { en: '📞 Talk to Human', hi: '📞 मानव से बात करें', ml: '📞 ടീമിനോട് സംസാരിക്കൂ' };
 const HELP_ADMIN_FULL = '+918590183646';
 const HELP_MARKETING_FULL = '+918590175977';
+// 🔒 V356 NUMBERS LOCKED BY USER: Business Opportunity = 8590175977 (HELP_MARKETING), Services (Ride/BizDir/Delivery/Booking) = 8590183646 (HELP_ADMIN). Never swap.
+const HELP_OPP = '8590175977'; const HELP_OPP_FULL = '+918590175977'; const HELP_SERVICE = '8590183646'; const HELP_SERVICE_FULL = '+918590183646';
+// 🔒 V356 VIDEO LINKS LOCKED BY USER (exact URLs): ML Company=2BB34, ML District=Bi2HJ, ML Corp/Muni=aj4Bxw, ML Center=jCwTwiu(SVqd); EN/HI Company=R9IEne, EN/HI District=_y2Je, EN/HI Corp=Gqolfq, EN/HI Center=r0X77
+const COMPANY_VIDEO_ML = 'https://youtu.be/2BB34hGi52I?si=KLXcu-amOJkAgVsi'; const COMPANY_VIDEO_ENHI = 'https://youtu.be/R9IEneHrUHE?si=f4Py2ADBpPYfl7Ca'; function getCompanyVideoUrl(_l){ return _l==='ml' ? COMPANY_VIDEO_ML : COMPANY_VIDEO_ENHI; }
 
 let blockUntil = 0, lastSendTime = 0;
 let redis = null, redisReady = false;
@@ -1639,79 +1693,22 @@ function interactiveWithCallButtons(to, body, replyButtons, phoneNumber, phoneTi
 }
 
 function interactiveCallDialer(to, body, phoneNumber, phoneTitle, extraButtons, phoneId){
-  // New: Sends message with inbuilt dialer - uses WhatsApp CTA call button
-  // extraButtons: additional reply buttons
-  try{
-    // WhatsApp Cloud API now supports call button in interactive?
-    // We implement as: interactive with type button + action buttons including phone_number type
-    // If not supported, fallback to reply button + phone number in text (which is tappable)
-    
-    const allButtons = [];
-    
-    if(extraButtons){
-      for(let b of extraButtons.slice(0,2)){
-        allButtons.push({type:'reply', reply:{id:b.id, title:b.title}});
-      }
-    }
-    
-    // Add call dialer button - using phone_number type (CTA)
-    // Payload format for call button
-    allButtons.push({type:'reply', reply:{id:'DIAL_'+phoneNumber, title: phoneTitle || `📞 Call Now`}});
-    
-    // Include phone number in body to make it tappable (WhatsApp makes numbers clickable)
-    const bodyWithPhone = body + `\n\n📞 ${phoneNumber} (Tap to call)`;
-    
-    return {
-      messaging_product: 'whatsapp',
-      to: to,
-      type: 'interactive',
-      interactive: {
-        type: 'button',
-        body: {text: bodyWithPhone},
-        action: {buttons: allButtons}
-      }
-    };
-  }catch(e){ console.log('interactiveCallDialer error', e.message); return interactiveButton(to, body, extraButtons, phoneId); }
+  // V357: real native dialer button + up to 2 reply buttons. Number ONLY in button, never in body.
+  const clean = String(phoneNumber).replace(/[^0-9]/g,''); const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+  const btns = [];
+  if(extraButtons){ for(let b of extraButtons.slice(0,2)){ btns.push({type:'reply', reply:{id:b.id, title:b.title}}); } }
+  btns.push({type:'phone_number', phone_number:full});
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(body).substring(0,1024)}, action:{buttons:btns} }, _phoneId: phoneId };
 }
 
 // New: Direct CTA with phone_number button (real inbuilt dialer)
 function interactiveWithPhoneCTA(to, body, replyButtons, phoneNumber, phoneId){
-  // This uses WhatsApp's native call button - user taps and phone dialer opens
-  // Format: action with buttons including type phone_number
-  try{
-    // Build CTA buttons
-    // For Cloud API, we need to use type: cta_url? No, for call we use phone_number
-    // Actually supported format for call button in interactive:
-    // {type: 'call', payload: ...} - Let's use official format
-    
-    const buttons = [];
-    if(replyButtons){
-      for(let b of replyButtons.slice(0,2)){
-        buttons.push({type:'reply', reply:{id:b.id, title:b.title}});
-      }
-    }
-    
-    // Add phone call button - using special type
-    // We will send as separate message type: contacts + interactive?
-    // Simplest: Send body with phone number that WhatsApp makes tappable + reply button
-    
-    // Enhance body to include phone as tappable
-    const enhancedBody = body.includes(phoneNumber) ? body : body + `\n\n📞 Tap to call: ${phoneNumber}`;
-    
-    return {
-      messaging_product: 'whatsapp',
-      to: to,
-      type: 'interactive',
-      interactive: {
-        type: 'button',
-        body: {text: enhancedBody},
-        action: {buttons: buttons.length>0 ? buttons : [{type:'reply', reply:{id:'CALL_'+phoneNumber, title:`📞 Call Now`}}]}
-      }
-    };
-  }catch(e){
-    console.log('interactiveWithPhoneCTA error', e.message);
-    return interactiveButton(to, body, replyButtons, phoneId);
-  }
+  // V357: real native dialer button. Number ONLY in button, never in body.
+  const clean = String(phoneNumber).replace(/[^0-9]/g,''); const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+  const btns = [];
+  if(replyButtons){ for(let b of replyButtons.slice(0,2)){ btns.push({type:'reply', reply:{id:b.id, title:b.title}}); } }
+  btns.push({type:'phone_number', phone_number:full});
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(body).substring(0,1024)}, action:{buttons:btns} }, _phoneId: phoneId };
 }
 
 function ctaButtons(to,body,ctaList, phoneId){
@@ -1722,13 +1719,23 @@ function singleCta(to,body,btn, phoneId){
 }
 // V247 REAL DIALER HELPER (GLOBAL - must be outside singleCta): 1-tap dialer via CTA URL button with tel: URL
 function realDialerCta(to, bodyText, phoneFull, phoneId){
+  // V357 REAL DIALER - Meta native phone_number button. NOT tel: in cta_url (Meta rejects tel:), NOT a reply button.
   const clean = String(phoneFull).replace(/[^0-9]/g,'');
-  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'cta_url', body:{text:String(bodyText).substring(0,1024)}, action:{ name:'cta_url', parameters:{ display_text:'📞 Call Now', url:'tel:+'+clean } } }, _phoneId: phoneId };
+  const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+  return { messaging_product:'whatsapp', to, type:'interactive', interactive:{ type:'button', body:{text:String(bodyText).substring(0,1024)}, action:{ buttons:[{type:'phone_number', phone_number:full}] } }, _phoneId: phoneId };
+}
+async function sendDialer(to, bodyText, phoneFull, phoneId){
+  // V357: try native phone_number button first. If Meta rejects it, fallback = contacts message (tappable number) - never tel: cta_url.
+  try{ return await sendWithDelay(realDialerCta(to, bodyText, phoneFull, phoneId)); }
+  catch(e){ console.log('V357 dialer fallback - phone_number button rejected', e.message);
+    const clean = String(phoneFull).replace(/[^0-9]/g,''); const full = clean.startsWith('91') ? '+'+clean : '+91'+clean;
+    try{ return await sendWithDelay({ messaging_product:'whatsapp', to, type:'contacts', contacts:[{name:{formatted_name:'Bizmapia Team', first_name:'Bizmapia Team'}, phones:[{phone:full, type:'WORK'}]}], _phoneId: phoneId }); }catch(e2){ return await sendWithDelay(textMessage(to, String(bodyText), phoneId)); }
+  }
 }
 function getDialerText(lang, isOpp){
-  if(lang==='ml') return isOpp ? `📞 ഫ്രാഞ്ചൈസി ടീമിനെ വിളിക്കൂ: 8590175977\n\n👇 താഴെയുള്ള Call Now ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ — ഡയലർ നേരിട്ട് തുറക്കും.\n\nനിങ്ങളുടെ Pay ലിങ്ക് ഇപ്പോഴും Active ആണ്.` : `📞 കസ്റ്റമർ കെയറിനെ വിളിക്കൂ: 8590183646\n\n👇 താഴെയുള്ള Call Now ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ — ഡയലർ നേരിട്ട് തുറക്കും.`;
-  if(lang==='hi') return isOpp ? `📞 फ्रेंचाइजी टीम को कॉल करें: 8590175977\n\n👇 नीचे Call Now बटन पर क्लिक करें — डायलर सीधे खुलेगा।\n\nआपका Pay लिंक अभी भी Active है।` : `📞 कस्टमर केयर को कॉल करें: 8590183646\n\n👇 नीचे Call Now बटन पर क्लिक करें — डायलर सीधे खुलेगा।`;
-  return isOpp ? `📞 Call Franchise Team: 8590175977\n\n👇 Tap Call Now below — Dialer will open directly.\n\nYour Pay link is still Active.` : `📞 Call Customer Care: 8590183646\n\n👇 Tap Call Now below — Dialer will open directly.`;
+  if(lang==='ml') return isOpp ? `📞 ഫ്രാഞ്ചൈസി ടീമിനെ വിളിക്കൂ\n\n👇 താഴെയുള്ള Call Now ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ — ഡയലർ നേരിട്ട് തുറക്കും.\n\nനിങ്ങളുടെ Pay ലിങ്ക് ഇപ്പോഴും Active ആണ്.` : `📞 കസ്റ്റമർ കെയറിനെ വിളിക്കൂ\n\n👇 താഴെയുള്ള Call Now ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ — ഡയലർ നേരിട്ട് തുറക്കും.`;
+  if(lang==='hi') return isOpp ? `📞 फ्रेंचाइजी टीम को कॉल करें\n\n👇 नीचे Call Now बटन पर क्लिक करें — डायलर सीधे खुलेगा।\n\nआपका Pay लिंक अभी भी Active है।` : `📞 कस्टमर केयर को कॉल करें\n\n👇 नीचे Call Now बटन पर क्लिक करें — डायलर सीधे खुलेगा।`;
+  return isOpp ? `📞 Call Franchise Team\n\n👇 Tap Call Now below — Dialer will open directly.\n\nYour Pay link is still Active.` : `📞 Call Customer Care\n\n👇 Tap Call Now below — Dialer will open directly.`;
 }
 async function sendCtaSequence(to, body, ctaList, phoneId){
   try{
@@ -1742,7 +1749,7 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
         // V247 REAL DIALER: CTA URL button with tel: URL - 1 tap opens dialer (same tech as Android/iOS buttons, but tel: instead of https:)
         const phoneClean = c.phone.replace(/[^0-9]/g,'');
         const dialText = lang0 => lang0; // keep simple
-        await sendWithDelay(singleCta(to, 'Tap below to call now:', {title:'📞 Call Now', url:'tel:+'+phoneClean}, phoneId));
+        await sendDialer(to, 'Tap below to call now:', '+'+phoneClean, phoneId); // V357 real dialer, not tel: cta_url
         await delay(400);
       }
     }
@@ -1913,9 +1920,9 @@ async function repeatLastStep(uid, state, lang, phoneId){
   // V247 FIX: tracking link defined correctly
   const videoObj = getVideoObj('OPP_DISTRICT', lang);
   const trackingLink = getTrackingLink('https://bizmapia-bot-8590175977.onrender.com', uid, lang, 'OPP_DISTRICT', videoObj, state.selectedDistrict || 'Idukki');
-  return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
-  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  await sendWithDelay(singleCta(uid, oppLearnQ(lang), {title:'🎥 See Video', url: getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CORP' || last.includes('Moderate level') || last.includes('Corp')){ await sendWithDelay(singleCta(uid, oppLearnQ(lang), {title:'🎥 See Video', url: getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
+  if(sub==='OPP_CENTER' || last.includes('Base level') || last.includes('₹30K-₹1L') || last.includes('Center')){ await sendWithDelay(singleCta(uid, oppLearnQ(lang), {title:'🎥 See Video', url: getVideoUrl('OPP_DISTRICT', lang)}, phoneId)); return await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], phoneId)); }
   if(last==='Benefits'){ const escalatedBen = getEscalatedGeneralText(lang, L.benText, level, 'Benefits'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n'+oppCongrats(lang,3)+'\n\n📄 3 Clicks — 1 of 3: Benefits\n\n'+escalatedBen, [{id:'KNOW_SUP',title:L.supBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
   if(last==='Support'){ const escalatedSup = getEscalatedGeneralText(lang, L.supText, level, 'Support'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 2 of 3: Support\n\n'+escalatedSup, [{id:'KNOW_REQ',title:L.reqBtn},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], phoneId)); }
   if(last==='Requirements'){ const escalatedReq = getEscalatedGeneralText(lang, L.reqText, level, 'Requirements'); return await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+'\n\n📄 3 Clicks — 3 of 3: Requirements\n\n'+escalatedReq, [{id:'SUBMIT_APP',title:L.submitBtn},{id:'KNOW_EMI',title:L.emiBtn}], phoneId)); }
@@ -2161,7 +2168,7 @@ function scheduleReminder(uid, type, lang, ms, phoneId){
 // ===== V252 TEAM ALERTS + DAY-END SUMMARY + TEAM CALL RULE =====
 // RULE (MOST IMPORTANT): Team calls user ONLY AFTER registration fee.
 // Before fee, Maya must NOT promise "team will call you". She must say:
-// "Team is busy with verifications. Please call us in your free time on 85901 83646 / 85901 75977. After you lock slot with token, team will call you for verification."
+// "Team is busy with verifications. Please call us in your free time on 85901 83646. After you lock slot with token, team will call you for verification."
 // This protects team time + company busy schedule.
 // Daily stats kept in memory, reset at midnight IST
 const dailyStats = { date: new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}), newLeads:0, talkRequests:0, contactGiven:0, tokenReady:0, payments:0, paymentTotal:0, paymentsList:[], talkList:[], idleNoReply:0, notInterested:0 };
@@ -2484,6 +2491,20 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         await sendWithDelay(textMessage(uid, f24, actualPhoneId));
         try{ await repeatLastStep(uid, state, actualLang, actualPhoneId); }catch(_){}
         try{ await autoFireLoser(uid, 'GEN - No Response After 1h/12h/24h Followups'); }catch(_){}
+      } else if(type.includes('V320_CALL_11AM')){
+        await sendWithDelay(textMessage(uid, v320Txt(actualLang,'REM_11AM'), actualPhoneId));
+        await sendDialer(uid, 'Tap below to call:', String(HELP_MARKETING_FULL).replace(/[^0-9]/g,''), actualPhoneId); // V357 real dialer
+      } else if(type.includes('V320_CALL_15MIN')){
+        await setState(uid,{...state, lastStep:'V320 - Callback - Did You Call?', phoneId: actualPhoneId});
+        await sendWithDelay(interactiveButton(uid, v320Txt(actualLang,'REM_15MIN'), [{id:'V320_CALLED_YES',title:'Yes, called'},{id:'V320_CALLED_NO',title:'Not yet'}], actualPhoneId));
+      } else if(type.includes('V320_CALL_130PM')){
+        await sendWithDelay(textMessage(uid, v320Txt(actualLang,'REM_130PM'), actualPhoneId));
+      } else if(type.includes('V320_CALL_345PM')){
+        await sendWithDelay(textMessage(uid, v320Txt(actualLang,'REM_345PM'), actualPhoneId));
+        await sendDialer(uid, 'Tap below to call:', String(HELP_MARKETING_FULL).replace(/[^0-9]/g,''), actualPhoneId); // V357 real dialer
+      } else if(type.includes('V320_CALL_AFTER4')){
+        await setState(uid,{...state, lastStep:'V320 - Callback - After 4PM Confirm', phoneId: actualPhoneId});
+        await sendWithDelay(interactiveButton(uid, v320Txt(actualLang,'REM_AFTER4'), [{id:'V320_CALLED_YES',title:'Yes'},{id:'V320_CALLED_NO',title:'No'}], actualPhoneId));
       } else {
         // Check if Pay step - use escalated pay text
         const last = state.lastStep||'';
@@ -2646,7 +2667,7 @@ Experience our service — select any one 👇`,
     highIntroSingle:`Excellent choice! 👏 👏 You selected District Franchisee - 10-15L - MOST PREMIUM opportunity!\n\nThank you for choosing our higher level income earning opportunity! This is a great decision - only one person per district!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about District franchise, then click Watched Video to see Benefits. Remember only one application is approved for a district, so study whole details and decide with this chat.`,
     moderateIntroSingle:`Excellent choice! 👏 👏 You selected Corporation/Municipal Franchisee - 4L/5L opportunity!\n\nThank you for choosing our moderate level income earning opportunity! Great decision - limited slots for Corporation / Municipal!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Corporation/Municipal franchise, then click Watched Video to see Benefits. Study whole details and decide with this chat.`,
     baseIntroSingle:`Excellent choice! 👏 👏 You selected Business Center - 1L - Easy Start opportunity!\n\nThank you for choosing our base level income earning opportunity! Wonderful decision - perfect for easy start with low investment!\n\n👇 👇 What to do in this step: Watch the YouTube video below fully to understand complete details about Business Center, then click Watched Video to see Benefits. Study details and decide.`,
-    reminderFranchise:`You were checking our franchise opportunity. Continue to know more?`,
+    reminderFranchise:`You were checking our Business Opportunity. Continue to know more?`,
     seeVideo:'See the Video',
     clickWatch:'Click to watch',
     mustWatch:'⚠️ IMPORTANT STEP: You MUST watch this video fully before proceeding!',
@@ -2934,6 +2955,84 @@ app.post('/webhook', async(req,res)=>{
         await setState(uid,{...state, lastStep:'V317 - Stop - Confirm', phoneId: incomingPhoneId});
         const _cf317 = _lang317==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang317==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
         await sendWithDelay(interactiveButton(uid,_cf317,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+        return;
+      }
+    }catch(_){}
+    // ===== V320 CALL WINDOW + NO NUMBER IN BODY - AFTER V317 STOP, BEFORE EVERYTHING ELSE =====
+    // V320 REPLACES V319 callback block. No number in body: team contact ONLY via buttons.
+    try{
+      const _t320 = String(txt||'').toLowerCase().trim();
+      // V320: answer to "Did you call?" / "Did you call today?" follow-ups - do NOT advance flow.
+      if(!btnId && msg.type==='text' && String(state.lastStep||'').includes('V320')){
+        if(/^(yes|yes,?\s*called|called|വിളിച്ചു|vilichu|call\s*kiya|haan)/.test(_t320)){
+          await setState(uid,{...state, lastStep:'V320 - Callback - Called', phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, v320Txt(state.lang||'ml','CALLED_YES'), incomingPhoneId));
+          return;
+        }
+        if(/^(no|not\s*yet|not|illa|illla|nahi|abhi\s*nahi)/.test(_t320)){
+          await setState(uid,{...state, lastStep:'V320 - Callback - Not Yet', phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, v320Txt(state.lang||'ml','CALLED_NO'), incomingPhoneId));
+          return;
+        }
+      }
+      // V320 (1) Callback request -> NEVER promise callback. Call button + calling time, stay on same step.
+      const _isCb320 = !btnId && msg.type==='text' && txt && /call\s*back|callback|call\s*me|call\s*cheyy|call\s*cheyyamo|vilikk|vilikkamo|phone\s*cheyy|enn*e\s*vilikk|call\s*vid|callback\s*cheyy/.test(_t320);
+      if(_isCb320){
+        const _lang320 = (state.lang||'ml');
+        const _prev320 = state.lastStep||'';
+        const _in320 = v320InWindow();
+        const _now320 = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+        const _hour320 = _now320.getHours();
+        const _kind320 = _hour320 < 11 ? 'CB_BEFORE' : (_in320 ? 'CB_IN' : 'CB_AFTER');
+        await setState(uid,{...state, lastStep:'V320 - Callback - Waiting ('+_prev320+')', phoneId: incomingPhoneId});
+        // Body has NO number. Team contact ONLY via Call button below (number only in button payload).
+        await sendWithDelay(textMessage(uid, v320Txt(_lang320,_kind320), incomingPhoneId));
+        if(_kind320 !== 'CB_AFTER'){
+          await sendDialer(uid, 'Tap below to call:', String(HELP_MARKETING_FULL).replace(/[^0-9]/g,''), incomingPhoneId); // V357 real dialer
+        } else {
+          await sendWithDelay(singleCta(uid, 'Tap below to chat on WhatsApp:', {title:'Chat on WhatsApp', url:'https://wa.me/'+String(HELP_MARKETING_FULL).replace(/[^0-9]/g,'')}, incomingPhoneId));
+        }
+        // V320 reminders for this case ONLY. No other reminder times touched.
+        try{
+          if(_kind320 === 'CB_BEFORE'){
+            scheduleReminder(uid,'install:V320_CALL_11AM:10',_lang320, v320MsUntil(11,0), incomingPhoneId);
+            scheduleReminder(uid,'install:V320_CALL_130PM:10',_lang320, v320MsUntil(13,30), incomingPhoneId);
+            scheduleReminder(uid,'install:V320_CALL_345PM:10',_lang320, v320MsUntil(15,45), incomingPhoneId);
+            scheduleReminder(uid,'install:V320_CALL_AFTER4:10',_lang320, v320MsUntil(16,5), incomingPhoneId);
+          } else if(_kind320 === 'CB_IN'){
+            scheduleReminder(uid,'install:V320_CALL_15MIN:10',_lang320, 15*60*1000, incomingPhoneId);
+            if(_hour320 < 13) scheduleReminder(uid,'install:V320_CALL_130PM:10',_lang320, v320MsUntil(13,30), incomingPhoneId);
+            if(_hour320 < 15) scheduleReminder(uid,'install:V320_CALL_345PM:10',_lang320, v320MsUntil(15,45), incomingPhoneId);
+            scheduleReminder(uid,'install:V320_CALL_AFTER4:10',_lang320, v320MsUntil(16,5), incomingPhoneId);
+          }
+        }catch(_){}
+        return;
+      }
+      // V320 (2) "Nobody answering" after a call -> check window, then reply. No number in body.
+      const _isNoAns320 = !btnId && msg.type==='text' && txt && /nobody|no\s*one|not\s*answering|no\s*answer|not\s*pick|not\s*reachable|busy|engaged|call.*not|eduthilla|edukkunnilla|answer.*illa|phone.*edukk/.test(_t320);
+      if(_isNoAns320){
+        const _lang320b = (state.lang||'ml');
+        const _in320b = v320InWindow();
+        const _kind320b = _in320b ? 'NOANS_IN' : 'NOANS_OUT';
+        await sendWithDelay(textMessage(uid, v320Txt(_lang320b,_kind320b), incomingPhoneId));
+        if(_in320b){
+          await sendDialer(uid, 'Tap below to try again:', String(HELP_MARKETING_FULL).replace(/[^0-9]/g,''), incomingPhoneId); // V357 real dialer
+        } else {
+          await sendWithDelay(singleCta(uid, 'Tap below to chat on WhatsApp:', {title:'Chat on WhatsApp', url:'https://wa.me/'+String(HELP_MARKETING_FULL).replace(/[^0-9]/g,'')}, incomingPhoneId));
+        }
+        return;
+      }
+    }catch(_){}
+    // V320 button answers to "Did you call?" - do NOT advance flow.
+    try{
+      if(btnId==='V320_CALLED_YES'){
+        await setState(uid,{...state, lastStep:'V320 - Callback - Called', phoneId: incomingPhoneId});
+        await sendWithDelay(textMessage(uid, v320Txt(state.lang||'ml','CALLED_YES'), incomingPhoneId));
+        return;
+      }
+      if(btnId==='V320_CALLED_NO'){
+        await setState(uid,{...state, lastStep:'V320 - Callback - Not Yet', phoneId: incomingPhoneId});
+        await sendWithDelay(textMessage(uid, v320Txt(state.lang||'ml','CALLED_NO'), incomingPhoneId));
         return;
       }
     }catch(_){}
@@ -3315,7 +3414,7 @@ Welcome to Bizmapia! 🙏
         // V270 BUSINESS-ONLY: 3A now = Video only, NO capacity buttons, NO services, NO More services. 3B after 3 min = capacity reminder.
         const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
         await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
-        await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: getCompanyVideoUrl(sl)}, incomingPhoneId));
         // V270: Capacity reminder after 3 min (180s) - only if user has NOT replied / picked level yet
         const _capUid = uid, _capPhone = incomingPhoneId, _capLang = sl, _capSentAt = Date.now();
         setTimeout(async()=>{ try{
@@ -3344,7 +3443,7 @@ Welcome to Bizmapia! 🙏
       await setState(uid,{...state, lastStep:'V266 - Level Picked '+btnId, aiMode:true, lead:{...(state.lead||{}), level:btnId, intent:'business_opportunity'}});
       // V272 FIX: NEVER ask district / name / address / location now. Those are LAST step, ONLY AFTER registration fee is VERIFIED. After capacity: confirm + explain + video + move to fee.
       const lvlMsg = sl3==='ml' ? `👍 നല്ല തിരഞ്ഞെടുപ്പ്! 🙏\n\n${lvl} തിരഞ്ഞെടുത്തു.\n\nനമുക്ക് ഫൈനലൈസ് ചെയ്യാം — ഈ അവസരം നിങ്ങൾക്ക് ചേരുമോ ഇല്ലയോ എന്ന്. പല ഉയർന്ന തുക അടയ്ക്കാൻ കഴിയുന്നവരും ആദ്യം കുറഞ്ഞ ഓപ്ഷൻ ചെക്ക് ചെയ്യാനാണ് തിരഞ്ഞെടുക്കുന്നത്, അതുകൊണ്ട് വീഡിയോ കണ്ട ശേഷം നമുക്ക് വീണ്ടും കൺഫേം ചെയ്യാം. സാധ്യമെങ്കിൽ നമുക്ക് ഉയർന്ന ഓപ്ഷനിലേക്ക് അപ്ഗ്രേഡ് ചെയ്യാം.\n\n👇 *ഈ അവസരത്തിന്റെ വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ ഇപ്പോൾ തന്നെ കാണൂ, കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.` : sl3==='hi' ? `👍 अच्छा चुनाव! ${lvl} चुना।\n\nहम फाइनलाइज़ करेंगे — यह अवसर आपको सूट करता है या नहीं। कई ज़्यादा राशि दे सकने वाले लोग पहले कम ऑप्शन चेक करने के लिए चुनते हैं, इसलिए वीडियो देखने के बाद हम फिर से कंफर्म करेंगे। अगर संभव है तो हम हायर ऑप्शन में अपग्रेड कर सकते हैं।\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो अभी देखें, देखने के बाद रिप्लाई करें।` : `👍 Good choice! You picked ${lvl}.\n\nWe will finalize whether this opportunity suits you or not. Many high-payable users first pick the lower option just to check, so after the video we will reconfirm. If possible, we can upgrade to higher options.\n\n👇 *Click the button below to see this Opportunity Video right now - See Video:*\n\nSee the video right now and reply after seeing it.`;
-      // V277 FIX: Opportunity Video is DIFFERENT from Company Video. Company Video = 7kkR_4w1ZMk (Know Company, shown BEFORE capacity).
+      // V277 FIX: Opportunity Video is DIFFERENT from Company Video. Company Video = per-language getCompanyVideoUrl() (Know Company, shown BEFORE capacity).
       // Opportunity Video = level + language specific via getVideoUrl (District/Corp/Center), shown AFTER capacity pick.
       const oppVideoUrl = (typeof getVideoUrl === 'function') ? getVideoUrl(btnId, sl3) : 'https://www.youtube.com/watch?v=jCwTwiuSi5s';
       await sendWithDelay(singleCta(uid, lvlMsg, {title: '🎥 See Video', url: oppVideoUrl}, incomingPhoneId));
@@ -3492,7 +3591,7 @@ Welcome to Bizmapia! 🙏
       const sl = state.lang || 'ml';
       const sortMsg = sl==='ml' ? `👍 മനസ്സിലായി! ബിസിനസ് അവസരമാണ് വേണ്ടത്. 🙏\n\n🎥 *വീഡിയോ കാണൂ, കമ്പനിയെ കുറിച്ച് മനസ്സിലാക്കൂ.*\n\nകമ്പനി എന്താണ് *പ്രതീക്ഷിക്കുന്നത്*,\nഅവസരത്തിന് അപേക്ഷിക്കാനുള്ള *Terms & Conditions* എന്തൊക്കെയാണ് —\n_എല്ലാം ഇതിൽ ഉണ്ട്._\n\n👇 *വീഡിയോ ഇപ്പോൾ തന്നെ കാണാൻ താഴെയുള്ള See Video ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ:*\n\nവീഡിയോ കണ്ട ശേഷം റിപ്ലൈ ചെയ്യൂ.\n\nഅതിന് ശേഷം *Bizmapia-യിൽ നിന്ന് നിങ്ങൾക്ക് ശരിയായ അവസരം* തിരഞ്ഞെടുക്കാൻ ഞാൻ സഹായിക്കാം. 🤝 ⏳` : sl==='hi' ? `👍 समझ गई! बिज़नेस अवसर चाहिए। 🙏\n\n🎥 *वीडियो देखें, कंपनी को समझें।*\n\nकंपनी क्या *उम्मीद* करती है, अवसर के लिए *Terms & Conditions* क्या हैं — _सब इसमें है।_\n\n👇 *इस अवसर का वीडियो अभी देखने के लिए नीचे See Video बटन पर क्लिक करें:*\n\nवीडियो देखने के बाद रिप्लाई करें।\n\nउसके बाद *Bizmapia से सही अवसर* चुनने में मैं मदद करूंगी। 🤝 ⏳` : `👍 Got it! You want Business Opportunity. 🙏\n\n🎥 *Watch the video, understand the company.*\n\nWhat the company *expects*, what are the *Terms & Conditions* to apply — _everything is in it._\n\n👇 *Click the button below to see video right now - See Video:*\n\nSee the video right now and reply after seeing it.\n\nAfter that I will help you choose the *right opportunity from Bizmapia.* 🤝 ⏳`;
       await setState(uid,{...state, lastStep:'V270 - Business Video Sent', aiMode:true, lead:{...(state.lead||{}), intent:'business_opportunity', funnel:'VIDEO_SENT'}});
-      await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId));
+      await sendWithDelay(singleCta(uid, sortMsg, {title: '🎥 See Video', url: getCompanyVideoUrl(sl)}, incomingPhoneId));
       const _capUid2 = uid, _capPhone2 = incomingPhoneId, _capLang2 = sl, _capSentAt2 = Date.now();
       setTimeout(async()=>{ try{ const cur = await getState(_capUid2); if(!cur || cur.lastStep!=='V270 - Business Video Sent') return; if(cur.lastReplyAt && cur.lastReplyAt > _capSentAt2) return; /* V289 replied after video */ const capMsg = _capLang2==='ml' ? `🎬 *വീഡിയോ കണ്ടോ?* 😊\n\n💰 *7 ദിവസത്തിനുള്ളിൽ നിങ്ങൾക്ക് ചെലവാക്കാൻ കഴിയുന്ന തുക എത്രയാണ്?*\n\n👇 *താഴെ നിന്ന് ശരിയായ ഒന്ന് തിരഞ്ഞെടുക്കൂ:*` : _capLang2==='hi' ? `🎬 *वीडियो देखा?* 😊\n\n💰 *7 दिनों के अंदर आप कितना खर्च कर सकते हैं?*\n\n👇 *नीचे से सही एक चुनें:*` : `🎬 *Did you watch the video?* 😊\n\n💰 *What is your spending capacity within 7 days?*\n\n👇 *Choose the right one below:*`; await sendWithDelay(interactiveButton(_capUid2, capMsg, [{id:'OPP_CENTER',title:'30K - 1L'},{id:'OPP_CORP',title:'2L - 5L'},{id:'OPP_DISTRICT',title:'5L - 15L'}], _capPhone2)); }catch(e){} }, 180000);
       await saveToSheet('System_Logs',[nowIso,uid,sl,'V276 AI_BUSINESS '+incomingPhoneId,'AI_BUSINESS button -> direct Company Video + See Video button, no AI loop','V276',HELP_ADMIN,'V276 Business',''],false);
@@ -3501,7 +3600,7 @@ Welcome to Bizmapia! 🙏
       return;
     }
     if(btnId.startsWith('AI_')){
-      const map={AI_BUSINESS:'Business opportunity ariyam',AI_SERVICES:'Njangalude services ariyam - What are your 4 services?',AI_TAXI:'Taxi book cheyyanam',AI_TALK:'Team-inodu samsarikkanam',AI_PAY:'Pay cheyyan ready aanu',AI_LATER:'Pinneedu vilikkam',AI_APP_ANDROID:'Android app install cheyyanam',AI_APP_IPHONE:'iPhone app install cheyyanam',AI_STILL_HERE:'Und, thudarram - I am here, continue',AI_NEED_TIME:'Samayam venam, kurachu kazhinju reply cheyyam - need time',AI_REMIND_LATER:'Pinneedu ormmippikku - remind later',AI_REMIND_EVENING:'Vaikunneram ormmippikku - remind evening',AI_REMIND_TOMORROW:'Naale ormmippikku - remind tomorrow',AI_NOT_INTERESTED:'Thalparyam illa, venda - not interested',OPP_TRY_FREE:'Try Free Business Opportunity - referral only, no payment',OPP_CONTINUE:'Continue Business Opportunity - continue from same step'};
+      const map={AI_BUSINESS:'Business opportunity ariyam',AI_SERVICES:'want to know about our service',AI_TAXI:'Taxi book cheyyanam',AI_TALK:'Team-inodu samsarikkanam',AI_PAY:'Pay cheyyan ready aanu',AI_LATER:'Pinneedu vilikkam',AI_APP_ANDROID:'Android app install cheyyanam',AI_APP_IPHONE:'iPhone app install cheyyanam',AI_STILL_HERE:'Und, thudarram - I am here, continue',AI_NEED_TIME:'Samayam venam, kurachu kazhinju reply cheyyam - need time',AI_REMIND_LATER:'Pinneedu ormmippikku - remind later',AI_REMIND_EVENING:'Vaikunneram ormmippikku - remind evening',AI_REMIND_TOMORROW:'Naale ormmippikku - remind tomorrow',AI_NOT_INTERESTED:'Thalparyam illa, venda - not interested',OPP_TRY_FREE:'Try Free Business Opportunity - referral only, no payment',OPP_CONTINUE:'Continue Business Opportunity - continue from same step'};
       const asText=map[btnId]||'Hello';
       const effLang2=state.lang||'ml'; const hist2=state.aiHistory||[];
       const aiRes2=AI_ENABLED?await callMayaAI(effLang2, asText, hist2):null;
@@ -3661,7 +3760,7 @@ Welcome to Bizmapia! 🙏
           if(_cur==='yes'||_cur==='ok'||_cur==='okay'){
             state.lastStep='V299 - Video Yes After Ask'; state.aiMode=true; await setState(uid, state);
             const _ansV = _L9==='ml' ? `🎥 സൂപ്പർ! Company Video ഇതാ — 2 മിനിറ്റ് കണ്ടാൽ കമ്പനി മനസ്സിലാകും.\n\nകണ്ട ശേഷം പറയൂ — “kandu” എന്ന് ടൈപ്പ് ചെയ്താൽ മതി.` : `🎥 Super! Here is the Company Video — 2 minutes and you will understand the company.\n\nAfter watching, just type “seen”.`;
-            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url:'https://youtu.be/7kkR_4w1ZMk'}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
+            try{ await sendWithDelay(singleCta(uid, _ansV, {title:'🎥 See Video', url: getCompanyVideoUrl(_L9)}, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _ansV, incomingPhoneId)); }
             return;
           }
         }
@@ -3678,7 +3777,7 @@ Welcome to Bizmapia! 🙏
           let _ans = null;
           const _L = lang || state.lang || 'en';
           if(/owner|founder|who.*(run|start|made|create)|aadhar|who is.*bizmapia/.test(_q)){
-            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് കേരളത്തിൽ നിന്നുള്ള ഒരു *All-India കമ്പനി* ആണ്.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nകമ്പനിയെക്കുറിച്ച് കൂടുതൽ അറിയാൻ Company Video കാണണോ? 👇` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* केरल की एक *All-India कंपनी* है।\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nCompany के बारे में और जानने के लिए Company Video देखें? 👇` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India company* from Kerala.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nWant to know more about the company? Watch the Company Video 👇`;
+            _ans = _L==='ml' ? `🙏 നല്ല ചോദ്യം!\n\n🌍 *Bizmapia* എന്നത് കേരളത്തിൽ നിന്നുള്ള ഒരു *All-India കമ്പനി* ആണ്.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nകമ്പനിയെക്കുറിച്ച് കൂടുതൽ അറിയാൻ Company Video കാണണോ? 👇` : _L==='hi' ? `🙏 अच्छा सवाल!\n\n🌍 *Bizmapia* केरल की एक *All-India कंपनी* है।\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nCompany के बारे में और जानने के लिए Company Video देखें? 👇` : `🙏 Good question!\n\n🌍 *Bizmapia* is an *All-India company* from Kerala.\n\n🏢 Head Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nWant to know more about the company? Watch the Company Video 👇`;
           } else if(/what.*bizmapia|bizmapia.*(what|entha|enth)/.test(_q)){
             _ans = _L==='ml' ? `🌍 *Bizmapia* എന്നത് നിങ്ങളുടെ ദൈനംദിന ആവശ്യങ്ങൾക്കുള്ള *All-India പ്ലാറ്റ്ഫോം* ആണ്.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nഇതിൽ ഏതാണ് വേണ്ടത്? സേവനം ഉപയോഗിക്കാനാണോ, അതോ Business Opportunity എടുത്ത് വരുമാനം ഉണ്ടാക്കാനാണോ?` : _L==='hi' ? `🌍 *Bizmapia* आपकी daily needs के लिए *All-India प्लेटफॉर्म* है।\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nआपको क्या चाहिए? Service use करना है, या Business Opportunity लेकर कमाना है?` : `🌍 *Bizmapia* is an *All-India platform* for your daily needs.\n\n🚕 Taxi Booking\n🔍 Business Directory\n🛵 Online Delivery\n📦 Online Booking\n\nWhat do you need? Use a service, or take the Business Opportunity and earn with us?`;
           } else if(/price|fee|cost|token|vila|charge/.test(_q)){
@@ -3686,9 +3785,9 @@ Welcome to Bizmapia! 🙏
           } else if(/service|sevana/.test(_q)){
             _ans = _L==='ml' ? `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n🛵 Online Delivery - ഭക്ഷണവും സാധനങ്ങളും വീട്ടിൽ\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nഏത് സേവനമാണ് വേണ്ടത്?` : `🛍️ *Bizmapia Services:*\n\n🚕 Taxi Booking\n🔍 Business Directory - find shops / services\n🛵 Online Delivery - food & items to your door\n📦 Online Booking - Hotel, Appointment, Movie Tickets\n\nWhich service do you need?`;
           } else if(/contact|phone|number|call|team|address|office/.test(_q)){
-            _ans = _L==='ml' ? `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nടീം തിരക്കിലാണ്. നിങ്ങൾക്ക് free time-ൽ വിളിക്കാം. Registration fee കഴിഞ്ഞാൽ ടീം നിങ്ങളെ വിളിക്കും.` : `📞 *Team:* 85901 83646 / 85901 75977\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nTeam is busy. You can call in your free time. After registration fee, team will call you for verification.`;
+            _ans = _L==='ml' ? `📞 *Team:* 85901 83646\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nടീം തിരക്കിലാണ്. നിങ്ങൾക്ക് free time-ൽ വിളിക്കാം. Registration fee കഴിഞ്ഞാൽ ടീം നിങ്ങളെ വിളിക്കും.` : `📞 *Team:* 85901 83646\n🏢 Office: Thodupuzha, Idukki, Kerala\n🌐 Website: bizmapia.com\n\nTeam is busy. You can call in your free time. After registration fee, team will call you for verification.`;
           } else if(/where|located|location|head office|office|address|evide|kuth/.test(_q)){
-            _ans = _L==='ml' ? `📍 *Bizmapia എവിടെയാണ്?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — എവിടെ നിന്നും ഉപയോഗിക്കാം. നിങ്ങൾ ഏത് ജില്ലയിൽ നിന്നാണ്?` : _L==='hi' ? `📍 *Bizmapia कहाँ है?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia एक *All-India प्लेटफॉर्म* है — कहीं से भी use कर सकते हैं। आप किस जिले से हैं?` : `📍 *Where is Bizmapia located?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646 / 85901 75977\n\nBizmapia is an *All-India platform* — you can use it from anywhere. Which district are you from?`;
+            _ans = _L==='ml' ? `📍 *Bizmapia എവിടെയാണ്?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nBizmapia ഒരു *All-India പ്ലാറ്റ്ഫോം* ആണ് — എവിടെ നിന്നും ഉപയോഗിക്കാം. നിങ്ങൾ ഏത് ജില്ലയിൽ നിന്നാണ്?` : _L==='hi' ? `📍 *Bizmapia कहाँ है?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nBizmapia एक *All-India प्लेटफॉर्म* है — कहीं से भी use कर सकते हैं। आप किस जिले से हैं?` : `📍 *Where is Bizmapia located?*\n\n🏢 Head Office: 1st Floor, Pulimoottil Arcade, Muvattupuzha Road, Thodupuzha, Idukki - 685584, Kerala\n🌐 Website: bizmapia.com\n📞 Team: 85901 83646\n\nBizmapia is an *All-India platform* — you can use it from anywhere. Which district are you from?`;
           } else if(/app|install|download|play store|link/.test(_q)){
             _ans = _L==='ml' ? `📱 *Bizmapia App:*\n\nAndroid: Play Store-ൽ Bizmapia എന്ന് search ചെയ്യൂ\n🌐 Website: bizmapia.com\n\nഏത് phone ആണ്? Android ആണോ iPhone ആണോ?` : `📱 *Bizmapia App:*\n\nAndroid: Search Bizmapia on Play Store\n🌐 Website: bizmapia.com\n\nWhich phone do you use? Android or iPhone?`;
           }
@@ -3874,7 +3973,7 @@ Welcome to Bizmapia! 🙏
           : `🎉 Excellent choice!\n👉 What to do now: Watch the Company Video below to know about Bizmapia.\n\nAlready know Bizmapia well? No need to watch again — tap Skip Video below:`;
         const companyVideo = oppRoadmap(lang) + `\n\n` + oppProgress(lang,1) + `\n\n` + step1Exact;
         state.lastStep='Company Video - Must Watch'; await setState(uid,state);
-        await sendWithDelay(singleCta(uid, companyVideo, {title: '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId));
+        await sendWithDelay(singleCta(uid, companyVideo, {title: '🎥 See Video', url: getCompanyVideoUrl(lang)}, incomingPhoneId));
         await delay(400);
         await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'നന്നായി അറിയാമോ? Skip ചെയ്യൂ:' : lang==='hi' ? 'पहले से जानते हैं? Skip करें:' : 'Already know Bizmapia well? Tap Skip Video:', [{id:'COMPANY_KNOW',title: lang==='ml' ? '⏭️ സ്കിപ്പ് ചെയ്യൂ' : lang==='hi' ? '⏭️ स्किप करें' : '⏭️ Skip Video'}], incomingPhoneId));
         // V247: Only 1 message now (Company video). Income Level comes ONLY after Watched confirmation (2-min reminder)
@@ -3901,7 +4000,7 @@ Welcome to Bizmapia! 🙏
     if(btnId==='COMPANY_VIDEO_WATCH'){
       state.lastStep='Company Video - Watch'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const cv = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് \"കമ്പനി വീഡിയോ കണ്ടു\" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर \"कंपनी वीडियो देखा\" पर क्लिक करें:` : `👉 Please watch Company video fully, then click \"Watched Company Video\":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+cv, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: getCompanyVideoUrl(lang)}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു OR Skip - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा OR Skip - नीचे क्लिक करें:' : 'Watched OR Skip - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'},{id:'COMPANY_SKIP',title: lang==='ml' ? 'സ്കിപ്പ് ചെയ്യുക' : lang==='hi' ? 'स्किप करें' : 'Skip Video'}], incomingPhoneId)); // V247: NO raw YouTube link in body - link is inside CTA button
       scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
@@ -3922,7 +4021,7 @@ Welcome to Bizmapia! 🙏
       // V247: Company video not watched -> resend video + reschedule 2-min reminder
       state.lastStep='Company Video - Not Watched - Resend'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const companyVideo2 = lang==='ml' ? `👉 ദയവായി കമ്പനി വീഡിയോ പൂർണ്ണമായി കാണുക, തുടർന്ന് "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `👉 कृपया कंपनी वीडियो पूरा देखें, फिर "कंपनी वीडियो देखा" पर क्लिक करें:` : `👉 Please watch Company video fully, then click "Watched Company Video":`;
-      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: 'https://youtu.be/7kkR_4w1ZMk?si=dT6RRAeugNeuUE2b'}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
+      await sendWithDelay(singleCta(uid, oppProgress(lang,1)+'\n\n'+oppCongrats(lang,1)+'\n\n'+companyVideo2, {title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video', url: getCompanyVideoUrl(lang)}, incomingPhoneId)); await delay(400); await sendWithDelay(interactiveButton(uid, lang==='ml' ? 'വീഡിയോ കണ്ടു - താഴെ ക്ലിക്ക് ചെയ്യൂ:' : lang==='hi' ? 'वीडियो देखा - नीचे क्लिक करें:' : 'Watched - tap below:', [{id:'COMPANY_WATCHED',title: lang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : lang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video'}], incomingPhoneId)); // V247: NO raw link - link inside CTA
       scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
@@ -3951,7 +4050,7 @@ Let's check District Franchise details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode='video'; await setState(uid,state); await sendWithDelay(singleCta(uid, msg1, {title:'🎥 See Video', url: videoUrl}, incomingPhoneId)); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_DISTRICT_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💰 ₹5L-₹15L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -3984,7 +4083,7 @@ Let's check Corporation / Municipal Franchise details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode='video'; await setState(uid,state); await sendWithDelay(singleCta(uid, msg1, {title:'🎥 See Video', url: videoUrl}, incomingPhoneId)); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CORP_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '💼 ₹2L-₹5L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -4017,7 +4116,7 @@ Let's check Business Center details.
 👉 👇 What to do now: Watch the video below.
 
 ⚠ Important step: You must watch this video fully before going to next step!`;
-      state.learnMode=''; await setState(uid,state); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_LEARN_VIDEO',title: lang==='ml' ? '🎥 See Video' : lang==='hi' ? '🎥 See Video' : '🎥 See Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
+      state.learnMode='video'; await setState(uid,state); await sendWithDelay(singleCta(uid, msg1, {title:'🎥 See Video', url: videoUrl}, incomingPhoneId)); await sendWithDelay(interactiveButton(uid, oppLearnQ(lang), [{id:'OPP_VIDEO_WATCHED',title: lang==='ml' ? '✅ വീഡിയോ കണ്ടു' : lang==='hi' ? '✅ वीडियो देखा' : '✅ Watched Video'},{id:'OPP_LEARN_READ',title: lang==='ml' ? '📄 3 ക്ലിക്ക് വായിക്കുക' : lang==='hi' ? '📄 3 क्लिक पढ़ें' : '📄 Read 3 Clicks'}], incomingPhoneId));
       // V247: Only 1 message now (msg1). msg2 (Did you watch?) will come as 2-min reminder, NOT immediately.
       scheduleReminder(uid, 'install:OPP_CENTER_VIDEO_5MIN:5', lang, 5*60*1000, incomingPhoneId);
       await saveToSheet('Franchise_Funnel', [nowIso, uid, lang, 'Business Opportunity '+incomingPhoneId, '🚀 ₹30K-₹1L Invest', 'Clicked', HELP_MARKETING, state.lastStep, ''], true);
@@ -4029,6 +4128,14 @@ Let's check Business Center details.
     // ==================== V247 CONFIRMATION FLOW - ALL LANGUAGES ====================
 
     // ===== V247 LEARN CHOICE - SINGLE MESSAGE EACH, with Congrats + What to do =====
+    if(btnId==='OPP_VIDEO_WATCHED'){
+      // V358: user tapped Watched after See Video CTA already opened the video. Do NOT resend video. Go to Benefits.
+      state.videoWatched=true; state.oppVideoWatched=true; state.learnMode='video'; state.lastStep='Opportunity Video - Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      const benDynV = getBenText(state.sub, lang);
+      const qTextV = lang==='ml' ? `\n\n👋 ആനുകൂല്യങ്ങൾ വായിച്ചോ? മനസ്സിലായോ?\n👉 മനസ്സിലായെങ്കിൽ താഴെ ക്ലിക്ക് ചെയ്യുക:` : lang==='hi' ? `\n\n👋 लाभ पढ़े? समझ में आया?\n👉 समझ आया तो नीचे क्लिक करें:` : `\n\n👋 Did you read Benefits? Understood?\n👉 If understood, click below:`;
+      await sendWithDelay(interactiveButton(uid, oppProgress(lang,3)+`\n\n`+oppCongrats(lang,3)+`\n\n📄 3 Clicks — 1 of 3: Benefits\n\n`+benDynV+qTextV, [{id:'UNDERSTOOD_BEN',title:L.understoodBen},{id:'SKIP_3CLICKS',title: lang==='ml' ? '⏭️ Skip - അടുത്തത്' : lang==='hi' ? '⏭️ Skip - आगे' : '⏭️ Skip - Go Next'}], incomingPhoneId));
+      return;
+    }
     if(btnId==='OPP_LEARN_VIDEO'){
       state.videoWatched=false; state.oppVideoWatched=false; state.learnMode='video'; state.lastStep='Opportunity Video - Must Watch'; // V286: user said NOT watched - video link IS allowed again state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
       const vUrl = getVideoUrl(state.sub||'OPP_DISTRICT', lang);
@@ -5147,7 +5254,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V321 TRY-FREE-5PCT-24H', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V358', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5179,16 +5286,16 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V321 TRY-FREE-5PCT-24H', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V321 TRY-FREE-5PCT-24H', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V321 TRY-FREE-5PCT-24H', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V321 TRY-FREE-5PCT-24H', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V358', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V358', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V358', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V358', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
 app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V352 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V352', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V358', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V352 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
