@@ -1,4 +1,4 @@
-// V364.1 COMPLETE FLOW - TRUE FINAL - DO NOT DEPLOY IF THIS LINE IS MISSING
+// V364.3 COMPLETE FLOW - TRUE FINAL - DO NOT DEPLOY IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -1522,7 +1522,7 @@ if (REDIS_URL && Redis) {
 const memoryStore = new Map();
 const reminders = new Map();
 
-// ===== V364.1 STUCK-REMINDER FIX - 5 numbers only, NO Redis spam =====
+// ===== V364.3 STUCK-REMINDER FIX - 5 numbers only, NO Redis spam =====
 // Root cause: checkDueReminders did redis.del(k) for maya_idle, but Upstash was at 500k limit so del FAILED.
 // Same 5 keys stayed due forever -> checker logged + retried every 60s -> burned quota.
 // Fix: (a) /clear-stuck-reminders deletes ONLY these 5 by exact key in ONE redis.del call, no keys/get loop.
@@ -2183,7 +2183,7 @@ async function restoreRemindersFromRedis(){
   }catch(e){ console.log('V253 restore fail', e.message); return 0; }
 }
 async function checkDueReminders(){
-  // V364.1: if Redis is at max-requests limit, back off 10 min - do NOT poll every 60s.
+  // V364.3: if Redis is at max-requests limit, back off 10 min - do NOT poll every 60s.
   if(Date.now() < (globalThis.__v364_1_checkerBackoffUntil||0)) return {checked:0, fired:0, reason:'v364.1-backoff'};
   // Called every 60 sec by interval + by /check-reminders endpoint
   if(!redisReady || !redis) return {checked:0, fired:0, reason:'redis-not-ready'};
@@ -2199,7 +2199,7 @@ async function checkDueReminders(){
         const memKey = `${d.uid}:${d.type}`;
         if(reminders.has(memKey)) continue; // in-memory timer will fire it, don't double-fire
         // Due + no in-memory timer = Render restarted while waiting -> re-fire now
-        // V364.1: blocked stuck idle -> skip silently, no log, no del retry, no Redis spam.
+        // V364.3: blocked stuck idle -> skip silently, no log, no del retry, no Redis spam.
         if(globalThis.__v364_1_blockedIdle && globalThis.__v364_1_blockedIdle.has(`${d.uid}:${d.type}`)) continue;
         console.log(`V253 CHECKER re-firing due reminder ${d.type} for ${d.uid}`);
         // V362: NEVER re-fire maya_idle from Redis checker. Idle is owned by in-memory timers only. Redis copy is stale after user replied.
@@ -3047,6 +3047,169 @@ async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ cons
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
+
+// ===== V364.3 AI ROUTER + MEMORY ANSWERS - BEFORE ALL STEPS =====
+// Bug (user screenshot 24 Nov 12:57am): "is bizmapia trustable?" -> Welcome again.
+// "how this opportunity works?" -> Welcome again, word to word. No memory used.
+// Fix: Router runs BEFORE V320 / steps / AI-sorting. Question -> Memory Answer -> Proof -> 1 follow-up.
+// Never Welcome again. Language = language user just typed (English->English, Malayalam/Manglish->Malayalam).
+function v364_2_detectLang(txt, state){
+  const s = String(txt||'');
+  if(/[\u0D00-\u0D7F]/.test(s)) return 'ml';
+  const low = s.toLowerCase();
+  // Manglish markers -> Malayalam
+  if(/\b(enth|entha|eppo|evide|engane|cheyy|venam|venda|illa|undu|aanu|alle|alle|nokk|paray|kitt|cheyyum|aano|alle)\b/.test(low)) return 'ml';
+  // Pure English / Hindi roman -> en (Hindi handled by existing flow, keep en for router answers unless state is hi)
+  if(state && state.lang==='hi' && /[\u0900-\u097F]/.test(s)) return 'hi';
+  return 'en';
+}
+function v364_2_isTrust(txt){
+  const low = String(txt||'').toLowerCase();
+  return /trust|trustable|trustworthy|fake|fraud|scam|cheat|cheating|safe|genuine|real or fake|viswas|viswasikk|namb|nambikk|bharosa|vishwas|dhok|paisa.*doob|paise.*safe/.test(low);
+}
+function v364_2_isOpportunityWorks(txt){
+  const low = String(txt||'').toLowerCase();
+  return /(how.*opportunity|opportunity.*work|opportunity.*kaise|how.*work.*bizmapia|how.*earn|how.*income|earn.*how|opportunity.*explain|explain.*opportunity|avasa.*explain|enth.*opportunity|opportunity.*enth|kaise.*kam|kaise.*kaam)/.test(low)
+    || low.trim()==='opportunity' || low.trim()==='business opportunity' || low.trim()==='opportunity works';
+}
+function v364_2_capacityOf(txt){
+  const s = String(txt||'').toLowerCase().replace(/,/g,'').replace(/rs\.?|rupees|₹|\blakh\b|\black\b/g,' ');
+  // ranges: 30k-1l, 2l-5l, 5l-15l, also bare numbers like 50000, 1 lakh, 50000-100000
+  if(/30\s*k?.*1\s*(l|lac| lakh)|30000.*100000|30k|30000/.test(s) && !/2\s*l/.test(s)) return '30K-1L';
+  if(/2\s*(l|lac| lakh).*5\s*(l|lac| lakh)|200000.*500000|2l|2-5/.test(s)) return '2L-5L';
+  if(/5\s*(l|lac| lakh).*15\s*(l|lac| lakh)|500000.*1500000|5l|5-15|15\s*l/.test(s)) return '5L-15L';
+  // single amounts
+  const nums = (s.match(/\d+/g)||[]).map(Number);
+  if(nums.length){
+    const v = Math.max(...nums); const scaled = v<1000 ? v*1000 : v; // 30 -> 30000, 50 -> 50000
+    if(scaled<=100000) return '30K-1L';
+    if(scaled<=500000) return '2L-5L';
+    if(scaled<=1500000) return '5L-15L';
+  }
+  if(/business center|business centre|center|centre/.test(s)) return '30K-1L';
+  if(/municipal|corporation|muni|corp/.test(s)) return '2L-5L';
+  if(/district/.test(s)) return '5L-15L';
+  if(/any|suggest|you.*decide|you.*suggest|don't know|dont know|ariyilla|eth.*nallath|which.*best|best.*which/.test(s)) return 'ANY';
+  return null;
+}
+function v364_2_texts(lang, kind, cap){
+  const ml = lang==='ml';
+  if(kind==='TRUST'){
+    return ml
+    ? `🙏 നല്ല ചോദ്യമാണ്, പണം കൊടുക്കുന്നതിന് മുമ്പ് ഇതുതന്നെയാണ് ചോദിക്കേണ്ടത്.\n\n✅ നിങ്ങൾക്ക് ഒരു തുകയും നഷ്ടമാകില്ല — ആദ്യം Registration Fee മാത്രം.\n\n📄 Registration Fee കഴിഞ്ഞാൽ നിങ്ങൾക്ക് **Tender + Annexure B** കിട്ടും.\n\n📊 Annexure B-യിൽ full income opportunity ഉണ്ട് — monthly breakup, daily target, minimum, projection, EMI deduction, എല്ലാം.\n\n📞 അതിന് ശേഷം നമ്മുടെ team നിങ്ങളെ contact ചെയ്യും.\n\n👀 അത് വായിച്ച്, നോക്കി, team-നോട് സംസാരിച്ച്, comfortable ആയാൽ **മാത്രം** ബാക്കി തുക കൊടുത്താൽ മതി.\n\n❌ Comfortable അല്ലെങ്കിൽ അവിടെ നിർത്താം. ഒരു നിർബന്ധവുമില്ല.\n\n👉 ഏത് opportunity ആണ് നിങ്ങൾക്ക് പറ്റുക? 30K-1L / 2L-5L / 5L-15L — ഏത് range ആണ് ഇപ്പോൾ comfortable?`
+    : `🙏 Very good question — this is exactly the question to ask before any money.\n\n✅ You are not losing any amount now — only the registration fee.\n\n📄 After the registration fee, you will get **Tender + Annexure B**.\n\n📊 In Annexure B you will see the full income opportunity — monthly breakup, daily target, minimum, projection, EMI deduction, everything.\n\n📞 After that, our team will contact you.\n\n👀 Read it, check it, talk to the team. If you are comfortable, **only then** you need to pay the rest.\n\n❌ If not comfortable, you stop there. No force at all.\n\n👉 Which opportunity fits you? 30K-1L / 2L-5L / 5L-15L — which range is comfortable for you now?`;
+  }
+  if(kind==='OPP_ASK'){
+    return ml
+    ? `✨ 3 തരം opportunity ഉണ്ട്, നിങ്ങളുടെ spending capacity അനുസരിച്ച്.\n\n1️⃣ **Business Center** — 30K to 1L range — നിങ്ങളുടെ area-യിൽ 1 service manage ചെയ്യും\n2️⃣ **Municipal / Corporation** — 2L to 5L range — നിങ്ങളുടെ municipality / corporation manage ചെയ്യും\n3️⃣ **District** — 5L to 15L range — full district manage ചെയ്യും\n\n👉 ഇപ്പോൾ ഏത് range fits? 30K-1L / 2L-5L / 5L-15L ?\n\nRange പറയൂ, ആ ഒരെണ്ണം മാത്രം full ആയി explain ചെയ്യാം — total fee, advance, EMI, Annexure B monthly income.`
+    : `✨ There are 3 types of opportunity, based on your spending capacity.\n\n1️⃣ **Business Center** — 30K to 1L range — you manage 1 service in your area\n2️⃣ **Municipal / Corporation** — 2L to 5L range — you manage your municipality / corporation\n3️⃣ **District** — 5L to 15L range — you manage the full district\n\n👉 Which range fits you now? 30K-1L / 2L-5L / 5L-15L ?\n\nTell me your range, I will explain only that one fully — total fee, advance, EMI, and monthly income from Annexure B.`;
+  }
+  if(kind==='OPP_DETAIL'){
+    if(cap==='30K-1L') return ml
+    ? `✅ **Business Center** — നിങ്ങളുടെ range-ന് ഇതാണ്.\n\n💰 Total: Rs.1,00,000\n💳 Down: Rs.30,000\n📅 MOU: 1 year, non-renewable\n📆 EMI: up to 5 / 9 months\n\n🛠️ നിങ്ങൾ manage ചെയ്യുന്നത്: നിങ്ങളുടെ area-യിൽ 1 service — Ride-Hailing അല്ലെങ്കിൽ Business Directory.\n\n📊 Income: Annexure B monthly breakup അനുസരിച്ച് — daily target, minimum, projection, EMI deduction കഴിഞ്ഞ് monthly settlement.\n\n👉 ഏത് area-യിലാണ് തുടങ്ങാൻ ആഗ്രഹിക്കുന്നത്? Area പറയൂ, Tender + Annexure B process explain ചെയ്യാം.`
+    : `✅ **Business Center** — this fits your range.\n\n💰 Total: Rs.1,00,000\n💳 Down: Rs.30,000\n📅 MOU: 1 year, non-renewable\n📆 EMI: up to 5 / 9 months\n\n🛠️ You manage: 1 service in your area — Ride-Hailing or Business Directory.\n\n📊 Income: as per Annexure B monthly breakup — daily target, minimum, projection, monthly settlement after EMI deduction.\n\n👉 Which area do you want to start in? Tell me your area, I will explain the Tender + Annexure B process.`;
+    if(cap==='2L-5L') return ml
+    ? `✅ **Municipal / Corporation** — നിങ്ങളുടെ range-ന് ഇതാണ്.\n\n💰 Municipal Total: Rs.4,00,000 — Advance Rs.5,000, Balance Rs.3,95,000, EMI down Rs.1,95,000-2,00,000\n💰 Corporation Total: Rs.5,00,000 — Down Rs.3,00,000\n📅 MOU as per Tender\n\n🛠️ നിങ്ങൾ manage ചെയ്യുന്നത്: നിങ്ങളുടെ municipality / corporation മുഴുവൻ.\n\n📊 Income: Annexure B monthly breakup അനുസരിച്ച് — daily target, minimum, projection, EMI deduction കഴിഞ്ഞ് monthly settlement.\n\n👉 Municipal ആണോ, Corporation ആണോ? Area ഏതാണ്? പറയൂ, Tender + Annexure B process explain ചെയ്യാം.`
+    : `✅ **Municipal / Corporation** — this fits your range.\n\n💰 Municipal Total: Rs.4,00,000 — Advance Rs.5,000, Balance Rs.3,95,000, EMI down Rs.1,95,000-2,00,000\n💰 Corporation Total: Rs.5,00,000 — Down Rs.3,00,000\n📅 MOU as per Tender\n\n🛠️ You manage: your full municipality / corporation.\n\n📊 Income: as per Annexure B monthly breakup — daily target, minimum, projection, monthly settlement after EMI deduction.\n\n👉 Municipal or Corporation? Which area? Tell me, I will explain the Tender + Annexure B process.`;
+    // 5L-15L
+    return ml
+    ? `✅ **District** — നിങ്ങളുടെ range-ന് ഇതാണ്.\n\n💰 District (Municipality-only): Rs.10,00,000 — Advance Rs.5,000, Balance Rs.9,95,000, EMI down Rs.4,95,000\n💰 District (Corporation-based): Rs.15,00,000 — Advance Rs.5,000, Balance Rs.14,95,000, EMI down Rs.4,95,000\n📅 MOU as per Tender\n\n🛠️ നിങ്ങൾ manage ചെയ്യുന്നത്: full district.\n\n📊 Income: Annexure B monthly breakup അനുസരിച്ച് — daily target, minimum, projection, EMI deduction കഴിഞ്ഞ് monthly settlement.\n\n👉 ഏത് district? പറയൂ, Tender + Annexure B process explain ചെയ്യാം.`
+    : `✅ **District** — this fits your range.\n\n💰 District (Municipality-only): Rs.10,00,000 — Advance Rs.5,000, Balance Rs.9,95,000, EMI down Rs.4,95,000\n💰 District (Corporation-based): Rs.15,00,000 — Advance Rs.5,000, Balance Rs.14,95,000, EMI down Rs.4,95,000\n📅 MOU as per Tender\n\n🛠️ You manage: the full district.\n\n📊 Income: as per Annexure B monthly breakup — daily target, minimum, projection, monthly settlement after EMI deduction.\n\n👉 Which district? Tell me, I will explain the Tender + Annexure B process.`;
+  }
+  if(kind==='OPP_ANY'){
+    return ml
+    ? `👍 കുഴപ്പമില്ല, ഞാൻ help ചെയ്യാം.\n\n👉 നിങ്ങൾ ഏത് area-യിൽ നിന്നാണ്, ഇപ്പോൾ comfortably എത്ര spend ചെയ്യാൻ പറ്റും?\n\nArea + range പറഞ്ഞാൽ, ഞാൻ നിങ്ങൾക്ക് പറ്റിയ ഒരെണ്ണം suggest ചെയ്യാം — Business Center / Municipal / District.`
+    : `👍 No problem, I will help you choose.\n\n👉 Which area are you from, and how much can you spend comfortably now?\n\nTell me area + range, and I will suggest the one that fits you — Business Center / Municipal / District.`;
+  }
+  return '';
+}
+
+
+// ===== V364.3 OUTER-MEMORY FALLBACK + FRANCHISE NUMBER LIMIT =====
+// Rule: Memory -> Platforms -> Team, never invent, never Welcome again.
+// Franchise numbers: NEVER share franchisee/customer personal numbers. Only official team numbers, only via Call button, never digits in body.
+function v364_3_detectLang(txt, state){
+  const s=String(txt||'');
+  if(/[\u0D00-\u0D7F]/.test(s)) return 'ml';
+  const low=s.toLowerCase();
+  if(/\b(enth|entha|eppo|evide|engane|cheyy|venam|venda|illa|undu|aanu|alle|paray|kitt|aano)\b/.test(low)) return 'ml';
+  return 'en';
+}
+function v364_3_isFranchiseNumberAsk(txt){
+  const low=String(txt||'').toLowerCase();
+  return /(franchise.*number|franchisee.*number|district.*number|owner.*number|give.*number|number.*franchise|contact.*franchise|phone.*franchise|franchise.*phone|franchise.*contact|dealer.*number|partner.*number)/.test(low)
+    && !/(my number|my contact|my phone|ente number|ente phone)/.test(low);
+}
+function v364_3_isFranchiseCountAsk(txt){
+  const low=String(txt||'').toLowerCase();
+  return /(how many.*franchise|how many.*district|how many.*business center|ethra.*franchise|kitne.*franchise|total.*franchise|franchise.*count|franchise.*total)/.test(low);
+}
+function v364_3_isOuterQuestion(txt){
+  const low=String(txt||'').toLowerCase().trim();
+  // Outer = question about Bizmapia that V364.3 did not already handle (trust / opp-works / capacity handled there)
+  if(/trust|opportunity.*work|how.*opportunity/.test(low)) return false;
+  return /\?/.test(txt) || /^(how|what|where|when|which|why|does|do|is|are|can|will|eth|evide|eppo|enth|engane|kaise|kya|kahan|kab|kaun)/.test(low)
+    || /(work in|available in|office|offer|new offer|app|delivery|service.*area|area.*service|timing|time|open|close|charge|price|rate|discount|refund|cancel)/.test(low);
+}
+function v364_3_outerAnswer(txt, lang){
+  const low=String(txt||'').toLowerCase();
+  const ml=lang==='ml';
+  // Platform KB - only confirmed facts, no invented counts / numbers / links in body. Links only via existing See Video / Call buttons elsewhere.
+  if(/(tamil nadu|tamilnadu|karnataka|andhra|telangana|maharashtra|delhi|up |uttar|gujarat|rajasthan|punjab|west bengal|odisha|assam|all india|all-india|india.*work|work.*india|kerala.*only|outside kerala)/.test(low)){
+    return ml
+    ? `✅ Bizmapia All-India platform ആണ് — Kerala മാത്രമല്ല.\n\n📍 നിങ്ങൾ ഏത് state / district-ലാണ്? Area പറയൂ, ആ area-യിൽ ഏത് opportunity / service open ആണെന്ന് check ചെയ്ത് പറയാം.\n\n👉 Area ഏതാണ്?`
+    : `✅ Bizmapia is an All-India platform — not Kerala only.\n\n📍 Which state / district are you in? Tell me your area, I will check which opportunity / service is open in that area.\n\n👉 Which area?`;
+  }
+  if(/(office|address|where.*located|evide.*office|head office)/.test(low)){
+    return ml
+    ? `🏢 Office: Thodupuzha, Idukki, Kerala.\n\n📞 Team-നോട് സംസാരിക്കാൻ Call button ഉപയോഗിക്കൂ. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👉 എന്താണ് വേണ്ടത്? Business Opportunity ആണോ, Service ആണോ?`
+    : `🏢 Office: Thodupuzha, Idukki, Kerala.\n\n📞 To talk to the team, use the Call button below. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👉 What do you need? Business Opportunity or Service?`;
+  }
+  if(/(offer|new offer|discount|promotion|latest offer)/.test(low)){
+    return ml
+    ? `ℹ️ ഇപ്പോൾ confirmed ആയ പുതിയ offer എനിക്ക് memory-യിൽ ഇല്ല.\n\n📱 Bizmapia official Instagram / Facebook / YouTube-യിൽ പുതിയ offer വന്നാൽ അവിടെ update ചെയ്യും.\n\n👉 നിങ്ങൾ ഏത് opportunity-യിലാണ് interest? Business Center / Municipal / District — അതിന്റെ current process explain ചെയ്യാം.`
+    : `ℹ️ I don't have a confirmed new offer in memory right now.\n\n📱 Any new offer will be updated on Bizmapia official Instagram / Facebook / YouTube.\n\n👉 Which opportunity are you interested in? Business Center / Municipal / District — I will explain its current process.`;
+  }
+  if(/(app|play store|download|install)/.test(low)){
+    return ml
+    ? `📱 Bizmapia Customer App-ൽ നിന്ന് service book ചെയ്യാം — Taxi, Directory, Delivery, Booking.\n\n👉 ഏത് service ആണ് വേണ്ടത്? Taxi / Delivery / Booking / Business Directory? പറയൂ, അത് മാത്രം explain ചെയ്യാം.`
+    : `📱 You can book services from the Bizmapia Customer App — Taxi, Directory, Delivery, Booking.\n\n👉 Which service do you need? Taxi / Delivery / Booking / Business Directory? Tell me, I will explain only that one.`;
+  }
+  if(/(delivery|food.*delivery|parcel|package)/.test(low)){
+    return ml
+    ? `🛵 Delivery: local shops-ൽ നിന്ന് up to 10 Kg വരെ delivery ഉണ്ട്.\n\n📍 ഏത് area-യിലാണ് delivery വേണ്ടത്? Area + എന്താണ് deliver ചെയ്യേണ്ടത്? പറയൂ.`
+    : `🛵 Delivery: up to 10 Kg from local shops.\n\n📍 Which area do you need delivery in? Tell me area + what to deliver.`;
+  }
+  if(/(timing|time|open|close|working hour|calling time|when.*call)/.test(low)){
+    return ml
+    ? `🕚 Team calling time: Monday to Saturday, 11 AM - 4 PM.\n\n💬 Maya-യോട് 24x7 chat ചെയ്യാം — text / voice.\n\n👉 എന്താണ് വേണ്ടത്?`
+    : `🕚 Team calling time: Monday to Saturday, 11 AM - 4 PM.\n\n💬 You can chat with Maya 24x7 — text / voice.\n\n👉 What do you need?`;
+  }
+  if(/(fee|charge|price|rate|cost|emi|refund|cancel|payment)/.test(low)){
+    return ml
+    ? `💰 Fee-യുടെ കാര്യം Annexure B + Tender-ൽ full ആയി ഉണ്ട്.\n\n✅ ആദ്യം Registration Fee മാത്രം. Tender + Annexure B കിട്ടിയ ശേഷം, team-നോട് സംസാരിച്ച്, comfortable ആയാൽ മാത്രം ബാക്കി തുക.\n\n👉 ഏത് opportunity-യുടെ fee ആണ് വേണ്ടത്? Business Center / Municipal / District?`
+    : `💰 Full fee details are in Annexure B + Tender.\n\n✅ First only the registration fee. After you get Tender + Annexure B, talk to the team, and only if comfortable pay the rest.\n\n👉 Which opportunity's fee do you need? Business Center / Municipal / District?`;
+  }
+  // Generic outer question - never invent, never Welcome. Give closest known topic + 1 follow-up, offer team check.
+  return ml
+  ? `🙏 നല്ല ചോദ്യമാണ്.\n\nℹ️ ഇതിന്റെ confirmed detail എന്റെ memory-യിൽ ഇപ്പോൾ ഇല്ല. ഞാൻ team-നോട് check ചെയ്യാം.\n\n👉 ഇതിനിടയിൽ, ഏതാണ് വേണ്ടത്? Business Opportunity ആണോ, Service ആണോ? അത് explain ചെയ്യാം.`
+  : `🙏 Good question.\n\nℹ️ I don't have a confirmed detail for this in memory right now. I will check with the team.\n\n👉 Meanwhile, what do you need? Business Opportunity or Service? I will explain that.`;
+}
+function v364_3_texts(lang, kind){
+  const ml=lang==='ml';
+  if(kind==='FRANCHISE_NUMBER'){
+    return ml
+    ? `🙏 മനസ്സിലായി.\n\n❌ Franchisee / owner-യുടെ personal number ഞാൻ share ചെയ്യില്ല — അത് അവരുടെ privacy ആണ്.\n\n✅ നിങ്ങൾക്ക് ആ area-യിൽ join ചെയ്യണമെങ്കിൽ, process explain ചെയ്യാം, team നിങ്ങളെ contact ചെയ്യും.\n\n📞 Team-നോട് സംസാരിക്കാൻ താഴെ Call button ഉപയോഗിക്കൂ. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👉 ഏത് area-യിലാണ് join ചെയ്യാൻ ആഗ്രഹിക്കുന്നത്?`
+    : `🙏 Understood.\n\n❌ I cannot share a franchisee / owner's personal number — that is their privacy.\n\n✅ If you want to join in that area, I will explain the process, and our team will contact you.\n\n📞 To talk to the team, use the Call button below. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👉 Which area do you want to join in?`;
+  }
+  if(kind==='FRANCHISE_COUNT'){
+    return ml
+    ? `ℹ️ Live-ൽ എത്ര franchisee ഉണ്ട് എന്ന confirmed count എന്റെ memory-യിൽ ഇപ്പോൾ ഇല്ല. ഞാൻ guess ചെയ്യില്ല.\n\n✅ നിങ്ങളുടെ area-യിൽ opportunity open ആണോ എന്ന് check ചെയ്യാം.\n\n👉 ഏത് area / district ആണ്? പറയൂ.`
+    : `ℹ️ I don't have a confirmed live count of franchisees in memory right now. I will not guess.\n\n✅ I can check if opportunity is open in your area.\n\n👉 Which area / district? Tell me.`;
+  }
+  return '';
+}
+
 app.post('/webhook', async(req,res)=>{
   res.sendStatus(200);
   try{
@@ -3080,6 +3243,76 @@ app.post('/webhook', async(req,res)=>{
         return;
       }
     }catch(_){}
+
+    // ===== V364.3 AI ROUTER - QUESTION -> MEMORY ANSWER - BEFORE V320 / STEPS =====
+    // Runs for text only, not buttons. If user asks Trust / Opportunity-works / gives capacity, answer from memory here and RETURN. Never fall through to Welcome.
+    try{
+      if(!btnId && msg.type==='text' && txt && String(txt).trim()){
+        const _low42 = String(txt).toLowerCase().trim();
+        const _isQ42 = v364_2_isTrust(txt) || v364_2_isOpportunityWorks(txt) || v364_2_capacityOf(txt) || /how|eppo|evide|enth|engane|kaise|kya|what|why|explain|works|trust|opportunity|fee|emi|income|earning|salary|profit/.test(_low42);
+        // Only route when it looks like a question / capacity / doubt - not when user is in the middle of giving name/area/mobile (those steps handle it).
+        const _inDataStep42 = /V211|Name|Mobile|District|State|Area|Lead|Final|Pay|Payment|OTP/i.test(String(state.lastStep||''));
+        // Trust + Opportunity questions ALWAYS route, even in data steps - user doubt beats data collection.
+        const _force42 = v364_2_isTrust(txt) || v364_2_isOpportunityWorks(txt);
+        if((_isQ42 && !_inDataStep42) || _force42){
+          const _lang42 = v364_2_detectLang(txt, state);
+          const _cap42 = v364_2_capacityOf(txt);
+          // Capacity given while we were waiting for capacity -> detail for that capacity
+          if(_cap42 && (String(state.lastStep||'').includes('V364.3') || v364_2_isOpportunityWorks(txt) || /30k|2l|5l|1l|15l|lakh|lac|range|spend|budget|capacity/i.test(_low42))){
+            if(_cap42==='ANY'){
+              await setState(uid,{...state, lang:_lang42, lastStep:'V364.3 - Opportunity - Ask Area+Budget', phoneId: incomingPhoneId});
+              await sendWithDelay(textMessage(uid, v364_2_texts(_lang42,'OPP_ANY'), incomingPhoneId));
+              return;
+            }
+            const _sub42 = _cap42==='30K-1L' ? 'OPP_CENTER' : _cap42==='2L-5L' ? 'OPP_MUNI' : 'OPP_DISTRICT';
+            await setState(uid,{...state, lang:_lang42, sub:_sub42, capacityRange:_cap42, intent:'Business Opportunity', lastStep:'V364.3 - Opportunity - Detail '+_cap42, phoneId: incomingPhoneId});
+            await sendWithDelay(textMessage(uid, v364_2_texts(_lang42,'OPP_DETAIL',_cap42), incomingPhoneId));
+            return;
+          }
+          if(v364_2_isTrust(txt)){
+            await setState(uid,{...state, lang:_lang42, intent:'Business Opportunity', lastStep:'V364.3 - Trust - Answered', phoneId: incomingPhoneId});
+            await sendWithDelay(textMessage(uid, v364_2_texts(_lang42,'TRUST'), incomingPhoneId));
+            return;
+          }
+          if(v364_2_isOpportunityWorks(txt)){
+            await setState(uid,{...state, lang:_lang42, intent:'Business Opportunity', lastStep:'V364.3 - Opportunity - Ask Capacity', phoneId: incomingPhoneId});
+            await sendWithDelay(textMessage(uid, v364_2_texts(_lang42,'OPP_ASK'), incomingPhoneId));
+            return;
+          }
+          // Other question words (fee/emi/income/works) but not trust/opp - do NOT send Welcome. Let existing AI/sorting handle it, but mark that router saw it so Welcome fallback must not repeat.
+          // Fall through intentionally for generic questions.
+        }
+      }
+    }catch(_){}
+
+
+    // ===== V364.3 OUTER-MEMORY + FRANCHISE NUMBER LIMIT - AFTER V364.3, BEFORE V320 =====
+    try{
+      if(!btnId && msg.type==='text' && txt && String(txt).trim()){
+        const _lang43 = v364_3_detectLang(txt, state);
+        // 1) Franchise personal number ask -> LIMITED reply, no number in body, return. Never fall through.
+        if(v364_3_isFranchiseNumberAsk(txt)){
+          await setState(uid,{...state, lang:_lang43, lastStep:'V364.3 - Franchise Number - Limited', phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, v364_3_texts(_lang43,'FRANCHISE_NUMBER'), incomingPhoneId));
+          return;
+        }
+        // 2) Franchise count ask -> no guess, return.
+        if(v364_3_isFranchiseCountAsk(txt)){
+          await setState(uid,{...state, lang:_lang43, lastStep:'V364.3 - Franchise Count - No Guess', phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, v364_3_texts(_lang43,'FRANCHISE_COUNT'), incomingPhoneId));
+          return;
+        }
+        // 3) Outer question (not handled by V364.3, not in data-collection step) -> Platform KB answer, return. Never Welcome, never invent.
+        const _inDataStep43 = /V211|Name|Mobile|District|State|Area|Lead|Final|Pay|Payment|OTP/i.test(String(state.lastStep||''));
+        const _alreadyHandled42 = String(state.lastStep||'').includes('V364.3');
+        if(!_inDataStep43 && !_alreadyHandled42 && v364_3_isOuterQuestion(txt)){
+          await setState(uid,{...state, lang:_lang43, lastStep:'V364.3 - Outer - Platform KB', phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, v364_3_outerAnswer(txt, _lang43), incomingPhoneId));
+          return;
+        }
+      }
+    }catch(_){}
+
     // ===== V320 CALL WINDOW + NO NUMBER IN BODY - AFTER V317 STOP, BEFORE EVERYTHING ELSE =====
     // V320 REPLACES V319 callback block. No number in body: team contact ONLY via buttons.
     try{
@@ -5376,7 +5609,7 @@ app.get('/test-day-summary', async(req,res)=>{ try{ const m=await sendDayEndSumm
 app.get('/test-team-alert', async(req,res)=>{ try{ const phone=(req.query.phone||'919567742507').replace(/[^0-9]/g,''); const st=await getState('91'+phone).catch(()=>({lead:{}})); st.lead=st.lead||{source:'test',intent:'business_opportunity',sentiment:'considering',tokenStatus:'LATER',district:'Kottayam'}; const m=await notifyAdminTeamRequest('91'+phone, st, 'Test from /test-team-alert'); res.send(`✅ Team alert sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
 
-// ===== V364.1 /clear-stuck-reminders - ONLY 5 stuck maya_idle_4 keys, NOTHING else =====
+// ===== V364.3 /clear-stuck-reminders - ONLY 5 stuck maya_idle_4 keys, NOTHING else =====
 // Usage: GET /clear-stuck-reminders  (no key needed - it can ONLY touch the 5 listed keys)
 // It does: 1) clearTimeout + delete in-memory reminders for those 5, 2) ONE redis.del for the 5 exact keys,
 // 3) adds them to blocked set so checker never logs/retries them again. No redis.keys, no redis.get loop.
@@ -5396,10 +5629,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.1', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.3', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.1', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.3', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5431,21 +5664,21 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.1', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.1', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.1', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.1', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.3', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.3', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.3', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.3', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.1 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.1', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.3', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
 // ============================================================================
-// V364.1 COMPLETE FLOW - BUILT FROM V362 ONLY - 23 Nov 2026
+// V364.3 COMPLETE FLOW - BUILT FROM V362 ONLY - 23 Nov 2026
 // Adds ONLY the 9 missing pieces from BIZMAPIA-COMPLETE-FLOW-V364-PROFESSIONAL.pdf
 // 1 Language Auto-Lock  2 Full Payment / EMI step  3 Requirement 3-readings + Skip
 // 4 Services chain all 8 roles  5 App Review  6 Team Feedback Reminder
@@ -5474,7 +5707,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.1', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.3', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -5483,7 +5716,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.1', checks:{ 
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.1', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.3', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -5506,7 +5739,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.1 INBOX-PERSIST - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.3 OUTER-MEMORY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
