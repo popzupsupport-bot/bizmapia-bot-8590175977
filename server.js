@@ -1,4 +1,4 @@
-// V364.11 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+// V364.13 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -180,6 +180,21 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
+// ===== V364.13 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
+// Pending maintenances bundled: M1 Fired Date col H, M2 Test numbers no reminders,
+// M3 Malappuram 99954 separate Sheet + separate Inbox (token pending - set WHATSAPP_TOKEN_99954 in Render),
+// M4 Reminder fix: Type1 Stuck (Are-you-there + Busy check -> 1h/12h/24h) + Type2 No-Action (direct 1h/12h/24h) -> Fired.
+// M5 Paused must NOT block reminders. noLang reminders fire even if language not selected / inbox Paused.
+const SHEET_ID_MALAPPURAM = process.env.SHEET_ID_MALAPPURAM || process.env.SHEET_ID_99954 || '1EyY_TB84wGnctyr_7K786NGS6hBoWpP82ttm2C85DUE';
+const PHONE_NUMBER_ID_MALAPPURAM = process.env.PHONE_NUMBER_ID_99954 || '1481022538422254';
+const WHATSAPP_TOKEN_MALAPPURAM = process.env.WHATSAPP_TOKEN_99954 || process.env.WHATSAPP_TOKEN_MALAPPURAM || '';
+const TEST_NUMBERS = new Set(['8590175977','918590175977','8590183646','918590183646']);
+function isTestNumber(uid){ try{ const d=String(uid||'').replace(/[^0-9]/g,''); return TEST_NUMBERS.has(d) || TEST_NUMBERS.has(d.slice(-10)); }catch(e){ return false; } }
+function isMalappuramPhoneId(pid){ return String(pid||'')==='1481022538422254'; }
+function getWhatsAppTokenForPhoneId(pid){ if(isMalappuramPhoneId(pid) && WHATSAPP_TOKEN_MALAPPURAM) return WHATSAPP_TOKEN_MALAPPURAM; return WHATSAPP_TOKEN; }
+function getSheetIdForUid(uid){ try{ const pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(uid))) || ''; if(isMalappuramPhoneId(pid)) return SHEET_ID_MALAPPURAM; }catch(e){} return SHEET_ID; }
+if(!globalThis.__phoneIdByUid) globalThis.__phoneIdByUid = new Map();
+
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
@@ -1591,7 +1606,7 @@ async function saveToSheet(tab, row, isNew){
       const sheets = await getSheets();
       if(!sheets){ console.log(`SHEET ${cleanTab}`, row); return; }
       const range = `'${cleanTab}'!A:Z`;
-      await sheets.spreadsheets.values.append({spreadsheetId: SHEET_ID, range: range, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
+      await sheets.spreadsheets.values.append({spreadsheetId: getSheetIdForUid(row[1]), range: range, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
       console.log(`SHEET SAVED ${cleanTab} -> ${row[1]||''} : ${row[3]||''}`);
       return;
     }catch(e){ lastSheetError = e.message; console.log(`SHEET FAIL ${cleanTab} attempt ${attempt+1}`, e.message, row); sheetsClient = null; sheetsClientAt = 0; if(attempt===1) return; }
@@ -1625,6 +1640,7 @@ async function getFiredList(force){
     const sheets = await getSheets();
     if(!sheets) return firedCache.set;
     const res = await sheets.spreadsheets.values.get({spreadsheetId: SHEET_ID, range: `'Fired_Loser_List'!A:A`});
+    try{ const res2 = await sheets.spreadsheets.values.get({spreadsheetId: SHEET_ID_MALAPPURAM, range: `'Fired_Loser_List'!A:A`}); (res2.data.values||[]).forEach(r=>{ firedVariants(r[0]).forEach(v=>set.add(v)); }); }catch(e){ console.log('FIRED_LIST Malappuram read fail (non-fatal)', e.message); }
     const set = new Set();
     (res.data.values||[]).forEach(r=>{ firedVariants(r[0]).forEach(v=>set.add(v)); });
     firedCache = { at: Date.now(), set };
@@ -1637,7 +1653,7 @@ async function saveFiredRow(row){
   try{
     const sheets = await getSheets();
     if(!sheets){ console.log('SHEET Fired_Loser_List', row); return; }
-    await sheets.spreadsheets.values.append({spreadsheetId: SHEET_ID, range: `'Fired_Loser_List'!A:G`, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
+    await sheets.spreadsheets.values.append({spreadsheetId: getSheetIdForUid(row[0]), range: `'Fired_Loser_List'!A:H`, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [row] }});
     firedVariants(row[0]).forEach(v=>firedCache.set.add(v)); firedCache.at = Date.now();
     console.log('SHEET SAVED Fired_Loser_List ->', row[0], row[4]||'');
     return;
@@ -1645,12 +1661,13 @@ async function saveFiredRow(row){
   }
 }
 async function autoFireLoser(uid, reason){
+  if(isTestNumber(uid)){ console.log('V364.13 SKIP autoFire - test number', uid); return; }
   try{
     const phone = normalizeFiredPhone(uid);
     if(await isFiredPhone(phone)) return;
     const st = await getState(uid);
     if(st && (st.flow==='DONE' || st.firedGate==='ALLOWED' || st.firedGate==='STOPPED')) return;
-    await saveFiredRow([phone, '', 'Auto - After 3 Reminders', 'Bot - No Response After 3 Reminders', 'FIRED - New - No Response After 3 Reminders', 'FIRED - New - '+reason, 'NO - Fresh - Auto Added']);
+    await saveFiredRow([phone, '', 'Auto - After 3 Reminders', 'Bot - No Response After 3 Reminders', 'FIRED - New - No Response After 3 Reminders', 'FIRED - New - '+reason, 'NO - Fresh - Auto Added', getISTTime()]);
     try{ const s2 = await getState(uid); s2.firedGate='FIRED_AUTO'; await setState(uid, s2); }catch{}
     console.log('AUTO-FIRED', phone, reason);
   }catch(e){ console.log('autoFire error', e.message); }
@@ -1871,7 +1888,7 @@ async function sendWithDelay(msg){
     const phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
     delete msg._phoneId;
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
-    const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+    const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
@@ -1888,7 +1905,7 @@ async function sendWithDelay(msg){
         const retryMsg = { messaging_product:'whatsapp', to: msg.to, type:'text', text:{body: String(retryBody).substring(0,4096)} };
         const phoneId2 = msg._phoneId || PHONE_ID_OLD;
         const url2 = `https://graph.facebook.com/v20.0/${phoneId2}/messages`;
-        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`, 'Content-Type':'application/json'}});
+        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
         console.log('SEND FAIL RETRY OK to ' + msg.to);
         return {retry:true};
       }
@@ -2257,6 +2274,10 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
+  // V364.13: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
+  if(isTestNumber(uid)){ console.log(`V364.13 SKIP reminder ${type} - test number ${uid}`); return; }
+  // V364.13: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
+  // V364.13: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
   // V362: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
@@ -3277,7 +3298,7 @@ app.post('/webhook', async(req,res)=>{
     // V340: If team took over, Maya stays silent - team replies from Inbox
     if(globalThis.__teamPaused && globalThis.__teamPaused.has(String(uid))){ try{ await saveToSheet('System_Logs',[getISTTime(),String(uid),'ml','V340 Team Paused','Maya paused - team handling','Paused',HELP_ADMIN,'V340 Paused',''],false); }catch(e){} return; }
     let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
-    const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID;
+    const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
     // ===== V317 GLOBAL STOP - TOP PRIORITY, BEFORE EVERYTHING =====
@@ -3337,7 +3358,7 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
-    // ===== V364.11 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // ===== V364.13 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
     // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
     // asked for professional college admission office opportunity - NOT in Bizmapia options.
     // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
@@ -3869,10 +3890,10 @@ Welcome to Bizmapia! 🙏
         let transcribed = '';
         if(mediaId && process.env.GEMINI_API_KEY){
           // Step 1: get media URL from WhatsApp
-          const mRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+          const mRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(incomingPhoneId)}`}});
           const mJson = await mRes.json();
           if(mJson.url){
-            const aRes = await fetch(mJson.url, {headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+            const aRes = await fetch(mJson.url, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(incomingPhoneId)}`}});
             const aBuf = Buffer.from(await aRes.arrayBuffer());
             const b64 = aBuf.toString('base64');
             // Step 2: Gemini transcribe + understand in one call
@@ -3909,7 +3930,7 @@ Welcome to Bizmapia! 🙏
           return;
         }
         // Voice becomes text - fall through to same AI router below with transcribed text
-        txt = transcribed; try{ state.voiceFailCount = 0; }catch(_){} msg.type = 'text';
+        txt = transcribed; try{ state.voiceFailCount = 0; state.lastVoiceTranscript = transcribed; state.lastVoiceAt = Date.now(); }catch(_){} msg.type = 'text';
         await saveToSheet('System_Logs',[nowIso,uid,state.lang||'en','V268 Voice '+incomingPhoneId,'Voice transcribed: '+transcribed,'V268',HELP_ADMIN,'V268 Voice',''],false);
       }catch(e){ console.log('V268 voice fail', e.message); }
     }
@@ -3979,7 +4000,7 @@ Welcome to Bizmapia! 🙏
     if(btnId==='FIRED_YES'){
       await setState(uid,{...state, firedGate:'ALLOWED', lastStep:'Fired YES - Allowed Again', lang:null, phoneId: incomingPhoneId});
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired YES '+incomingPhoneId, 'YES - Serious Now - Allowed Again', 'Clicked', HELP_ADMIN, 'Fired YES', ''], false);
-      try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired YES', 'RETURNED_LOSER - YES - Allowed Again', 'RETURNED - YES - 1 More Chance', 'NO - Returned']); }catch{}
+      try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired YES', 'RETURNED_LOSER - YES - Allowed Again', 'RETURNED - YES - 1 More Chance', 'NO - Returned', getISTTime()]); }catch{}
       clearReminders(uid);
       const L0=T.en;
       await sendWithDelay(interactiveButton(uid, L0.welcome, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
@@ -3990,7 +4011,7 @@ Welcome to Bizmapia! 🙏
       await setState(uid,{...state, firedGate:'STOPPED', lastStep:'Fired STOP - Do Not Message', phoneId: incomingPhoneId});
       clearReminders(uid);
       await saveToSheet('System_Logs', [nowIso, uid, 'none', 'Fired STOP '+incomingPhoneId, 'STOP - Do Not Message', 'Clicked', HELP_ADMIN, 'Fired STOP', ''], false);
-      try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired STOP', 'STOP - Do Not Message', 'STOP - User Said STOP', 'NO - Stopped']); }catch{}
+      try{ await saveFiredRow([normalizeFiredPhone(uid), '', getISTTime(), 'Bot - Fired STOP', 'STOP - Do Not Message', 'STOP - User Said STOP', 'NO - Stopped', getISTTime()]); }catch{}
       await sendWithDelay(textMessage(uid, 'OK. Stopped. We will not message you again. ✅\n\nठीक है। रुक गए। हम आपको फिर मैसेज नहीं करेंगे। ✅\n\nശരി. നിർത്തി. ഞങ്ങൾ ഇനി നിങ്ങൾക്ക് മെസേജ് അയക്കില്ല. ✅', incomingPhoneId));
       return;
     }
@@ -4367,7 +4388,17 @@ Welcome to Bizmapia! 🙏
       if(needsHuman(txt)){ try{ await notifyHumanHandover(uid, state, txt); }catch(e){} }
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
-        const aiReply = aiRes.text;
+        let aiReply = aiRes.text;
+        // V364.13 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
+        // Format: 🎙️ Voice-il ningal paranjathu: "<transcript>" + answer. Same language as reply.
+        if(state.lastVoiceTranscript){
+          try{
+            const _vt = String(state.lastVoiceTranscript).slice(0,300);
+            const _echo13 = effLang==='ml' ? `🎙️ Voice-il ningal paranjathu: "${_vt}"` : effLang==='hi' ? `🎙️ Voice me aapne kaha: "${_vt}"` : `🎙️ In your voice note you said: "${_vt}"`;
+            if(!String(aiReply||'').includes(_vt)) aiReply = _echo13 + "\n\n" + String(aiReply||'');
+            state.lastVoiceTranscript = ''; state.lastVoiceAt = 0;
+          }catch(_){}
+        }
         hist.push({role:'user', text: txt.slice(0,300)});
         hist.push({role:'maya', text: aiReply.slice(0,500)});
         state.aiHistory = hist.slice(-12);
@@ -5905,7 +5936,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.11 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.13 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
