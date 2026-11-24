@@ -1,4 +1,4 @@
-// V364.3 COMPLETE FLOW - TRUE FINAL - DO NOT DEPLOY IF THIS LINE IS MISSING
+// V364.7 RESUME + INBOX-KEEP - TRUE FINAL - BASE = V364.6 - DO NOT DEPLOY IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -674,7 +674,7 @@ ${MAYA_BIZMAPIA_FACTS}
 ${globalThis.__mayaGrounding||''}
 CONVERSATION RULES:
 - If user is confused / hopping services, ask: business or service? Then stick to one.
-- If user types audio/image/video mention, ask them to type it in words.
+- If user sends audio/voice, treat as heard - never ask to type it. Reply: which opportunity to check - Business Opportunity or Use Our Services.
 - If user says later / stop, be polite, save, do not push.
 - If user is ready to pay / finalize, ask: Name, Place/District, confirm level (Center 1L / Corp 4L / District 10L), then say "I will send Pay link".
 - If user asks Benefits/Requirements/Support/Income/EMI, answer that ONE topic in 2-3 lines, then ask next question. Do not dump all topics.
@@ -3041,9 +3041,9 @@ app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===VERIFY_TOKEN)
 globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 // V362: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
-function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -2000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
-function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); teamInboxSaveRedis(_e); }catch(e){} }
-async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { globalThis.__teamInboxLog.push(_e); _n++; } }catch(e){} } if(globalThis.__teamInboxLog.length>2000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-2000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
+function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -20000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
+function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
+async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; if(globalThis.__inboxRestored) { console.log('V364.7 inbox restore skipped - already restored, old chats kept'); return globalThis.__teamInboxLog.length; } globalThis.__inboxRestored = true; const _seen = new Set(globalThis.__teamInboxLog.map(e=>e.time+'|'+e.phone+'|'+e.who+'|'+e.text)); for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { const _k=_e.time+'|'+_e.phone+'|'+_e.who+'|'+_e.text; if(!_seen.has(_k)){ globalThis.__teamInboxLog.push(_e); _seen.add(_k); _n++; } } }catch(e){} } if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
@@ -3210,6 +3210,60 @@ function v364_3_texts(lang, kind){
   return '';
 }
 
+
+// ===== V364.4 FIRST-MESSAGE + NO-LEAK + STOP GUARDS =====
+function v364_4_shouldSkipRouter(txt, state){
+  const s=String(txt||'').trim(); const low=s.toLowerCase(); const last=String(state?.lastStep||'');
+  if(!last || last==='' || last==='NEW') return true;
+  if(/hello.*can i get more info|can i get more info|hello.*more info/.test(low)) return true;
+  if(/^(hi+|hello+|hey+|hai+|namaskaram|vanakkam|namaste)[\s.!]*$/.test(low)) return true;
+  if(s.length<=2) return true;
+  if(/^(bo|bu|bus|busi|busin|busine|busi?ness)$/.test(low)) return true;
+  if(/^(yes|yes,?\s*continue|continue|yes continue|yes, continue|continue please|thudar|thudaruka)[\s.!]*$/.test(low)) return true;
+  return false;
+}
+function v364_4_isNotInterested(txt){
+  const low=String(txt||'').toLowerCase().trim();
+  return /^(not interested|not intrested|no interest|no thanks|no thank you|not now|no need|vend|venda|illa|illla|talparyam illa|interest illa|not intrested)/.test(low);
+}
+function v364_4_friendlyStep(step){
+  const s=String(step||'');
+  if(/Trust/.test(s)) return 'understanding trust';
+  if(/Opportunity.*Detail|Capacity/.test(s)) return 'choosing the right opportunity';
+  if(/Opportunity.*Ask/.test(s)) return 'choosing the right opportunity';
+  if(/Outer|Platform KB/.test(s)) return 'learning about Bizmapia';
+  if(/V\d+/.test(s)) return 'learning about Bizmapia';
+  if(!s) return 'learning about Bizmapia';
+  return s.replace(/V\d+[\.\d]*[^\s,]*/g,'').replace(/[-_]+/g,' ').trim() || 'learning about Bizmapia';
+}
+function v364_4_stopText(lang){
+  return lang==='ml'
+  ? `🙏 മനസ്സിലായി, കുഴപ്പമില്ല.\n\nഞാൻ ഇവിടെ നിർത്താം. വീണ്ടും താല്പര്യം തോന്നിയാൽ, എപ്പോൾ വേണമെങ്കിലും "Hi" അയച്ചാൽ മതി, ഞാൻ ഇവിടെയുണ്ടാകും. 😊`
+  : `🙏 Understood, no problem.\n\nI will stop here. If you feel interested again anytime, just send "Hi", I will be here. 😊`;
+}
+
+
+// ===== V364.7 RETURNING / FIRED USER - CONTINUE vs NEW CHAT =====
+// If chat already exists (has lastStep + lang/intent) and user returns with Hi / Hello / Can I get more info / any first input after gap,
+// do NOT give fresh Welcome and do NOT skip to routers. Ask: Continue where you left, or Start New Chat?
+// Continue -> restore saved lastStep, resend SAME option for that step. New Chat -> Welcome Back + full Welcome (English) + Language buttons.
+function v364_7_isReturnGreeting(txt){
+  const low=String(txt||'').toLowerCase().trim();
+  return /^(hi+|hello+|hey+|hai+|namaskaram|vanakkam|namaste)[\s.!]*$/.test(low) || /hello.*can i get more info|can i get more info/.test(low) || low==='bo' || low==='continue' || low==='yes, continue';
+}
+function v364_7_resumeText(lang, friendlyStep){
+  return lang==='ml'
+  ? `🙏 Welcome back! നിങ്ങളുടെ chat ഇവിടെ ഉണ്ട്.\n\n📍 നിങ്ങൾ നിർത്തിയത്: *${friendlyStep}*\n\n👉 അതേ സ്ഥലത്ത് നിന്ന് തുടരട്ടെ, അതോ പുതിയ chat തുടങ്ങട്ടെ?\n\n👇 താഴെ ഒന്ന് ക്ലിക്ക് ചെയ്യൂ:`
+  : lang==='hi'
+  ? `🙏 Welcome back! Aapki chat yahan hai.\n\n📍 Aap ruke the: *${friendlyStep}*\n\n👉 Wahi se continue karein, ya nayi chat shuru karein?\n\n👇 Neeche ek par click karein:`
+  : `🙏 Welcome back! Your chat is already here.\n\n📍 You left at: *${friendlyStep}*\n\n👉 Continue from there, or start a new chat?\n\n👇 Tap one below:`;
+}
+function v364_7_continueText(lang, friendlyStep){
+  return lang==='ml'
+  ? `✅ ശരി, അതേ സ്ഥലത്ത് നിന്ന് തുടരാം. 🙏\n\n📍 Last step: *${friendlyStep}*\n\n👉 തുടരാൻ തയ്യാറാണോ? താഴെ നിങ്ങളുടെ option തിരഞ്ഞെടുക്കൂ:`
+  : `✅ OK, continuing from where you left. 🙏\n\n📍 Last step: *${friendlyStep}*\n\n👉 Ready to continue? Choose your option below:`;
+}
+
 app.post('/webhook', async(req,res)=>{
   res.sendStatus(200);
   try{
@@ -3244,10 +3298,59 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
+
+
+    // ===== V364.7 RETURNING USER - CONTINUE vs NEW CHAT - BEFORE ALL ROUTERS =====
+    try{
+      // Handle button taps for Continue / New Chat first
+      if(btnId==='RESUME_CONTINUE'){
+        const _saved47 = state.resumeFromStep || state.lastStep || '';
+        const _friendly47 = (typeof v364_4_friendlyStep==='function' ? v364_4_friendlyStep(_saved47) : _saved47);
+        const _lang47 = state.lang || 'en';
+        await setState(uid,{...state, lastStep:_saved47 || 'Business Opportunity - Resume', resumeFromStep:'', phoneId: incomingPhoneId});
+        // Resend SAME option for that step: Company Video -> See Video, Opportunity/Capacity -> capacity question, else Business/Service choice
+        if(/Company Video|Business Video/i.test(_saved47)){
+          await sendWithDelay(textMessage(uid, v364_7_continueText(_lang47,_friendly47)+'\n\n🎥 Company Video - please watch it, then reply "Seen".', incomingPhoneId));
+        } else if(/Capacity|Opportunity/i.test(_saved47)){
+          await sendWithDelay(textMessage(uid, v364_7_continueText(_lang47,_friendly47)+'\n\n👉 Which range fits you? 30K-1L / 2L-5L / 5L-15L ?', incomingPhoneId));
+        } else {
+          await sendWithDelay(interactiveButton(uid, v364_7_continueText(_lang47,_friendly47), [{id:'AI_BUSINESS',title:'Business Opportunity'},{id:'AI_SERVICES',title:'Use Our Services'}], incomingPhoneId));
+        }
+        return;
+      }
+      if(btnId==='RESUME_NEW'){
+        await setState(uid,{first:true, lastStep:'First Message', lang:null, phoneId: incomingPhoneId, intent:'', sub:'', resumeFromStep:'', firedGate: state.firedGate||''});
+        await sendWithDelay(interactiveButton(uid, `🙏 Welcome back! 👋\n\nHi, I am Maya here to chat with you! 👋\n\nWelcome to Bizmapia! 🙏\n🇮🇳 India's Largest Online Platform - First 4-in-1 App in India\n\n👇 To start, please tap your language below:`, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], incomingPhoneId));
+        return;
+      }
+      // Returning user greeting: chat already exists (has lastStep + lang) and NOT already in Resume gate, NOT in Fired Warning gate
+      if(!btnId && msg.type==='text' && txt && v364_7_isReturnGreeting(txt)){
+        const _hasChat47 = state && state.lastStep && state.lastStep!=='' && state.lastStep!=='First Message' && state.lastStep!=='Fired Warning' && !String(state.lastStep).includes('RESUME') && !String(state.lastStep).includes('Not Interested') && state.lang;
+        const _isFired47 = state && (state.firedGate || String(state.lastStep||'').includes('Fired'));
+        if(_hasChat47 || _isFired47){
+          const _lang47b = state.lang || 'en';
+          const _friendly47b = (typeof v364_4_friendlyStep==='function' ? v364_4_friendlyStep(state.lastStep) : state.lastStep);
+          await setState(uid,{...state, resumeFromStep: state.lastStep, lastStep:'V364.7 - Resume - Ask Continue/New', phoneId: incomingPhoneId});
+          await sendWithDelay(interactiveButton(uid, v364_7_resumeText(_lang47b,_friendly47b), [{id:'RESUME_CONTINUE',title:'Continue'},{id:'RESUME_NEW',title:'New Chat'}], incomingPhoneId));
+          return;
+        }
+      }
+    }catch(_){}
+
+    // ===== V364.4 NOT-INTERESTED - BEFORE ALL ROUTERS =====
+    try{
+      if(!btnId && msg.type==='text' && txt && v364_4_isNotInterested(txt)){
+        const _lang44 = state.lang || v364_2_detectLang(txt, state);
+        await setState(uid,{...state, lang:_lang44, lastStep:'V364.4 - Not Interested - Stopped', stopped:true, phoneId: incomingPhoneId});
+        await sendWithDelay(textMessage(uid, v364_4_stopText(_lang44), incomingPhoneId));
+        return;
+      }
+    }catch(_){}
+
     // ===== V364.3 AI ROUTER - QUESTION -> MEMORY ANSWER - BEFORE V320 / STEPS =====
     // Runs for text only, not buttons. If user asks Trust / Opportunity-works / gives capacity, answer from memory here and RETURN. Never fall through to Welcome.
     try{
-      if(!btnId && msg.type==='text' && txt && String(txt).trim()){
+      if(!btnId && msg.type==='text' && txt && String(txt).trim() && !v364_4_shouldSkipRouter(txt, state)){
         const _low42 = String(txt).toLowerCase().trim();
         const _isQ42 = v364_2_isTrust(txt) || v364_2_isOpportunityWorks(txt) || v364_2_capacityOf(txt) || /how|eppo|evide|enth|engane|kaise|kya|what|why|explain|works|trust|opportunity|fee|emi|income|earning|salary|profit/.test(_low42);
         // Only route when it looks like a question / capacity / doubt - not when user is in the middle of giving name/area/mobile (those steps handle it).
@@ -3288,7 +3391,7 @@ app.post('/webhook', async(req,res)=>{
 
     // ===== V364.3 OUTER-MEMORY + FRANCHISE NUMBER LIMIT - AFTER V364.3, BEFORE V320 =====
     try{
-      if(!btnId && msg.type==='text' && txt && String(txt).trim()){
+      if(!btnId && msg.type==='text' && txt && String(txt).trim() && !v364_4_shouldSkipRouter(txt, state)){
         const _lang43 = v364_3_detectLang(txt, state);
         // 1) Franchise personal number ask -> LIMITED reply, no number in body, return. Never fall through.
         if(v364_3_isFranchiseNumberAsk(txt)){
@@ -3306,7 +3409,7 @@ app.post('/webhook', async(req,res)=>{
         const _inDataStep43 = /V211|Name|Mobile|District|State|Area|Lead|Final|Pay|Payment|OTP/i.test(String(state.lastStep||''));
         const _alreadyHandled42 = String(state.lastStep||'').includes('V364.3');
         if(!_inDataStep43 && !_alreadyHandled42 && v364_3_isOuterQuestion(txt)){
-          await setState(uid,{...state, lang:_lang43, lastStep:'V364.3 - Outer - Platform KB', phoneId: incomingPhoneId});
+          await setState(uid,{...state, lang:_lang43, lastStep:'Outer - Platform KB', phoneId: incomingPhoneId});
           await sendWithDelay(textMessage(uid, v364_3_outerAnswer(txt, _lang43), incomingPhoneId));
           return;
         }
@@ -3596,7 +3699,7 @@ app.post('/webhook', async(req,res)=>{
         try{ await setState(uid, {...state, lang:_want, lastStep: state.lastStep||'Language Switched'}); }catch(_){}
         // Reply in NEW language confirming switch + bring back to current step (do not restart)
         const _step5 = state.lastStep||'';
-        const _conf = _want==='ml' ? `✅ മനസ്സിലായി! ഇനി മുതൽ *മലയാളത്തിൽ* മാത്രം സംസാരിക്കാം. 🙏\n\n📍 നമ്മൾ ഇപ്പോൾ *${_step5}* step-ൽ ആണ്. തുടരാൻ തയ്യാറാണോ?` : _want==='hi' ? `✅ समझ गया! अब से *हिन्दी* में ही बात करेंगे। 🙏\n\n📍 हम अभी *${_step5}* step पर हैं। आगे बढ़ने के लिए तैयार हैं?` : `✅ Got it! From now, we will speak *only in English*. 🙏\n\n📍 We are at *${_step5}* step. Are you ready to continue?`;
+        const _conf = _want==='ml' ? `✅ മനസ്സിലായി! ഇനി മുതൽ *മലയാളത്തിൽ* മാത്രം സംസാരിക്കാം. 🙏\n\n📍 നമ്മൾ ഇപ്പോൾ *${v364_4_friendlyStep(_step5)}*-ൽ ആണ്. തുടരാൻ തയ്യാറാണോ?` : _want==='hi' ? `✅ समझ गया! अब से *हिन्दी* में ही बात करेंगे। 🙏\n\n📍 हम अभी *${v364_4_friendlyStep(_step5)}* पर हैं। आगे बढ़ने के लिए तैयार हैं?` : `✅ Got it! From now, we will speak *only in English*. 🙏\n\n📍 We are at *${v364_4_friendlyStep(_step5)}*. Are you ready to continue?`;
         // Only send confirm if this message was ONLY a language request (not "need malayalam + other content"). If it also has other content, let later handlers reply in new language.
         if(/^(need\s+(malayalam|english|hindi)|malayalam|english|hindi|change.*(malayalam|english|hindi)).*$/ .test(_low5) && _low5.length<40){
           try{ await sendWithDelay(textMessage(uid, _conf, incomingPhoneId)); }catch(_){}
@@ -3738,12 +3841,33 @@ Welcome to Bizmapia! 🙏
           }
         }
         if(!transcribed){
+          // V364.6: Voice not understood -> "not understanding through voice, type it here I will explain".
+          // 1st time: that line + Business / Services choice. 2nd+ time: same line + contact team via Call button (number ONLY in button, never digits in body).
           const vl = state.lang || 'en';
-          await sendWithDelay(textMessage(uid, vl==='ml' ? `കേട്ടു! 🙏 വോയ്സ് കുറച്ച് വ്യക്തമായില്ല. ഒന്ന് ടൈപ്പ് ചെയ്ത് പറയാമോ?` : vl==='hi' ? `Suna! 🙏 Voice thoda clear nahi hua. Ek baar type karke batayenge?` : `Heard you! 🙏 Your voice was not very clear. Can you type it once?`, incomingPhoneId));
+          const _vc = (Number(state.voiceFailCount||0)+1);
+          const _say46 = vl==='ml'
+            ? `🎙️ വോയ്സിലൂടെ നിങ്ങളുടെ requirement മനസ്സിലായില്ല. ഇവിടെ ടൈപ്പ് ചെയ്ത് പറയൂ, ഞാൻ explain ചെയ്യാം. 🙏`
+            : vl==='hi'
+            ? `🎙️ Voice se aapki requirement samajh nahi aayi. Yahan type karke batayein, main explain kar dunga. 🙏`
+            : `🎙️ Not understanding your requirement through voice. Type it here, I will explain. 🙏`;
+          if(_vc>=2){
+            const _team46 = vl==='ml'
+              ? `📞 വോയ്സ് വീണ്ടും മനസ്സിലായില്ല. Team-നോട് നേരിട്ട് സംസാരിക്കൂ. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👇 താഴെ Call button ക്ലിക്ക് ചെയ്യൂ:`
+              : `📞 Still not understanding through voice. Please contact our team directly. Calling time: Monday to Saturday, 11 AM - 4 PM.\n\n👇 Tap Call below:`;
+            await setState(uid,{...state, lang:vl, voiceFailCount:_vc, lastStep:'V364.6 - Voice - Team Contact', phoneId: incomingPhoneId});
+            await sendWithDelay(textMessage(uid, _say46+'\n\n'+_team46, incomingPhoneId));
+            try{ await sendDialer(uid, 'Tap below to call:', String(HELP_MARKETING_FULL).replace(/[^0-9]/g,''), incomingPhoneId); }catch(_){}
+            return;
+          }
+          const _q46 = _say46 + (vl==='ml' ? `\n\nഞങ്ങളിൽ നിന്ന് ഏത് opportunity ആണ് check ചെയ്യാൻ ആഗ്രഹിക്കുന്നത്?\n\n👇 താഴെ ഒന്ന് ക്ലിക്ക് ചെയ്യൂ:` : vl==='hi' ? `\n\nHumse kaun si opportunity check karna chahte hain?\n\n👇 Neeche ek par click karein:` : `\n\nWhich opportunity do you want to check from us?\n\n👇 Tap one below:`);
+          const _b1 = vl==='ml' ? 'ബിസിനസ് അവസരം' : 'Business Opportunity';
+          const _s1 = vl==='ml' ? 'സേവനങ്ങൾ ഉപയോഗിക്കാം' : vl==='hi' ? 'Use Our Services' : 'Use Our Services';
+          await setState(uid,{...state, lang:vl, voiceFailCount:_vc, lastStep:'V364.6 - Voice - Ask Business/Service', phoneId: incomingPhoneId});
+          await sendWithDelay(interactiveButton(uid,_q46,[{id:'AI_BUSINESS',title:_b1},{id:'AI_SERVICES',title:_s1}], incomingPhoneId));
           return;
         }
         // Voice becomes text - fall through to same AI router below with transcribed text
-        txt = transcribed; msg.type = 'text';
+        txt = transcribed; try{ state.voiceFailCount = 0; }catch(_){} msg.type = 'text';
         await saveToSheet('System_Logs',[nowIso,uid,state.lang||'en','V268 Voice '+incomingPhoneId,'Voice transcribed: '+transcribed,'V268',HELP_ADMIN,'V268 Voice',''],false);
       }catch(e){ console.log('V268 voice fail', e.message); }
     }
@@ -5185,7 +5309,7 @@ function v350DoubtAnswer(low, L){
         _reply = _uLang==='ml' ? `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nഏത് level ആണ് വേണ്ടത്?` : `💰 *Token Fee:* Center Rs.100 | Corp / Municipal Rs.150 | District Rs.250.\n\nFull: Center ~1 Lakh | Corp ~4-5 Lakh | District ~10 Lakh.\n\nWhich level do you want?`;
       } else if(_isShort || _isEmojiOnly || _isUnknownBtn){
         const _step = state.lastStep||'';
-        _reply = _uLang==='ml' ? `👍 കിട്ടി! 😊\n\nഞാൻ ഇവിടെയുണ്ട്. ഇപ്പോൾ നമ്മൾ ഇവിടെയാണ്: *${_step||'Bizmapia-യെക്കുറിച്ച് അറിയുന്നു'}*.\n\nതുടരട്ടെ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `👍 मिल गया! 😊\n\nमैं यहाँ हूँ। अभी हम यहाँ हैं: *${_step||'Bizmapia के बारे में जान रहे हैं'}*।\n\nआगे बढ़ें? Business Opportunity या Service?` : `👍 Got it! 😊\n\nI am here. Right now we are at: *${_step||'learning about Bizmapia'}*.\n\nShall we continue? Business Opportunity or a service?`;
+        _reply = _uLang==='ml' ? `👍 കിട്ടി! 😊\n\nഞാൻ ഇവിടെയുണ്ട്. ഇപ്പോൾ നമ്മൾ ഇവിടെയാണ്: *${v364_4_friendlyStep(_step)}*.\n\nതുടരട്ടെ? Business Opportunity ആണോ, സേവനമാണോ?` : _uLang==='hi' ? `👍 मिल गया! 😊\n\nमैं यहाँ हूँ। अभी हम यहाँ हैं: *${v364_4_friendlyStep(_step)}*।\n\nआगे बढ़ें? Business Opportunity या Service?` : `👍 Got it! 😊\n\nI am here. Right now we are at: *${v364_4_friendlyStep(_step)}*.\n\nShall we continue? Business Opportunity or a service?`;
       } else {
         // General / off-topic / gibberish / anything else - acknowledge + bring back, never Sorry+Repeat, never old menu
         const _echo = _rawU ? `“${_rawU.slice(0,60)}”` : '';
@@ -5739,7 +5863,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.3 OUTER-MEMORY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.7 RESUME + INBOX-KEEP - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
