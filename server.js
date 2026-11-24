@@ -1,4 +1,4 @@
-// V364.10 PURE-MALAYALAM - TRUE FINAL - BASE = V364.9 - DO NOT DEPLOY IF THIS LINE IS MISSING
+// V364.11 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -3337,6 +3337,48 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
+    // ===== V364.11 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
+    // asked for professional college admission office opportunity - NOT in Bizmapia options.
+    // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
+    // Fix: detect outer opportunity, say NOT in Bizmapia, give right direction (contact that
+    // provider / approach banker for project loan), KEEP same lastStep, re-ask SAME step only.
+    // Never reset to Step 1, never resend Video, never repeat Balance Steps, never invent a Bizmapia profile.
+    try{
+      if(!btnId && msg.type==='text' && txt && String(txt).trim()){
+        const _raw11 = String(txt);
+        const _low11 = _raw11.toLowerCase();
+        const _isOuterOpp11 = /professional\s*college|professional\s*colleg|admission\s*office|admission.*office|college.*admission|school.*admission|hospital.*admission|university.*admission|coaching.*centre|coaching.*center|tuition.*centre|petrol\s*pump|petrol\s*bunk|medical\s*college|engineering\s*college|nursing\s*college|pharmacy\s*college|hotel.*franchise|restaurant.*franchise|supermarket.*franchise|textile.*shop|jewellery|jewelry|real\s*estate|construction.*opportunity|chitty|finance.*company|bank.*franchise/.test(_low11)
+          || /പ്രൊഫഷണൽ\s*കോളേജ്|പ്രൊഫഷണൽ\s*കോളേജുകള|അഡ്മിഷൻ\s*ഓഫീസ്|അഡ്മിഷൻ|കോളേജ്.*അവസരം|കോളേജ്.*ഓഫീസ്|സ്കൂൾ.*അവസരം|ആശുപത്രി.*അവസരം|പെട്രോൾ\s*പമ്പ്|മെഡിക്കൽ\s*കോളേജ്|എഞ്ചിനീയറിംഗ്\s*കോളേജ്|നഴ്സിംഗ്\s*കോളേജ്|ഹോട്ടൽ.*അവസരം|സൂപ്പർ\s*മാർക്കറ്റ്|റിയൽ\s*എസ്റ്റേറ്റ്|ചിട്ടി|ഫിനാൻസ്/.test(_raw11);
+        // Only when user is asking for an opportunity / business / avasaram - not when giving name/area/price
+        const _asksOpp11 = /opportunity|avasa|avasaram|അവസരം|business|ബിസിനസ്|franchise|ഫ്രാഞ്ചൈസി|start.*business|thudang|open.*office|office.*open/.test(_low11) || /അവസരം|ബിസിനസ്|ഫ്രാഞ്ചൈസി/.test(_raw11);
+        // Exclude Bizmapia's own opportunities - those must go to normal flow, NOT outer
+        const _isBizmapiaOpp11 = /bizmapia|business\s*center|business\s*centre|municipal|corporation|district.*franchise|ride|taxi|delivery|directory|booking/.test(_low11);
+        if(_isOuterOpp11 && _asksOpp11 && !_isBizmapiaOpp11){
+          const _lang11 = state.lang || v364_2_detectLang(txt, state) || 'ml';
+          // Extract a short label of what user asked, for the reply - never invent a Bizmapia profile for it
+          let _label11 = _lang11==='ml' ? 'ഈ അവസരം' : _lang11==='hi' ? 'यह अवसर' : 'this opportunity';
+          if(/professional\s*college|പ്രൊഫഷണൽ\s*കോളേജ്/.test(_low11) || /പ്രൊഫഷണൽ/.test(_raw11)) _label11 = _lang11==='ml' ? 'പ്രൊഫഷണൽ കോളേജ് അഡ്മിഷൻ ഓഫീസ് അവസരം' : _lang11==='hi' ? 'प्रोफेशनल कॉलेज एडमिशन ऑफिस अवसर' : 'Professional College Admission Office opportunity';
+          else if(/admission/.test(_low11) || /അഡ്മിഷൻ/.test(_raw11)) _label11 = _lang11==='ml' ? 'അഡ്മിഷൻ ഓഫീസ് അവസരം' : _lang11==='hi' ? 'एडमिशन ऑफिस अवसर' : 'Admission Office opportunity';
+          const _msg11 = _lang11==='ml'
+            ? `🙏 ${_label11} Bizmapia-യിൽ ഇല്ല.\n\n✅ അതിന് ആ സർവീസ് നൽകുന്ന സ്ഥാപനത്തെ നേരിട്ട് ബന്ധപ്പെടണം, അല്ലെങ്കിൽ പ്രോജക്ട് ലോണിന് ബാങ്കറെ സമീപിക്കണം.\n\n📍 Bizmapia-യിൽ നിങ്ങൾക്ക് വേണ്ടത് ബിസിനസ് അവസരമാണോ? വില പരിധി തിരഞ്ഞെടുത്താൽ ഞാൻ Bizmapia അവസരം വിശദീകരിക്കാം. 😊`
+            : _lang11==='hi'
+            ? `🙏 ${_label11} Bizmapia में नहीं है.\n\n✅ इसके लिए उस सर्विस देने वाली संस्था से सीधे संपर्क करें, या प्रोजेक्ट लोन के लिए बैंकर से संपर्क करें.\n\n📍 Bizmapia में आपको बिज़नेस अवसर चाहिए? कीमत सीमा चुनें, मैं Bizmapia अवसर समझाऊँगा. 😊`
+            : `🙏 ${_label11} is not in Bizmapia.\n\n✅ For that, contact the institution that provides that service directly, or approach a banker for a project loan.\n\n📍 In Bizmapia, do you want a Business Opportunity? Select a price range and I will explain the Bizmapia opportunity. 😊`;
+          // KEEP same lastStep - do NOT reset to Step 1, do NOT resend Video, do NOT repeat Balance Steps
+          // Re-ask SAME step: if waiting for price range (Step 2 / V270 Video Sent), show price-range buttons once
+          const _wasStep2_11 = /V270|Video Sent|Step 2|Capacity|Price|price/i.test(String(state.lastStep||''));
+          await setState(uid,{...state, lang:_lang11, lastStep: state.lastStep || 'V270 - Business Video Sent', phoneId: incomingPhoneId});
+          if(_wasStep2_11){
+            await sendWithDelay(quickReply(uid, _msg11, [{id:'CAP_5L_15L',title:(_lang11==='ml'?'5L-15L നിക്ഷേപം':'5L-15L')},{id:'CAP_2L_5L',title:(_lang11==='ml'?'2L-5L നിക്ഷേപം':'2L-5L')},{id:'CAP_30K_1L',title:(_lang11==='ml'?'30K-1L നിക്ഷേപം':'30K-1L')}], incomingPhoneId));
+          } else {
+            await sendWithDelay(textMessage(uid, _msg11, incomingPhoneId));
+          }
+          return;
+        }
+      }
+    }catch(_){}
+
     // ===== V364.4 NOT-INTERESTED - BEFORE ALL ROUTERS =====
     try{
       if(!btnId && msg.type==='text' && txt && v364_4_isNotInterested(txt)){
@@ -5863,7 +5905,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.10 PURE-MALAYALAM - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.11 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
