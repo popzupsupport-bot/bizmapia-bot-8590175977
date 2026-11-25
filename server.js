@@ -1,5 +1,5 @@
-// V364.14 - ONLY 2 EDITS vs V364.13-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.13 logic locked.
-// V364.13 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+// V364.14 - 2 LOGIC EDITS + VERSION-CODE MAINTENANCE (boot/health/endpoints now say V364.14, were stale V364.13/V364.3) vs V364.14-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.14 logic locked.
+// V364.14 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -181,7 +181,7 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
-// ===== V364.13 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
+// ===== V364.14 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
 // Pending maintenances bundled: M1 Fired Date col H, M2 Test numbers no reminders,
 // M3 Malappuram 99954 separate Sheet + separate Inbox (token pending - set WHATSAPP_TOKEN_99954 in Render),
 // M4 Reminder fix: Type1 Stuck (Are-you-there + Busy check -> 1h/12h/24h) + Type2 No-Action (direct 1h/12h/24h) -> Fired.
@@ -1657,7 +1657,7 @@ async function saveFiredRow(row){
   }
 }
 async function autoFireLoser(uid, reason){
-  if(isTestNumber(uid)){ console.log('V364.13 SKIP autoFire - test number', uid); return; }
+  if(isTestNumber(uid)){ console.log('V364.14 SKIP autoFire - test number', uid); return; }
   try{
     const phone = normalizeFiredPhone(uid);
     if(await isFiredPhone(phone)) return;
@@ -2270,10 +2270,10 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
-  // V364.13: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
-  if(isTestNumber(uid)){ console.log(`V364.13 SKIP reminder ${type} - test number ${uid}`); return; }
-  // V364.13: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
-  // V364.13: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
+  // V364.14: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
+  if(isTestNumber(uid)){ console.log(`V364.14 SKIP reminder ${type} - test number ${uid}`); return; }
+  // V364.14: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
+  // V364.14: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
   // V362: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
@@ -3362,7 +3362,7 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
-    // ===== V364.13 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // ===== V364.14 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
     // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
     // asked for professional college admission office opportunity - NOT in Bizmapia options.
     // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
@@ -4393,7 +4393,7 @@ Welcome to Bizmapia! 🙏
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
         let aiReply = aiRes.text;
-        // V364.13 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
+        // V364.14 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
         // Format: 🎙️ Voice-il ningal paranjathu: "<transcript>" + answer. Same language as reply.
         if(state.lastVoiceTranscript){
           try{
@@ -5830,10 +5830,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.3', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.14', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.3', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.14', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5861,20 +5861,20 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V364.14 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.3', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.3', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.3', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.3', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.14', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.14', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.14', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.14', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
 app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.3', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.14', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -5886,7 +5886,7 @@ app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.3', pa
 // 7 Losers return confirm  8 Instant Team Notification  9 Day End Report 8 PM
 // NO other V362 logic touched. Button Only. No link / number in chat body.
 // ============================================================================
-const V364_VERSION = 'V364';
+const V364_VERSION = 'V364.14';
 const V364_TEAM_BO = '918590175977';
 const V364_TEAM_SERVICES = '918590183646';
 const V364_DAY_END_TO = ['918590175977','918590183646'];
@@ -5908,7 +5908,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.3', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.14', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -5917,7 +5917,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.3', checks:{ 
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.3', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.14', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -5940,7 +5940,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.13 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.14 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
