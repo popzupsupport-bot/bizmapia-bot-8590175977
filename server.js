@@ -1,3 +1,4 @@
+// V364.14 - ONLY 2 EDITS vs V364.13-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.13 logic locked.
 // V364.13 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
@@ -1334,20 +1335,15 @@ function getTokenFee(sub){
   return 250;
 }
 function saveRegistrationFee(phone, sub, fee){
+  // V364.14 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
+  // BUG: saveToSheet() expects row as ARRAY (it reads row[1] as phone and appends {values:[row]}).
+  // Old code passed an OBJECT {phone, franchise_type, ...} -> Google API error: Unknown name "phone" at 'data.values[0]'.
+  // FIX: pass ARRAY row, phone at index 1 (same pattern as Master_Leads / System_Logs). Single save (old code saved twice).
   try{
     const regFee = getTokenFee(sub);
     const link = getRazorpayLinkForSub(sub);
-    const data = {
-      phone: phone,
-      franchise_type: sub,
-      registration_fee: regFee,
-      full_fee: fee+'L',
-      razorpay_link: link,
-      timestamp: getISTTime(),
-      date_ist: new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})
-    };
-    saveToSheet('Registration_Fee', data).catch(()=>{});
-    saveToSheet(getRegistrationFeeTab(), data).catch(()=>{});
+    const row = [getISTTime(), String(phone||''), String(sub||''), regFee, fee+'L', link, new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})];
+    saveToSheet('Registration_Fee', row).catch(()=>{});
   }catch(e){ console.log('REG FEE SAVE FAIL', e.message); }
 }
 function getRegistrationFeeForSheet(sub){ return getTokenFee(sub); }
@@ -3301,20 +3297,28 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    // ===== V317 GLOBAL STOP - TOP PRIORITY, BEFORE EVERYTHING =====
-    // BUG (user correct, not user mistake): V315/V316 Stop was at line ~3345, AFTER V285/V292/V288/V307/V265-sorting/language-confirm blocks that return first.
-    // So on many steps Stop never reached it and fell to AI sorting / language confirm - exactly the screenshot: Stop -> "Malayalam thiranjeduthathinu nandi" + Business/Service sorting.
-    // FIX: Stop is checked HERE, first, before duplicate/hurry/step-aware/sorting/AI. No other block can grab it.
-    // Matches: stop / Stop. / nirthu / nirthuka / stop cheyyu / nirthu cheyyu / niruthu / vend (exact, whole message only - NOT inside longer sentences, so "stop cheyyan vend" etc still works, but "I want to stop and think" does NOT trigger).
-    // Also matches Stop button payloads BUSY_STOP / STOP_FINAL / STOP_LATER are handled by their own handlers below - do NOT convert them here.
+    // ===== V364.14 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
+    // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
+    // Maya ignored it and replied "Now you are on Company Video step..." + [kandu | kandilla].
+    // CAUSE: old V317 check only matched msg.type==='text' + empty btnId + txt body.
+    // A tapped [Stop] button arrives as msg.type==='interactive' with btnId (e.g. IDLE_STOP) and NO txt body,
+    // so it fell through to V301 step-aware handler which resent Company Video. Free-text Stop must NEVER do that.
+    // FIX: derive Stop from (a) txt body, (b) button_reply title, (c) list_reply title, (d) btnId containing STOP.
+    // STOP_FINAL / STOP_LATER / FIRED_STOP are NOT converted here - they keep their own handlers below.
+    // Result for ANY Stop form: ask confirm [Stop] [Yes] only. Never resend Company Video / any step.
     try{
-      const _s317 = String(txt||'').toLowerCase().trim();
-      const _isStop317 = !btnId && msg.type==='text' && txt && /^\s*(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_s317);
-      if(_isStop317){
-        const _lang317 = (state.lang||'ml');
-        await setState(uid,{...state, lastStep:'V317 - Stop - Confirm', phoneId: incomingPhoneId});
-        const _cf317 = _lang317==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang317==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
-        await sendWithDelay(interactiveButton(uid,_cf317,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+      const _btnTitle36414 = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || msg.button?.text || '';
+      const _stopText36414 = String(txt||_btnTitle36414||'').toLowerCase().trim();
+      const _stopBtn36414 = String(btnId||'');
+      const _isStopBtn36414 = /STOP/i.test(_stopBtn36414) && !/STOP_FINAL|STOP_LATER|FIRED_STOP/.test(_stopBtn36414);
+      const _isStopText36414 = /^(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_stopText36414);
+      if(_isStopText36414 || _isStopBtn36414){
+        const _lang36414 = (state.lang||'ml');
+        // V364.14: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
+        // one consistent Stop flow, no direct jump, no step resend.
+        await setState(uid,{...state, lastStep:'V364.14 - Stop - Confirm', phoneId: incomingPhoneId});
+        const _cf36414 = _lang36414==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang36414==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
+        await sendWithDelay(interactiveButton(uid,_cf36414,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
         return;
       }
     }catch(_){}
