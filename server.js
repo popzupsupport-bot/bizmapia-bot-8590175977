@@ -1,4 +1,4 @@
-// V364.26 - IDLE-6 AUTO-FIRE + (V364.25 DRIVER REFERRAL CODE) (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
+// V364.27 - INBOX-SEPARATE + BUTTON LABELS + (V364.26 IDLE-6 AUTO-FIRE) + (V364.25 DRIVER REFERRAL CODE) (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
 // V364.25 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
@@ -214,7 +214,7 @@ function isFranchiseePhoneId(pid){ return !!getFranchiseeByPhoneId(pid); }
 async function sendFranchiseeServicesMenu(uid, lang, phoneId){
   const ml = lang==='ml';
   const head = ml ? `👍 നന്ദി! 😊\n\n👇 നിങ്ങൾക്ക് എന്താണ് വേണ്ടത്? ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : (lang==='hi' ? `👍 धन्यवाद! 😊\n\n👇 आपको क्या चाहिए? एक चुनें:` : `👍 Thank you! 😊\n\n👇 What do you need? Select one:`);
-  await sendWithDelay(interactiveButton(uid, head, [{id:'SVC_RIDE',title:'Ride Hailing / Cab Booking'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'}], phoneId));
+  await sendWithDelay(interactiveButton(uid, head, [{id:'SVC_RIDE',title:'Cab Booking'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'}], phoneId));
   const head2 = ml ? `👇 അല്ലെങ്കിൽ ഇതിൽ ഒന്ന്:` : (lang==='hi' ? `👇 या इनमें से एक:` : `👇 Or one of these:`);
   await sendWithDelay(interactiveButton(uid, head2, [{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}], phoneId));
 }
@@ -2805,9 +2805,9 @@ Learn about our Business / Earning Opportunity Click here and apply now 👇`,
 Experience our service — select any one 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 Book Anything'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 Online Booking'}],
     moreServices:`More services:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'},{id:'SVC_BOOKING',title:'📦 Book Anything'},{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
+    services:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'},{id:'SVC_BOOKING',title:'📦 Online Booking'},{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
     noLang:`Sorry, You are not selected any Language.\n\nPlease select your preferred language from below:-`,
     noService:`You haven't selected any service yet.\n\nPlease click any one service from below:-`,
     rideSelected:`Great you are selected "Ride Hailing"\nBizmapia is the one and only platform giving all India Ride Hailing service without any boarder.\nPlease select any one option from below:-`,
@@ -2824,7 +2824,7 @@ Experience our service — select any one 👇`,
     bizRegister:`Register your business on Bizmapia and start getting more customers, leads and bookings.\n\nClick below to register on website or call us:`,
     bizAds:`Start advertising your business on Bizmapia and get 10x more customers.\n\nClick below to start advertising or call us:`,
     deliverySelected:`Great you selected "Online Delivery"\nBook anything from local stores to your door step delivery in 2 hours.\nPlease select any one option from below:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Start earning'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Delivery Partner'}],
     delOrder:`Order Grocery, Food, Medicine, Anything from local stores and get delivered in 2 hours.\n\nClick below to install app or call us:`,
     delPartner:`Become our delivery partner and earn daily.\n\nClick below to install app or call us:`,
     bookingSelected:`Great you selected "Online Booking"\nBook Rooms, Appointments, Movie Tickets at affordable rates all India.\nPlease select any one option from below:-`,
@@ -2892,9 +2892,9 @@ ${LINKS_V92.tenderDistrict}
 अपनी सर्विस अनुभव करें — नीचे से कोई एक चुनें 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 कुछ भी बुक करें'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 ऑनलाइन बुकिंग'}],
     moreServices:`और सेवाएं:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'📦 कुछ भी बुक करें'},{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
+    services:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'📦 ऑनलाइन बुकिंग'},{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
     noLang:`क्षमा करें, आपने कोई भाषा नहीं चुनी।\n\nकृपया नीचे से अपनी पसंदीदा भाषा चुनें:-`,
     noService:`आपने अभी तक कोई सेवा नहीं चुनी।\n\nकृपया नीचे से कोई एक सेवा चुनें:-`,
     rideSelected:`बहुत बढ़िया आपने "राइड हेलिंग" चुना\nBizmapia पूरे भारत में बिना सीमा के राइड सेवा देने वाला एकमात्र प्लेटफॉर्म है।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -2911,7 +2911,7 @@ ${LINKS_V92.tenderDistrict}
     bizRegister:`Bizmapia पर अपना व्यवसाय रजिस्टर करें और अधिक ग्राहक, लीड और बुकिंग प्राप्त करना शुरू करें।\n\nनीचे वेबसाइट पर क्लिक करें या कॉल करें:`,
     bizAds:`Bizmapia पर अपने व्यवसाय का विज्ञापन शुरू करें और 10 गुना अधिक ग्राहक प्राप्त करें।\n\nनीचे क्लिक करें:`,
     deliverySelected:`बहुत बढ़िया आपने "ऑनलाइन डिलीवरी" चुना\nस्थानीय स्टोर से कुछ भी 2 घंटे में आपके दरवाजे पर डिलीवरी।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी जॉब'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी पार्टनर'}],
     delOrder:`किराना, भोजन, दवा, स्थानीय दुकानों से कुछ भी ऑर्डर करें और 2 घंटे में डिलीवरी प्राप्त करें।\n\nनीचे क्लिक करें:`,
     delPartner:`हमारे डिलीवरी पार्टनर बनें और रोज कमाएं।\n\nनीचे क्लिक करें:`,
     bookingSelected:`बहुत बढ़िया आपने "ऑनलाइन बुकिंग" चुना\nपूरे भारत में किफायती दरों पर रूम, अपॉइंटमेंट, मूवी टिकट बुक करें।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -2984,9 +2984,9 @@ ${LINKS_V92.tenderDistrict}
 ഞങ്ങളുടെ സേവനം അനുഭവിക്കൂ — താഴെ നിന്ന് ഒരെണ്ണം തിരഞ്ഞെടുക്കൂ 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 എന്തും ബുക്ക് ചെയ്യൂ'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 ഓൺലൈൻ ബുക്കിംഗ്'}],
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'📦 എന്തും ബുക്ക് ചെയ്യൂ'},{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
+    services:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'📦 ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     noService:`നിങ്ങൾ ഇതുവരെ ഒരു സേവനവും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
     rideSelected:`നിങ്ങൾ "റൈഡ് ഹെയ്ലിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nBizmapia അതിർത്തിയില്ലാതെ ഇന്ത്യ മുഴുവൻ റൈഡ് ഹെയ്ലിംഗ് സേവനം നൽകുന്ന ഒരേയൊരു പ്ലാറ്റ്ഫോമാണ്.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
@@ -3003,7 +3003,7 @@ ${LINKS_V92.tenderDistrict}
     bizRegister:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് കൂടുതൽ ഉപഭോക്താക്കളെയും ലീഡുകളെയും ബുക്കിംഗുകളെയും നേടാൻ തുടങ്ങൂ.\n\nതാഴെ വെബ്സൈറ്റിൽ ക്ലിക്ക് ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
     bizAds:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് പരസ്യം ചെയ്യാൻ തുടങ്ങൂ, 10 മടങ്ങ് കൂടുതൽ ഉപഭോക്താക്കളെ നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     deliverySelected:`നിങ്ങൾ "ഓൺലൈൻ ഡെലിവറി" തിരഞ്ഞെടുത്തു, നന്നായി\nപ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും 2 മണിക്കൂറിനുള്ളിൽ നിങ്ങളുടെ വാതിൽക്കൽ ഡെലിവറി.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോർ ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി ജോലി'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോർ ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി പാർട്ണർ'}],
     delOrder:`പലചരക്ക്, ഭക്ഷണം, മരുന്ന്, പ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും ഓർഡർ ചെയ്ത് 2 മണിക്കൂറിനുള്ളിൽ ഡെലിവറി നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     delPartner:`ഞങ്ങളുടെ ഡെലിവറി പങ്കാളിയായി ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookingSelected:`നിങ്ങൾ "ഓൺലൈൻ ബുക്കിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nഇന്ത്യയിലുടനീളം മിതമായ നിരക്കിൽ റൂമുകൾ, അപ്പോയിന്റ്മെന്റുകൾ, മൂവി ടിക്കറ്റുകൾ ബുക്ക് ചെയ്യുക.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
@@ -3090,9 +3090,9 @@ globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 // V362: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
 function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -20000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
-function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
+function teamInboxPush(phone, who, text, step, phoneIdArg){ try{ const _pid = phoneIdArg || ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(phone))||'') : ''); const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||'', phoneId: String(_pid||'')}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
 async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; if(globalThis.__inboxRestored) { console.log('V364.7 inbox restore skipped - already restored, old chats kept'); return globalThis.__teamInboxLog.length; } globalThis.__inboxRestored = true; const _seen = new Set(globalThis.__teamInboxLog.map(e=>e.time+'|'+e.phone+'|'+e.who+'|'+e.text)); for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { const _k=_e.time+'|'+_e.phone+'|'+_e.who+'|'+_e.text; if(!_seen.has(_k)){ globalThis.__teamInboxLog.push(_e); _seen.add(_k); _n++; } } }catch(e){} } if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
-function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
+function teamInboxChats(filterPhoneId){ const m={}; for(const r of globalThis.__teamInboxLog){ const _pid = r.phoneId || ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(r.phone))||'') : ''); if(filterPhoneId){ if(String(_pid)===String(filterPhoneId)){ /* keep */ } else if(!_pid && String(filterPhoneId)===String(PHONE_NUMBER_ID)){ /* legacy company log, no phoneId yet -> company */ } else { continue; } } if(!m[r.phone]) m[r.phone]={phone:r.phone, phoneId:String(_pid||''), last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; if(_pid) m[r.phone].phoneId=String(_pid); } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
 
@@ -4325,19 +4325,19 @@ Welcome to Bizmapia! 🙏
     // ===== V257: AI_SERVICES -> show 4 services (3+1, WhatsApp max 3 per msg) =====
     if(btnId==='AI_SERVICES' || btnId==='AI_TAXI'){
       const sl = state.lang || 'ml';
-      const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
+      const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Online Booking - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Online Booking - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Online Booking - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
       const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
       await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 സൂപ്പർ! സേവനങ്ങൾ കാണിക്കുന്നതിന് മുൻപ് ഒരു ചെറിയ ചോദ്യം — നിങ്ങൾ ഏത് കൂട്ടത്തിലാണ്? Customer ആണോ, Driver ആണോ, Shop Owner ആണോ? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : sl==='hi' ? `🙏 Super! Services dikhane se pehle ek chhota sawaal — aap kis category mein hain? Customer, Driver, ya Shop Owner? Us hisaab se main aapko bilkul sahi guide karungi. 💛\n\n` : `🙏 Super! Before I show you the services, one small question — which one are you? Customer, Driver, or Shop Owner? I will guide you exactly the way you need. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
       await delay(300);
-      try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
+      try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ഓൺലൈൻ ബുക്കിംഗ്','Online Booking','Online Booking'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
       return;
     }
     // ===== V257: SVC_* taps -> AI explains THAT service, then offers Business Opportunity =====
     if(btnId.startsWith('SVC_')){
       const sl2 = state.lang || 'ml';
-      const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
+      const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Online Booking service', SVC_OPP:'Business Opportunity'};
       const asSvc = svcMap[btnId] || 'Service';
       const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee ethilaanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : sl2==='hi' ? `${asSvc} - Aap Bizmapia App se use kar sakte hain. 🙏\n\nApp install karke OTP login karein. Aap kis category mein hain — Customer, Driver, ya Shop Owner? Batayein, main aapko sahi guide karungi.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Which one are you — Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
       const svcReply = svcFixed;
@@ -6084,10 +6084,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.26', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.27', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.26', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.27', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -6119,16 +6119,16 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.26', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.26', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.26', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.26', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.27', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.27', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.27', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.27', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ let _f = String(req.query.number||req.query.phoneId||'').trim(); if(_f==='malappuram'||_f==='99954'||_f==='9995441970') _f = PHONE_NUMBER_ID_MALAPPURAM; if(_f==='company'||_f==='main') _f = PHONE_NUMBER_ID; res.json({ok:true, live:true, version:'V364.27 INBOX-SEPARATE', time:getISTTime(), paused:[...globalThis.__teamPaused], filter: _f||'all', chats: teamInboxChats(_f||null), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.26', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} const _replyPid = ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(phone))||'') : '') || (globalThis.__teamInboxLog||[]).slice().reverse().find(r=>String(r.phone)===String(phone)&&r.phoneId)?.phoneId || PHONE_NUMBER_ID; teamInboxPush(phone,'team',text,'V340 Team Reply', _replyPid); const _tm=textMessage(phone, text, _replyPid); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.27', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -6162,7 +6162,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.26', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.27', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -6171,7 +6171,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.26', checks:{
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.26', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.27', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -6194,7 +6194,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.26 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.27 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
