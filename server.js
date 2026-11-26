@@ -1,4 +1,4 @@
-// V364.27 - INBOX-SEPARATE + BUTTON LABELS + (V364.26 IDLE-6 AUTO-FIRE) + (V364.25 DRIVER REFERRAL CODE) (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
+// V364.28 - CAB ONLY + (V364.27 INBOX-SEPARATE) + (V364.26 IDLE-6 AUTO-FIRE) + (V364.25 DRIVER REFERRAL CODE) (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
 // V364.25 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
@@ -4334,6 +4334,19 @@ Welcome to Bizmapia! 🙏
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
       return;
     }
+    // ===== V364.28 CAB ONLY: SVC_RIDE -> real Cab sub-buttons. Other services UNTOUCHED (already finalized). =====
+    // V257 hijacked Cab into generic Manglish/Roman text + Business/Services loop. This block runs BEFORE V257,
+    // only for SVC_RIDE, and uses L.rideSelected + L.rideButtons which are already full Malayalam (ml),
+    // Devanagari Hindi (hi), English (en). No other service, no other text changed.
+    if(btnId==='SVC_RIDE'){
+      const sl28 = state.lang || 'ml';
+      const L28 = (typeof T!=='undefined' ? T[sl28] : null) || (typeof T!=='undefined' ? T.en : null);
+      await setState(uid,{...state, lang:sl28, service:btnId, lastStep:btnId, phoneId:incomingPhoneId, aiMode:true});
+      try{ clearReminders(uid); }catch(_){}
+      try{ await sendWithDelay(interactiveButton(uid, L28.rideSelected, L28.rideButtons, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, L28.rideSelected, incomingPhoneId)); }
+      await saveToSheet('System_Logs',[nowIso,uid,sl28,'Cab Sub-buttons '+incomingPhoneId,`SVC_RIDE -> Book a Cab / Attach Cab in ${sl28}`,'Service',HELP_ADMIN,'Cab Sub-buttons',''],false);
+      return;
+    }
     // ===== V257: SVC_* taps -> AI explains THAT service, then offers Business Opportunity =====
     if(btnId.startsWith('SVC_')){
       const sl2 = state.lang || 'ml';
@@ -6084,10 +6097,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.27', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.28', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.27', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.28', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -6119,16 +6132,16 @@ app.get('/render-stats', async(req,res)=>{
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.27', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.27', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.27', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.27', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.28', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.28', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.28', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.28', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ let _f = String(req.query.number||req.query.phoneId||'').trim(); if(_f==='malappuram'||_f==='99954'||_f==='9995441970') _f = PHONE_NUMBER_ID_MALAPPURAM; if(_f==='company'||_f==='main') _f = PHONE_NUMBER_ID; res.json({ok:true, live:true, version:'V364.27 INBOX-SEPARATE', time:getISTTime(), paused:[...globalThis.__teamPaused], filter: _f||'all', chats: teamInboxChats(_f||null), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ let _f = String(req.query.number||req.query.phoneId||'').trim(); if(_f==='malappuram'||_f==='99954'||_f==='9995441970') _f = PHONE_NUMBER_ID_MALAPPURAM; if(_f==='company'||_f==='main') _f = PHONE_NUMBER_ID; res.json({ok:true, live:true, version:'V364.28 CAB-ONLY', time:getISTTime(), paused:[...globalThis.__teamPaused], filter: _f||'all', chats: teamInboxChats(_f||null), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} const _replyPid = ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(phone))||'') : '') || (globalThis.__teamInboxLog||[]).slice().reverse().find(r=>String(r.phone)===String(phone)&&r.phoneId)?.phoneId || PHONE_NUMBER_ID; teamInboxPush(phone,'team',text,'V340 Team Reply', _replyPid); const _tm=textMessage(phone, text, _replyPid); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.27', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.28', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -6162,7 +6175,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.27', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.28', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -6171,7 +6184,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.27', checks:{
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.27', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.28', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -6194,7 +6207,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.27 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.28 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
