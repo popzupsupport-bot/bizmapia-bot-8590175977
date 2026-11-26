@@ -1,5 +1,5 @@
-// V364.15 - GENERIC FRANCHISEE 10 SLOTS + SERVICES-FIRST MENU (built from V364.15) (boot/health/endpoints now say V364.15, were stale V364.13/V364.3) vs V364.15-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.15 logic locked.
-// V364.15 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+// V364.25 - DRIVER REFERRAL CODE (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
+// V364.25 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -181,16 +181,16 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
-// ===== V364.15 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
+// ===== V364.25 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
 // Pending maintenances bundled: M1 Fired Date col H, M2 Test numbers no reminders,
 // M3 Malappuram 99954 separate Sheet + separate Inbox (token pending - set WHATSAPP_TOKEN_99954 in Render),
 // M4 Reminder fix: Type1 Stuck (Are-you-there + Busy check -> 1h/12h/24h) + Type2 No-Action (direct 1h/12h/24h) -> Fired.
 // M5 Paused must NOT block reminders. noLang reminders fire even if language not selected / inbox Paused.
-const SHEET_ID_MALAPPURAM = process.env.SHEET_ID_MALAPPURAM || process.env.SHEET_ID_99954 || process.env.SHEET_ID_2 || process.env.SHEET_ID_MALAPPURAM_2 || '1EyY_TB84wGnctyr_7K786NGS6hBoWpP82ttm2C85DUE';
-const PHONE_NUMBER_ID_MALAPPURAM = process.env.PHONE_NUMBER_ID_99954 || process.env.PHONE_NUMBER_ID_2 || process.env.PHONE_NUMBER_ID_MALAPPURAM || '1481022538422254';
-const WHATSAPP_TOKEN_MALAPPURAM = process.env.WHATSAPP_TOKEN_99954 || process.env.WHATSAPP_TOKEN_2 || process.env.WHATSAPP_TOKEN_MALAPPURAM || '';
+const SHEET_ID_MALAPPURAM = process.env.SHEET_ID_MALAPPURAM || process.env.SHEET_ID_99954 || '1EyY_TB84wGnctyr_7K786NGS6hBoWpP82ttm2C85DUE';
+const PHONE_NUMBER_ID_MALAPPURAM = process.env.PHONE_NUMBER_ID_99954 || '1481022538422254';
+const WHATSAPP_TOKEN_MALAPPURAM = process.env.WHATSAPP_TOKEN_99954 || process.env.WHATSAPP_TOKEN_MALAPPURAM || '';
 
-// ===== V364.15 - GENERIC FRANCHISEE 10 SLOTS =====
+// ===== V364.25 - GENERIC FRANCHISEE 10 SLOTS =====
 // Slot 1 = Malappuram (filled). Slots 2-10 = EMPTY - fill later via Render env, no code change to flows.
 // For each new franchisee, set 3 Render env vars, e.g. Slot 2:
 //   PHONE_NUMBER_ID_F2, WHATSAPP_TOKEN_F2, SHEET_ID_F2
@@ -222,7 +222,6 @@ const TEST_NUMBERS = new Set(['8590175977','918590175977','8590183646','91859018
 function isTestNumber(uid){ try{ const d=String(uid||'').replace(/[^0-9]/g,''); return TEST_NUMBERS.has(d) || TEST_NUMBERS.has(d.slice(-10)); }catch(e){ return false; } }
 function isMalappuramPhoneId(pid){ return String(pid||'')==='1481022538422254'; }
 function getWhatsAppTokenForPhoneId(pid){ const f=getFranchiseeByPhoneId(pid); if(f && f.token) return f.token; if(isMalappuramPhoneId(pid) && WHATSAPP_TOKEN_MALAPPURAM) return WHATSAPP_TOKEN_MALAPPURAM; return WHATSAPP_TOKEN; }
-function getPhoneIdForUid(uid){ try{ const pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(uid))) || ''; if(pid) return String(pid); }catch(e){} return String(PHONE_NUMBER_ID); }
 function getSheetIdForUid(uid){ try{ const pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(uid))) || ''; const f=getFranchiseeByPhoneId(pid); if(f && f.sheetId) return f.sheetId; if(isMalappuramPhoneId(pid)) return SHEET_ID_MALAPPURAM; }catch(e){} return SHEET_ID; }
 if(!globalThis.__phoneIdByUid) globalThis.__phoneIdByUid = new Map();
 
@@ -362,7 +361,7 @@ async function notifyAdminTeamRequest(uid, state, reason){
   const district = L.district || state?.district || 'Not yet given';
   const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
   try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
   return msg;
@@ -372,7 +371,7 @@ async function notifyAdminContactGiven(uid, state, contactNumber){
   const L=state.lead||{};
   const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   return msg;
 }
 async function sendDayEndSummary(){
@@ -382,7 +381,7 @@ async function sendDayEndSummary(){
   try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
   const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
   try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
@@ -433,7 +432,7 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
     try{
       // Do NOT send to the payer himself as admin alert (avoid duplicate)
       if(admin===String(uid)) continue;
-      await sendWithDelay(textMessage(admin, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:'')));
+      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
       console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
     }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
   }
@@ -1365,7 +1364,7 @@ function getTokenFee(sub){
   return 250;
 }
 function saveRegistrationFee(phone, sub, fee){
-  // V364.15 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
+  // V364.25 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
   // BUG: saveToSheet() expects row as ARRAY (it reads row[1] as phone and appends {values:[row]}).
   // Old code passed an OBJECT {phone, franchise_type, ...} -> Google API error: Unknown name "phone" at 'data.values[0]'.
   // FIX: pass ARRAY row, phone at index 1 (same pattern as Master_Leads / System_Logs). Single save (old code saved twice).
@@ -1687,7 +1686,7 @@ async function saveFiredRow(row){
   }
 }
 async function autoFireLoser(uid, reason){
-  if(isTestNumber(uid)){ console.log('V364.15 SKIP autoFire - test number', uid); return; }
+  if(isTestNumber(uid)){ console.log('V364.25 SKIP autoFire - test number', uid); return; }
   try{
     const phone = normalizeFiredPhone(uid);
     if(await isFiredPhone(phone)) return;
@@ -1895,19 +1894,15 @@ async function sendCtaSequence(to, body, ctaList, phoneId){
 
 async function sendWithDelay(msg){
   // V342: Log Maya outgoing to Team Inbox so team can see what Maya replied
-  try{ if(!msg._fromTeam && msg.to){ let t=''; if(msg.type==='text') t=msg.text?.body||''; else if(msg.type==='interactive') t=(msg.interactive?.body?.text||'')+' [Buttons: '+(msg.interactive?.action?.buttons||[]).map(b=>b.reply?.title||b.title||'').join(' | ')+']'; else if(msg.type==='image') t='[Image] '+(msg.image?.caption||''); else if(msg.type==='video') t='[Video] '+(msg.video?.caption||''); else if(msg.type==='template') t='[Template: '+(msg.template?.name||'')+']'; else t='['+(msg.type||'message')+']'; if(t) teamInboxPush(String(msg.to),'maya',t,'V342 Maya Reply', msg._phoneId || PHONE_NUMBER_ID); } }catch(e){}
+  try{ if(!msg._fromTeam && msg.to){ let t=''; if(msg.type==='text') t=msg.text?.body||''; else if(msg.type==='interactive') t=(msg.interactive?.body?.text||'')+' [Buttons: '+(msg.interactive?.action?.buttons||[]).map(b=>b.reply?.title||b.title||'').join(' | ')+']'; else if(msg.type==='image') t='[Image] '+(msg.image?.caption||''); else if(msg.type==='video') t='[Video] '+(msg.video?.caption||''); else if(msg.type==='template') t='[Template: '+(msg.template?.name||'')+']'; else t='['+(msg.type||'message')+']'; if(t) teamInboxPush(String(msg.to),'maya',t,'V342 Maya Reply'); } }catch(e){}
   const now = Date.now();
   if(now < blockUntil){ console.log(`BLOCKED till ${new Date(blockUntil)}`); return; }
   if(now - lastSendTime < 500){ await delay(500-(now-lastSendTime)); }
   lastSendTime = Date.now();
   // V364: sanitize + log BEFORE send + retry once
-  // FIX 14:32 SEND FAIL FINAL phoneIdToUse is not defined - hoisted out of try so catch can see it.
-  // FIX 14:32 JSON schema text must be [object] - default to text when text present but type missing.
-  let phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
   try{
     try{ console.log('SEND TO ' + (msg.to||'unknown') + ' : ' + (msg.type||'message')); }catch(e){}
     if(!msg.messaging_product) msg.messaging_product='whatsapp';
-    if(!msg.type && msg.text) msg.type='text';
     if(msg.type==='text' && typeof msg.text==='string') msg.text={body: msg.text};
     if(msg.type==='text' && msg.text && typeof msg.text.body!=='string') msg.text={body: String(msg.text.body||'')};
     if(msg.type==='text' && (!msg.text || !String(msg.text.body||'').trim())){
@@ -1915,14 +1910,14 @@ async function sendWithDelay(msg){
       msg.text={body:'Sorry, please tap button again.'};
     }
     delete msg._ctaList; delete msg._fromTeam; delete msg._isIdle;
-    phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
+    const phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
     delete msg._phoneId;
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
     const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
-    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, phoneIdToUse||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
+    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -1933,9 +1928,9 @@ async function sendWithDelay(msg){
       if(msg.to && retryBody){
         console.log('SEND FAIL RETRY to ' + msg.to);
         const retryMsg = { messaging_product:'whatsapp', to: msg.to, type:'text', text:{body: String(retryBody).substring(0,4096)} };
-        const phoneId2 = msg._phoneId || phoneIdToUse || PHONE_ID_OLD;
+        const phoneId2 = msg._phoneId || PHONE_ID_OLD;
         const url2 = `https://graph.facebook.com/v20.0/${phoneId2}/messages`;
-        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneId2)}`, 'Content-Type':'application/json'}});
+        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
         console.log('SEND FAIL RETRY OK to ' + msg.to);
         return {retry:true};
       }
@@ -2140,7 +2135,7 @@ async function sendWeeklySummary(){
   resetDailyIfNeeded();
   const msg=`📅 WEEKLY SUMMARY - Bizmapia Maya - Week of ${weeklyStats.weekStart}\n\n📊 THIS WEEK:\n• New leads: ${weeklyStats.leads + dailyStats.newLeads}\n• Talk-to-Team: ${weeklyStats.talk + dailyStats.talkRequests}\n• Payments: ${weeklyStats.payments + dailyStats.payments} | Total: Rs ${weeklyStats.total + dailyStats.paymentTotal}\n• Not Interested: ${weeklyStats.notInterested + dailyStats.notInterested}\n\n🎯 TOP LEARNING FOR NEXT WEEK:\n• Call ONLY Token Paid leads first.\n• Follow up Token Ready + Considering leads within 24h.\n• Check Master_Leads for Avoid 3+ - do NOT spam them.\n\nCheck Sheet for full list.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   weeklyStats.weekStart=new Date().toISOString().slice(0,10); weeklyStats.leads=0; weeklyStats.payments=0; weeklyStats.total=0; weeklyStats.talk=0; weeklyStats.notInterested=0;
   return msg;
 }
@@ -2167,7 +2162,7 @@ async function notifyHumanHandover(uid, state, txt){
   const L=state.lead||{};
   const msg=`🚨 HUMAN HANDOVER NEEDED\n\n👤 Phone: +${uid}\n👤 Name: ${state?.leadData?.name||'Not given'}\n📍 District: ${L.district||'Not given'}\n🎯 Intent: ${L.intent||''} | Sentiment: ${L.sentiment||''} | Token: ${L.tokenStatus||''}\n\n💬 User said: "${String(txt).slice(0,300)}"\n\n📌 Needs: ${whatHeNeeds(state)}\n🧠 Nature: ${describeNature(state)}\n\n⚠️ Action: Team, please check this chat in Sheet / WhatsApp. Do NOT promise refund / call unless token paid.\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   return msg;
 }
 // Spam / Duplicate Guard: if same user sends 10+ msgs in 1 min, slow down, don't call AI 10x
@@ -2304,10 +2299,10 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
-  // V364.15: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
-  if(isTestNumber(uid)){ console.log(`V364.15 SKIP reminder ${type} - test number ${uid}`); return; }
-  // V364.15: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
-  // V364.15: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
+  // V364.25: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
+  if(isTestNumber(uid)){ console.log(`V364.25 SKIP reminder ${type} - test number ${uid}`); return; }
+  // V364.25: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
+  // V364.25: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
   // V362: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
@@ -2387,7 +2382,7 @@ async function notifyAdminTeamRequest(uid, state, reason){
   const district = L.district || state?.district || 'Not yet given';
   const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
   try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
   return msg;
@@ -2397,7 +2392,7 @@ async function notifyAdminContactGiven(uid, state, contactNumber){
   const L=state.lead||{};
   const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   return msg;
 }
 async function sendDayEndSummary(){
@@ -2407,7 +2402,7 @@ async function sendDayEndSummary(){
   try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
   const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
   try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
@@ -2458,7 +2453,7 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
     try{
       // Do NOT send to the payer himself as admin alert (avoid duplicate)
       if(admin===String(uid)) continue;
-      await sendWithDelay(textMessage(admin, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:'')));
+      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
       console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
     }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
   }
@@ -3093,7 +3088,7 @@ globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 // V362: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
 function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -20000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
-function teamInboxPush(phone, who, text, step, phoneId){ try{ const _pid = String(phoneId|| (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(phone))) || ''); const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||'', phoneId:_pid}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
+function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
 async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; if(globalThis.__inboxRestored) { console.log('V364.7 inbox restore skipped - already restored, old chats kept'); return globalThis.__teamInboxLog.length; } globalThis.__inboxRestored = true; const _seen = new Set(globalThis.__teamInboxLog.map(e=>e.time+'|'+e.phone+'|'+e.who+'|'+e.text)); for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { const _k=_e.time+'|'+_e.phone+'|'+_e.who+'|'+_e.text; if(!_seen.has(_k)){ globalThis.__teamInboxLog.push(_e); _seen.add(_k); _n++; } } }catch(e){} } if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
 function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
@@ -3315,6 +3310,69 @@ function v364_7_continueText(lang, friendlyStep){
   : `✅ OK, continuing from where you left. 🙏\n\n📍 Last step: *${friendlyStep}*\n\n👉 Ready to continue? Choose your option below:`;
 }
 
+
+// ===== V364.25 - DRIVER ATTACH HELPERS =====
+// REFERRAL CODE RULE (user locked):
+// - No referral code = Direct Company registration.
+// - Referral code present = user belongs to that franchisee.
+// - Registration fee contribution + daily recharge + transaction incentives go to that franchisee.
+// - Each franchisee has a DIFFERENT referral code.
+// Referral code is on the VERY FIRST SCREEN of app login - driver must enter it there to activate free recharge opportunity assurance.
+// Bot says this clearly before app link, so driver does not skip it and lose free recharge chance.
+// Mapping is set in Render env FRANCHISEE_REFERRAL_CODES_JSON, e.g. {"MLP001":"Malappuram","CLT002":"Calicut"}
+// Until you give the real codes, bot asks for code, validates against this map, and NEVER invents a code.
+// If code is not in map, bot does NOT assign a franchisee - it asks to re-check or continue as Direct Company.
+function drvLookupReferral(code){
+  try{
+    const raw=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(!raw) return null;
+    let map={};
+    try{ map=JSON.parse(process.env.FRANCHISEE_REFERRAL_CODES_JSON||'{}'); }catch(e){ map={}; }
+    // Normalise map keys to upper, no spaces
+    const norm={};
+    for(const k of Object.keys(map)){ norm[String(k).toUpperCase().replace(/[^A-Z0-9]/g,'')]=map[k]; }
+    // Malappuram fallback: if its code is set separately
+    if(process.env.MALAPPURAM_REFERRAL_CODE) norm[String(process.env.MALAPPURAM_REFERRAL_CODE).toUpperCase().replace(/[^A-Z0-9]/g,'')]='Malappuram';
+    if(norm[raw]) return {code:raw, franchisee:norm[raw]};
+    return null;
+  }catch(e){ return null; }
+}
+
+// Driver video link: set in Render env DRIVER_VIDEO_URL later by user. Button created NOW, link added later. If empty, bot still sends Watched / See Video buttons.
+// LOCKED: Driver income withdraw = AFTER 24 HOURS ONLY (user correction, not 48h). Test-trip date rule (day+2) and reschedule 48h rule are separate.
+const DRV_VIDEO_URL = process.env.DRIVER_VIDEO_URL || '';
+function drvFmtDate(d){ const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getDate()+' '+m[d.getMonth()]; }
+function drvDateISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function drvSupportNumbers(phoneId){
+  const list=[{label:'Team', phone:'+918590183646'}];
+  try{
+    if(String(phoneId)==='1481022538422254') list.push({label:'Malappuram Franchisee', phone:'+919995441970'});
+    else {
+      const envMap={};
+      const v=process.env['FRANCHISEE_NUMBER_'+(FRANCHISEE_SLOTS.findIndex(s=>String(s.phoneId)===String(phoneId))+1)]||'';
+      if(v) list.push({label:'Franchisee', phone:'+91'+String(v).replace(/[^0-9]/g,'').slice(-10)});
+    }
+  }catch(e){}
+  return list;
+}
+async function drvSendSupport(uid, lang, phoneId){
+  const ml=(lang||'ml')==='ml';
+  const nums=drvSupportNumbers(phoneId);
+  const numText=nums.map(n=>n.label+': '+n.phone).join('\n');
+  const msg=ml
+    ? `🙏 കുഴപ്പമില്ല, ഞാൻ സഹായിക്കാം. 😊\n\n📞 ഈ നമ്പറിൽ വിളിക്കൂ:\n${numText}\n\n⏰ വിളിക്കേണ്ട സമയം: രാവിലെ 9 AM മുതൽ വൈകിട്ട് 5 PM വരെ മാത്രം.\n\nവിളിച്ചാൽ ടീം നിങ്ങളെ സഹായിക്കും.`
+    : `🙏 No problem, I will help you. 😊\n\n📞 Call on this number:\n${numText}\n\n⏰ Call between 9 AM to 5 PM only.\n\nOur team will help you.`;
+  await sendWithDelay(textMessage(uid, msg, phoneId));
+  for(const n of nums){ try{ await sendWithDelay(realDialerCta(uid, 'Tap below to call '+n.label+':', n.phone, phoneId)); }catch(e){} }
+}
+async function drvSendDateButtons(uid, lang, phoneId, titleKey){
+  const ml=(lang||'ml')==='ml';
+  const head=ml ? `📅 ടെസ്റ്റ് ട്രിപ്പ് തീയതി തിരഞ്ഞെടുക്കൂ:\n\n👉 ഇന്നിൽ നിന്ന് 2 ദിവസത്തിന് ശേഷം മുതൽ മാത്രമേ തിരഞ്ഞെടുക്കാൻ പറ്റൂ.` : `📅 Select your test trip date:\n\n👉 You can select only from day after tomorrow onwards.`;
+  const btns=[];
+  for(let off=2; off<=4; off++){ const d=new Date(); d.setDate(d.getDate()+off); btns.push({id:'DRV_DATE_'+drvDateISO(d), title:drvFmtDate(d)}); }
+  await sendWithDelay(interactiveButton(uid, head, btns, phoneId));
+}
+
 app.post('/webhook', async(req,res)=>{
   res.sendStatus(200);
   try{
@@ -3324,15 +3382,14 @@ app.post('/webhook', async(req,res)=>{
     const msg = value?.messages?.[0];
     if(!msg) return;
     const uid = msg.from;
-    const _incomingPidEarly = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && _incomingPidEarly) globalThis.__phoneIdByUid.set(String(uid), String(_incomingPidEarly)); }catch(e){}
-    try{ teamInboxPush(uid, 'customer', (msg.text?.body||msg.button?.payload||msg.interactive?.button_reply?.title||msg.interactive?.list_reply?.title||msg.type||'message'), 'IN', _incomingPidEarly); }catch(e){}
+    try{ teamInboxPush(uid, 'customer', (msg.text?.body||msg.button?.payload||msg.interactive?.button_reply?.title||msg.interactive?.list_reply?.title||msg.type||'message'), 'IN'); }catch(e){}
     // V340: If team took over, Maya stays silent - team replies from Inbox
     if(globalThis.__teamPaused && globalThis.__teamPaused.has(String(uid))){ try{ await saveToSheet('System_Logs',[getISTTime(),String(uid),'ml','V340 Team Paused','Maya paused - team handling','Paused',HELP_ADMIN,'V340 Paused',''],false); }catch(e){} return; }
     let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    // ===== V364.15 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
+    // ===== V364.25 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
     // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
     // Maya ignored it and replied "Now you are on Company Video step..." + [kandu | kandilla].
     // CAUSE: old V317 check only matched msg.type==='text' + empty btnId + txt body.
@@ -3349,9 +3406,9 @@ app.post('/webhook', async(req,res)=>{
       const _isStopText36414 = /^(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_stopText36414);
       if(_isStopText36414 || _isStopBtn36414){
         const _lang36414 = (state.lang||'ml');
-        // V364.15: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
+        // V364.25: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
         // one consistent Stop flow, no direct jump, no step resend.
-        await setState(uid,{...state, lastStep:'V364.15 - Stop - Confirm', phoneId: incomingPhoneId});
+        await setState(uid,{...state, lastStep:'V364.25 - Stop - Confirm', phoneId: incomingPhoneId});
         const _cf36414 = _lang36414==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang36414==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
         await sendWithDelay(interactiveButton(uid,_cf36414,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
         return;
@@ -3360,7 +3417,167 @@ app.post('/webhook', async(req,res)=>{
 
 
 
-    // ===== V364.7 RETURNING USER - CONTINUE vs NEW CHAT - BEFORE ALL ROUTERS =====
+    
+    // ===== V364.25 - DRIVER ATTACH FLOW - BEFORE ALL OTHER ROUTERS =====
+    // Entry: RIDE_ATTACH (Attach Cab). Old generic attach message is replaced by this exact driver flow.
+    // Steps: Video -> Watched/See Video -> App link -> 1h check (Yes/Doubts) -> Schedule date (day+2 onwards)
+    // -> Confirm details+fee (Yes/Doubts) -> Team checks manually -> 24h after date: Test trip got? (Yes/No) -> Welcome / Reschedule (48h rule).
+    try{
+      const _drvLang = state.lang || 'ml';
+      const _drvMl = _drvLang==='ml';
+      const _isDrvBtn = String(btnId||'').startsWith('DRV_');
+      const _isTestTripText = /test\s*trip/i.test(String(txt||'')) && state.driverFlow;
+      const _isNoTripsText = /(not getting|no trip|trip.*(not|illa|varunnilla|kittunnilla|kittunnilla|illa)|trip.*kid|trip.*varun)/i.test(String(txt||'')) && (state.driverFlow || state.drvStep==='DONE' || state.lastStep||'').includes('Driver');
+      if(btnId==='RIDE_ATTACH' || _isDrvBtn || _isTestTripText || _isNoTripsText){
+        const _drvSet = async(patch)=>{ state={...state, ...patch, phoneId: incomingPhoneId}; await setState(uid, state); };
+        // --- RIDE_ATTACH: send driver video + Watched / See Video ---
+        if(btnId==='RIDE_ATTACH'){
+          await _drvSet({driverFlow:true, drvStep:'VIDEO', sub:'RIDE_ATTACH', lastStep:'V364.25 - Driver - Video'});
+          const _vmsg=_drvMl
+            ? `🚖 ബിസ്മാപ്പിയയിൽ വാഹനം ബന്ധിപ്പിക്കാം! 🙏\n\n📹 ആദ്യം ഈ വീഡിയോ കാണൂ - വാഹനം എങ്ങനെ ബന്ധിപ്പിക്കാം എന്ന് മുഴുവൻ ഇതിൽ ഉണ്ട്.\n\nവീഡിയോ കണ്ട ശേഷം താഴെ "Watched" അമർത്തൂ, ഞാൻ നിങ്ങളെ സഹായിക്കാം.`
+            : `🚖 Attach your vehicle with Bizmapia! 🙏\n\n📹 First watch this video - it explains how to attach your vehicle fully.\n\nAfter watching, tap "Watched" below and I will help you.`;
+          await sendWithDelay(textMessage(uid, _vmsg, incomingPhoneId));
+          if(DRV_VIDEO_URL){ try{ await sendWithDelay(singleCta(uid, 'Tap below to watch:', {title:'See Video', url:DRV_VIDEO_URL}, incomingPhoneId)); }catch(e){} }
+          await sendWithDelay(interactiveButton(uid, _drvMl?`👇 വീഡിയോ കണ്ടോ?`:`👇 Did you watch the video?`, [{id:'DRV_WATCHED',title:'Watched'},{id:'DRV_SEE_VIDEO',title:'See Video'}], incomingPhoneId));
+          return;
+        }
+        if(btnId==='DRV_SEE_VIDEO'){
+          if(DRV_VIDEO_URL){ try{ await sendWithDelay(singleCta(uid, 'Tap below to watch:', {title:'See Video', url:DRV_VIDEO_URL}, incomingPhoneId)); }catch(e){} }
+          await sendWithDelay(interactiveButton(uid, _drvMl?`👇 വീഡിയോ കണ്ട ശേഷം Watched അമർത്തൂ:`:`👇 After watching, tap Watched:`, [{id:'DRV_WATCHED',title:'Watched'},{id:'DRV_SEE_VIDEO',title:'See Video'}], incomingPhoneId));
+          return;
+        }
+        // --- WATCHED: ask referral code FIRST, then app link ---
+        // App login asks referral code. Bot must capture it BEFORE app link, otherwise fee/recharge/incentives cannot be attributed.
+        if(btnId==='DRV_WATCHED'){
+          await _drvSet({driverFlow:true, drvStep:'REF_ASK', lastStep:'V364.25 - Driver - Referral Ask'});
+          await sendWithDelay(interactiveButton(uid, _drvMl?`👍 നന്നായി!\n\n❓ നിങ്ങൾക്ക് റഫറൽ കോഡ് ഉണ്ടോ?\n\n⚠️ റഫറൽ കോഡ് ആപ്പിൽ ലോഗിൻ ചെയ്യുമ്പോൾ ഏറ്റവും ആദ്യത്തെ സ്ക്രീനിൽ തന്നെ കൊടുക്കണം.\n\n🎁 ഈ റഫറൽ കോഡ് ആണ് നിങ്ങളുടെ ഫ്രീ റീചാർജ് അവസര ഉറപ്പ് ആക്ടിവേറ്റ് ആകുന്നത്.\n\n📌 കുറിപ്പ്: നൽകിയിരിക്കുന്ന ഏരിയയിൽ റഫറൽ കോഡ് നിലനിർത്തൂ - നിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ.\nനിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ, നിങ്ങളുടെ ആപ്പിലെ റഫറൽ കോഡ് ബോക്സിൽ ഈ കോഡ് മറക്കാതെ നൽകൂ.\n\nറഫറൽ കോഡ് ഉണ്ടെങ്കിൽ നിങ്ങൾ ആ ഫ്രാഞ്ചൈസിയുടെ കീഴിലാണ്. ഇല്ലെങ്കിൽ ഡയറക്ട് കമ്പനി രജിസ്ട്രേഷൻ ആണ്.`:`👍 Great!\n\n❓ Do you have a referral code?\n\n⚠️ Referral code must be entered on the VERY FIRST SCREEN of app login.\n\n🎁 This referral code activates your FREE recharge opportunity assurance.\n\n📌 Note: Maintain referral code in the given area to avail best free recharge offer for you.\nTo get the best free recharge offer for you, give this code on your app referral code box, without fail.\n\nWith a referral code you belong to that franchisee. Without it, it is Direct Company registration.`, [{id:'DRV_REF_YES',title:'Yes, I have'},{id:'DRV_REF_NO',title:'No code'}], incomingPhoneId));
+          return;
+        }
+        // --- REFERRAL: No code = Direct Company -> app link ---
+        if(btnId==='DRV_REF_NO' || btnId==='DRV_REF_SKIP'){
+          await _drvSet({driverFlow:true, drvStep:'APP', drvReferralCode:'', drvFranchisee:'Direct Company', lastStep:'V364.25 - Driver - App Link - Direct Company'});
+          const _amsg0=_drvMl?`✅ ശരി - ഡയറക്ട് കമ്പനി രജിസ്ട്രേഷൻ.\n\n📱 ഇനി താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യൂ. ആപ്പിൽ ലോഗിന്റെ ആദ്യ സ്ക്രീനിൽ റഫറൽ കോഡ് ചോദിച്ചാൽ ഒഴിവാക്കൂ / കാലിയായി വിടൂ.`:`✅ OK - Direct Company registration.\n\n📱 Now click the button below and install our app. On the first screen of app login, if it asks for a referral code, skip / leave it blank.`;
+          await sendWithDelay(textMessage(uid, _amsg0, incomingPhoneId));
+          try{ await sendWithDelay(singleCta(uid, 'Tap below to install:', {title:'Install App', url:PLAY_STORE}, incomingPhoneId)); }catch(e){}
+          try{ setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='APP') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 നൽകിയ ആപ്ലിക്കേഷൻ ലിങ്ക് വഴി വാഹനം ബന്ധിപ്പിച്ചോ?`:`🙏 Have you completed attaching your vehicle by the given application link?`, [{id:'DRV_YES_ATTACHED',title:'Yes'},{id:'DRV_DOUBTS',title:'I have doubts'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, 60*60*1000); }catch(e){}
+          return;
+        }
+        // --- REFERRAL: Yes -> ask to type code ---
+        if(btnId==='DRV_REF_YES' || btnId==='DRV_REF_RETRY'){
+          await _drvSet({driverFlow:true, drvStep:'REF_CODE', lastStep:'V364.25 - Driver - Referral Code Entry'});
+          await sendWithDelay(textMessage(uid, _drvMl?`📝 നിങ്ങളുടെ റഫറൽ കോഡ് ഇവിടെ ടൈപ്പ് ചെയ്യൂ.\n\nഉദാഹരണം: MLP001 പോലെ - കിട്ടിയ കോഡ് അതേപോലെ ടൈപ്പ് ചെയ്യൂ.\n\n⚠️ ആപ്പിൽ ലോഗിൻ ചെയ്യുമ്പോൾ ആദ്യ സ്ക്രീനിൽ തന്നെ ഇതേ കോഡ് കൊടുക്കണം - അപ്പോഴാണ് ഫ്രീ റീചാർജ് അവസര ഉറപ്പ് ആക്ടിവേറ്റ് ആകുന്നത്.\n\n📌 കുറിപ്പ്: നൽകിയിരിക്കുന്ന ഏരിയയിൽ റഫറൽ കോഡ് നിലനിർത്തൂ - നിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ.\nനിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ, നിങ്ങളുടെ ആപ്പിലെ റഫറൽ കോഡ് ബോക്സിൽ ഈ കോഡ് മറക്കാതെ നൽകൂ.`:`📝 Type your referral code here.\n\nExample: like MLP001 - type the code exactly as you got it.\n\n⚠️ On the very first screen of app login, enter this same code - that activates your FREE recharge opportunity assurance.\n\n📌 Note: Maintain referral code in the given area to avail best free recharge offer for you.\nTo get the best free recharge offer for you, give this code on your app referral code box, without fail.`, incomingPhoneId));
+          return;
+        }
+        // --- REFERRAL: free-text code typed while drvStep REF_CODE ---
+        if(state.drvStep==='REF_CODE' && txt && !String(btnId||'').startsWith('DRV_')){
+          const _found=drvLookupReferral(txt);
+          if(_found){
+            await _drvSet({driverFlow:true, drvStep:'APP', drvReferralCode:_found.code, drvFranchisee:_found.franchisee, lastStep:'V364.25 - Driver - App Link - Referral '+_found.code});
+            await sendWithDelay(textMessage(uid, _drvMl?`🎁 ഇതാ നിങ്ങളുടെ സ്പെഷ്യൽ റീചാർജ് ഓഫർ വൗച്ചർ കോഡ്\n\nവൗച്ചർ കോഡ്: *${_found.code}* - ഇപ്പോൾ കോപ്പി ചെയ്യൂ\n(കോഡിൽ അമർത്തിപ്പിടിച്ച് കോപ്പി ചെയ്യൂ)\n\nഈ കോഡ് ആപ്പ് രജിസ്ട്രേഷനിലെ നിങ്ങളുടെ റഫറൽ കോഡ് ബോക്സിൽ നൽകാൻ മറക്കരുത്, ഇപ്പോൾ തന്നെ കോപ്പി ചെയ്യൂ\n\nബിസ്മാപ്പിയ ഡ്രൈവർ ആപ്പ് ഡൗൺലോഡ് ചെയ്യാൻ ഇൻസ്റ്റാൾ ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ.`:`🎁 Here is your special recharge offer voucher code\n\nVOUCHER CODE: *${_found.code}* - copy now\n(Tap and hold the code to copy it)\n\nDon't forget to give this code, on your referral code box in app registration, copy it now\n\nClick the install button to download bizmapia Driver app.`, incomingPhoneId));
+            try{ await sendWithDelay(textMessage(uid, _drvMl?`📋 കോപ്പി ചെയ്യാൻ - ഇപ്പോൾ കോപ്പി ചെയ്യൂ: *${_found.code}*`:`📋 To copy - copy now: *${_found.code}*`, incomingPhoneId)); }catch(e){}
+            try{ await sendWithDelay(singleCta(uid, 'Tap below to install:', {title:'Driver app', url:PLAY_STORE}, incomingPhoneId)); }catch(e){}
+            try{ await saveToSheet('Ride_Hailing',[getISTTime(),uid,_drvLang,'Ride Hailing '+incomingPhoneId,'Driver Attach - Referral '+_found.code,'Franchisee: '+_found.franchisee,'Team',state.lastStep,''],true); }catch(e){}
+            try{ setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='APP') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 നൽകിയ ആപ്ലിക്കേഷൻ ലിങ്ക് വഴി വാഹനം ബന്ധിപ്പിച്ചോ?`:`🙏 Have you completed attaching your vehicle by the given application link?`, [{id:'DRV_YES_ATTACHED',title:'Yes'},{id:'DRV_DOUBTS',title:'I have doubts'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, 60*60*1000); }catch(e){}
+            return;
+          } else {
+            await _drvSet({driverFlow:true, drvStep:'REF_CODE', lastStep:'V364.25 - Driver - Referral Code Invalid'});
+            await sendWithDelay(interactiveButton(uid, _drvMl?`⚠️ ഈ റഫറൽ കോഡ് കണ്ടെത്താനായില്ല: *${String(txt).toUpperCase()}*\n\nകോഡ് ഒന്നുകൂടി നോക്കി ടൈപ്പ് ചെയ്യൂ, അല്ലെങ്കിൽ ഡയറക്ട് കമ്പനി ആയി തുടരാം.`:`⚠️ This referral code was not found: *${String(txt).toUpperCase()}*\n\nCheck the code and type again, or continue as Direct Company.`, [{id:'DRV_REF_RETRY',title:'Type again'},{id:'DRV_REF_SKIP',title:'Direct Company'}], incomingPhoneId));
+            return;
+          }
+        }
+        // --- DOUBTS anywhere in driver flow: support numbers, 9AM-5PM only ---
+        if(btnId==='DRV_DOUBTS' || btnId==='DRV_CONFIRM_DOUBTS'){
+          await _drvSet({driverFlow:true, lastStep:'V364.25 - Driver - Doubts'});
+          await drvSendSupport(uid, _drvLang, incomingPhoneId);
+          return;
+        }
+        // --- YES attached / Test Trip text: schedule date (day+2 onwards) ---
+        if(btnId==='DRV_YES_ATTACHED' || _isTestTripText){
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.25 - Driver - Schedule Test Trip'});
+          const _smsg=_drvMl?`👍 നന്നായി! ഇനി ടെസ്റ്റ് ട്രിപ്പ് ഷെഡ്യൂൾ ചെയ്യാം. 📅`:`👍 Great! Now let us schedule your test trip. 📅`;
+          await sendWithDelay(textMessage(uid, _smsg, incomingPhoneId));
+          await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
+          return;
+        }
+        // --- DATE picked: confirm details + fee ---
+        if(String(btnId||'').startsWith('DRV_DATE_')){
+          const _d=String(btnId).replace('DRV_DATE_','');
+          await _drvSet({driverFlow:true, drvStep:'CONFIRM', drvTestDate:_d, lastStep:'V364.25 - Driver - Confirm Details+Fee'});
+          const _cmsg=_drvMl
+            ? `📅 നിങ്ങൾ തിരഞ്ഞെടുത്ത തീയതി: ${_d}\n\n⚠️ നിങ്ങളുടെ വിവരങ്ങൾ ഞങ്ങളുടെ internal team പരിശോധിക്കും. നിങ്ങളുടെ വിവരങ്ങളും one-time registration fee submission-ഉം ശരിയാണെങ്കിൽ കമ്പനിയിൽ നിന്ന് "Your test trip approved" എന്ന മറുപടി കിട്ടും. അല്ലെങ്കിൽ മറുപടി കിട്ടില്ല, നിങ്ങളുടെ അപേക്ഷ താനേ reject ആകും.\n\n❓ നിങ്ങൾ ശരിയായ വിവരങ്ങൾ upload ചെയ്യുകയും ആപ്പ് വഴി one-time registration fee അടയ്ക്കുകയും ചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാണോ?`
+            : `📅 Your selected date: ${_d}\n\n⚠️ Your details will be checked by our internal team. If your details and one-time registration fee submission are correct, you will get a reply from our company like "Your test trip approved". Otherwise you may get no reply and your application will be rejected automatically.\n\n❓ Are you sure you uploaded correct details and paid the one-time registration fee through the app?`;
+          await sendWithDelay(interactiveButton(uid, _cmsg, [{id:'DRV_CONFIRM_YES',title:'Yes'},{id:'DRV_CONFIRM_DOUBTS',title:'I have doubts'}], incomingPhoneId));
+          return;
+        }
+        // --- CONFIRM YES: team checks manually + 24h-after-date reminder ---
+        if(btnId==='DRV_CONFIRM_YES'){
+          const _d=state.drvTestDate||'';
+          await _drvSet({driverFlow:true, drvStep:'WAIT_TEST', lastStep:'V364.25 - Driver - Team Checking Fee+Details'});
+          const _tmsg=_drvMl
+            ? `✅ ശരി, നന്ദി! 🙏\n\nഞങ്ങളുടെ ടീം നിങ്ങളുടെ registration fee paid ആയിട്ടുണ്ടോ എന്ന് പരിശോധിക്കും. Confirm ആയാൽ കമ്പനിയിൽ നിന്ന് മറുപടി കിട്ടും.`
+            : `✅ OK, thank you! 🙏\n\nOur team will check whether your registration fee is paid. Once confirmed, you will get a reply from our company.`;
+          await sendWithDelay(textMessage(uid, _tmsg, incomingPhoneId));
+          try{ await saveToSheet('Ride_Hailing',[getISTTime(),uid,_drvLang,'Ride Hailing '+incomingPhoneId,'Driver Attach - Test Trip '+_d,'Team check: fee + details','Team',state.lastStep,''],true); }catch(e){}
+          // 24h AFTER the test-trip date: "Do you get test trip from company today?"
+          try{
+            const _target=new Date(_d+'T00:00:00'); const _ms=(_target.getTime()+24*60*60*1000)-Date.now();
+            if(_ms>0 && _ms<30*24*60*60*1000){
+              setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='WAIT_TEST') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 ഇന്ന് കമ്പനിയിൽ നിന്ന് ടെസ്റ്റ് ട്രിപ്പ് കിട്ടിയോ?`:`🙏 Do you get test trip from company today?`, [{id:'DRV_TEST_YES',title:'Yes'},{id:'DRV_TEST_NO',title:'No'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, _ms);
+            }
+          }catch(e){}
+          return;
+        }
+        // --- TEST TRIP YES: warm welcome ---
+        if(btnId==='DRV_TEST_YES'){
+          await _drvSet({driverFlow:false, drvStep:'DONE', lastStep:'V364.25 - Driver - Welcomed'});
+          await sendWithDelay(textMessage(uid, _drvMl?`🎉 ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം! 🙏\n\nനിങ്ങളുടെ ഓരോ യാത്രയും ഇനി വരുമാനമാക്കൂ. 💛\n\nആപ്പിൽ ഓൺലൈനിൽ തുടരൂ, ട്രിപ്പുകൾ വരും. വാഹനം വൃത്തിയായും പെരുമാറ്റം മാന്യമായും സൂക്ഷിക്കൂ.`:`🎉 Warm welcome to Bizmapia platform! 🙏\n\nMake every journey your income now. 💛\n\nStay online in the app, trips will come. Keep your vehicle clean and behaviour polite.`, incomingPhoneId));
+          await sendWithDelay(interactiveButton(uid, _drvMl?`👇 എന്തെങ്കിലും സംശയമുണ്ടോ?`:`👇 Any doubts?`, [{id:'DRV_NO_TRIPS',title:'Not getting trips'},{id:'DRV_DOUBTS',title:'I have doubts'}], incomingPhoneId));
+          return;
+        }
+        // --- V364.25 AFTER WELCOME: "Not getting trips" doubt ---
+        if(btnId==='DRV_NO_TRIPS' || _isNoTripsText){
+          await _drvSet({driverFlow:true, drvStep:'DONE', lastStep:'V364.25 - Driver - Not Getting Trips'});
+          const _ntmsg=_drvMl
+            ? `🙏 കുഴപ്പമില്ല, മനസ്സിലായി.
+
+📱 Just keep online - ആപ്പിൽ ഓൺലൈനിൽ തുടരൂ.
+
+🔍 നിങ്ങളുടെ ഏരിയയിൽ നിന്ന് കൂടുതൽ customer searches ഉം trip requests ഉം വരുന്നുണ്ട്.
+
+👀 Customers നിങ്ങളുടെ ഏരിയയിൽ വാഹനം ലഭ്യമാണോ എന്ന് നോക്കുന്നതും, rate compare ചെയ്യുന്നതും ആണ് - അതാണ് ഇപ്പോൾ നടക്കുന്നത്.
+
+⏳ നിങ്ങളുടെ ആദ്യ ട്രിപ്പ് കിട്ടുന്നത് വരെ കാത്തിരിക്കൂ.
+
+⚠️ No advance recharge may not result in ready trip - ഇത് request base-ൽ മാത്രമാണ്. Advance recharge ചെയ്തിട്ടില്ലെങ്കിൽ ready trip കിട്ടണമെന്നില്ല.
+
+💛 ഓൺലൈനിൽ തുടർന്നാൽ ആദ്യ ട്രിപ്പ് വരും.`
+            : `🙏 No problem, I understand.
+
+📱 Just keep online - stay online in the app.
+
+🔍 We are getting more customer searches and trip requests from your area.
+
+👀 Customers are either checking availability of vehicle in their area for confirming vehicle availability and rate comparison - that is what is happening now.
+
+⏳ Just wait till you get your first trip.
+
+⚠️ No advance recharge may not result in ready trip - it is on request base only.
+
+💛 Stay online, your first trip will come.`;
+          await sendWithDelay(textMessage(uid, _ntmsg, incomingPhoneId));
+          await sendWithDelay(interactiveButton(uid, _drvMl?`👇 ഇനിയും സംശയമുണ്ടോ?`:`👇 Still have doubts?`, [{id:'DRV_DOUBTS',title:'I have doubts'},{id:'DRV_NO_TRIPS',title:'Not getting trips'}], incomingPhoneId));
+        }
+        // --- TEST TRIP NO: reschedule, 48h rule from today ---
+        if(btnId==='DRV_TEST_NO'){
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.25 - Driver - Reschedule Test Trip'});
+          await sendWithDelay(textMessage(uid, _drvMl?`🙏 കുഴപ്പമില്ല. വീണ്ടും ഒരു തീയതി തിരഞ്ഞെടുക്കൂ.\n\n👉 ഈ മെസ്സേജ് തീയതിയിൽ നിന്ന് 48 മണിക്കൂറിന് ശേഷം മുതൽ മാത്രമേ തിരഞ്ഞെടുക്കാൻ പറ്റൂ.`:`🙏 No problem. Please select another date.\n\n👉 You can select only from 48 hours after today onwards.`, incomingPhoneId));
+          await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
+          return;
+        }
+      }
+    }catch(_){}
+
+// ===== V364.7 RETURNING USER - CONTINUE vs NEW CHAT - BEFORE ALL ROUTERS =====
     try{
       // Handle button taps for Continue / New Chat first
       if(btnId==='RESUME_CONTINUE'){
@@ -3397,7 +3614,7 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
-    // ===== V364.15 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // ===== V364.25 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
     // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
     // asked for professional college admission office opportunity - NOT in Bizmapia options.
     // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
@@ -4428,7 +4645,7 @@ Welcome to Bizmapia! 🙏
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
         let aiReply = aiRes.text;
-        // V364.15 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
+        // V364.25 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
         // Format: 🎙️ Voice-il ningal paranjathu: "<transcript>" + answer. Same language as reply.
         if(state.lastVoiceTranscript){
           try{
@@ -5865,10 +6082,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.15', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.25', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.15', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.25', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -5896,20 +6113,20 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V364.15 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V364.25 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.15', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.15', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.15', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.15', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.25', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.25', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.25', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.25', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ const _q = String(req.query.number||req.query.phoneId||req.query.account||'').toLowerCase(); let _filterPid=''; if(_q==='malappuram'||_q==='99954'||_q==='9995441970'||_q==='91 99954 41970'||_q==='1481022538422254') _filterPid='1481022538422254'; else if(_q==='company'||_q==='bizmapia'||_q==='1392695460599655') _filterPid=String(PHONE_NUMBER_ID); else if(/^\d{10,16}$/.test(_q)) _filterPid=_q; let _chats=teamInboxChats(); if(_filterPid){ _chats=_chats.filter(c=>{ const _pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(c.phone))) || (c.msgs && c.msgs[0] && c.msgs[0].phoneId) || ''; if(_pid) return String(_pid)===_filterPid; const _has = (c.msgs||[]).some(m=>String(m.phoneId||'')===_filterPid); return _has; }); } res.json({ok:true, live:true, version:'V364.15 INBOX-SEPARATE-MALAPPURAM', time:getISTTime(), filter:_filterPid||'all', malappuramInbox:'/team-inbox?number=malappuram', companyInbox:'/team-inbox?number=company', paused:[...globalThis.__teamPaused], chats:_chats, total:_chats.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} const _replyPid = String(req.body.phoneId||req.body.number||'')==='malappuram' ? '1481022538422254' : (String(req.body.phoneId||'')|| (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(phone))) || PHONE_NUMBER_ID); teamInboxPush(phone,'team',text,'V340 Team Reply', _replyPid); const _tm=textMessage(phone, text, _replyPid); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.15', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.25', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -5921,7 +6138,7 @@ app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.15', p
 // 7 Losers return confirm  8 Instant Team Notification  9 Day End Report 8 PM
 // NO other V362 logic touched. Button Only. No link / number in chat body.
 // ============================================================================
-const V364_VERSION = 'V364.15';
+const V364_VERSION = 'V364.25';
 const V364_TEAM_BO = '918590175977';
 const V364_TEAM_SERVICES = '918590183646';
 const V364_DAY_END_TO = ['918590175977','918590183646'];
@@ -5943,7 +6160,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.15', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.25', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -5952,7 +6169,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.15', checks:{
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.15', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.25', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -5975,7 +6192,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.15 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.25 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
