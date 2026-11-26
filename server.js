@@ -1901,9 +1901,13 @@ async function sendWithDelay(msg){
   if(now - lastSendTime < 500){ await delay(500-(now-lastSendTime)); }
   lastSendTime = Date.now();
   // V364: sanitize + log BEFORE send + retry once
+  // FIX 14:32 SEND FAIL FINAL phoneIdToUse is not defined - hoisted out of try so catch can see it.
+  // FIX 14:32 JSON schema text must be [object] - default to text when text present but type missing.
+  let phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
   try{
     try{ console.log('SEND TO ' + (msg.to||'unknown') + ' : ' + (msg.type||'message')); }catch(e){}
     if(!msg.messaging_product) msg.messaging_product='whatsapp';
+    if(!msg.type && msg.text) msg.type='text';
     if(msg.type==='text' && typeof msg.text==='string') msg.text={body: msg.text};
     if(msg.type==='text' && msg.text && typeof msg.text.body!=='string') msg.text={body: String(msg.text.body||'')};
     if(msg.type==='text' && (!msg.text || !String(msg.text.body||'').trim())){
@@ -1911,14 +1915,14 @@ async function sendWithDelay(msg){
       msg.text={body:'Sorry, please tap button again.'};
     }
     delete msg._ctaList; delete msg._fromTeam; delete msg._isIdle;
-    const phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
+    phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
     delete msg._phoneId;
     const url = `https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
     const res = await httpClient.post(url, msg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
-    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
+    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, phoneIdToUse||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -1929,9 +1933,9 @@ async function sendWithDelay(msg){
       if(msg.to && retryBody){
         console.log('SEND FAIL RETRY to ' + msg.to);
         const retryMsg = { messaging_product:'whatsapp', to: msg.to, type:'text', text:{body: String(retryBody).substring(0,4096)} };
-        const phoneId2 = msg._phoneId || PHONE_ID_OLD;
+        const phoneId2 = msg._phoneId || phoneIdToUse || PHONE_ID_OLD;
         const url2 = `https://graph.facebook.com/v20.0/${phoneId2}/messages`;
-        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneIdToUse)}`, 'Content-Type':'application/json'}});
+        await httpClient.post(url2, retryMsg, {headers:{Authorization:`Bearer ${getWhatsAppTokenForPhoneId(phoneId2)}`, 'Content-Type':'application/json'}});
         console.log('SEND FAIL RETRY OK to ' + msg.to);
         return {retry:true};
       }
@@ -3324,8 +3328,7 @@ app.post('/webhook', async(req,res)=>{
     try{ teamInboxPush(uid, 'customer', (msg.text?.body||msg.button?.payload||msg.interactive?.button_reply?.title||msg.interactive?.list_reply?.title||msg.type||'message'), 'IN', _incomingPidEarly); }catch(e){}
     // V340: If team took over, Maya stays silent - team replies from Inbox
     if(globalThis.__teamPaused && globalThis.__teamPaused.has(String(uid))){ try{ await saveToSheet('System_Logs',[getISTTime(),String(uid),'ml','V340 Team Paused','Maya paused - team handling','Paused',HELP_ADMIN,'V340 Paused',''],false); }catch(e){} return; }
-    let state = await getState(uid); // V294: declare state FIRST
-    try{ if(incomingPhoneId) { const _s0 = await getState(uid); if(_s0 && _s0.phoneId!==incomingPhoneId){ _s0.phoneId=incomingPhoneId; await setState(uid,_s0); } } }catch(e){}
+    let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
