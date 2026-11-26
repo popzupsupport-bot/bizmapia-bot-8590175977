@@ -222,6 +222,7 @@ const TEST_NUMBERS = new Set(['8590175977','918590175977','8590183646','91859018
 function isTestNumber(uid){ try{ const d=String(uid||'').replace(/[^0-9]/g,''); return TEST_NUMBERS.has(d) || TEST_NUMBERS.has(d.slice(-10)); }catch(e){ return false; } }
 function isMalappuramPhoneId(pid){ return String(pid||'')==='1481022538422254'; }
 function getWhatsAppTokenForPhoneId(pid){ const f=getFranchiseeByPhoneId(pid); if(f && f.token) return f.token; if(isMalappuramPhoneId(pid) && WHATSAPP_TOKEN_MALAPPURAM) return WHATSAPP_TOKEN_MALAPPURAM; return WHATSAPP_TOKEN; }
+function getPhoneIdForUid(uid){ try{ const pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(uid))) || ''; if(pid) return String(pid); }catch(e){} return String(PHONE_NUMBER_ID); }
 function getSheetIdForUid(uid){ try{ const pid = (globalThis.__phoneIdByUid && globalThis.__phoneIdByUid.get(String(uid))) || ''; const f=getFranchiseeByPhoneId(pid); if(f && f.sheetId) return f.sheetId; if(isMalappuramPhoneId(pid)) return SHEET_ID_MALAPPURAM; }catch(e){} return SHEET_ID; }
 if(!globalThis.__phoneIdByUid) globalThis.__phoneIdByUid = new Map();
 
@@ -361,7 +362,7 @@ async function notifyAdminTeamRequest(uid, state, reason){
   const district = L.district || state?.district || 'Not yet given';
   const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
   try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
   return msg;
@@ -371,7 +372,7 @@ async function notifyAdminContactGiven(uid, state, contactNumber){
   const L=state.lead||{};
   const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   return msg;
 }
 async function sendDayEndSummary(){
@@ -381,7 +382,7 @@ async function sendDayEndSummary(){
   try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
   const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
   try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
@@ -432,7 +433,7 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
     try{
       // Do NOT send to the payer himself as admin alert (avoid duplicate)
       if(admin===String(uid)) continue;
-      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
+      await sendWithDelay(textMessage(admin, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:'')));
       console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
     }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
   }
@@ -2135,7 +2136,7 @@ async function sendWeeklySummary(){
   resetDailyIfNeeded();
   const msg=`📅 WEEKLY SUMMARY - Bizmapia Maya - Week of ${weeklyStats.weekStart}\n\n📊 THIS WEEK:\n• New leads: ${weeklyStats.leads + dailyStats.newLeads}\n• Talk-to-Team: ${weeklyStats.talk + dailyStats.talkRequests}\n• Payments: ${weeklyStats.payments + dailyStats.payments} | Total: Rs ${weeklyStats.total + dailyStats.paymentTotal}\n• Not Interested: ${weeklyStats.notInterested + dailyStats.notInterested}\n\n🎯 TOP LEARNING FOR NEXT WEEK:\n• Call ONLY Token Paid leads first.\n• Follow up Token Ready + Considering leads within 24h.\n• Check Master_Leads for Avoid 3+ - do NOT spam them.\n\nCheck Sheet for full list.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   weeklyStats.weekStart=new Date().toISOString().slice(0,10); weeklyStats.leads=0; weeklyStats.payments=0; weeklyStats.total=0; weeklyStats.talk=0; weeklyStats.notInterested=0;
   return msg;
 }
@@ -2162,7 +2163,7 @@ async function notifyHumanHandover(uid, state, txt){
   const L=state.lead||{};
   const msg=`🚨 HUMAN HANDOVER NEEDED\n\n👤 Phone: +${uid}\n👤 Name: ${state?.leadData?.name||'Not given'}\n📍 District: ${L.district||'Not given'}\n🎯 Intent: ${L.intent||''} | Sentiment: ${L.sentiment||''} | Token: ${L.tokenStatus||''}\n\n💬 User said: "${String(txt).slice(0,300)}"\n\n📌 Needs: ${whatHeNeeds(state)}\n🧠 Nature: ${describeNature(state)}\n\n⚠️ Action: Team, please check this chat in Sheet / WhatsApp. Do NOT promise refund / call unless token paid.\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   return msg;
 }
 // Spam / Duplicate Guard: if same user sends 10+ msgs in 1 min, slow down, don't call AI 10x
@@ -2382,7 +2383,7 @@ async function notifyAdminTeamRequest(uid, state, reason){
   const district = L.district || state?.district || 'Not yet given';
   const msg = `📞 TEAM TALK REQUEST\n\n👤 Phone: +${uid}\n👤 Name: ${name}\n📍 District: ${district}\n📥 Source: ${L.source||'unknown'}\n🎯 Intent: ${L.intent||'unknown'}\n💬 Sentiment: ${L.sentiment||'unknown'}\n\n📌 WHAT HE NEEDS TO FINALIZE:\n${whatHeNeeds(state)}\n\n🧠 RESPONDS NATURE:\n${describeNature(state)}\n\n⚠️ TEAM CALL RULE: ${L.tokenStatus==='PAID' ? '✅ Token PAID - Team CAN call for verification.' : '⛔ Token NOT PAID - Do NOT call now. Tell him: Team is busy, please call us in your free time on 85901 83646. After token, team will call.'}\n\nReason: ${reason}\nTime: ${getISTTime()}\n\n👉 Prepare before calling: Check Master_Leads row for this phone.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   dailyStats.talkList.push({phone:uid, name, district, intent:L.intent||'', sentiment:L.sentiment||'', needs: whatHeNeeds(state), nature: describeNature(state), token: L.tokenStatus||'', time: getISTTime()});
   try{ await saveToSheet('System_Logs',[getISTTime(), uid, state.lang||'ml','Team Talk Request',`Talk: ${reason} | ${whatHeNeeds(state)} | ${describeNature(state)}`,'Team Alert',HELP_ADMIN,'Team Request',''],false); }catch(e){}
   return msg;
@@ -2392,7 +2393,7 @@ async function notifyAdminContactGiven(uid, state, contactNumber){
   const L=state.lead||{};
   const msg=`📱 CONTACT NUMBER GIVEN\n\n👤 Phone (chat): +${uid}\n📞 Contact given: +${contactNumber}\n👤 Name: ${state?.leadData?.name||state?.name||'Not yet given'}\n📍 District: ${L.district||'Not yet given'}\n\n📌 WHAT HE NEEDS:\n${whatHeNeeds(state)}\n\n🧠 NATURE:\n${describeNature(state)}\n\n⚠️ CALL RULE: ${L.tokenStatus==='PAID'?'✅ Token PAID - Team CAN call':'⛔ Token NOT PAID - Do NOT call now. User should call team in free time.'}\nTime: ${getISTTime()}`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ if(a===String(uid)) continue; try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   return msg;
 }
 async function sendDayEndSummary(){
@@ -2402,7 +2403,7 @@ async function sendDayEndSummary(){
   try{ for(let [uid,s] of memoryStore){ if(s.lead && s.lastActive && (Date.now()-s.lastActive)<24*60*60*1000) newToday++; } }catch(e){}
   const msg=`🌙 DAY-END SUMMARY - Bizmapia Maya - ${dailyStats.date}\n\n📊 TODAY:\n• New leads chatted: ${Math.max(dailyStats.newLeads, newToday)}\n• Talk-to-Team requests: ${dailyStats.talkRequests}\n• Contact numbers given: ${dailyStats.contactGiven}\n• Token Ready (want to pay): ${dailyStats.tokenReady}\n• Payments VERIFIED: ${dailyStats.payments} | Total Token Collected: Rs ${dailyStats.paymentTotal}\n• Not Interested: ${dailyStats.notInterested}\n• No Reply / Idle: ${dailyStats.idleNoReply}\n\n💰 PAYMENTS TODAY:\n${dailyStats.paymentsList.length?dailyStats.paymentsList.map(x=>`• +${x.phone} - Rs ${x.amount} - ${x.level} - ${x.time}`).join('\\n'):'• None today'}\n\n📞 TEAM TALK LIST - PREPARE FOR TOMORROW:\n${dailyStats.talkList.length?dailyStats.talkList.map(x=>`• +${x.phone} (${x.name}, ${x.district}) - ${x.intent} / ${x.sentiment} - Token:${x.token}\\n  Needs: ${x.needs}\\n  Nature: ${x.nature}`).join('\\n\\n'):'• None today'}\n\n⚠️ REMEMBER: Call ONLY after token paid. Before token, user should call team in free time on 85901 83646.\n\nCheck Sheet: Master_Leads + Payments for full details.`;
   const admins=[...new Set([...DEFAULT_ADMIN_NUMBERS, ...ADMIN_NOTIFY_NUMBERS])];
-  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, PHONE_NUMBER_ID)); }catch(e){} }
+  for(let a of admins){ try{ await sendWithDelay(textMessage(a, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:(typeof a!=='undefined'?a:'')))); }catch(e){} }
   if(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID){ try{ await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:msg})}); }catch(e){} }
   try{ await saveToSheet('System_Logs',[getISTTime(),'ALL','all','Day-End Summary',`Leads:${Math.max(dailyStats.newLeads, newToday)} Talk:${dailyStats.talkRequests} Pay:${dailyStats.payments} Total:Rs ${dailyStats.paymentTotal} | V364 Sheet=WhatsApp count, built from Sheet/Redis not memory alone`,'Day Summary',HELP_ADMIN,'Day-End',''],false); }catch(e){}
   console.log('DAY-END SUMMARY SENT');
@@ -2453,7 +2454,7 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
     try{
       // Do NOT send to the payer himself as admin alert (avoid duplicate)
       if(admin===String(uid)) continue;
-      await sendWithDelay(textMessage(admin, msg, PHONE_NUMBER_ID));
+      await sendWithDelay(textMessage(admin, msg, getPhoneIdForUid(typeof uid!=='undefined'?uid:'')));
       console.log('ADMIN NOTIFY SENT WhatsApp to', admin, paymentId);
     }catch(e){ console.log('ADMIN NOTIFY WhatsApp fail', admin, e.message); }
   }
@@ -3323,7 +3324,8 @@ app.post('/webhook', async(req,res)=>{
     try{ teamInboxPush(uid, 'customer', (msg.text?.body||msg.button?.payload||msg.interactive?.button_reply?.title||msg.interactive?.list_reply?.title||msg.type||'message'), 'IN', _incomingPidEarly); }catch(e){}
     // V340: If team took over, Maya stays silent - team replies from Inbox
     if(globalThis.__teamPaused && globalThis.__teamPaused.has(String(uid))){ try{ await saveToSheet('System_Logs',[getISTTime(),String(uid),'ml','V340 Team Paused','Maya paused - team handling','Paused',HELP_ADMIN,'V340 Paused',''],false); }catch(e){} return; }
-    let state = await getState(uid); // V294: declare state FIRST - V285-V293 blocks above use state, a later 'let state' caused TDZ crash at 2857
+    let state = await getState(uid); // V294: declare state FIRST
+    try{ if(incomingPhoneId) { const _s0 = await getState(uid); if(_s0 && _s0.phoneId!==incomingPhoneId){ _s0.phoneId=incomingPhoneId; await setState(uid,_s0); } } }catch(e){}
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
