@@ -969,6 +969,83 @@ async function m41_buildSearchContext(userText, history){
   return { own, web, needsWeb };
 }
 
+
+// ===== V364.43 FINAL - MAYA BRAIN - ONE AI CALL FOR ALL TIME =====
+// WHY: Fixing one word / one sentence / one intent at a time can never end.
+// Voice, new sentences, new doubts, new spellings will keep coming.
+// FIX: ONE AI BRAIN per message. No keyword list. No intent list. No funnel push.
+// HOW IT WORKS (every free-text message, before ALL old routers):
+//   1) Maya Brain gets: user message + last 8 chat history + Own Files (Knowledge Sheet) + Open Web search + Funnel Rules.
+//   2) Gemini returns ONLY JSON: {feeling, reply, buttons, action}
+//   3) Bot sends that reply and STOPS. Old funnel code never runs for that message.
+//   4) If Brain fails / no API key / bad JSON -> old V364.42 code runs as fallback. Nothing breaks.
+// RULES LOCKED IN BRAIN PROMPT (never in code, so new inputs work without deploy):
+//   - Comfort FIRST, money LAST. Fear / no-balance / need-time / family / EMI fear / rude -> Golden comfort, NO Fee/Token/Balance in that message.
+//   - Meet request -> NEVER promise meeting / office / address. Say team must confirm, team will call Mon-Sat 11AM-4PM, offer Call Team.
+//   - Never invent numbers, dates, prices, followers, ratings. If search has no answer -> "I could not find this, team will check".
+//   - Never put company number in message body. Only in Call button.
+//   - Never push Token / Balance Steps when user is scared / confused / wants meet / wants time.
+//   - Voice notes are already transcribed to text before this - same Brain handles them.
+//   - Reply in user's selected language only. Short: max 3 lines + 1 question. 1 action only.
+async function m43_brain(txt, lang, state){
+  try{
+    const _txt = String(txt||'').slice(0,500);
+    if(!_txt.trim()) return null;
+    const _hist = (state.aiHistory||[]).slice(-8).map(h=>`${h.role}: ${String(h.text||'').slice(0,200)}`).join('\n');
+    // Search first: Own Files + Web (same permanent search from V364.41)
+    let _own='', _web='';
+    try{ const _sc = (typeof m41_buildSearchContext==='function') ? await m41_buildSearchContext(_txt, state.aiHistory||[]) : {own:'',web:''}; _own=_sc.own||''; _web=_sc.web||''; }catch(_){}
+    const _prompt = `You are Maya, friendly AI assistant of Bizmapia from Kerala. You decide the reply for ONE user message. Return ONLY JSON, no other text: {"feeling":"...","reply":"...","buttons":["Call Team","You Answer","Remind Later"],"action":"REPLY"}
+User language (reply ONLY in this language, never mix): ${lang||'ml'}
+User message: """${_txt}"""
+Previous chat (memory - use it, do not repeat what was already asked):
+${_hist||'(no history)'}
+OWN FILES (use first, do not invent):
+${String(_own||'').slice(0,3000)}
+OPEN WEB / SOCIAL (public only, if present):
+${String(_web||'').slice(0,2000)}
+FEELING: one word for what user feels/intends: NO_BALANCE, FEAR_SCAM, ASK_FAMILY, NEED_TIME, EMI_FEAR, MEET_REQUEST, WANTS_RETURN, NEEDS_HOPE, JUST_CHECKING, RUDE, STOP, READY, QUESTION, OTHER. Judge INTENTION, not exact words. Malayalam script, Manglish, English, Hindi, mixed, spelling mistakes, voice-transcribed text - all count. "Balance" + "illa/ഇല്ല" = NO_BALANCE, NOT a request for balance details. "nerittu kaanam / നേരിട്ട് കാണണം" = MEET_REQUEST.
+REPLY RULES (must follow):
+- Comfort FIRST, money LAST. If feeling is NO_BALANCE/FEAR_SCAM/ASK_FAMILY/NEED_TIME/EMI_FEAR/RUDE: reply = comfort only in Golden pattern: "Manassilaayi 🙏 [situation line], prashnamilla. Njan ningalude chat prathyegam maatti vaykkaam. ... Ini parayoo - teamumaayi samsarikkanaamo atho njan marupadikal nalkaal mathiyo atho pinneedu ormmippikkanaamo?" - NO Fee, NO Token, NO Balance Details, NO Step X of Y in that message.
+- If MEET_REQUEST: reply = "Manassilaayi 🙏 Nerittu kaananam ennu paranjathu manassilaayi. Ippol nerittu kaanan office visit team confirm cheyyanam. Njan team-inu ariyikkam. Team calling time-il vilikkum - Monday to Saturday, 11 AM - 4 PM. Athu vare, ningalude samshayam enthaanu? Njan ivide marupadi tharaam, atho teamumaayi samsarikkanaamo?" - NEVER promise meeting/office/address/visit date. NEVER push Token/Balance Steps.
+- If QUESTION / OTHER: answer from OWN FILES first, then WEB. If neither has it: "I could not find this, team will check" + offer Team button. NEVER invent numbers, dates, prices, follower counts, ratings, office address.
+- If READY / WANTS_RETURN / NEEDS_HOPE: answer helpfully, 1 step only, 1 question only. Do NOT jump to Token unless user clearly says ready to pay.
+- If STOP: reply = "" and action = "STOP" (code will show Stop confirm).
+- Reply in user's language only. Short: max 4 lines + 1 question. Warm, simple, local Kerala tone. Never put phone number in reply body.
+- BUTTONS: pick 2-3 from: "Call Team", "You Answer", "Remind Later", "Look at Service", "Look at Return", "Ask Question". Keep short.
+- ACTION: "REPLY" normally, "STOP" only if user wants to stop.
+Return JSON only.`;
+    let _out='';
+    if(typeof GEMINI_API_KEY!=='undefined' && GEMINI_API_KEY){
+      const _url = `https://generativelanguage.googleapis.com/v1beta/models/${(typeof AI_MODEL!=='undefined'&&AI_MODEL)||'gemini-2.0-flash'}:generateContent?key=${GEMINI_API_KEY}`;
+      const _ctl = new AbortController(); const _to=setTimeout(()=>_ctl.abort(), 8000);
+      try{
+        const _r = await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},signal:_ctl.signal,body:JSON.stringify({contents:[{parts:[{text:_prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:500}})});
+        const _j = await _r.json(); _out = _j?.candidates?.[0]?.content?.parts?.map(x=>x.text).join('')||'';
+      }finally{ clearTimeout(_to); }
+    } else if(typeof OPENAI_API_KEY!=='undefined' && OPENAI_API_KEY){
+      const _ctl2 = new AbortController(); const _to2=setTimeout(()=>_ctl2.abort(), 8000);
+      try{
+        const _r2 = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},signal:_ctl2.signal,body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4o-mini',messages:[{role:'user',content:_prompt}],temperature:0.4,max_tokens:500})});
+        const _j2 = await _r2.json(); _out = _j2?.choices?.[0]?.message?.content||'';
+      }finally{ clearTimeout(_to2); }
+    } else return null;
+    const _m = String(_out||'').match(/\{[\s\S]*\}/);
+    if(!_m) return null;
+    const _o = JSON.parse(_m[0]);
+    if(!_o.reply || typeof _o.reply!=='string') return null;
+    // Safety: Brain must never send Fee/Token/Balance Details on a comfort feeling - enforce in code, not just prompt.
+    const _feel = String(_o.feeling||'').toUpperCase();
+    if(['NO_BALANCE','FEAR_SCAM','ASK_FAMILY','NEED_TIME','EMI_FEAR','RUDE','MEET_REQUEST'].includes(_feel)){
+      const _bad = /Full Fee|Balance Details|Token.*Rs|Step \d+ of \d+|Balance Steps|Pay Token|office address|come tomorrow|visit.*office/i.test(_o.reply);
+      if(_bad) return null; // fall back to old Golden Draft path, never send a bad Brain reply
+    }
+    // Safety: never let Brain put a phone number in body
+    _o.reply = String(_o.reply).replace(/8590\d{6}|85901\s?\d{5}/g,'[team number in Call button]');
+    return {feeling:_feel||'OTHER', reply:_o.reply.slice(0,1200), buttons:Array.isArray(_o.buttons)?_o.buttons.slice(0,3):[], action:_o.action||'REPLY'};
+  }catch(e){ try{ console.log('M43 brain fail', e.message); }catch(_){} return null; }
+}
+
 async function callMayaAI(lang, userText, history){
   const historyText = (history||[]).slice(-8).map(h=>`${h.role}: ${h.text}`).join('\n');
   globalThis.__mayaGrounding = getBizmapiaGrounding(userText);
@@ -3679,7 +3756,22 @@ app.post('/webhook', async(req,res)=>{
       if(_m37IsFreeText && !state.driverFlow && state.lang){ // V364.38: NO m37Pause gate - every feeling message must be checked, not only first
         const _m37Lang = state.lang || 'ml';
         const _m37Mind = state.mindset || state.intent || '';
-        const _m37 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, _m37Lang, _m37Mind) : ((typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'});
+        // V364.43: BRAIN FIRST - one AI call for all inputs. If Brain returns a reply, send it and STOP - old funnel never runs.
+          const _brain43 = (_m37IsFreeText && !state.driverFlow && state.lang) ? await (typeof m43_brain==='function' ? m43_brain(txt, _m37Lang, state) : null) : null;
+          if(_brain43 && _brain43.action!=='STOP' && _brain43.reply){
+            try{ console.log('M43 BRAIN feeling='+(_brain43.feeling||'')+' txt='+String(txt).slice(0,60)); }catch(_){}
+            await setState(uid,{...state, m37Pause:false, m37Feeling:_brain43.feeling||'', lastStep:'V364.43 - Brain - '+(_brain43.feeling||''), phoneId: incomingPhoneId});
+            await sendWithDelay(textMessage(uid, _brain43.reply, incomingPhoneId));
+            const _b43 = (_brain43.buttons||[]).map(b=>{ const s=String(b); if(/Call Team|Team/i.test(s)) return {id:'AI_TALK', title:'Call Team'}; if(/You Answer|Marupadi/i.test(s)) return {id:'M37_YOU_ANSWER', title:'You Answer'}; if(/Remind Later|Pinneedu/i.test(s)) return {id:'AI_LATER', title:'Remind Later'}; if(/Service/i.test(s)) return {id:'AI_SERVICES', title:'Look at Service'}; if(/Return/i.test(s)) return {id:'M37_RETURN', title:'Look at Return'}; return {id:'M37_CONTINUE', title: s.slice(0,20)}; });
+            if(_b43.length) await sendWithDelay(interactiveButton(uid, _m37Lang==='ml' ? `👇 Ini parayoo:` : `👇 Tell me now:`, _b43, incomingPhoneId));
+            return;
+          }
+          if(_brain43 && _brain43.action==='STOP'){
+            await setState(uid,{...state, m37Pause:false, lastStep:'V364.43 - Brain - Stop', phoneId: incomingPhoneId});
+            await sendWithDelay(interactiveButton(uid, `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*`, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+            return;
+          }
+          const _m37 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, _m37Lang, _m37Mind) : ((typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'});
           try{ console.log('M37 CHECK txt='+String(txt).slice(0,60)+' lang='+_m37Lang+' feeling='+(_m37.feeling||'')+' action='+_m37.action); }catch(e){}
         if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH' || _m37.action==='MEET_PATH'){
           // Map Trust buttons to existing working ids + M37 continue ids (handled above)
@@ -6516,7 +6608,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.42 MEET-INTENTION - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.43 MAYA-BRAIN-ALL-TIME - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
