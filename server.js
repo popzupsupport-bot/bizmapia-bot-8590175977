@@ -3497,10 +3497,11 @@ app.post('/webhook', async(req,res)=>{
         await sendWithDelay(textMessage(uid, _l37b==='ml' ? `Dharyamaayi parayoo 🙏 Ningalude samshayam enthaanu? Njan marupadi tharaam.` : _l37b==='hi' ? `Befikar hokar batayiye 🙏 Aapka doubt kya hai? Main jawab dungi.` : `Tell me boldly 🙏 What is your doubt? I will answer.`, incomingPhoneId));
         return;
       }
-      if(_m37IsFreeText && !state.driverFlow && state.lang && !state.m37Pause){
+      if(_m37IsFreeText && !state.driverFlow && state.lang){ // V364.38: NO m37Pause gate - every feeling message must be checked, not only first
         const _m37Lang = state.lang || 'ml';
         const _m37Mind = state.mindset || state.intent || '';
         const _m37 = (typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'};
+          try{ console.log('M37 CHECK txt='+String(txt).slice(0,60)+' lang='+_m37Lang+' feeling='+(_m37.feeling||'')+' action='+_m37.action); }catch(e){}
         if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH'){
           // Map Trust buttons to existing working ids + M37 continue ids (handled above)
           const _mapBtn = (t)=>{
@@ -4589,7 +4590,22 @@ Welcome to Bizmapia! 🙏
       if(isFreeText){
         const _v = String(txt||'').toLowerCase();
         const _knowsVideo = /know.*video|already.*(saw|seen|watched|kandu)|i.*saw.*video|video.*(kandu|kandhu|ariyam|manasilayi)|seen.*video|watched.*already/.test(_v);
-        const _wantsBalance = /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
+        // V364.38 FIX: "Balance illa / no balance / balance ill" = NO BALANCE, NOT wants-balance.
+        // Old code matched ANY "balance" and sent Fee/Token - that is why "Balance illa." got Balance Details.
+        const _isNoBalance300 = /balance\s*(illa|ill\b|illai|illa\.)|no\s*balance|no\s*money|balance\s*ill|paisa\s*illa|cash\s*illa|money\s*illa/.test(_v);
+        const _wantsBalance = !_isNoBalance300 && /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
+        // V364.38 TRUST GUARD INSIDE V300: if feeling is pause-type, NEVER send Balance Details here.
+        // Send Golden Draft instead and return - this guard works even if top hook was skipped.
+        if(isFreeText && (typeof m37_detectFeeling==='function') && ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','RUDE'].includes(m37_detectFeeling(txt))){
+          const _f38 = m37_detectFeeling(txt);
+          const _L38 = lang || state.lang || 'ml';
+          const _r38 = (typeof m37_goldenReply==='function') ? m37_goldenReply(_L38, _f38) : '';
+          await setState(uid,{...state, m37Pause:true, m37Feeling:_f38, lastStep:'V364.38 - Trust - '+_f38, phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, _r38, incomingPhoneId));
+          await sendWithDelay(interactiveButton(uid, _L38==='ml' ? `👇 Ini parayoo:` : `👇 Tell me now:`, [{id:'AI_TALK',title:'Talk to Team'},{id:'M37_YOU_ANSWER',title:'You Answer'},{id:'AI_LATER',title:'Remind Later'}], incomingPhoneId));
+          try{ console.log('M37 V300-GUARD fired feeling='+_f38+' txt='+String(txt).slice(0,60)); }catch(e){}
+          return;
+        }
         if(_knowsVideo || _wantsBalance){
           const _L0 = lang || state.lang || 'en';
           const _lvl = state.sub || state.lead?.level || 'OPP_CENTER';
@@ -6317,7 +6333,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.37 TRUST-FIRST-WIRED - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.38 TRUST-FIRST-V300-FIX - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
