@@ -94,6 +94,7 @@ FEAR_SCAM - user fears this is fraud / cheating / fake / scam, does not trust ye
 WANTS_RETURN - user asks what return / profit / income they will get first.
 NEEDS_HOPE - user doubts whether it will work for them, can they do it.
 JUST_CHECKING - user is only checking / looking / understanding, not ready.
+MEET_REQUEST - user wants to meet in person / see office / meet team / visit directly / see face-to-face. Any language, any spelling, Malayalam script, Manglish. Examples: "nerittu kaanam", "നേരിട്ട് കാണണം", "nerittu kaanm", "officeil vannu kaanam", "direct kaanam", "meet cheyyam", "nere kaanam".
 RUDE - user is angry / annoyed / says stop disturbing.
 STOP - user wants to stop messages / stop application / do not message.
 READY - user says ok / yes / continue / ready to move forward.
@@ -117,7 +118,7 @@ RULES: Judge INTENTION, not exact words. Malayalam script, Manglish, English, Hi
     const _m = String(_out||'').match(/\{[^}]*\}/);
     if(!_m) return null;
     const _o = JSON.parse(_m[0]);
-    const _valid = ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','WANTS_RETURN','NEEDS_HOPE','JUST_CHECKING','RUDE','STOP','READY','UNKNOWN'];
+    const _valid = ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','WANTS_RETURN','NEEDS_HOPE','JUST_CHECKING','RUDE','STOP','READY','UNKNOWN','MEET_REQUEST'];
     if(!_valid.includes(_o.feeling)) return null;
     if(Number(_o.confidence||0) < 55) return null;
     return _o.feeling;
@@ -134,6 +135,7 @@ async function m40_decideAI(txt, lang, mindset){
     const _f = _ai;
     if(_f==='STOP') return {action:'STOP', feeling:_f, reply:'', buttons:[]};
     if(_f==='RUDE') return {action:'SORRY_ONLY', feeling:_f, reply:m37_goldenReply(lang,_f), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+    if(_f==='MEET_REQUEST') return {action:'MEET_PATH', feeling:_f, reply: (lang==='ml' ? 'Manassilaayi 🙏 Nerittu kaananam ennu paranjathu manassilaayi.\n\nIppol nerittu kaanan office visit team confirm cheyyanam. Njan team-inu ariyikkam. Team calling time-il vilikkum - Monday to Saturday, 11 AM - 4 PM.\n\nAthu vare, ningalude samshayam enthaanu? Njan ivide marupadi tharaam, atho teamumaayi samsarikkanaamo?' : 'Understood 🙏 You want to meet in person.\n\nAn office visit must be confirmed by the team. I will inform the team. Team will call in calling time - Monday to Saturday, 11 AM - 4 PM.\n\nTill then, what is your doubt? I will answer here, or do you want to talk to the team?'), buttons: ['MEET_CALL_TEAM','MEET_YOU_ANSWER','MEET_REMIND_LATER']};
     if(_f==='JUST_CHECKING' || mindset==='JUST_CHECKING') return {action:'TRUST_PATH', feeling:_f, reply:m37_mindsetReply('JUST_CHECKING', lang), buttons: lang==='ml'?['📚 Service Nokkaam','🔔 Pinneedu Ormmippikkoo']:['📚 Look at Service','🔔 Remind Later']};
     if(['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM'].indexOf(_f)!==-1) return {action:'COMFORT_PAUSE', feeling:_f, reply:m37_goldenReply(lang, _f), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
     if(_f==='WANTS_RETURN' || mindset==='RUNNING') return {action:'TRUST_PATH', feeling:_f, reply:m37_mindsetReply('RUNNING', lang), buttons: lang==='ml'?['📄 Return Nokkaam','💬 Chodyam Chodikkaam']:['📄 Look at Return','💬 Ask Question']};
@@ -3679,7 +3681,7 @@ app.post('/webhook', async(req,res)=>{
         const _m37Mind = state.mindset || state.intent || '';
         const _m37 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, _m37Lang, _m37Mind) : ((typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'});
           try{ console.log('M37 CHECK txt='+String(txt).slice(0,60)+' lang='+_m37Lang+' feeling='+(_m37.feeling||'')+' action='+_m37.action); }catch(e){}
-        if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH'){
+        if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH' || _m37.action==='MEET_PATH'){
           // Map Trust buttons to existing working ids + M37 continue ids (handled above)
           const _mapBtn = (t)=>{
             if(/Teamumaayi|Talk to Team|ടീമിനോട്|टीम से/.test(t)) return {id:'AI_TALK', title: t.length>20 ? t.slice(0,20) : t};
@@ -3689,6 +3691,9 @@ app.post('/webhook', async(req,res)=>{
             if(/Return Nokkaam|Look at Return/.test(t)) return {id:'M37_RETURN', title: 'Look at Return'};
             if(/Cheruthaayi|Start Small/.test(t)) return {id:'M37_START_SMALL', title: 'Start Small'};
             if(/Chodyam|Ask Question/.test(t)) return {id:'M37_CONTINUE', title: 'Ask Question'};
+            if(t==='MEET_CALL_TEAM') return {id:'AI_TALK', title:'Call Team'};
+            if(t==='MEET_YOU_ANSWER') return {id:'M37_YOU_ANSWER', title:'You Answer'};
+            if(t==='MEET_REMIND_LATER') return {id:'AI_LATER', title:'Remind Later'};
             return {id:'M37_CONTINUE', title: t.length>20 ? t.slice(0,20) : t};
           };
           const _btns = (_m37.buttons||[]).map(_mapBtn);
@@ -4774,7 +4779,7 @@ Welcome to Bizmapia! 🙏
         // V364.38 TRUST GUARD INSIDE V300: if feeling is pause-type, NEVER send Balance Details here.
         // Send Golden Draft instead and return - this guard works even if top hook was skipped.
         const _d40v300 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, lang || state.lang || 'ml', state.mindset || state.intent || '') : null;
-        if(isFreeText && _d40v300 && ['COMFORT_PAUSE','SORRY_ONLY','TRUST_PATH'].includes(_d40v300.action) && ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','RUDE'].includes(_d40v300.feeling)){
+        if(isFreeText && _d40v300 && ['COMFORT_PAUSE','SORRY_ONLY','TRUST_PATH','MEET_PATH'].includes(_d40v300.action) && ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','RUDE','MEET_REQUEST'].includes(_d40v300.feeling)){
           const _f38 = _d40v300.feeling;
           const _L38 = lang || state.lang || 'ml';
           const _r38 = (typeof m37_goldenReply==='function') ? m37_goldenReply(_L38, _f38) : '';
@@ -6511,7 +6516,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.41 SEARCH-FIRST-AUTO-REPLY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.42 MEET-INTENTION - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
