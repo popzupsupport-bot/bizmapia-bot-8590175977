@@ -16,6 +16,15 @@
 // V364.36 flow continues exactly as before.
 // ============================================================================
 function m37_detectFeeling(t){
+  // V364.39 FIX: Malayalam SCRIPT - "Balance ഇല്ല" is NOT Latin "illa".
+  // Old code only matched Latin "balance illa", so "Balance ഇല്ല" fell through to V300 Balance Details.
+  const _raw39 = String(t||'');
+  if(/ഇല്ല/.test(_raw39) && /balance|ബാലൻസ്|പൈസ|കാശ്|പണം|token|fee|ടോക്കൺ/i.test(_raw39)) return 'NO_BALANCE';
+  if(/ബാലൻസ്\s*ഇല്ല|പൈസ\s*ഇല്ല|കാശ്\s*ഇല്ല|പണം\s*ഇല്ല/.test(_raw39)) return 'NO_BALANCE';
+  if(/തട്ടിപ്പ്|പറ്റിക്ക/.test(_raw39)) return 'FEAR_SCAM';
+  if(/ഭാര്യ|വീട്ടിൽ/.test(_raw39)) return 'ASK_FAMILY';
+  if(/പിന്നെ|ആലോചിക്ക|സമയം\s*വേണം|നാളെ/.test(_raw39)) return 'NEED_TIME';
+  if(/ഇഎംഐ|പേടി|ഭയം/.test(_raw39)) return 'EMI_FEAR';
   const s=' '+String(t||'').toLowerCase()+' ';
   const has=function(){return Array.prototype.some.call(arguments,function(x){return s.includes(x);});};
   if(has('stop','vendaa','venda',"don't message",'dont message',"don't msg",'msg venda','parayaruth','block')) return 'STOP';
@@ -4592,7 +4601,7 @@ Welcome to Bizmapia! 🙏
         const _knowsVideo = /know.*video|already.*(saw|seen|watched|kandu)|i.*saw.*video|video.*(kandu|kandhu|ariyam|manasilayi)|seen.*video|watched.*already/.test(_v);
         // V364.38 FIX: "Balance illa / no balance / balance ill" = NO BALANCE, NOT wants-balance.
         // Old code matched ANY "balance" and sent Fee/Token - that is why "Balance illa." got Balance Details.
-        const _isNoBalance300 = /balance\s*(illa|ill\b|illai|illa\.)|no\s*balance|no\s*money|balance\s*ill|paisa\s*illa|cash\s*illa|money\s*illa/.test(_v);
+        const _isNoBalance300 = /balance\s*(illa|ill\b|illai|illa\.)|no\s*balance|no\s*money|balance\s*ill|paisa\s*illa|cash\s*illa|money\s*illa|ഇല്ല|ബാലൻസ്\s*ഇല്ല/.test(_v) || (/ഇല്ല/.test(String(txt||'')) && /balance|ബാലൻസ്|പൈസ|കാശ്|പണം|token/i.test(String(txt||'')));
         const _wantsBalance = !_isNoBalance300 && /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
         // V364.38 TRUST GUARD INSIDE V300: if feeling is pause-type, NEVER send Balance Details here.
         // Send Golden Draft instead and return - this guard works even if top hook was skipped.
@@ -6333,7 +6342,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.38 TRUST-FIRST-V300-FIX - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.39 TRUST-FIRST-MALAYALAM-SCRIPT - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
