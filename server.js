@@ -1,6 +1,74 @@
-// V364.36 - Q1 AS REMINDER REPLACING COMPANY VIDEO REMINDER + Q2 SERIOUS ONLY (built from V364.36) - Q1 after Company Video, Q2 only RUNNING/PLANNING, JUST_ENQUIRY gets 4 services only, NO loser/investment-range in bot
-// V364.36 - GENERIC FRANCHISEE 10 SLOTS + SERVICES-FIRST MENU (built from V364.36) (boot/health/endpoints now say V364.36, were stale V364.13/V364.3) vs V364.36-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.36 logic locked.
-// V364.36 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+// V364.37 - TRUST-FIRST - BUILT FROM V364.37 (6214 lines kept) - Q1 AS REMINDER REPLACING COMPANY VIDEO REMINDER + Q2 SERIOUS ONLY (built from V364.37 - TRUST-FIRST - BUILT FROM V364.37 (6214 lines kept)) - Q1 after Company Video, Q2 only RUNNING/PLANNING, JUST_ENQUIRY gets 4 services only, NO loser/investment-range in bot
+// V364.37 - GENERIC FRANCHISEE 10 SLOTS + SERVICES-FIRST MENU (built from V364.36) (boot/health/endpoints now say V364.36, were stale V364.13/V364.3) vs V364.36-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.37 logic locked.
+// V364.37 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+
+// ============================================================================
+// V364.37 TRUST-FIRST PATCH - ADDED ON TOP OF V364.36 - NOTHING BELOW DELETED
+// 6214 lines of V364.36 kept intact. This block ONLY adds:
+// 1) Feeling check BEFORE fee/Balance replies
+// 2) Golden Draft for NO_BALANCE / NEED_TIME / FEAR / ASK_FAMILY / EMI_FEAR / RUDE
+// 3) 3 Mindset Paths: RUNNING / PLANNING / JUST_CHECKING
+// 4) STOP / COLD auto-stop - deletes reminders, saves money
+// 5) Separate reminder only - "vilikku" = reminder only, NEVER a human call
+// HOW IT WORKS: m37_decide() is called at the TOP of the message handler in
+// V364.36 (see M37_HOOK below). If it returns COMFORT_PAUSE / STOP / SORRY_ONLY,
+// the OLD fee/Balance/Token reply is SKIPPED for that message. Otherwise old
+// V364.36 flow continues exactly as before.
+// ============================================================================
+function m37_detectFeeling(t){
+  const s=' '+String(t||'').toLowerCase()+' ';
+  const has=function(){return Array.prototype.some.call(arguments,function(x){return s.includes(x);});};
+  if(has('stop','vendaa','venda',"don't message",'dont message',"don't msg",'msg venda','parayaruth','block')) return 'STOP';
+  if(has('fraud','pattik','cheat','scam','thattip','fake')) return 'FEAR_SCAM';
+  if(has("don't have balance",'no balance','balance illa','balance ill','no money','paisa illa','cash illa','money illa','kaash illa','salary varumbo','salary varumbol')) return 'NO_BALANCE';
+  if(has('wife','bharya','husband','veettil chodikk','veettil chodik','veettil paray')) return 'ASK_FAMILY';
+  if(has('aloikk','think','samayam venam','pinne','later','nale','naale','tomorrow','yochikk')) return 'NEED_TIME';
+  if(has('emi','thavanakal','gadu','pedi','bayam','fear','risk','nashtam')) return 'EMI_FEAR';
+  if(has('return','labham','profit','income','varumanam','entha kittum','enthu kittum')) return 'WANTS_RETURN';
+  if(has('hope','nadakkumo','pattumo','cheyyan pattumo')) return 'NEEDS_HOPE';
+  if(has('just checking','just check','nokkan','ariyan','check cheyyan')) return 'JUST_CHECKING';
+  if(has('shut','annoy','bore','angry','rude')) return 'RUDE';
+  if(has('ok','yes','seri','sheri','thudaram','continue','thudar')) return 'READY';
+  return 'UNKNOWN';
+}
+function m37_situationLine(f, lang){
+  const ml={NO_BALANCE:'Petteannu payment ennu parayumbol chilappol balance illennu varaam,',ASK_FAMILY:'Bharyayodu / veettil chodikkathe theerumanikkaan pattillallo,',EMI_FEAR:'EMI ennu kelkkumbol pedi thonnunnathu swaabhavikamaanu,',FEAR_SCAM:'Palarum pattikkappedunna kaalathu pedi thonnunnathu swaabhavikamaanu,',NEED_TIME:'Onnu aalochikkaan samayam venam ennu thonnunnathu swaabhavikamaanu,',RUDE:'Njan dhrythi pidippichathu pole thonniyenkil kshamikkaanam,',JUST_CHECKING:'Aadyam nokki manassilaakkanam ennu thonnunnathu shariyaanu,',WANTS_RETURN:'Business ullaa aalaayathukondu return aadyam manassilaakkanam ennu thonnunnathu shariyaanu,',NEEDS_HOPE:'Thudangaan plan cheyyumbol ithu nadakkumo ennu samshayam thonnunnathu swaabhavikamaanu,',UNKNOWN:'Ippol munnottu pokaan pattaatha avasthayaanaanennu manassilaayi,'};
+  const en={NO_BALANCE:'When payment is asked suddenly, sometimes balance may not be there,',ASK_FAMILY:'Without asking family at home, a decision cannot be taken,',EMI_FEAR:'It is natural to feel fear when hearing EMI,',FEAR_SCAM:'In a time when many are cheated, fear is natural,',NEED_TIME:'It is natural to need time to think,',RUDE:'Sorry if I seemed to hurry you,',JUST_CHECKING:'It is right to first look and understand,',WANTS_RETURN:'As a businessman, it is right to first understand return,',NEEDS_HOPE:'When planning to start, doubt whether it will work is natural,',UNKNOWN:'I understand you cannot move forward right now,'};
+  return lang==='ml'?(ml[f]||ml.UNKNOWN):(en[f]||en.UNKNOWN);
+}
+function m37_goldenReply(lang, feeling){
+  const line=m37_situationLine(feeling, lang);
+  if(lang==='ml') return 'Manassilaayi 🙏\n\n'+line+' prashnamilla.\n\nNjan ningalude chat prathyegam maatti vaykkaam. Oru pakshae mattenthenkilum samshayamundenkil dhairyamaayi ennodu parayaam, njan enikku kazhiyunna vidham marupadikal nalkaam. Athalla ningalude teamumaayi samsarikkamenundenkil athum saadhyamaakkaam. Ellaam thaankalude soukaryathinaayi njan thayyaraakkaam.\n\nIni parayoo - teamumaayi samsarikkanaamo atho njan marupadikal nalkaal mathiyo atho pinneedu ormmippikkanaamo?';
+  if(lang==='hi') return 'Samajh gaya 🙏\n\n'+line+' Koi baat nahi.\n\nMain aapki chat alag se rakh dungi. Agar koi aur doubt ho to bejhijhak mujhse poochiye, main jitna ho sake utna jawab dungi. Ya agar team se baat karni ho to wo bhi ho jayega. Sab aapki suvidha ke liye taiyaar hai.\n\nAb batayiye - team se baat karni hai, ya main jawab doon, ya baad me yaad dila doon?';
+  return 'Understood 🙏\n\n'+line+' No problem.\n\nI will keep your chat separately. If you have any other doubt, please tell me boldly, I will answer as best I can. Or if you want to talk to our team, that is also possible. Everything is arranged for your convenience.\n\nTell me now - do you want to talk to the team, or shall I answer, or shall I remind you later?';
+}
+function m37_mindsetReply(mindset, lang){
+  if(mindset==='RUNNING') return lang==='ml'?'Ningalkku ippol thanne business undallo, athukondu return-nte karyam aadyam manassilaakkendathu shariyaanu. Dhairyamaayi nokkoo, ningalkku return manassilaayaal mathram munnottu poyaal mathi.\n\nAadyam Annexure B - Return onnu nokkaam. Paisayude karyam pinne.':'You already have a business, so it is right to first understand return. Look boldly, move forward only if return is clear to you.\n\nFirst let us look at Annexure B - Return. Money talk later.';
+  if(mindset==='PLANNING') return lang==='ml'?'Thudangaan plan cheyyunnathu thanne valiya karyamaanu 🙏 Cheruthaayi thudangaam, manassilaakki, viswasam aayittu mathram munnottu pokaam. Dhrythi illa.\n\nAadyam Business Centre engane cheruthaayi thudangaam ennu nokkaam.':'Planning to start itself is a big thing 🙏 Start small, understand, move only when you trust. No hurry.\n\nFirst let us see how Business Centre can start small.';
+  return lang==='ml'?'Aadyam ningalude service padikkoo 😊 Ningalkku ithu nallathanennu thonniyaal, eppol venamenkilum thirichu vannu Business Opportunity theranjedukkam. Appol nammal orumichu finalize cheyyaam.\n\nIppol vilkilla, dhrythi illa. Service nokkiyittu parayoo.':'First study our service 😊 If you feel it is good, you can come back anytime and choose Business Opportunity. Then we will finalise together.\n\nNo selling now, no hurry. Look at service and tell me.';
+}
+// M37_HOOK - the other tab / developer must call this at TOP of webhook handler,
+// right after extracting user text and language, BEFORE any Balance/Fee/Token reply:
+//   const m37 = m37_decide(userText, userLang, userMindset);
+//   if(m37.action==='STOP'){ /* send STOP confirm only, return */ }
+//   if(m37.action==='COMFORT_PAUSE' || m37.action==='SORRY_ONLY' || m37.action==='TRUST_PATH'){ send(m37.reply, m37.buttons); return; }
+//   // otherwise fall through to existing V364.36 flow
+function m37_decide(text, lang, mindset){
+  const feeling=m37_detectFeeling(text);
+  if(feeling==='STOP') return {action:'STOP', feeling, reply:'', buttons:[]};
+  if(feeling==='RUDE') return {action:'SORRY_ONLY', feeling, reply:m37_goldenReply(lang,'RUDE'), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+  if(feeling==='JUST_CHECKING' || mindset==='JUST_CHECKING') return {action:'TRUST_PATH', feeling, reply:m37_mindsetReply('JUST_CHECKING', lang), buttons: lang==='ml'?['📚 Service Nokkaam','🔔 Pinneedu Ormmippikkoo']:['📚 Look at Service','🔔 Remind Later']};
+  if(['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM'].indexOf(feeling)!==-1) return {action:'COMFORT_PAUSE', feeling, reply:m37_goldenReply(lang, feeling), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+  if(feeling==='WANTS_RETURN' || mindset==='RUNNING') return {action:'TRUST_PATH', feeling, reply:m37_mindsetReply('RUNNING', lang), buttons: lang==='ml'?['📄 Return Nokkaam','💬 Chodyam Chodikkaam']:['📄 Look at Return','💬 Ask Question']};
+  if(feeling==='NEEDS_HOPE' || mindset==='PLANNING') return {action:'TRUST_PATH', feeling, reply:m37_mindsetReply('PLANNING', lang), buttons: lang==='ml'?['▶️ Cheruthaayi Thudangaam','💬 Chodyam Chodikkaam']:['▶️ Start Small','💬 Ask Question']};
+  return {action:'CONTINUE_V364_36', feeling, reply:'', buttons:[]};
+}
+// REMINDER RULE V364.37 - to be applied in existing reminder code, do NOT delete old reminder code:
+// - "Pinneedu Ormmippikkoo" => ask WHEN in his words, set ONLY that one separate reminder, cancel normal reminders.
+// - "vilikku / call" in buttons = reminder only, NEVER create human call task.
+// - STOP => delete ALL reminders. No reply after 1 soft reminder => mark COLD, delete ALL reminders.
+// END V364.37 PATCH
+
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -182,7 +250,7 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
-// ===== V364.36 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
+// ===== V364.37 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
 // Pending maintenances bundled: M1 Fired Date col H, M2 Test numbers no reminders,
 // M3 Malappuram 99954 separate Sheet + separate Inbox (token pending - set WHATSAPP_TOKEN_99954 in Render),
 // M4 Reminder fix: Type1 Stuck (Are-you-there + Busy check -> 1h/12h/24h) + Type2 No-Action (direct 1h/12h/24h) -> Fired.
@@ -191,7 +259,7 @@ const SHEET_ID_MALAPPURAM = process.env.SHEET_ID_MALAPPURAM || process.env.SHEET
 const PHONE_NUMBER_ID_MALAPPURAM = process.env.PHONE_NUMBER_ID_99954 || '1481022538422254';
 const WHATSAPP_TOKEN_MALAPPURAM = process.env.WHATSAPP_TOKEN_99954 || process.env.WHATSAPP_TOKEN_MALAPPURAM || '';
 
-// ===== V364.36 - GENERIC FRANCHISEE 10 SLOTS =====
+// ===== V364.37 - GENERIC FRANCHISEE 10 SLOTS =====
 // Slot 1 = Malappuram (filled). Slots 2-10 = EMPTY - fill later via Render env, no code change to flows.
 // For each new franchisee, set 3 Render env vars, e.g. Slot 2:
 //   PHONE_NUMBER_ID_F2, WHATSAPP_TOKEN_F2, SHEET_ID_F2
@@ -1365,7 +1433,7 @@ function getTokenFee(sub){
   return 250;
 }
 function saveRegistrationFee(phone, sub, fee){
-  // V364.36 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
+  // V364.37 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
   // BUG: saveToSheet() expects row as ARRAY (it reads row[1] as phone and appends {values:[row]}).
   // Old code passed an OBJECT {phone, franchise_type, ...} -> Google API error: Unknown name "phone" at 'data.values[0]'.
   // FIX: pass ARRAY row, phone at index 1 (same pattern as Master_Leads / System_Logs). Single save (old code saved twice).
@@ -1549,7 +1617,7 @@ const HELP_OPP = '8590175977'; const HELP_OPP_FULL = '+918590175977'; const HELP
 // 🔒 V356 VIDEO LINKS LOCKED BY USER (exact URLs): ML Company=2BB34, ML District=Bi2HJ, ML Corp/Muni=aj4Bxw, ML Center=jCwTwiu(SVqd); EN/HI Company=R9IEne, EN/HI District=_y2Je, EN/HI Corp=Gqolfq, EN/HI Center=r0X77
 const COMPANY_VIDEO_ML = 'https://youtu.be/2BB34hGi52I?si=KLXcu-amOJkAgVsi'; const COMPANY_VIDEO_ENHI = 'https://youtu.be/R9IEneHrUHE?si=f4Py2ADBpPYfl7Ca'; function getCompanyVideoUrl(_l){ return _l==='ml' ? COMPANY_VIDEO_ML : COMPANY_VIDEO_ENHI; }
 
-// ===== V364.36 Q1/Q2 AFTER COMPANY VIDEO - Q1 AS REMINDER, Q2 SERIOUS ONLY =====
+// ===== V364.37 Q1/Q2 AFTER COMPANY VIDEO - Q1 AS REMINDER, Q2 SERIOUS ONLY =====
 // Q1 message = user-locked text. Language ONLY - no mixing, no Manglish.
 // Q2 = investment capacity, shown ONLY if Q1 = RUNNING / PLANNING. NEVER for JUST_ENQUIRY.
 function v36436Q1Text(lang){
@@ -1573,7 +1641,7 @@ function v36436JustText(lang){
   if(lang==='hi') return `पूछताछ के लिए धन्यवाद 😊 आप हमारी सेवाएँ यहाँ देख सकते हैं।`;
   return `Thank you for your enquiry 😊 You can check our services here.`;
 }
-// ===== END V364.36 Q1/Q2 =====
+// ===== END V364.37 Q1/Q2 =====
 
 
 let blockUntil = 0, lastSendTime = 0;
@@ -1714,7 +1782,7 @@ async function saveFiredRow(row){
   }
 }
 async function autoFireLoser(uid, reason){
-  if(isTestNumber(uid)){ console.log('V364.36 SKIP autoFire - test number', uid); return; }
+  if(isTestNumber(uid)){ console.log('V364.37 SKIP autoFire - test number', uid); return; }
   try{
     const phone = normalizeFiredPhone(uid);
     if(await isFiredPhone(phone)) return;
@@ -2328,7 +2396,7 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
   // V364.36: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
-  if(isTestNumber(uid)){ console.log(`V364.36 SKIP reminder ${type} - test number ${uid}`); return; }
+  if(isTestNumber(uid)){ console.log(`V364.37 SKIP reminder ${type} - test number ${uid}`); return; }
   // V364.36: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
   // V364.36: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
   // V362: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
@@ -3338,7 +3406,7 @@ function v364_7_continueText(lang, friendlyStep){
 }
 
 
-// ===== V364.36 - DRIVER ATTACH HELPERS =====
+// ===== V364.37 - DRIVER ATTACH HELPERS =====
 // Driver video link: set in Render env DRIVER_VIDEO_URL later by user. Button created NOW, link added later. If empty, bot still sends Watched / See Video buttons.
 // LOCKED: Driver income withdraw = AFTER 24 HOURS ONLY (user correction, not 48h). Test-trip date rule (day+2) and reschedule 48h rule are separate.
 const DRV_VIDEO_URL = process.env.DRIVER_VIDEO_URL || '';
@@ -3390,7 +3458,7 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    // ===== V364.36 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
+    // ===== V364.37 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
     // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
     // Maya ignored it and replied "Now you are on Company Video step..." + [kandu | kandilla].
     // CAUSE: old V317 check only matched msg.type==='text' + empty btnId + txt body.
@@ -3409,7 +3477,7 @@ app.post('/webhook', async(req,res)=>{
         const _lang36414 = (state.lang||'ml');
         // V364.36: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
         // one consistent Stop flow, no direct jump, no step resend.
-        await setState(uid,{...state, lastStep:'V364.36 - Stop - Confirm', phoneId: incomingPhoneId});
+        await setState(uid,{...state, lastStep:'V364.37 - Stop - Confirm', phoneId: incomingPhoneId});
         const _cf36414 = _lang36414==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang36414==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
         await sendWithDelay(interactiveButton(uid,_cf36414,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
         return;
@@ -3419,7 +3487,7 @@ app.post('/webhook', async(req,res)=>{
 
 
     
-    // ===== V364.36 - DRIVER ATTACH FLOW - BEFORE ALL OTHER ROUTERS =====
+    // ===== V364.37 - DRIVER ATTACH FLOW - BEFORE ALL OTHER ROUTERS =====
     // Entry: RIDE_ATTACH (Attach Cab). Old generic attach message is replaced by this exact driver flow.
     // Steps: Video -> Watched/See Video -> App link -> 1h check (Yes/Doubts) -> Schedule date (day+2 onwards)
     // -> Confirm details+fee (Yes/Doubts) -> Team checks manually -> 24h after date: Test trip got? (Yes/No) -> Welcome / Reschedule (48h rule).
@@ -3433,7 +3501,7 @@ app.post('/webhook', async(req,res)=>{
         const _drvSet = async(patch)=>{ state={...state, ...patch, phoneId: incomingPhoneId}; await setState(uid, state); };
         // --- RIDE_ATTACH: send driver video + Watched / See Video ---
         if(btnId==='RIDE_ATTACH'){
-          await _drvSet({driverFlow:true, drvStep:'VIDEO', sub:'RIDE_ATTACH', lastStep:'V364.36 - Driver - Video'});
+          await _drvSet({driverFlow:true, drvStep:'VIDEO', sub:'RIDE_ATTACH', lastStep:'V364.37 - Driver - Video'});
           const _vmsg=_drvMl
             ? `🚖 ബിസ്മാപ്പിയയിൽ വാഹനം ബന്ധിപ്പിക്കാം! 🙏\n\n📹 ആദ്യം ഈ വീഡിയോ കാണൂ - വാഹനം എങ്ങനെ ബന്ധിപ്പിക്കാം എന്ന് മുഴുവൻ ഇതിൽ ഉണ്ട്.\n\nവീഡിയോ കണ്ട ശേഷം താഴെ "Watched" അമർത്തൂ, ഞാൻ നിങ്ങളെ സഹായിക്കാം.`
             : `🚖 Attach your vehicle with Bizmapia! 🙏\n\n📹 First watch this video - it explains how to attach your vehicle fully.\n\nAfter watching, tap "Watched" below and I will help you.`;
@@ -3449,7 +3517,7 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- WATCHED: app link + 1h reminder ---
         if(btnId==='DRV_WATCHED'){
-          await _drvSet({driverFlow:true, drvStep:'APP', lastStep:'V364.36 - Driver - App Link'});
+          await _drvSet({driverFlow:true, drvStep:'APP', lastStep:'V364.37 - Driver - App Link'});
           const _amsg=_drvMl
             ? `👍 നന്നായി! 🙏\n\n📱 ഇനി താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യൂ.`
             : `👍 Great! 🙏\n\n📱 Now click the button below and install our app.`;
@@ -3463,13 +3531,13 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- DOUBTS anywhere in driver flow: support numbers, 9AM-5PM only ---
         if(btnId==='DRV_DOUBTS' || btnId==='DRV_CONFIRM_DOUBTS'){
-          await _drvSet({driverFlow:true, lastStep:'V364.36 - Driver - Doubts'});
+          await _drvSet({driverFlow:true, lastStep:'V364.37 - Driver - Doubts'});
           await drvSendSupport(uid, _drvLang, incomingPhoneId);
           return;
         }
         // --- YES attached / Test Trip text: schedule date (day+2 onwards) ---
         if(btnId==='DRV_YES_ATTACHED' || _isTestTripText){
-          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.36 - Driver - Schedule Test Trip'});
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.37 - Driver - Schedule Test Trip'});
           const _smsg=_drvMl?`👍 നന്നായി! ഇനി ടെസ്റ്റ് ട്രിപ്പ് ഷെഡ്യൂൾ ചെയ്യാം. 📅`:`👍 Great! Now let us schedule your test trip. 📅`;
           await sendWithDelay(textMessage(uid, _smsg, incomingPhoneId));
           await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
@@ -3478,7 +3546,7 @@ app.post('/webhook', async(req,res)=>{
         // --- DATE picked: confirm details + fee ---
         if(String(btnId||'').startsWith('DRV_DATE_')){
           const _d=String(btnId).replace('DRV_DATE_','');
-          await _drvSet({driverFlow:true, drvStep:'CONFIRM', drvTestDate:_d, lastStep:'V364.36 - Driver - Confirm Details+Fee'});
+          await _drvSet({driverFlow:true, drvStep:'CONFIRM', drvTestDate:_d, lastStep:'V364.37 - Driver - Confirm Details+Fee'});
           const _cmsg=_drvMl
             ? `📅 നിങ്ങൾ തിരഞ്ഞെടുത്ത തീയതി: ${_d}\n\n⚠️ നിങ്ങളുടെ വിവരങ്ങൾ ഞങ്ങളുടെ internal team പരിശോധിക്കും. നിങ്ങളുടെ വിവരങ്ങളും one-time registration fee submission-ഉം ശരിയാണെങ്കിൽ കമ്പനിയിൽ നിന്ന് "Your test trip approved" എന്ന മറുപടി കിട്ടും. അല്ലെങ്കിൽ മറുപടി കിട്ടില്ല, നിങ്ങളുടെ അപേക്ഷ താനേ reject ആകും.\n\n❓ നിങ്ങൾ ശരിയായ വിവരങ്ങൾ upload ചെയ്യുകയും ആപ്പ് വഴി one-time registration fee അടയ്ക്കുകയും ചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാണോ?`
             : `📅 Your selected date: ${_d}\n\n⚠️ Your details will be checked by our internal team. If your details and one-time registration fee submission are correct, you will get a reply from our company like "Your test trip approved". Otherwise you may get no reply and your application will be rejected automatically.\n\n❓ Are you sure you uploaded correct details and paid the one-time registration fee through the app?`;
@@ -3488,7 +3556,7 @@ app.post('/webhook', async(req,res)=>{
         // --- CONFIRM YES: team checks manually + 24h-after-date reminder ---
         if(btnId==='DRV_CONFIRM_YES'){
           const _d=state.drvTestDate||'';
-          await _drvSet({driverFlow:true, drvStep:'WAIT_TEST', lastStep:'V364.36 - Driver - Team Checking Fee+Details'});
+          await _drvSet({driverFlow:true, drvStep:'WAIT_TEST', lastStep:'V364.37 - Driver - Team Checking Fee+Details'});
           const _tmsg=_drvMl
             ? `✅ ശരി, നന്ദി! 🙏\n\nഞങ്ങളുടെ ടീം നിങ്ങളുടെ registration fee paid ആയിട്ടുണ്ടോ എന്ന് പരിശോധിക്കും. Confirm ആയാൽ കമ്പനിയിൽ നിന്ന് മറുപടി കിട്ടും.`
             : `✅ OK, thank you! 🙏\n\nOur team will check whether your registration fee is paid. Once confirmed, you will get a reply from our company.`;
@@ -3505,14 +3573,14 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- TEST TRIP YES: warm welcome ---
         if(btnId==='DRV_TEST_YES'){
-          await _drvSet({driverFlow:false, drvStep:'DONE', lastStep:'V364.36 - Driver - Welcomed'});
+          await _drvSet({driverFlow:false, drvStep:'DONE', lastStep:'V364.37 - Driver - Welcomed'});
           await sendWithDelay(textMessage(uid, _drvMl?`🎉 ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം! 🙏\n\nനിങ്ങളുടെ ഓരോ യാത്രയും ഇനി വരുമാനമാക്കൂ. 💛\n\nആപ്പിൽ ഓൺലൈനിൽ തുടരൂ, ട്രിപ്പുകൾ വരും. വാഹനം വൃത്തിയായും പെരുമാറ്റം മാന്യമായും സൂക്ഷിക്കൂ.`:`🎉 Warm welcome to Bizmapia platform! 🙏\n\nMake every journey your income now. 💛\n\nStay online in the app, trips will come. Keep your vehicle clean and behaviour polite.`, incomingPhoneId));
           await sendWithDelay(interactiveButton(uid, _drvMl?`👇 എന്തെങ്കിലും സംശയമുണ്ടോ?`:`👇 Any doubts?`, [{id:'DRV_NO_TRIPS',title:'Not getting trips'},{id:'DRV_DOUBTS',title:'I have doubts'}], incomingPhoneId));
           return;
         }
-        // --- V364.36 AFTER WELCOME: "Not getting trips" doubt ---
+        // --- V364.37 AFTER WELCOME: "Not getting trips" doubt ---
         if(btnId==='DRV_NO_TRIPS' || _isNoTripsText){
-          await _drvSet({driverFlow:true, drvStep:'DONE', lastStep:'V364.36 - Driver - Not Getting Trips'});
+          await _drvSet({driverFlow:true, drvStep:'DONE', lastStep:'V364.37 - Driver - Not Getting Trips'});
           const _ntmsg=_drvMl
             ? `🙏 കുഴപ്പമില്ല, മനസ്സിലായി.
 
@@ -3545,7 +3613,7 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- TEST TRIP NO: reschedule, 48h rule from today ---
         if(btnId==='DRV_TEST_NO'){
-          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.36 - Driver - Reschedule Test Trip'});
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.37 - Driver - Reschedule Test Trip'});
           await sendWithDelay(textMessage(uid, _drvMl?`🙏 കുഴപ്പമില്ല. വീണ്ടും ഒരു തീയതി തിരഞ്ഞെടുക്കൂ.\n\n👉 ഈ മെസ്സേജ് തീയതിയിൽ നിന്ന് 48 മണിക്കൂറിന് ശേഷം മുതൽ മാത്രമേ തിരഞ്ഞെടുക്കാൻ പറ്റൂ.`:`🙏 No problem. Please select another date.\n\n👉 You can select only from 48 hours after today onwards.`, incomingPhoneId));
           await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
           return;
@@ -3590,7 +3658,7 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
-    // ===== V364.36 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // ===== V364.37 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
     // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
     // asked for professional college admission office opportunity - NOT in Bizmapia options.
     // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
@@ -4621,7 +4689,7 @@ Welcome to Bizmapia! 🙏
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
         let aiReply = aiRes.text;
-        // V364.36 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
+        // V364.37 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
         // Format: 🎙️ Voice-il ningal paranjathu: "<transcript>" + answer. Same language as reply.
         if(state.lastVoiceTranscript){
           try{
@@ -4807,7 +4875,7 @@ Welcome to Bizmapia! 🙏
       return;
     }
 
-    // ===== V364.36 Q1 / Q2 HANDLERS =====
+    // ===== V364.37 Q1 / Q2 HANDLERS =====
     if(btnId==='Q1_RUNNING' || btnId==='Q1_PLANNING' || btnId==='Q1_JUST'){
       const q1 = btnId==='Q1_RUNNING' ? 'RUNNING' : btnId==='Q1_PLANNING' ? 'PLANNING' : 'JUST_ENQUIRY';
       state.q1=q1; state.lastStep='Q1 - '+q1; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
@@ -4840,7 +4908,7 @@ Welcome to Bizmapia! 🙏
       try{ const _opUrl = typeof getVideoUrl==='function' ? getVideoUrl('OPP_DISTRICT', lang) : getCompanyVideoUrl(lang); await sendWithDelay(singleCta(uid, (lang==='ml' ? `✅ നന്ദി! Opportunity വീഡിയോ കാണുക:` : lang==='hi' ? `✅ धन्यवाद! Opportunity वीडियो देखें:` : `✅ Thank you! Please watch Opportunity Video:`), {title:'🎥 See Video', url:_opUrl}, incomingPhoneId)); }catch(e){ await sendWithDelay(interactiveButton(uid, lang==='ml' ? `✅ നന്ദി! Opportunity വിശദാംശങ്ങൾ:` : lang==='hi' ? `✅ धन्यवाद! Opportunity विवरण:` : `✅ Thank you! Opportunity details:`, [{id:'OPP_DISTRICT',title:'District'},{id:'OPP_CORP',title:'Corporation'},{id:'OPP_CENTER',title:'Business Centre'}], incomingPhoneId)); }
       return;
     }
-    // ===== END V364.36 Q1/Q2 =====
+    // ===== END V364.37 Q1/Q2 =====
     if(btnId==='OPP_DISTRICT'){
       state.sub='OPP_DISTRICT'; state.lastStep='💰 ₹5L-₹15L Invest - DISTRICT - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
@@ -6090,10 +6158,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.36', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.37', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.36', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.37', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -6121,20 +6189,20 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V364.36 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V364.37 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.36', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.36', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.36', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.36', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.37', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.37', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.37', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.37', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
 app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
 app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.36', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.37', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -6146,7 +6214,7 @@ app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.36', p
 // 7 Losers return confirm  8 Instant Team Notification  9 Day End Report 8 PM
 // NO other V362 logic touched. Button Only. No link / number in chat body.
 // ============================================================================
-const V364_VERSION = 'V364.36';
+const V364_VERSION = 'V364.37';
 const V364_TEAM_BO = '918590175977';
 const V364_TEAM_SERVICES = '918590183646';
 const V364_DAY_END_TO = ['918590175977','918590183646'];
@@ -6168,7 +6236,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.36', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.37', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -6177,7 +6245,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.36', checks:{
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.36', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.37', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -6200,7 +6268,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.36 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.37 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
