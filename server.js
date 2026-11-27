@@ -989,6 +989,8 @@ async function m41_buildSearchContext(userText, history){
 //   - Reply in user's selected language only. Short: max 3 lines + 1 question. 1 action only.
 async function m43_brain(txt, lang, state){
   try{
+    // V364.44: if lang missing, infer from message - never block Brain on missing lang.
+    if(!lang){ lang = 'ml'; if(/[\u0900-\u097F]/.test(String(txt||''))) lang='hi'; if(/[\u0D00-\u0D7F]/.test(String(txt||''))) lang='ml'; }
     const _txt = String(txt||'').slice(0,500);
     if(!_txt.trim()) return null;
     const _hist = (state.aiHistory||[]).slice(-8).map(h=>`${h.role}: ${String(h.text||'').slice(0,200)}`).join('\n');
@@ -3757,7 +3759,11 @@ app.post('/webhook', async(req,res)=>{
         const _m37Lang = state.lang || 'ml';
         const _m37Mind = state.mindset || state.intent || '';
         // V364.43: BRAIN FIRST - one AI call for all inputs. If Brain returns a reply, send it and STOP - old funnel never runs.
-          const _brain43 = (_m37IsFreeText && !state.driverFlow && state.lang) ? await (typeof m43_brain==='function' ? m43_brain(txt, _m37Lang, state) : null) : null;
+          // V364.44 FIX: Brain runs even when state.lang is EMPTY (user typed before picking language).
+          // Old gate "&& state.lang" blocked Brain exactly in your screenshot test. Removed.
+          // Infer lang from message itself: Malayalam script -> ml, Devanagari -> hi, else en.
+          const _inferLang44 = /[\u0D00-\u0D7F]/.test(String(txt||'')) ? 'ml' : (/[\u0900-\u097F]/.test(String(txt||'')) ? 'hi' : (state.lang || 'ml'));
+          const _brain43 = (_m37IsFreeText && !state.driverFlow) ? await (typeof m43_brain==='function' ? m43_brain(txt, _inferLang44, {...state, lang:_inferLang44}) : null) : null;
           if(_brain43 && _brain43.action!=='STOP' && _brain43.reply){
             try{ console.log('M43 BRAIN feeling='+(_brain43.feeling||'')+' txt='+String(txt).slice(0,60)); }catch(_){}
             await setState(uid,{...state, m37Pause:false, m37Feeling:_brain43.feeling||'', lastStep:'V364.43 - Brain - '+(_brain43.feeling||''), phoneId: incomingPhoneId});
@@ -6608,7 +6614,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.43 MAYA-BRAIN-ALL-TIME - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.44 BRAIN-NO-LANG-GATE - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
