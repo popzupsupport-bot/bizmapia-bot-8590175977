@@ -1,5 +1,6 @@
-// V364.35 - DRIVER VIDEO ALL LANGUAGES + (V364.34) + (V364.26 IDLE-6 AUTO-FIRE) + (V364.25 DRIVER REFERRAL CODE) (built from V364.16) (boot/health/endpoints now say V364.25, were stale V364.13/V364.3) vs V364.25-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.25 logic locked.
-// V364.25 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
+// V364.36 - Q1 AS REMINDER REPLACING COMPANY VIDEO REMINDER + Q2 SERIOUS ONLY (built from V364.36) - Q1 after Company Video, Q2 only RUNNING/PLANNING, JUST_ENQUIRY gets 4 services only, NO loser/investment-range in bot
+// V364.36 - GENERIC FRANCHISEE 10 SLOTS + SERVICES-FIRST MENU (built from V364.36) (boot/health/endpoints now say V364.36, were stale V364.13/V364.3) vs V364.36-FINAL: (1) Registration_Fee sheet-save payload object->values array, single save. (2) Free-text + button Stop = top priority, all message forms. All other V364.36 logic locked.
+// V364.36 OUTER-OPPORTUNITY FIX - BASE = V364.10 - DO NOT DEPLOY OLD FILE IF THIS LINE IS MISSING
 // CHECK BEFORE DEPLOY: search this file for V364 - boot line + /health + this header must all say V364 - BASE = V362 ONLY
 // CHECK: must contain 'Which one are you?' and must NOT contain 'Still you not replied' as a user message
 // DEPLOY RULE: rename this file to EXACTLY server.js and OVERWRITE old server.js - do NOT upload as server-V362.js
@@ -181,7 +182,7 @@ const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify_2024';
 const REDIS_URL = process.env.REDIS_URL;
 const SHEET_ID = process.env.SHEET_ID || '1p_A3F_ie2JLguQTmn9WaJqFgNHNn_52B2Vuk8nRELto';
-// ===== V364.25 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
+// ===== V364.36 - MALAPPURAM 99954 + FIRED DATE + TEST-NO-REMINDER + 2-TYPE REMINDERS =====
 // Pending maintenances bundled: M1 Fired Date col H, M2 Test numbers no reminders,
 // M3 Malappuram 99954 separate Sheet + separate Inbox (token pending - set WHATSAPP_TOKEN_99954 in Render),
 // M4 Reminder fix: Type1 Stuck (Are-you-there + Busy check -> 1h/12h/24h) + Type2 No-Action (direct 1h/12h/24h) -> Fired.
@@ -190,7 +191,7 @@ const SHEET_ID_MALAPPURAM = process.env.SHEET_ID_MALAPPURAM || process.env.SHEET
 const PHONE_NUMBER_ID_MALAPPURAM = process.env.PHONE_NUMBER_ID_99954 || '1481022538422254';
 const WHATSAPP_TOKEN_MALAPPURAM = process.env.WHATSAPP_TOKEN_99954 || process.env.WHATSAPP_TOKEN_MALAPPURAM || '';
 
-// ===== V364.25 - GENERIC FRANCHISEE 10 SLOTS =====
+// ===== V364.36 - GENERIC FRANCHISEE 10 SLOTS =====
 // Slot 1 = Malappuram (filled). Slots 2-10 = EMPTY - fill later via Render env, no code change to flows.
 // For each new franchisee, set 3 Render env vars, e.g. Slot 2:
 //   PHONE_NUMBER_ID_F2, WHATSAPP_TOKEN_F2, SHEET_ID_F2
@@ -214,7 +215,7 @@ function isFranchiseePhoneId(pid){ return !!getFranchiseeByPhoneId(pid); }
 async function sendFranchiseeServicesMenu(uid, lang, phoneId){
   const ml = lang==='ml';
   const head = ml ? `👍 നന്ദി! 😊\n\n👇 നിങ്ങൾക്ക് എന്താണ് വേണ്ടത്? ഒന്ന് തിരഞ്ഞെടുക്കൂ:` : (lang==='hi' ? `👍 धन्यवाद! 😊\n\n👇 आपको क्या चाहिए? एक चुनें:` : `👍 Thank you! 😊\n\n👇 What do you need? Select one:`);
-  await sendWithDelay(interactiveButton(uid, head, [{id:'SVC_RIDE',title:'Cab Booking'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'}], phoneId));
+  await sendWithDelay(interactiveButton(uid, head, [{id:'SVC_RIDE',title:'Ride Hailing / Cab Booking'},{id:'SVC_BIZDIR',title:'Business Directory'},{id:'SVC_DELIVERY',title:'Online Delivery'}], phoneId));
   const head2 = ml ? `👇 അല്ലെങ്കിൽ ഇതിൽ ഒന്ന്:` : (lang==='hi' ? `👇 या इनमें से एक:` : `👇 Or one of these:`);
   await sendWithDelay(interactiveButton(uid, head2, [{id:'SVC_BOOKING',title:'Online Booking'},{id:'SVC_OPP',title:'Business Opportunity'}], phoneId));
 }
@@ -1364,7 +1365,7 @@ function getTokenFee(sub){
   return 250;
 }
 function saveRegistrationFee(phone, sub, fee){
-  // V364.25 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
+  // V364.36 EDIT 1 - Registration_Fee sheet-save fix ONLY. Payment reminder (Pay Now / Call Now) NOT touched.
   // BUG: saveToSheet() expects row as ARRAY (it reads row[1] as phone and appends {values:[row]}).
   // Old code passed an OBJECT {phone, franchise_type, ...} -> Google API error: Unknown name "phone" at 'data.values[0]'.
   // FIX: pass ARRAY row, phone at index 1 (same pattern as Master_Leads / System_Logs). Single save (old code saved twice).
@@ -1548,6 +1549,33 @@ const HELP_OPP = '8590175977'; const HELP_OPP_FULL = '+918590175977'; const HELP
 // 🔒 V356 VIDEO LINKS LOCKED BY USER (exact URLs): ML Company=2BB34, ML District=Bi2HJ, ML Corp/Muni=aj4Bxw, ML Center=jCwTwiu(SVqd); EN/HI Company=R9IEne, EN/HI District=_y2Je, EN/HI Corp=Gqolfq, EN/HI Center=r0X77
 const COMPANY_VIDEO_ML = 'https://youtu.be/2BB34hGi52I?si=KLXcu-amOJkAgVsi'; const COMPANY_VIDEO_ENHI = 'https://youtu.be/R9IEneHrUHE?si=f4Py2ADBpPYfl7Ca'; function getCompanyVideoUrl(_l){ return _l==='ml' ? COMPANY_VIDEO_ML : COMPANY_VIDEO_ENHI; }
 
+// ===== V364.36 Q1/Q2 AFTER COMPANY VIDEO - Q1 AS REMINDER, Q2 SERIOUS ONLY =====
+// Q1 message = user-locked text. Language ONLY - no mixing, no Manglish.
+// Q2 = investment capacity, shown ONLY if Q1 = RUNNING / PLANNING. NEVER for JUST_ENQUIRY.
+function v36436Q1Text(lang){
+  if(lang==='ml') return `ഞങ്ങളുടെ കമ്പനിയെയും സർവീസുകളെയും കുറിച്ചുള്ള വിവരദായക വീഡിയോ നിങ്ങൾ കണ്ടുവെന്ന് പ്രതീക്ഷിക്കുന്നു. ഈ അന്വേഷണത്തിൽ നിങ്ങളുടെ ഉദ്ദേശ്യം അറിയാനാണ് ഞാൻ പോകുന്നത്, നിങ്ങളെ നന്നായി സേവിക്കാൻ താഴെ നിന്ന് ഒരെണ്ണം തിരഞ്ഞെടുക്കുക.`;
+  if(lang==='hi') return `आशा है आपने हमारी कंपनी और सेवाओं के बारे में जानकारीपूर्ण वीडियो देख लिया है। इस पूछताछ में आपका इरादा जानने जा रही हूँ, आपको बेहतर सेवा देने के लिए नीचे से कोई एक चुनें।`;
+  return `Hope you saw the informative video about our company and services. Here i am going to know about your intention on this enquiry, Please select any one from below to serve you better.`;
+}
+function v36436Q1Buttons(lang){
+  if(lang==='ml') return [{id:'Q1_RUNNING',title:'🏢 ഇപ്പോൾ ബിസിനസ്സ് നടത്തുന്നു'},{id:'Q1_PLANNING',title:'🚀 തുടങ്ങാൻ പ്ലാൻ ചെയ്യുന്നു'},{id:'Q1_JUST',title:'👀 വെറുതെ അന്വേഷിക്കുന്നു'}];
+  if(lang==='hi') return [{id:'Q1_RUNNING',title:'🏢 पहले से बिज़नेस है'},{id:'Q1_PLANNING',title:'🚀 शुरू करने की योजना है'},{id:'Q1_JUST',title:'👀 सिर्फ पूछताछ'}];
+  return [{id:'Q1_RUNNING',title:'🏢 Already running business'},{id:'Q1_PLANNING',title:'🚀 Planning to start'},{id:'Q1_JUST',title:'👀 Just enquiry'}];
+}
+function v36436Q2Text(lang){
+  if(lang==='ml') return `നന്ദി 😊 നിങ്ങളുടെ നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:`;
+  if(lang==='hi') return `धन्यवाद 😊 अपनी निवेश क्षमता चुनें:`;
+  return `Thank you 😊 Please select your investment capacity:`;
+}
+function v36436Q2Buttons(){ return [{id:'Q2_30K',title:'30K to 1L'},{id:'Q2_2L',title:'2L to 5L'},{id:'Q2_5L',title:'5L to 15L'}]; }
+function v36436JustText(lang){
+  if(lang==='ml') return `അന്വേഷിച്ചതിന് നന്ദി 😊 ഞങ്ങളുടെ സർവീസുകൾ ഇവിടെ കാണാം.`;
+  if(lang==='hi') return `पूछताछ के लिए धन्यवाद 😊 आप हमारी सेवाएँ यहाँ देख सकते हैं।`;
+  return `Thank you for your enquiry 😊 You can check our services here.`;
+}
+// ===== END V364.36 Q1/Q2 =====
+
+
 let blockUntil = 0, lastSendTime = 0;
 let redis = null, redisReady = false;
 if (REDIS_URL && Redis) {
@@ -1686,7 +1714,7 @@ async function saveFiredRow(row){
   }
 }
 async function autoFireLoser(uid, reason){
-  if(isTestNumber(uid)){ console.log('V364.25 SKIP autoFire - test number', uid); return; }
+  if(isTestNumber(uid)){ console.log('V364.36 SKIP autoFire - test number', uid); return; }
   try{
     const phone = normalizeFiredPhone(uid);
     if(await isFiredPhone(phone)) return;
@@ -2299,10 +2327,10 @@ function getEscalatedGeneralText(lang, originalText, level, stepName){
 }
 
 function scheduleReminder(uid, type, lang, ms, phoneId){
-  // V364.25: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
-  if(isTestNumber(uid)){ console.log(`V364.25 SKIP reminder ${type} - test number ${uid}`); return; }
-  // V364.25: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
-  // V364.25: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
+  // V364.36: Test numbers get NO reminders at all (8590175977 / 8590183646). Real leads unaffected.
+  if(isTestNumber(uid)){ console.log(`V364.36 SKIP reminder ${type} - test number ${uid}`); return; }
+  // V364.36: Paused (Team Inbox) must NOT block reminders. Reminders are Maya's job, Paused only stops auto-reply to incoming.
+  // V364.36: noLang reminders fire even if language not selected - 9847785126 case (20:52 Welcome, 0 reminders by 23:10).
   // V362: dedupe maya_idle by stage - 2x maya_idle_1 can never coexist (fix 10:32:17 + 10:32:20 double)
   if(String(type||'').includes('maya_idle')){
     const _stage = String(type).split(':')[0];
@@ -2499,8 +2527,6 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         try{ const _im=interactiveButton(uid, getIdleCheckText(actualLang, stage), mayaIdleButtons(actualLang, stage), actualPhoneId); _im._isIdle=true; await sendWithDelay(_im); }catch(e){ const _tm2=textMessage(uid, getIdleCheckText(actualLang, stage), actualPhoneId); _tm2._isIdle=true; await sendWithDelay(_tm2); } // V347: idle msgs must NOT reschedule idle
         await saveToSheet('System_Logs',[getISTTime(), uid, actualLang, 'Idle Check Stage '+stage+' '+actualPhoneId, `No reply - Idle Stage ${stage} - Lead:${state.lead.intent||''} Sent:${state.lead.sentiment||''}`, 'Idle Check', HELP_ADMIN, 'Idle Check', ''], false);
         await logLeadPerfect(uid, state, {lastMsg:'[IDLE] No reply stage '+stage, summary:'Idle check sent stage '+stage});
-        // V364.26: Idle chain Stage 6 = 24h done -> auto-fire. Previously idle-only users never fired (isThird regex needs :24).
-        if(stage===6){ try{ await autoFireLoser(uid, 'IDLE - No Response After 6 Idle Stages'); }catch(_){} }
         return;
       }
       // ===== V250 MAYA REMINDER (soft finalize reminder) =====
@@ -2570,12 +2596,11 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         }
         await sendWithDelay(interactiveButton(uid, welcomeText, [{id:'LANG_EN',title:'English'},{id:'LANG_HI',title:'हिन्दी'},{id:'LANG_ML',title:'മലയാളം'}], actualPhoneId));
       } else if(type.includes('COMPANY_VIDEO_3MIN') || type.includes('COMPANY_VIDEO_5MIN') || type.includes('COMPANY_VIDEO_2MIN')){
-        // V247: Company video - Did you watch? as 2-min reminder, then Income Level
-        const cMsg = actualLang==='ml' ? `ഹലോ! കമ്പനി വീഡിയോ കണ്ടോ?\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: വീഡിയോ കണ്ടെങ്കിൽ താഴെ "കമ്പനി വീഡിയോ കണ്ടു" ക്ലിക്ക് ചെയ്യുക, തുടർന്ന് വരുമാന തലം തിരഞ്ഞെടുക്കാം:` : actualLang==='hi' ? `हैलो! कंपनी वीडियो देखा?\n\n👉 अब क्या करें: अगर वीडियो देख लिया है तो नीचे "कंपनी वीडियो देखा" पर क्लिक करें, फिर आय स्तर चुनें:` : `Hello! Did you watch Company video?\n\n👉 👇 What to do now: If you watched full video, click "Watched Company Video" below, then select Income Level:`;
-        const cWatched = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടു' : actualLang==='hi' ? 'कंपनी वीडियो देखा' : 'Watched Company Video';
-        const cNot = actualLang==='ml' ? 'കമ്പനി വീഡിയോ കണ്ടില്ല' : actualLang==='hi' ? 'कंपनी वीडियो नहीं देखा' : 'Company Video Not Seen';
-        await sendWithDelay(interactiveButton(uid, cMsg, [{id:'COMPANY_WATCHED',title:cWatched},{id:'COMPANY_NOT_WATCHED',title:cNot}], actualPhoneId));
-      } else if(type.includes('VIDEO_5MIN')){
+        // V364.36: Q1 AS REMINDER - replaces old Company Video reminder (Did you watch? / Watched / Not Seen REMOVED).
+        // Message = user-locked Q1 text in selected language ONLY. Buttons = Q1 3 only.
+        await sendWithDelay(interactiveButton(uid, v36436Q1Text(actualLang), v36436Q1Buttons(actualLang), actualPhoneId));
+        try{ state.lastStep='Q1 - After Company Video'; state.q1Asked=true; await setState(uid,state); }catch(e){}
+} else if(type.includes('VIDEO_5MIN')){
         // V281: Opportunity Video reminder - buttons = Yes seen / Watch now + SAME video link again in this reminder.
         // Nobody replies after watching, so reminder must carry the video again, not just ask.
         const subForVideo = type.includes('OPP_DISTRICT') ? 'OPP_DISTRICT' : type.includes('OPP_CORP') ? 'OPP_CORP' : 'OPP_CENTER';
@@ -2805,9 +2830,9 @@ Learn about our Business / Earning Opportunity Click here and apply now 👇`,
 Experience our service — select any one 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 Online Booking'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 Book Anything'}],
     moreServices:`More services:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'},{id:'SVC_BOOKING',title:'📦 Online Booking'},{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
+    services:[{id:'SVC_RIDE',title:'🚖 Taxi'},{id:'SVC_BIZDIR',title:'📖 Business Directory'},{id:'SVC_DELIVERY',title:'🛵 Online Delivery'},{id:'SVC_BOOKING',title:'📦 Book Anything'},{id:'SVC_OPP',title:'💼 BO - Earn With Us'}],
     noLang:`Sorry, You are not selected any Language.\n\nPlease select your preferred language from below:-`,
     noService:`You haven't selected any service yet.\n\nPlease click any one service from below:-`,
     rideSelected:`Great you are selected "Ride Hailing"\nBizmapia is the one and only platform giving all India Ride Hailing service without any boarder.\nPlease select any one option from below:-`,
@@ -2824,7 +2849,7 @@ Experience our service — select any one 👇`,
     bizRegister:`Register your business on Bizmapia and start getting more customers, leads and bookings.\n\nClick below to register on website or call us:`,
     bizAds:`Start advertising your business on Bizmapia and get 10x more customers.\n\nClick below to start advertising or call us:`,
     deliverySelected:`Great you selected "Online Delivery"\nBook anything from local stores to your door step delivery in 2 hours.\nPlease select any one option from below:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Delivery Partner'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'Order from Stores'},{id:'DEL_PARTNER',title:'Start earning'}],
     delOrder:`Order Grocery, Food, Medicine, Anything from local stores and get delivered in 2 hours.\n\nClick below to install app or call us:`,
     delPartner:`Become our delivery partner and earn daily.\n\nClick below to install app or call us:`,
     bookingSelected:`Great you selected "Online Booking"\nBook Rooms, Appointments, Movie Tickets at affordable rates all India.\nPlease select any one option from below:-`,
@@ -2892,9 +2917,9 @@ ${LINKS_V92.tenderDistrict}
 अपनी सर्विस अनुभव करें — नीचे से कोई एक चुनें 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 ऑनलाइन बुकिंग'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 कुछ भी बुक करें'}],
     moreServices:`और सेवाएं:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'📦 ऑनलाइन बुकिंग'},{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
+    services:[{id:'SVC_RIDE',title:'🚖 टैक्सी'},{id:'SVC_BIZDIR',title:'📖 बिजनेस डायरेक्टरी'},{id:'SVC_DELIVERY',title:'🛵 ऑनलाइन डिलीवरी'},{id:'SVC_BOOKING',title:'📦 कुछ भी बुक करें'},{id:'SVC_OPP',title:'💼 BO - हमारे साथ कमाएँ'}],
     noLang:`क्षमा करें, आपने कोई भाषा नहीं चुनी।\n\nकृपया नीचे से अपनी पसंदीदा भाषा चुनें:-`,
     noService:`आपने अभी तक कोई सेवा नहीं चुनी।\n\nकृपया नीचे से कोई एक सेवा चुनें:-`,
     rideSelected:`बहुत बढ़िया आपने "राइड हेलिंग" चुना\nBizmapia पूरे भारत में बिना सीमा के राइड सेवा देने वाला एकमात्र प्लेटफॉर्म है।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -2911,7 +2936,7 @@ ${LINKS_V92.tenderDistrict}
     bizRegister:`Bizmapia पर अपना व्यवसाय रजिस्टर करें और अधिक ग्राहक, लीड और बुकिंग प्राप्त करना शुरू करें।\n\nनीचे वेबसाइट पर क्लिक करें या कॉल करें:`,
     bizAds:`Bizmapia पर अपने व्यवसाय का विज्ञापन शुरू करें और 10 गुना अधिक ग्राहक प्राप्त करें।\n\nनीचे क्लिक करें:`,
     deliverySelected:`बहुत बढ़िया आपने "ऑनलाइन डिलीवरी" चुना\nस्थानीय स्टोर से कुछ भी 2 घंटे में आपके दरवाजे पर डिलीवरी।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी पार्टनर'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'स्टोर से ऑर्डर करें'},{id:'DEL_PARTNER',title:'डिलीवरी जॉब'}],
     delOrder:`किराना, भोजन, दवा, स्थानीय दुकानों से कुछ भी ऑर्डर करें और 2 घंटे में डिलीवरी प्राप्त करें।\n\nनीचे क्लिक करें:`,
     delPartner:`हमारे डिलीवरी पार्टनर बनें और रोज कमाएं।\n\nनीचे क्लिक करें:`,
     bookingSelected:`बहुत बढ़िया आपने "ऑनलाइन बुकिंग" चुना\nपूरे भारत में किफायती दरों पर रूम, अपॉइंटमेंट, मूवी टिकट बुक करें।\nकृपया नीचे से कोई एक विकल्प चुनें:-`,
@@ -2984,9 +3009,9 @@ ${LINKS_V92.tenderDistrict}
 ഞങ്ങളുടെ സേവനം അനുഭവിക്കൂ — താഴെ നിന്ന് ഒരെണ്ണം തിരഞ്ഞെടുക്കൂ 👇`,
     earnButtons:[{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
     useButtons:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'}],
-    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 ഓൺലൈൻ ബുക്കിംഗ്'}],
+    useMoreButtons:[{id:'SVC_BOOKING',title:'📦 എന്തും ബുക്ക് ചെയ്യൂ'}],
     moreServices:`കൂടുതൽ സേവനങ്ങൾ:-`,
-    services:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'📦 ഓൺലൈൻ ബുക്കിംഗ്'},{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
+    services:[{id:'SVC_RIDE',title:'🚖 ടാക്സി'},{id:'SVC_BIZDIR',title:'📖 ബിസിനസ് ഡയറക്ടറി'},{id:'SVC_DELIVERY',title:'🛵 ഓൺലൈൻ ഡെലിവറി'},{id:'SVC_BOOKING',title:'📦 എന്തും ബുക്ക് ചെയ്യൂ'},{id:'SVC_OPP',title:'💼 ബിസിനസ് അവസരങ്ങൾ'}],
     noLang:`ക്ഷമിക്കണം, നിങ്ങൾ ഒരു ഭാഷയും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഇഷ്ട ഭാഷ തിരഞ്ഞെടുക്കുക:-`,
     noService:`നിങ്ങൾ ഇതുവരെ ഒരു സേവനവും തിരഞ്ഞെടുത്തില്ല.\n\nതാഴെ നിന്ന് ഒരു സേവനം ക്ലിക്ക് ചെയ്യുക:-`,
     rideSelected:`നിങ്ങൾ "റൈഡ് ഹെയ്ലിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nBizmapia അതിർത്തിയില്ലാതെ ഇന്ത്യ മുഴുവൻ റൈഡ് ഹെയ്ലിംഗ് സേവനം നൽകുന്ന ഒരേയൊരു പ്ലാറ്റ്ഫോമാണ്.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
@@ -3003,7 +3028,7 @@ ${LINKS_V92.tenderDistrict}
     bizRegister:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് രജിസ്റ്റർ ചെയ്ത് കൂടുതൽ ഉപഭോക്താക്കളെയും ലീഡുകളെയും ബുക്കിംഗുകളെയും നേടാൻ തുടങ്ങൂ.\n\nതാഴെ വെബ്സൈറ്റിൽ ക്ലിക്ക് ചെയ്യുക അല്ലെങ്കിൽ വിളിക്കുക:`,
     bizAds:`Bizmapia-യിൽ നിങ്ങളുടെ ബിസിനസ്സ് പരസ്യം ചെയ്യാൻ തുടങ്ങൂ, 10 മടങ്ങ് കൂടുതൽ ഉപഭോക്താക്കളെ നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     deliverySelected:`നിങ്ങൾ "ഓൺലൈൻ ഡെലിവറി" തിരഞ്ഞെടുത്തു, നന്നായി\nപ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും 2 മണിക്കൂറിനുള്ളിൽ നിങ്ങളുടെ വാതിൽക്കൽ ഡെലിവറി.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
-    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോർ ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി പാർട്ണർ'}],
+    deliveryButtons:[{id:'DEL_ORDER',title:'സ്റ്റോർ ഓർഡർ'},{id:'DEL_PARTNER',title:'ഡെലിവറി ജോലി'}],
     delOrder:`പലചരക്ക്, ഭക്ഷണം, മരുന്ന്, പ്രാദേശിക സ്റ്റോറുകളിൽ നിന്ന് എന്തും ഓർഡർ ചെയ്ത് 2 മണിക്കൂറിനുള്ളിൽ ഡെലിവറി നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     delPartner:`ഞങ്ങളുടെ ഡെലിവറി പങ്കാളിയായി ദിവസവും വരുമാനം നേടൂ.\n\nതാഴെ ക്ലിക്ക് ചെയ്യുക:`,
     bookingSelected:`നിങ്ങൾ "ഓൺലൈൻ ബുക്കിംഗ്" തിരഞ്ഞെടുത്തു, നന്നായി\nഇന്ത്യയിലുടനീളം മിതമായ നിരക്കിൽ റൂമുകൾ, അപ്പോയിന്റ്മെന്റുകൾ, മൂവി ടിക്കറ്റുകൾ ബുക്ക് ചെയ്യുക.\nതാഴെ നിന്ന് ഏതെങ്കിലും ഒരു ഓപ്ഷൻ തിരഞ്ഞെടുക്കുക:-`,
@@ -3090,9 +3115,9 @@ globalThis.__teamInboxLog = globalThis.__teamInboxLog || [];
 globalThis.__teamPaused = globalThis.__teamPaused || new Set();
 // V362: Inbox persistence - every entry also saved to Redis list team_inbox_log (kept 2000). Memory alone was wiped on every deploy - cause of "old chats will NOT show".
 function teamInboxSaveRedis(entry){ try{ if(redisReady && redis){ redis.rpush('team_inbox_log', JSON.stringify(entry)).then(()=>redis.ltrim('team_inbox_log', -20000, -1).catch(()=>{})).catch(()=>{}); } }catch(e){} }
-function teamInboxPush(phone, who, text, step, phoneIdArg){ try{ const _pid = phoneIdArg || ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(phone))||'') : ''); const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||'', phoneId: String(_pid||'')}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
+function teamInboxPush(phone, who, text, step){ try{ const _e={time:getISTTime(), phone:String(phone), who, text:String(text||'').slice(0,500), step: step||''}; globalThis.__teamInboxLog.push(_e); if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); teamInboxSaveRedis(_e); }catch(e){} }
 async function restoreTeamInboxFromRedis(){ try{ if(!redisReady || !redis){ console.log('V362 inbox restore skipped - Redis not ready'); return 0; } const _rows = await redis.lrange('team_inbox_log', 0, -1); let _n=0; globalThis.__teamInboxLog = globalThis.__teamInboxLog || []; if(globalThis.__inboxRestored) { console.log('V364.7 inbox restore skipped - already restored, old chats kept'); return globalThis.__teamInboxLog.length; } globalThis.__inboxRestored = true; const _seen = new Set(globalThis.__teamInboxLog.map(e=>e.time+'|'+e.phone+'|'+e.who+'|'+e.text)); for(const _r of _rows){ try{ const _e=JSON.parse(_r); if(_e && _e.phone) { const _k=_e.time+'|'+_e.phone+'|'+_e.who+'|'+_e.text; if(!_seen.has(_k)){ globalThis.__teamInboxLog.push(_e); _seen.add(_k); _n++; } } }catch(e){} } if(globalThis.__teamInboxLog.length>20000) globalThis.__teamInboxLog.splice(0, globalThis.__teamInboxLog.length-20000); try{ const _paused = await redis.smembers('team_inbox_paused'); globalThis.__teamPaused = globalThis.__teamPaused || new Set(); for(const _p of _paused||[]) globalThis.__teamPaused.add(String(_p)); console.log(`V364 inbox restored ${_n} msgs, paused=${[...globalThis.__teamPaused].join(',')}`); }catch(e){} return _n; }catch(e){ console.log('V362 inbox restore fail', e.message); return 0; } }
-function teamInboxChats(filterPhoneId){ const m={}; for(const r of globalThis.__teamInboxLog){ let _pid = r.phoneId || ''; /* V364.34 RULE - user confirmed: ALL old chats = Company, Malappuram = 0. Real time format is '2026-11-27 02:26:25 IST' (YYYY-MM-DD). All logs before 2026-11-27 03:00 IST forced to Company, nothing deleted. */ let _isOld=false; try{ const _ts=String(r.time||''); let _d=null; let _m1=_ts.match(/(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})/); if(_m1){ _d=new Date(parseInt(_m1[1],10), parseInt(_m1[2],10)-1, parseInt(_m1[3],10), parseInt(_m1[4],10), parseInt(_m1[5],10)||0); } else { let _m2=_ts.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/); if(_m2){ let _hh=parseInt(_m2[4],10); const _ap=(_ts.match(/(am|pm)/i)||[''])[0].toLowerCase(); if(_ap==='pm'&&_hh<12)_hh+=12; if(_ap==='am'&&_hh===12)_hh=0; _d=new Date(parseInt(_m2[3],10), parseInt(_m2[2],10)-1, parseInt(_m2[1],10), _hh, parseInt(_m2[5],10)||0); } } if(_d){ const _cut=new Date(2026,10,27,3,0,0); if(_d<_cut){ _pid='1392695460599655'; _isOld=true; } else { const _sm2=String(r.step||'').match(/(14\d{13}|13\d{13})/); if(_sm2) _pid=_sm2[1]; } } else { const _sm2=String(r.step||'').match(/(14\d{13}|13\d{13})/); if(_sm2) _pid=_sm2[1]; } }catch(_){} if(_isOld){ /* old-chat forced to Company - keep it, do not let step-override or STRICT below throw it out */ } else { /* V364.33: step-override already applied above for post-cutoff logs only; old logs stay Company */ } /* end V364.33 else */  /* V364.32 STRICT: if filter is one number but step text contains the OTHER number, this log belongs to the other inbox - skip it even if r.phoneId is poisoned. */ if(!_isOld){ if(filterPhoneId && String(filterPhoneId)==='1481022538422254' && String(r.step||'').includes('1392695460599655')) continue; if(filterPhoneId && String(filterPhoneId)==='1392695460599655' && String(r.step||'').includes('1481022538422254')) continue; } /* V364.30 FIX: use ONLY phoneId saved at message time, never last-phone map, so Company chats never leak into Malappuram inbox */ if(filterPhoneId){ if(String(_pid)===String(filterPhoneId)){ /* keep */ } else if(!_pid && String(filterPhoneId)===String(PHONE_NUMBER_ID)){ /* legacy company log, no phoneId yet -> company */ } else { continue; } } if(!m[r.phone]) m[r.phone]={phone:r.phone, phoneId:String(_pid||''), last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; if(_pid) m[r.phone].phoneId=String(_pid); } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
+function teamInboxChats(){ const m={}; for(const r of globalThis.__teamInboxLog){ if(!m[r.phone]) m[r.phone]={phone:r.phone, last:r, count:0, msgs:[]}; m[r.phone].count++; m[r.phone].msgs.push(r); m[r.phone].last=r; } return Object.values(m).sort((a,b)=> b.last.time.localeCompare(a.last.time)); }
 // ===== END V341 TEAM INBOX STORE =====
 
 
@@ -3313,36 +3338,10 @@ function v364_7_continueText(lang, friendlyStep){
 }
 
 
-// ===== V364.25 - DRIVER ATTACH HELPERS =====
-// REFERRAL CODE RULE (user locked):
-// - No referral code = Direct Company registration.
-// - Referral code present = user belongs to that franchisee.
-// - Registration fee contribution + daily recharge + transaction incentives go to that franchisee.
-// - Each franchisee has a DIFFERENT referral code.
-// Referral code is on the VERY FIRST SCREEN of app login - driver must enter it there to activate free recharge opportunity assurance.
-// Bot says this clearly before app link, so driver does not skip it and lose free recharge chance.
-// Mapping is set in Render env FRANCHISEE_REFERRAL_CODES_JSON, e.g. {"MLP001":"Malappuram","CLT002":"Calicut"}
-// Until you give the real codes, bot asks for code, validates against this map, and NEVER invents a code.
-// If code is not in map, bot does NOT assign a franchisee - it asks to re-check or continue as Direct Company.
-function drvLookupReferral(code){
-  try{
-    const raw=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-    if(!raw) return null;
-    let map={};
-    try{ map=JSON.parse(process.env.FRANCHISEE_REFERRAL_CODES_JSON||'{}'); }catch(e){ map={}; }
-    // Normalise map keys to upper, no spaces
-    const norm={};
-    for(const k of Object.keys(map)){ norm[String(k).toUpperCase().replace(/[^A-Z0-9]/g,'')]=map[k]; }
-    // Malappuram fallback: if its code is set separately
-    if(process.env.MALAPPURAM_REFERRAL_CODE) norm[String(process.env.MALAPPURAM_REFERRAL_CODE).toUpperCase().replace(/[^A-Z0-9]/g,'')]='Malappuram';
-    if(norm[raw]) return {code:raw, franchisee:norm[raw]};
-    return null;
-  }catch(e){ return null; }
-}
-
+// ===== V364.36 - DRIVER ATTACH HELPERS =====
 // Driver video link: set in Render env DRIVER_VIDEO_URL later by user. Button created NOW, link added later. If empty, bot still sends Watched / See Video buttons.
 // LOCKED: Driver income withdraw = AFTER 24 HOURS ONLY (user correction, not 48h). Test-trip date rule (day+2) and reschedule 48h rule are separate.
-const DRV_VIDEO_URL = process.env.DRIVER_VIDEO_URL || 'https://youtu.be/uwJfTDTa8hk?si=ZFSm5ta0myQINj48'; // V364.35 DRIVER VIDEO: Bizmapia Driver Malayalam video, same link for ALL languages for now. Separate language links will replace per-language later when uploaded.
+const DRV_VIDEO_URL = process.env.DRIVER_VIDEO_URL || '';
 function drvFmtDate(d){ const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getDate()+' '+m[d.getMonth()]; }
 function drvDateISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function drvSupportNumbers(phoneId){
@@ -3391,7 +3390,7 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    // ===== V364.25 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
+    // ===== V364.36 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
     // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
     // Maya ignored it and replied "Now you are on Company Video step..." + [kandu | kandilla].
     // CAUSE: old V317 check only matched msg.type==='text' + empty btnId + txt body.
@@ -3408,9 +3407,9 @@ app.post('/webhook', async(req,res)=>{
       const _isStopText36414 = /^(stop|nirthu|nirthuka|nirthu\s*cheyyu|stop\s*cheyyu|stop\s*cheyyanam|vend|niruthu)[\s.!]*$/i.test(_stopText36414);
       if(_isStopText36414 || _isStopBtn36414){
         const _lang36414 = (state.lang||'ml');
-        // V364.25: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
+        // V364.36: if this was already a button tap (IDLE_STOP / BUSY_STOP), still ask the same confirm -
         // one consistent Stop flow, no direct jump, no step resend.
-        await setState(uid,{...state, lastStep:'V364.25 - Stop - Confirm', phoneId: incomingPhoneId});
+        await setState(uid,{...state, lastStep:'V364.36 - Stop - Confirm', phoneId: incomingPhoneId});
         const _cf36414 = _lang36414==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _lang36414==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
         await sendWithDelay(interactiveButton(uid,_cf36414,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
         return;
@@ -3420,7 +3419,7 @@ app.post('/webhook', async(req,res)=>{
 
 
     
-    // ===== V364.25 - DRIVER ATTACH FLOW - BEFORE ALL OTHER ROUTERS =====
+    // ===== V364.36 - DRIVER ATTACH FLOW - BEFORE ALL OTHER ROUTERS =====
     // Entry: RIDE_ATTACH (Attach Cab). Old generic attach message is replaced by this exact driver flow.
     // Steps: Video -> Watched/See Video -> App link -> 1h check (Yes/Doubts) -> Schedule date (day+2 onwards)
     // -> Confirm details+fee (Yes/Doubts) -> Team checks manually -> 24h after date: Test trip got? (Yes/No) -> Welcome / Reschedule (48h rule).
@@ -3434,7 +3433,7 @@ app.post('/webhook', async(req,res)=>{
         const _drvSet = async(patch)=>{ state={...state, ...patch, phoneId: incomingPhoneId}; await setState(uid, state); };
         // --- RIDE_ATTACH: send driver video + Watched / See Video ---
         if(btnId==='RIDE_ATTACH'){
-          await _drvSet({driverFlow:true, drvStep:'VIDEO', sub:'RIDE_ATTACH', lastStep:'V364.25 - Driver - Video'});
+          await _drvSet({driverFlow:true, drvStep:'VIDEO', sub:'RIDE_ATTACH', lastStep:'V364.36 - Driver - Video'});
           const _vmsg=_drvMl
             ? `🚖 ബിസ്മാപ്പിയയിൽ വാഹനം ബന്ധിപ്പിക്കാം! 🙏\n\n📹 ആദ്യം ഈ വീഡിയോ കാണൂ - വാഹനം എങ്ങനെ ബന്ധിപ്പിക്കാം എന്ന് മുഴുവൻ ഇതിൽ ഉണ്ട്.\n\nവീഡിയോ കണ്ട ശേഷം താഴെ "Watched" അമർത്തൂ, ഞാൻ നിങ്ങളെ സഹായിക്കാം.`
             : `🚖 Attach your vehicle with Bizmapia! 🙏\n\n📹 First watch this video - it explains how to attach your vehicle fully.\n\nAfter watching, tap "Watched" below and I will help you.`;
@@ -3448,54 +3447,29 @@ app.post('/webhook', async(req,res)=>{
           await sendWithDelay(interactiveButton(uid, _drvMl?`👇 വീഡിയോ കണ്ട ശേഷം Watched അമർത്തൂ:`:`👇 After watching, tap Watched:`, [{id:'DRV_WATCHED',title:'Watched'},{id:'DRV_SEE_VIDEO',title:'See Video'}], incomingPhoneId));
           return;
         }
-        // --- WATCHED: ask referral code FIRST, then app link ---
-        // App login asks referral code. Bot must capture it BEFORE app link, otherwise fee/recharge/incentives cannot be attributed.
+        // --- WATCHED: app link + 1h reminder ---
         if(btnId==='DRV_WATCHED'){
-          await _drvSet({driverFlow:true, drvStep:'REF_ASK', lastStep:'V364.25 - Driver - Referral Ask'});
-          await sendWithDelay(interactiveButton(uid, _drvMl?`👍 നന്നായി!\n\n❓ നിങ്ങൾക്ക് റഫറൽ കോഡ് ഉണ്ടോ?\n\n⚠️ റഫറൽ കോഡ് ആപ്പിൽ ലോഗിൻ ചെയ്യുമ്പോൾ ഏറ്റവും ആദ്യത്തെ സ്ക്രീനിൽ തന്നെ കൊടുക്കണം.\n\n🎁 ഈ റഫറൽ കോഡ് ആണ് നിങ്ങളുടെ ഫ്രീ റീചാർജ് അവസര ഉറപ്പ് ആക്ടിവേറ്റ് ആകുന്നത്.\n\n📌 കുറിപ്പ്: നൽകിയിരിക്കുന്ന ഏരിയയിൽ റഫറൽ കോഡ് നിലനിർത്തൂ - നിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ.\nനിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ, നിങ്ങളുടെ ആപ്പിലെ റഫറൽ കോഡ് ബോക്സിൽ ഈ കോഡ് മറക്കാതെ നൽകൂ.\n\nറഫറൽ കോഡ് ഉണ്ടെങ്കിൽ നിങ്ങൾ ആ ഫ്രാഞ്ചൈസിയുടെ കീഴിലാണ്. ഇല്ലെങ്കിൽ ഡയറക്ട് കമ്പനി രജിസ്ട്രേഷൻ ആണ്.`:`👍 Great!\n\n❓ Do you have a referral code?\n\n⚠️ Referral code must be entered on the VERY FIRST SCREEN of app login.\n\n🎁 This referral code activates your FREE recharge opportunity assurance.\n\n📌 Note: Maintain referral code in the given area to avail best free recharge offer for you.\nTo get the best free recharge offer for you, give this code on your app referral code box, without fail.\n\nWith a referral code you belong to that franchisee. Without it, it is Direct Company registration.`, [{id:'DRV_REF_YES',title:'Yes, I have'},{id:'DRV_REF_NO',title:'No code'}], incomingPhoneId));
-          return;
-        }
-        // --- REFERRAL: No code = Direct Company -> app link ---
-        if(btnId==='DRV_REF_NO' || btnId==='DRV_REF_SKIP'){
-          await _drvSet({driverFlow:true, drvStep:'APP', drvReferralCode:'', drvFranchisee:'Direct Company', lastStep:'V364.25 - Driver - App Link - Direct Company'});
-          const _amsg0=_drvMl?`✅ ശരി - ഡയറക്ട് കമ്പനി രജിസ്ട്രേഷൻ.\n\n📱 ഇനി താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യൂ. ആപ്പിൽ ലോഗിന്റെ ആദ്യ സ്ക്രീനിൽ റഫറൽ കോഡ് ചോദിച്ചാൽ ഒഴിവാക്കൂ / കാലിയായി വിടൂ.`:`✅ OK - Direct Company registration.\n\n📱 Now click the button below and install our app. On the first screen of app login, if it asks for a referral code, skip / leave it blank.`;
-          await sendWithDelay(textMessage(uid, _amsg0, incomingPhoneId));
+          await _drvSet({driverFlow:true, drvStep:'APP', lastStep:'V364.36 - Driver - App Link'});
+          const _amsg=_drvMl
+            ? `👍 നന്നായി! 🙏\n\n📱 ഇനി താഴെയുള്ള ബട്ടൺ ക്ലിക്ക് ചെയ്ത് ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യൂ.`
+            : `👍 Great! 🙏\n\n📱 Now click the button below and install our app.`;
+          await sendWithDelay(textMessage(uid, _amsg, incomingPhoneId));
           try{ await sendWithDelay(singleCta(uid, 'Tap below to install:', {title:'Install App', url:PLAY_STORE}, incomingPhoneId)); }catch(e){}
-          try{ setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='APP') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 നൽകിയ ആപ്ലിക്കേഷൻ ലിങ്ക് വഴി വാഹനം ബന്ധിപ്പിച്ചോ?`:`🙏 Have you completed attaching your vehicle by the given application link?`, [{id:'DRV_YES_ATTACHED',title:'Yes'},{id:'DRV_DOUBTS',title:'I have doubts'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, 60*60*1000); }catch(e){}
+          // 1h reminder: own timer (generic reminder system sends wrong text for driver flow). If server restarts, team follows up from Sheet.
+          try{
+            setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='APP') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 നൽകിയ ആപ്ലിക്കേഷൻ ലിങ്ക് വഴി വാഹനം ബന്ധിപ്പിച്ചോ?`:`🙏 Have you completed attaching your vehicle by the given application link?`, [{id:'DRV_YES_ATTACHED',title:'Yes'},{id:'DRV_DOUBTS',title:'I have doubts'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, 60*60*1000);
+          }catch(e){}
           return;
-        }
-        // --- REFERRAL: Yes -> ask to type code ---
-        if(btnId==='DRV_REF_YES' || btnId==='DRV_REF_RETRY'){
-          await _drvSet({driverFlow:true, drvStep:'REF_CODE', lastStep:'V364.25 - Driver - Referral Code Entry'});
-          await sendWithDelay(textMessage(uid, _drvMl?`📝 നിങ്ങളുടെ റഫറൽ കോഡ് ഇവിടെ ടൈപ്പ് ചെയ്യൂ.\n\nഉദാഹരണം: MLP001 പോലെ - കിട്ടിയ കോഡ് അതേപോലെ ടൈപ്പ് ചെയ്യൂ.\n\n⚠️ ആപ്പിൽ ലോഗിൻ ചെയ്യുമ്പോൾ ആദ്യ സ്ക്രീനിൽ തന്നെ ഇതേ കോഡ് കൊടുക്കണം - അപ്പോഴാണ് ഫ്രീ റീചാർജ് അവസര ഉറപ്പ് ആക്ടിവേറ്റ് ആകുന്നത്.\n\n📌 കുറിപ്പ്: നൽകിയിരിക്കുന്ന ഏരിയയിൽ റഫറൽ കോഡ് നിലനിർത്തൂ - നിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ.\nനിങ്ങൾക്ക് ബെസ്റ്റ് ഫ്രീ റീചാർജ് ഓഫർ കിട്ടാൻ, നിങ്ങളുടെ ആപ്പിലെ റഫറൽ കോഡ് ബോക്സിൽ ഈ കോഡ് മറക്കാതെ നൽകൂ.`:`📝 Type your referral code here.\n\nExample: like MLP001 - type the code exactly as you got it.\n\n⚠️ On the very first screen of app login, enter this same code - that activates your FREE recharge opportunity assurance.\n\n📌 Note: Maintain referral code in the given area to avail best free recharge offer for you.\nTo get the best free recharge offer for you, give this code on your app referral code box, without fail.`, incomingPhoneId));
-          return;
-        }
-        // --- REFERRAL: free-text code typed while drvStep REF_CODE ---
-        if(state.drvStep==='REF_CODE' && txt && !String(btnId||'').startsWith('DRV_')){
-          const _found=drvLookupReferral(txt);
-          if(_found){
-            await _drvSet({driverFlow:true, drvStep:'APP', drvReferralCode:_found.code, drvFranchisee:_found.franchisee, lastStep:'V364.25 - Driver - App Link - Referral '+_found.code});
-            await sendWithDelay(textMessage(uid, _drvMl?`🎁 ഇതാ നിങ്ങളുടെ സ്പെഷ്യൽ റീചാർജ് ഓഫർ വൗച്ചർ കോഡ്\n\nവൗച്ചർ കോഡ്: *${_found.code}* - ഇപ്പോൾ കോപ്പി ചെയ്യൂ\n(കോഡിൽ അമർത്തിപ്പിടിച്ച് കോപ്പി ചെയ്യൂ)\n\nഈ കോഡ് ആപ്പ് രജിസ്ട്രേഷനിലെ നിങ്ങളുടെ റഫറൽ കോഡ് ബോക്സിൽ നൽകാൻ മറക്കരുത്, ഇപ്പോൾ തന്നെ കോപ്പി ചെയ്യൂ\n\nബിസ്മാപ്പിയ ഡ്രൈവർ ആപ്പ് ഡൗൺലോഡ് ചെയ്യാൻ ഇൻസ്റ്റാൾ ബട്ടൺ ക്ലിക്ക് ചെയ്യൂ.`:`🎁 Here is your special recharge offer voucher code\n\nVOUCHER CODE: *${_found.code}* - copy now\n(Tap and hold the code to copy it)\n\nDon't forget to give this code, on your referral code box in app registration, copy it now\n\nClick the install button to download bizmapia Driver app.`, incomingPhoneId));
-            try{ await sendWithDelay(textMessage(uid, _drvMl?`📋 കോപ്പി ചെയ്യാൻ - ഇപ്പോൾ കോപ്പി ചെയ്യൂ: *${_found.code}*`:`📋 To copy - copy now: *${_found.code}*`, incomingPhoneId)); }catch(e){}
-            try{ await sendWithDelay(singleCta(uid, 'Tap below to install:', {title:'Driver app', url:PLAY_STORE}, incomingPhoneId)); }catch(e){}
-            try{ await saveToSheet('Ride_Hailing',[getISTTime(),uid,_drvLang,'Ride Hailing '+incomingPhoneId,'Driver Attach - Referral '+_found.code,'Franchisee: '+_found.franchisee,'Team',state.lastStep,''],true); }catch(e){}
-            try{ setTimeout(async()=>{ try{ const _st=await getState(uid); if(!_st || !_st.driverFlow || _st.drvStep!=='APP') return; await sendWithDelay(interactiveButton(uid, _st.lang==='ml'?`🙏 നൽകിയ ആപ്ലിക്കേഷൻ ലിങ്ക് വഴി വാഹനം ബന്ധിപ്പിച്ചോ?`:`🙏 Have you completed attaching your vehicle by the given application link?`, [{id:'DRV_YES_ATTACHED',title:'Yes'},{id:'DRV_DOUBTS',title:'I have doubts'}], _st.phoneId||incomingPhoneId)); }catch(e){} }, 60*60*1000); }catch(e){}
-            return;
-          } else {
-            await _drvSet({driverFlow:true, drvStep:'REF_CODE', lastStep:'V364.25 - Driver - Referral Code Invalid'});
-            await sendWithDelay(interactiveButton(uid, _drvMl?`⚠️ ഈ റഫറൽ കോഡ് കണ്ടെത്താനായില്ല: *${String(txt).toUpperCase()}*\n\nകോഡ് ഒന്നുകൂടി നോക്കി ടൈപ്പ് ചെയ്യൂ, അല്ലെങ്കിൽ ഡയറക്ട് കമ്പനി ആയി തുടരാം.`:`⚠️ This referral code was not found: *${String(txt).toUpperCase()}*\n\nCheck the code and type again, or continue as Direct Company.`, [{id:'DRV_REF_RETRY',title:'Type again'},{id:'DRV_REF_SKIP',title:'Direct Company'}], incomingPhoneId));
-            return;
-          }
         }
         // --- DOUBTS anywhere in driver flow: support numbers, 9AM-5PM only ---
         if(btnId==='DRV_DOUBTS' || btnId==='DRV_CONFIRM_DOUBTS'){
-          await _drvSet({driverFlow:true, lastStep:'V364.25 - Driver - Doubts'});
+          await _drvSet({driverFlow:true, lastStep:'V364.36 - Driver - Doubts'});
           await drvSendSupport(uid, _drvLang, incomingPhoneId);
           return;
         }
         // --- YES attached / Test Trip text: schedule date (day+2 onwards) ---
         if(btnId==='DRV_YES_ATTACHED' || _isTestTripText){
-          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.25 - Driver - Schedule Test Trip'});
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.36 - Driver - Schedule Test Trip'});
           const _smsg=_drvMl?`👍 നന്നായി! ഇനി ടെസ്റ്റ് ട്രിപ്പ് ഷെഡ്യൂൾ ചെയ്യാം. 📅`:`👍 Great! Now let us schedule your test trip. 📅`;
           await sendWithDelay(textMessage(uid, _smsg, incomingPhoneId));
           await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
@@ -3504,7 +3478,7 @@ app.post('/webhook', async(req,res)=>{
         // --- DATE picked: confirm details + fee ---
         if(String(btnId||'').startsWith('DRV_DATE_')){
           const _d=String(btnId).replace('DRV_DATE_','');
-          await _drvSet({driverFlow:true, drvStep:'CONFIRM', drvTestDate:_d, lastStep:'V364.25 - Driver - Confirm Details+Fee'});
+          await _drvSet({driverFlow:true, drvStep:'CONFIRM', drvTestDate:_d, lastStep:'V364.36 - Driver - Confirm Details+Fee'});
           const _cmsg=_drvMl
             ? `📅 നിങ്ങൾ തിരഞ്ഞെടുത്ത തീയതി: ${_d}\n\n⚠️ നിങ്ങളുടെ വിവരങ്ങൾ ഞങ്ങളുടെ internal team പരിശോധിക്കും. നിങ്ങളുടെ വിവരങ്ങളും one-time registration fee submission-ഉം ശരിയാണെങ്കിൽ കമ്പനിയിൽ നിന്ന് "Your test trip approved" എന്ന മറുപടി കിട്ടും. അല്ലെങ്കിൽ മറുപടി കിട്ടില്ല, നിങ്ങളുടെ അപേക്ഷ താനേ reject ആകും.\n\n❓ നിങ്ങൾ ശരിയായ വിവരങ്ങൾ upload ചെയ്യുകയും ആപ്പ് വഴി one-time registration fee അടയ്ക്കുകയും ചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാണോ?`
             : `📅 Your selected date: ${_d}\n\n⚠️ Your details will be checked by our internal team. If your details and one-time registration fee submission are correct, you will get a reply from our company like "Your test trip approved". Otherwise you may get no reply and your application will be rejected automatically.\n\n❓ Are you sure you uploaded correct details and paid the one-time registration fee through the app?`;
@@ -3514,7 +3488,7 @@ app.post('/webhook', async(req,res)=>{
         // --- CONFIRM YES: team checks manually + 24h-after-date reminder ---
         if(btnId==='DRV_CONFIRM_YES'){
           const _d=state.drvTestDate||'';
-          await _drvSet({driverFlow:true, drvStep:'WAIT_TEST', lastStep:'V364.25 - Driver - Team Checking Fee+Details'});
+          await _drvSet({driverFlow:true, drvStep:'WAIT_TEST', lastStep:'V364.36 - Driver - Team Checking Fee+Details'});
           const _tmsg=_drvMl
             ? `✅ ശരി, നന്ദി! 🙏\n\nഞങ്ങളുടെ ടീം നിങ്ങളുടെ registration fee paid ആയിട്ടുണ്ടോ എന്ന് പരിശോധിക്കും. Confirm ആയാൽ കമ്പനിയിൽ നിന്ന് മറുപടി കിട്ടും.`
             : `✅ OK, thank you! 🙏\n\nOur team will check whether your registration fee is paid. Once confirmed, you will get a reply from our company.`;
@@ -3531,14 +3505,14 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- TEST TRIP YES: warm welcome ---
         if(btnId==='DRV_TEST_YES'){
-          await _drvSet({driverFlow:false, drvStep:'DONE', lastStep:'V364.25 - Driver - Welcomed'});
+          await _drvSet({driverFlow:false, drvStep:'DONE', lastStep:'V364.36 - Driver - Welcomed'});
           await sendWithDelay(textMessage(uid, _drvMl?`🎉 ബിസ്മാപ്പിയയിലേക്ക് സ്വാഗതം! 🙏\n\nനിങ്ങളുടെ ഓരോ യാത്രയും ഇനി വരുമാനമാക്കൂ. 💛\n\nആപ്പിൽ ഓൺലൈനിൽ തുടരൂ, ട്രിപ്പുകൾ വരും. വാഹനം വൃത്തിയായും പെരുമാറ്റം മാന്യമായും സൂക്ഷിക്കൂ.`:`🎉 Warm welcome to Bizmapia platform! 🙏\n\nMake every journey your income now. 💛\n\nStay online in the app, trips will come. Keep your vehicle clean and behaviour polite.`, incomingPhoneId));
           await sendWithDelay(interactiveButton(uid, _drvMl?`👇 എന്തെങ്കിലും സംശയമുണ്ടോ?`:`👇 Any doubts?`, [{id:'DRV_NO_TRIPS',title:'Not getting trips'},{id:'DRV_DOUBTS',title:'I have doubts'}], incomingPhoneId));
           return;
         }
-        // --- V364.25 AFTER WELCOME: "Not getting trips" doubt ---
+        // --- V364.36 AFTER WELCOME: "Not getting trips" doubt ---
         if(btnId==='DRV_NO_TRIPS' || _isNoTripsText){
-          await _drvSet({driverFlow:true, drvStep:'DONE', lastStep:'V364.25 - Driver - Not Getting Trips'});
+          await _drvSet({driverFlow:true, drvStep:'DONE', lastStep:'V364.36 - Driver - Not Getting Trips'});
           const _ntmsg=_drvMl
             ? `🙏 കുഴപ്പമില്ല, മനസ്സിലായി.
 
@@ -3571,7 +3545,7 @@ app.post('/webhook', async(req,res)=>{
         }
         // --- TEST TRIP NO: reschedule, 48h rule from today ---
         if(btnId==='DRV_TEST_NO'){
-          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.25 - Driver - Reschedule Test Trip'});
+          await _drvSet({driverFlow:true, drvStep:'DATE', lastStep:'V364.36 - Driver - Reschedule Test Trip'});
           await sendWithDelay(textMessage(uid, _drvMl?`🙏 കുഴപ്പമില്ല. വീണ്ടും ഒരു തീയതി തിരഞ്ഞെടുക്കൂ.\n\n👉 ഈ മെസ്സേജ് തീയതിയിൽ നിന്ന് 48 മണിക്കൂറിന് ശേഷം മുതൽ മാത്രമേ തിരഞ്ഞെടുക്കാൻ പറ്റൂ.`:`🙏 No problem. Please select another date.\n\n👉 You can select only from 48 hours after today onwards.`, incomingPhoneId));
           await drvSendDateButtons(uid, _drvLang, incomingPhoneId);
           return;
@@ -3616,7 +3590,7 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
-    // ===== V364.25 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
+    // ===== V364.36 OUTER-OPPORTUNITY - BEFORE ALL ROUTERS =====
     // Bug (screenshot 24 Nov 11:34am, 918547854771): user at Step 2 (Video Seen, waiting price range)
     // asked for professional college admission office opportunity - NOT in Bizmapia options.
     // Maya reset to Step 1, repeated Balance Steps twice, resent Company Video - misleading.
@@ -4325,41 +4299,22 @@ Welcome to Bizmapia! 🙏
     // ===== V257: AI_SERVICES -> show 4 services (3+1, WhatsApp max 3 per msg) =====
     if(btnId==='AI_SERVICES' || btnId==='AI_TAXI'){
       const sl = state.lang || 'ml';
-      const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Online Booking - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Online Booking - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Online Booking - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
+      const svcText = sl==='ml' ? `🙏 Bizmapia-യുടെ 4 സേവനങ്ങൾ ഇവയാണ്:\n\n1️⃣ 🚖 Taxi / Ride - എവിടെയും ടാക്സി ബുക്ക് ചെയ്യാം\n2️⃣ 📖 Business Directory - നിങ്ങളുടെ അടുത്തുള്ള കടകൾ / സേവനങ്ങൾ കണ്ടെത്താം\n3️⃣ 🛵 Online Delivery - ഭക്ഷണം / സാധനങ്ങൾ ഡെലിവറി\n4️⃣ 📦 Book Anything - റൂം, മൂവി, ഇവന്റ്, എന്തും ബുക്ക് ചെയ്യാം\n\n👉 ഏത് സേവനത്തെ കുറിച്ചാണ് അറിയേണ്ടത്? താഴെ ക്ലിക്ക് ചെയ്യൂ:` : sl==='hi' ? `🙏 Bizmapia ki 4 services ye hain:\n\n1️⃣ 🚖 Taxi / Ride - Kahin bhi taxi book karein\n2️⃣ 📖 Business Directory - Paas ki dukaan / services dhoondhein\n3️⃣ 🛵 Online Delivery - Khana / samaan delivery\n4️⃣ 📦 Book Anything - Room, movie, event, kuch bhi book karein\n\n👉 Kis service ke baare mein jaanna hai? Neeche click karein:` : `🙏 Bizmapia has 4 services:\n\n1️⃣ 🚖 Taxi / Ride - Book a taxi anywhere\n2️⃣ 📖 Business Directory - Find nearby shops / services\n3️⃣ 🛵 Online Delivery - Food / items delivery\n4️⃣ 📦 Book Anything - Room, movie, event, anything\n\n👉 Which service do you want to know about? Tap below:`;
       const b2=(id,ml,en,hi)=>({id,title:(sl==='ml'?ml:sl==='hi'?hi:en).substring(0,20)});
       await setState(uid,{...state, lang:sl, lastStep:'AI Maya - Services Menu', aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, (sl==='ml' ? `🙏 സൂപ്പർ! സേവനങ്ങൾ കാണിക്കുന്നതിന് മുൻപ് ഒരു ചെറിയ ചോദ്യം — നിങ്ങൾ ഏത് കൂട്ടത്തിലാണ്? Customer ആണോ, Driver ആണോ, Shop Owner ആണോ? അതനുസരിച്ച് ഞാൻ കൃത്യമായി സഹായിക്കാം. 💛\n\n` : sl==='hi' ? `🙏 Super! Services dikhane se pehle ek chhota sawaal — aap kis category mein hain? Customer, Driver, ya Shop Owner? Us hisaab se main aapko bilkul sahi guide karungi. 💛\n\n` : `🙏 Super! Before I show you the services, one small question — which one are you? Customer, Driver, or Shop Owner? I will guide you exactly the way you need. 💛\n\n`) + svcText, [b2('WHO_CUSTOMER','🙋 Customer','Customer','Customer'), b2('WHO_DRIVER','🚖 Driver','Driver','Driver'), b2('WHO_SHOP','🏪 Shop Owner','Shop Owner','Shop Owner')], incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcText, incomingPhoneId)); }
       await delay(300);
-      try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ഓൺലൈൻ ബുക്കിംഗ്','Online Booking','Online Booking'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
+      try{ await sendWithDelay(interactiveButton(uid, sl==='ml' ? `👉 4-ാമത്തെ സേവനം:` : sl==='hi' ? `👉 4th service:` : `👉 4th service:`, [b2('SVC_BOOKING','📦 ബുക്ക് ചെയ്യാം','Book Anything','Book Anything'), b2('AI_BUSINESS','ബിസിനസ് അവസരം','Business Opportunity','Business Opportunity')], incomingPhoneId)); }catch(e){}
       await saveToSheet('System_Logs',[nowIso,uid,sl,'AI Services Menu '+incomingPhoneId,'User tapped Know Our Services - showed 4 services','AI Services',HELP_ADMIN,'AI Services Menu',''],false);
-      return;
-    }
-    // ===== V364.29 STEP MAINTENANCE - EVERYWHERE (IMPLEMENTATION IN RENDER CODE, NOT PDF) =====
-    // Every step: Step X of Y + Emoji + What to do + What to send + Steps left = Y - X.
-    // Helper only - existing step texts untouched, only Step header/footer added.
-    function v364_stepTag(step,total,emoji){ const left=Math.max(0,total-step); return `${emoji} Step ${step} of ${total} | Steps left: ${left}\n\n`; }
-    function v364_stepFooter(step,total){ const left=Math.max(0,total-step); return `\n\nSteps left: ${left}`; }
-    // ===== V364.28 CAB ONLY: SVC_RIDE -> real Cab sub-buttons. Other services UNTOUCHED (already finalized). =====
-    // V257 hijacked Cab into generic Manglish/Roman text + Business/Services loop. This block runs BEFORE V257,
-    // only for SVC_RIDE, and uses L.rideSelected + L.rideButtons which are already full Malayalam (ml),
-    // Devanagari Hindi (hi), English (en). No other service, no other text changed.
-    if(btnId==='SVC_RIDE'){
-      const sl28 = state.lang || 'ml';
-      const L28 = (typeof T!=='undefined' ? T[sl28] : null) || (typeof T!=='undefined' ? T.en : null);
-      await setState(uid,{...state, lang:sl28, service:btnId, lastStep:btnId, phoneId:incomingPhoneId, aiMode:true, stepNum:2, stepTotal:7});
-      try{ clearReminders(uid); }catch(_){}
-      const _cabMsg29 = v364_stepTag(2, 7, '🚖') + L28.rideSelected + v364_stepFooter(2, 7);
-      try{ await sendWithDelay(interactiveButton(uid, _cabMsg29, L28.rideButtons, incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, _cabMsg29, incomingPhoneId)); }
-      await saveToSheet('System_Logs',[nowIso,uid,sl28,'Cab Sub-buttons '+incomingPhoneId,`SVC_RIDE -> Book a Cab / Attach Cab in ${sl28}`,'Service',HELP_ADMIN,'Cab Sub-buttons',''],false);
       return;
     }
     // ===== V257: SVC_* taps -> AI explains THAT service, then offers Business Opportunity =====
     if(btnId.startsWith('SVC_')){
       const sl2 = state.lang || 'ml';
-      const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Online Booking service', SVC_OPP:'Business Opportunity'};
+      const svcMap={SVC_RIDE:'Taxi / Ride service', SVC_BIZDIR:'Business Directory service', SVC_DELIVERY:'Online Delivery service', SVC_BOOKING:'Book Anything service', SVC_OPP:'Business Opportunity'};
       const asSvc = svcMap[btnId] || 'Service';
       const svcFixed = sl2==='ml' ? `${asSvc} - Bizmapia App-il ninnu use cheyyam. 🙏\n\nApp install cheythu OTP login cheyyoo. Nee ethilaanu - Customer, Driver, allenkil Shop Owner? Athu paranjaal njan karyamayi paranjutharaam.` : sl2==='hi' ? `${asSvc} - Aap Bizmapia App se use kar sakte hain. 🙏\n\nApp install karke OTP login karein. Aap kis category mein hain — Customer, Driver, ya Shop Owner? Batayein, main aapko sahi guide karungi.` : `${asSvc} - You can use it from Bizmapia App. 🙏\n\nInstall the App and OTP login. Which one are you — Customer, Driver, or Shop Owner? Tell me and I will guide you exactly.`;
-      const svcReply = v364_stepTag(2, 7, '📌') + svcFixed + v364_stepFooter(2, 7);
+      const svcReply = svcFixed;
       await setState(uid,{...state, lang:sl2, lastStep:'AI Maya - Service '+btnId, aiMode:true});
       try{ await sendWithDelay(interactiveButton(uid, svcReply, mayaQuickButtons(sl2, 'business'), incomingPhoneId)); }catch(e){ await sendWithDelay(textMessage(uid, svcReply, incomingPhoneId)); }
       await saveToSheet('System_Logs',[nowIso,uid,sl2,'AI Service Detail '+incomingPhoneId,`${btnId} -> ${asSvc}`,'AI Service',HELP_ADMIN,'AI Service Detail',''],false);
@@ -4666,7 +4621,7 @@ Welcome to Bizmapia! 🙏
       const aiRes = await callMayaAI(effLang, txt, hist);
       if(aiRes && aiRes.text){
         let aiReply = aiRes.text;
-        // V364.25 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
+        // V364.36 VOICE ECHO: Maya must mention what user said in voice note, then answer. Never reply as if voice was typed text.
         // Format: 🎙️ Voice-il ningal paranjathu: "<transcript>" + answer. Same language as reply.
         if(state.lastVoiceTranscript){
           try{
@@ -4834,16 +4789,13 @@ Welcome to Bizmapia! 🙏
       return;
     }
     if(btnId==='COMPANY_KNOW' || btnId==='COMPANY_SKIP'){
-      state.lastStep='Company Video - Skipped - I Know Bizmapia'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const incomeMsg2 = lang==='ml' ? `✅ Bizmapia അറിയാമെന്ന് സ്ഥിരീകരിച്ചു!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:` : lang==='hi' ? `✅ Bizmapia जानते हैं - कन्फर्म!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:` : `✅ Confirmed - You know Bizmapia!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 What to do now: Select investing capacity from below:`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg2, L.oppButtons, incomingPhoneId));
+      state.lastStep='Q1 - After Company Video Skipped'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      await sendWithDelay(interactiveButton(uid, v36436Q1Text(lang), v36436Q1Buttons(lang), incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_WATCHED'){
-      // V247: Company video watched -> now show Income Level (next step)
-      state.lastStep='Income Level - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
-      const incomeMsg = lang==='ml' ? `✅ കമ്പനി വീഡിയോ കണ്ടതിന് നന്ദി!\n\nനിങ്ങൾ Bizmapia-യിൽ നിന്ന് വരുമാന സ്ലോട്ട് ബുക്ക് ചെയ്യാൻ പോകുന്നു.\n\n👉 ഇപ്പോൾ ചെയ്യേണ്ടത്: താഴെ നിന്ന് നിക്ഷേപ ശേഷി തിരഞ്ഞെടുക്കുക:-` : lang==='hi' ? `✅ कंपनी वीडियो देखने के लिए धन्यवाद!\n\nआप Bizmapia से आय स्लॉट बुक करने जा रहे हैं।\n\n👉 अब क्या करें: नीचे से निवेश क्षमता चुनें:-` : `✅ Thanks for watching Company video!\n\nYou are going to book an income slot from Bizmapia.\n\n👉 👇 What to do now: Select investing capacity from below:-`;
-      await sendWithDelay(interactiveButton(uid, oppProgress(lang,2)+'\n\n'+oppCongrats(lang,2)+'\n\n'+incomeMsg, L.oppButtons, incomingPhoneId));
+      state.lastStep='Q1 - After Company Video Watched'; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      await sendWithDelay(interactiveButton(uid, v36436Q1Text(lang), v36436Q1Buttons(lang), incomingPhoneId));
       return;
     }
     if(btnId==='COMPANY_NOT_WATCHED'){
@@ -4854,6 +4806,41 @@ Welcome to Bizmapia! 🙏
       scheduleReminder(uid, 'install:COMPANY_VIDEO_3MIN:3', lang, 3*60*1000, incomingPhoneId);
       return;
     }
+
+    // ===== V364.36 Q1 / Q2 HANDLERS =====
+    if(btnId==='Q1_RUNNING' || btnId==='Q1_PLANNING' || btnId==='Q1_JUST'){
+      const q1 = btnId==='Q1_RUNNING' ? 'RUNNING' : btnId==='Q1_PLANNING' ? 'PLANNING' : 'JUST_ENQUIRY';
+      state.q1=q1; state.lastStep='Q1 - '+q1; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      try{ await saveToSheet('System_Logs',[nowIso, uid, lang, 'Q1 '+q1+' '+incomingPhoneId, 'Q1', 'Answered', '', state.lastStep, ''], false); }catch(e){}
+      if(q1==='JUST_ENQUIRY'){
+        // V364.36: JUST_ENQUIRY = NO Q2, NO video/EMI push. 4 Services only.
+        state.lastStep='Just Enquiry - 4 Services Only'; await setState(uid,state);
+        await sendWithDelay(interactiveButton(uid, v36436JustText(lang)+'\n\n🚕 Cab  |  🏪 Business Directory  |  🛵 Online Delivery  |  🎟️ Online Booking', [{id:'RIDE_BOOK',title: lang==='ml'?'🚕 Cab':lang==='hi'?'🚕 Cab':'🚕 Cab'},{id:'BIZ_REGISTER',title: lang==='ml'?'🏪 Directory':lang==='hi'?'🏪 Directory':'🏪 Directory'},{id:'DEL_ORDER',title: lang==='ml'?'🛵 Delivery':lang==='hi'?'🛵 Delivery':'🛵 Delivery'}], incomingPhoneId));
+        return;
+      }
+      // Serious only -> Q2
+      state.lastStep='Q2 - Serious Only'; await setState(uid,state);
+      await sendWithDelay(interactiveButton(uid, v36436Q2Text(lang), v36436Q2Buttons(), incomingPhoneId));
+      return;
+    }
+    if(btnId==='Q2_30K' || btnId==='Q2_2L' || btnId==='Q2_5L'){
+      // V364.36: Q2 only reached if Q1 = RUNNING/PLANNING. Guard: if Q1 is JUST, do NOT accept Q2.
+      if(state.q1==='JUST_ENQUIRY'){ state.lastStep='Just Enquiry - 4 Services Only'; await setState(uid,state); await sendWithDelay(interactiveButton(uid, v36436JustText(lang), [{id:'RIDE_BOOK',title:'🚕 Cab'},{id:'BIZ_REGISTER',title:'🏪 Directory'},{id:'DEL_ORDER',title:'🛵 Delivery'}], incomingPhoneId)); return; }
+      const q2 = btnId==='Q2_30K' ? '30K-1L' : btnId==='Q2_2L' ? '2L-5L' : '5L-15L';
+      state.q2=q2; state.lastStep='Q2 - '+q2; state.phoneId=incomingPhoneId; await setState(uid,state); clearReminders(uid);
+      try{ await saveToSheet('System_Logs',[nowIso, uid, lang, 'Q2 '+q2+' Q1 '+(state.q1||'')+' '+incomingPhoneId, 'Q2', 'Answered', '', state.lastStep, ''], false); }catch(e){}
+      if(state.q1==='RUNNING'){
+        // RUNNING + Q2 -> Business Centre Video ONLY. Do NOT show District Video.
+        state.lastStep='Business Centre Video - Q1 RUNNING + Q2'; await setState(uid,state);
+        try{ const _bcUrl = typeof getVideoUrl==='function' ? getVideoUrl('OPP_CENTER', lang) : getCompanyVideoUrl(lang); await sendWithDelay(singleCta(uid, (lang==='ml' ? `✅ നന്ദി! Business Centre വീഡിയോ കാണുക:` : lang==='hi' ? `✅ धन्यवाद! Business Centre वीडियो देखें:` : `✅ Thank you! Please watch Business Centre Video:`), {title:'🎥 See Video', url:_bcUrl}, incomingPhoneId)); }catch(e){ await sendWithDelay(interactiveButton(uid, lang==='ml' ? `✅ നന്ദി! Business Centre വിശദാംശങ്ങൾ:` : lang==='hi' ? `✅ धन्यवाद! Business Centre विवरण:` : `✅ Thank you! Business Centre details:`, [{id:'OPP_CENTER',title:'Business Centre'}], incomingPhoneId)); }
+        return;
+      }
+      // PLANNING + Q2 -> Opportunity Video -> District/Corp/Muni flow (existing Section 5)
+      state.lastStep='Opportunity Video - Q1 PLANNING + Q2'; await setState(uid,state);
+      try{ const _opUrl = typeof getVideoUrl==='function' ? getVideoUrl('OPP_DISTRICT', lang) : getCompanyVideoUrl(lang); await sendWithDelay(singleCta(uid, (lang==='ml' ? `✅ നന്ദി! Opportunity വീഡിയോ കാണുക:` : lang==='hi' ? `✅ धन्यवाद! Opportunity वीडियो देखें:` : `✅ Thank you! Please watch Opportunity Video:`), {title:'🎥 See Video', url:_opUrl}, incomingPhoneId)); }catch(e){ await sendWithDelay(interactiveButton(uid, lang==='ml' ? `✅ നന്ദി! Opportunity വിശദാംശങ്ങൾ:` : lang==='hi' ? `✅ धन्यवाद! Opportunity विवरण:` : `✅ Thank you! Opportunity details:`, [{id:'OPP_DISTRICT',title:'District'},{id:'OPP_CORP',title:'Corporation'},{id:'OPP_CENTER',title:'Business Centre'}], incomingPhoneId)); }
+      return;
+    }
+    // ===== END V364.36 Q1/Q2 =====
     if(btnId==='OPP_DISTRICT'){
       state.sub='OPP_DISTRICT'; state.lastStep='💰 ₹5L-₹15L Invest - DISTRICT - Video Must Watch'; state.phoneId=incomingPhoneId; 
       await setState(uid,state); clearReminders(uid);
@@ -6103,10 +6090,10 @@ app.get('/clear-stuck-reminders', async(req,res)=>{
       if(redisReady && redis){ redisDeleted = await redis.del(...exactKeys); }
       else redisError='redis-not-ready';
     }catch(e){ redisError=String(e.message||e); if(redisError.includes('max requests')) globalThis.__v364_1_checkerBackoffUntil = Date.now()+10*60*1000; }
-    return res.json({ok:true, version:'V364.35', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
+    return res.json({ok:true, version:'V364.36', memCleared, redisDeleted, redisError, blocked:[...globalThis.__v364_1_blockedIdle], note:'Only 5 stuck maya_idle_4 keys touched. Checker will now skip them silently. If redisError=max requests, wait for Upstash reset / new DB - memory is already cleared so loop stops.'});
   }catch(e){ return res.status(500).json({ok:false, error:e.message}); }
 });
-app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.35', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/health', async(req,res)=>{ try{ const sheets=await getSheets().catch(()=>null); res.json({ok:true, version:'V364.36', time:getISTTime(), memory: memoryStore.size, reminders: reminders.size, redis: redisReady, sheets: !!sheets, lastSheetError: lastSheetError||null, ai: AI_ENABLED, daily: dailyStats}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.get('/reset-user', async(req,res)=>{ try{ const phone=String(req.query.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.send('Usage: /reset-user?phone=919567742507'); const st = memoryStore.get(phone); if(st) { memoryStore.delete(phone); } try{ if(redisReady && redis){ const keys=await redis.keys(`*${phone}*`); if(keys.length) await redis.del(...keys); } }catch(e){} res.send(`✅ Reset done for ${phone}. Now send Hi again from that number - Maya will reply with AI, not Company Video loop.`); }catch(e){ res.send('Error '+e.message); } });
 app.get('/test-weekly-summary', async(req,res)=>{ try{ const m=await sendWeeklySummary(); res.send(`✅ Weekly summary sent.<br><br><pre>${m}</pre>`); }catch(e){ res.send('Error '+e.message); } });
 
@@ -6134,20 +6121,20 @@ app.get('/render-stats', async(req,res)=>{
     const memCount = memoryStore.size;
     let redisCount = 0;
     if(redisReady && redis){ try{ const keys = await redis.keys('state:*'); redisCount = keys.length; }catch{} }
-    res.json({version: 'V364.25 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
+    res.json({version: 'V364.36 | V317 GLOBAL-STOP-TOP-PRIORITY | V248 AI-MAYA ALL-VIDEO-REMINDERS-5MIN + ALL-VIDEOS-COMPANY-PATTERN + MALAYALAM-BO-FIX + STEP1-CLARITY ML-FIX + EARN-FIRST MAINMENU + LANGUAGE-KEYS English/हिन्दी/മലയാളം + CALL-FOLLOWUP - SHORT PROFESSIONAL PAY REMINDER - STEP1/STEP5/EMI/FRANCHISEE VIDEO EXACT - 1988', generatedAt: getISTTime(), memoryStore: memCount, redisStates: redisCount, redisReady, sheets: ALLOWED_SHEETS, last4DaysEndpoint: '/all-chats shows last 4 days', wipe: '/wipe-and-replay-4-days?key=95677'});
   }catch(e){ res.status(500).json({error: e.message}); }
 });
 
-app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.35', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
-app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.35', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
-app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.35', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.35', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/check-fired/:phone', async(req,res)=>{ try{ const p=normalizeFiredPhone(req.params.phone); const fired=await isFiredPhone(p); res.json({phone:p, fired, version:'V364.36', checked:[...firedVariants(req.params.phone)]}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.get('/sheet-test', async(req,res)=>{ try{ const row=[getISTTime(),'SHEET-TEST','en','Sheet Test V247','Manual /sheet-test','OK','TEST','sheet-test','']; await saveToSheet('System_Logs', row, false); res.json({ok:true, version:'V364.36', lastSheetError: lastSheetError||null, note:'Check System_Logs last row for SHEET-TEST'}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
+app.get('/sheet-status', async(req,res)=>{ try{ const sheets = await getSheets(); if(!sheets) return res.json({ok:false, version:'V364.36', lastSheetError: lastSheetError||'getSheets returned null - check GOOGLE_CREDENTIALS in Render'}); const fired = await getFiredList(true); res.json({ok:true, version:'V364.36', firedCount: fired.size, lastSheetError: lastSheetError||null, sheetsClientAgeSec: Math.floor((Date.now()-sheetsClientAt)/1000)}); }catch(e){ res.status(500).json({ok:false, error:e.message, lastSheetError}); } });
 try{ scheduleDayEndSummary(); }catch(e){}
 
 // ===== V341 TEAM INBOX ENDPOINTS =====
-app.get('/team-inbox', async(req,res)=>{ try{ let _f = String(req.query.number||req.query.phoneId||'').trim(); if(_f==='malappuram'||_f==='99954'||_f==='9995441970') _f = PHONE_NUMBER_ID_MALAPPURAM; if(_f==='company'||_f==='main') _f = PHONE_NUMBER_ID; res.json({ok:true, live:true, version:'V364.35 DRIVER-VIDEO-ALL-LANG', time:getISTTime(), paused:[...globalThis.__teamPaused], filter: _f||'all', chats: teamInboxChats(_f||null), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
+app.get('/team-inbox', async(req,res)=>{ try{ res.json({ok:true, live:true, version:'V364.3 INBOX-PERSIST', time:getISTTime(), paused:[...globalThis.__teamPaused], chats: teamInboxChats(), total: globalThis.__teamInboxLog.length}); }catch(e){ res.status(500).json({ok:false, error:e.message}); } });
 app.post('/team-inbox/pause', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); if(!phone) return res.json({ok:false,error:'phone required'}); if(req.body.paused===false){ globalThis.__teamPaused.delete(phone); try{ if(redisReady&&redis) redis.srem('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } else { globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} } teamInboxPush(phone,'system', req.body.paused===false?'Maya RESUMED':'Maya PAUSED - Team took over','V340'); res.json({ok:true, phone, paused: globalThis.__teamPaused.has(phone)}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} const _replyPid = ((typeof globalThis.__phoneIdByUid!=='undefined' && globalThis.__phoneIdByUid.get) ? (globalThis.__phoneIdByUid.get(String(phone))||'') : '') || (globalThis.__teamInboxLog||[]).slice().reverse().find(r=>String(r.phone)===String(phone)&&r.phoneId)?.phoneId || PHONE_NUMBER_ID; teamInboxPush(phone,'team',text,'V340 Team Reply', _replyPid); const _tm=textMessage(phone, text, _replyPid); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
-app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.35', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
+app.post('/team-inbox/reply', express.json(), async(req,res)=>{ try{ const phone=String(req.body.phone||'').replace(/[^0-9]/g,''); const text=String(req.body.text||'').slice(0,1000); if(!phone||!text) return res.json({ok:false,error:'phone+text required'}); globalThis.__teamPaused.add(phone); try{ if(redisReady&&redis) redis.sadd('team_inbox_paused', phone).catch(()=>{}); }catch(e){} teamInboxPush(phone,'team',text,'V340 Team Reply'); const _tm=textMessage(phone, text, PHONE_NUMBER_ID); _tm._fromTeam=true; await sendWithDelay(_tm); try{ await saveToSheet('System_Logs',[getISTTime(),phone,'ml','V340 Team Reply',text,'Team',HELP_ADMIN,'V340 Team',''],false); }catch(e){} res.json({ok:true, phone, sent:true}); }catch(e){ res.status(500).json({ok:false,error:e.message}); } });
+app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.36', paused:[...globalThis.__teamPaused], log: globalThis.__teamInboxLog.length}));
 // ===== END V340 =====
 
 
@@ -6159,7 +6146,7 @@ app.get('/team-inbox/health', (req,res)=>res.json({ok:true, version:'V364.35', p
 // 7 Losers return confirm  8 Instant Team Notification  9 Day End Report 8 PM
 // NO other V362 logic touched. Button Only. No link / number in chat body.
 // ============================================================================
-const V364_VERSION = 'V364.25';
+const V364_VERSION = 'V364.36';
 const V364_TEAM_BO = '918590175977';
 const V364_TEAM_SERVICES = '918590183646';
 const V364_DAY_END_TO = ['918590175977','918590183646'];
@@ -6181,7 +6168,7 @@ async function v363NotifyTeam(phone, flow, step, doubtText){ try{ const to = (fl
 async function v363SendDayEndReport(){ try{ const tt = typeof getISTTime==='function'?getISTTime():new Date().toISOString(); const msg = 'BIZMAPIA DAY END REPORT - V364\nDate: '+tt+'\nNew users / Returning / BO completions / Services completions / Reminders / Talk Later / Stopped / Losers returned / Reviews / Team Feedback pending / Agreement next 7 days / Late Risk >7 days\nNumbers must match Google Sheet. If Sheet writes pending, check Sheet now. 🙏'; for(const to of V364_DAY_END_TO){ try{ if(typeof sendWhatsAppMessage==='function') await sendWhatsAppMessage(to, msg); else if(typeof sendWithDelay==='function') await sendWithDelay({to, text:msg}); }catch(e){} } return true; }catch(e){ return false; } }
 let __v363DayEndSentFor = '';
 setInterval(()=>{ try{ const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); const key = now.toISOString().slice(0,10); const hh = now.getHours(); if((hh===20 || hh===21) && __v363DayEndSentFor!==key){ __v363DayEndSentFor=key; v363SendDayEndReport(); } }catch(e){} }, 5*60*1000);
-app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.35', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
+app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.36', checks:{ languageAutoLock:true, fullPaymentEMI:true, requirement3ReadingsSkip:true, servicesChain8Roles:true, appReview:true, teamFeedback:true, losersReturnConfirm:true, teamNotification:true, dayEndReport:true }, teamBO:V364_TEAM_BO, teamServices:V364_TEAM_SERVICES }));
 // ===== END V364 =====
 
 
@@ -6190,7 +6177,7 @@ app.get('/v363-check', (req,res)=>res.json({ok:true, version:'V364.35', checks:{
 // Every new message is saved to Redis immediately via teamInboxSaveRedis(). If Redis is not ready at 5s, retry at 30s.
 // If /team-inbox shows 0 after deploy, that is a BUG - do not test chats, check Redis first.
 setTimeout(async()=>{ try{ if(globalThis.__teamInboxLog && globalThis.__teamInboxLog.length===0){ await restoreTeamInboxFromRedis(); } }catch(e){} }, 30000);
-app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.35', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
+app.get('/v363-inbox-check', (req,res)=>res.json({ok:true, version:'V364.36', inboxPersist:true, total: globalThis.__teamInboxLog?globalThis.__teamInboxLog.length:0, paused:[...globalThis.__teamPaused||[]], redisReady: typeof redisReady!=='undefined'?redisReady:null, rule:'Old chats survive deploy - Redis team_inbox_log 2000 + paused set - NEVER clear on boot' }));
 // ===== END V364 INBOX GUARANTEE =====
 
 
@@ -6213,7 +6200,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.35 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.36 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
