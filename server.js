@@ -72,6 +72,77 @@ function m37_decide(text, lang, mindset){
   if(feeling==='NEEDS_HOPE' || mindset==='PLANNING') return {action:'TRUST_PATH', feeling, reply:m37_mindsetReply('PLANNING', lang), buttons: lang==='ml'?['▶️ Cheruthaayi Thudangaam','💬 Chodyam Chodikkaam']:['▶️ Start Small','💬 Ask Question']};
   return {action:'CONTINUE_V364_36', feeling, reply:'', buttons:[]};
 }
+// ===== V364.40 PERMANENT FIX - AI INTENTION, NOT KEYWORD LIST =====
+// Problem: keyword list can never cover every new word / spelling / Malayalam script / Manglish mix.
+// Fix: Maya now ASKS Gemini (same AI already used for chat) "what does user FEEL / INTEND?" - no word list.
+// Keyword m37_detectFeeling is kept ONLY as offline fallback if AI fails / no API key.
+// New words, new spellings, new Malayalam script, mixed language - all work, NO new deploy needed.
+// The AI returns ONLY JSON: {feeling, confidence}. Feeling is one of the fixed list below.
+async function m40_classifyFeeling(txt, lang){
+  try{
+    const _txt = String(txt||'').slice(0,300);
+    if(!_txt.trim()) return null;
+    const _prompt = `You are an intention classifier for Bizmapia WhatsApp bot Maya. User language: ${lang||'ml'}.
+Read the user's message and return ONLY JSON, no other text: {"feeling":"FEELING","confidence":0-100}
+User message: """${_txt}"""
+FEELING must be exactly one of:
+NO_BALANCE - user says they have no money/balance/paisa/cash right now, cannot pay now. Any language, any spelling, Malayalam script, Manglish, English, Hindi. Examples: "Balance illa", "Balance ഇല്ല", "ബാലൻസ് ഇല്ല", "paisa illa", "cash illa", "no money now", "salary varumbo".
+ASK_FAMILY - user must ask wife/husband/family at home before deciding. Examples: "veettil chodikkam", "ഭാര്യയോട് ചോദിക്കണം", "wife nu chodikkanam".
+NEED_TIME - user needs time to think, later, tomorrow, will tell later. Examples: "pinne parayam", "aalochikkam", "പിന്നെ പറയാം", "think cheyyam".
+EMI_FEAR - user is scared of EMI / loan / monthly payment / risk / loss. Examples: "EMI pedi", "പേടിയാണ്", "risk aanu".
+FEAR_SCAM - user fears this is fraud / cheating / fake / scam, does not trust yet. Examples: "ithu thattippalle?", "ഇത് തട്ടിപ്പല്ലേ?", "ithu fraud aano", "fake aano", "pattikkumo".
+WANTS_RETURN - user asks what return / profit / income they will get first.
+NEEDS_HOPE - user doubts whether it will work for them, can they do it.
+JUST_CHECKING - user is only checking / looking / understanding, not ready.
+RUDE - user is angry / annoyed / says stop disturbing.
+STOP - user wants to stop messages / stop application / do not message.
+READY - user says ok / yes / continue / ready to move forward.
+UNKNOWN - none of the above, normal question / answer / other topic.
+RULES: Judge INTENTION, not exact words. Malayalam script, Manglish, English, Hindi, mixed, spelling mistakes - all count. "Balance" + "illa/ഇല്ല" together = NO_BALANCE, NOT a request for balance details. A question about balance amount ("balance ethra?") = UNKNOWN, not NO_BALANCE. Return JSON only.`;
+    let _out = '';
+    if(typeof GEMINI_API_KEY!=='undefined' && GEMINI_API_KEY){
+      const _url = `https://generativelanguage.googleapis.com/v1beta/models/${(typeof AI_MODEL!=='undefined'&&AI_MODEL)||'gemini-2.0-flash'}:generateContent?key=${GEMINI_API_KEY}`;
+      const _ctl = new AbortController(); const _to = setTimeout(()=>_ctl.abort(), 4000);
+      try{
+        const _r = await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},signal:_ctl.signal,body:JSON.stringify({contents:[{parts:[{text:_prompt}]}],generationConfig:{temperature:0,maxOutputTokens:80}})});
+        const _j = await _r.json(); _out = _j?.candidates?.[0]?.content?.parts?.map(x=>x.text).join('')||'';
+      }finally{ clearTimeout(_to); }
+    } else if(typeof OPENAI_API_KEY!=='undefined' && OPENAI_API_KEY){
+      const _ctl2 = new AbortController(); const _to2 = setTimeout(()=>_ctl2.abort(), 4000);
+      try{
+        const _r2 = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_API_KEY},signal:_ctl2.signal,body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4o-mini',messages:[{role:'user',content:_prompt}],temperature:0,max_tokens:80})});
+        const _j2 = await _r2.json(); _out = _j2?.choices?.[0]?.message?.content||'';
+      }finally{ clearTimeout(_to2); }
+    } else return null;
+    const _m = String(_out||'').match(/\{[^}]*\}/);
+    if(!_m) return null;
+    const _o = JSON.parse(_m[0]);
+    const _valid = ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','WANTS_RETURN','NEEDS_HOPE','JUST_CHECKING','RUDE','STOP','READY','UNKNOWN'];
+    if(!_valid.includes(_o.feeling)) return null;
+    if(Number(_o.confidence||0) < 55) return null;
+    return _o.feeling;
+  }catch(e){ try{ console.log('M40 classify fail', e.message); }catch(_){} return null; }
+}
+async function m40_decideAI(txt, lang, mindset){
+  // 1) Try AI intention first - permanent, covers new words.
+  const _ai = await m40_classifyFeeling(txt, lang);
+  if(_ai){
+    try{ console.log('M40 AI feeling='+_ai+' txt='+String(txt).slice(0,60)); }catch(_){}
+    // Reuse same reply builder as keyword path, but with AI feeling.
+    const _fake = { action:'CONTINUE_V364_36' };
+    // Build decision exactly like m37_decide, using AI feeling:
+    const _f = _ai;
+    if(_f==='STOP') return {action:'STOP', feeling:_f, reply:'', buttons:[]};
+    if(_f==='RUDE') return {action:'SORRY_ONLY', feeling:_f, reply:m37_goldenReply(lang,_f), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+    if(_f==='JUST_CHECKING' || mindset==='JUST_CHECKING') return {action:'TRUST_PATH', feeling:_f, reply:m37_mindsetReply('JUST_CHECKING', lang), buttons: lang==='ml'?['📚 Service Nokkaam','🔔 Pinneedu Ormmippikkoo']:['📚 Look at Service','🔔 Remind Later']};
+    if(['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM'].indexOf(_f)!==-1) return {action:'COMFORT_PAUSE', feeling:_f, reply:m37_goldenReply(lang, _f), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+    if(_f==='WANTS_RETURN' || mindset==='RUNNING') return {action:'TRUST_PATH', feeling:_f, reply:m37_mindsetReply('RUNNING', lang), buttons: lang==='ml'?['📄 Return Nokkaam','💬 Chodyam Chodikkaam']:['📄 Look at Return','💬 Ask Question']};
+    if(_f==='NEEDS_HOPE' || mindset==='PLANNING') return {action:'TRUST_PATH', feeling:_f, reply:m37_mindsetReply('PLANNING', lang), buttons: lang==='ml'?['▶️ Cheruthaayi Thudangaam','💬 Chodyam Chodikkaam']:['▶️ Start Small','💬 Ask Question']};
+    return {action:'CONTINUE_V364_36', feeling:_f, reply:'', buttons:[]};
+  }
+  // 2) Fallback: old keyword list (offline / AI fail) - kept, not primary.
+  return (typeof m37_decide==='function') ? m37_decide(txt, lang, mindset) : {action:'CONTINUE_V364_36', feeling:'UNKNOWN', reply:'', buttons:[]};
+}
 // REMINDER RULE V364.37 - to be applied in existing reminder code, do NOT delete old reminder code:
 // - "Pinneedu Ormmippikkoo" => ask WHEN in his words, set ONLY that one separate reminder, cancel normal reminders.
 // - "vilikku / call" in buttons = reminder only, NEVER create human call task.
@@ -806,10 +877,107 @@ Previous conversation (for context):
 ${historyText}
 Reply as Maya now in JSON.`;
 }
+
+// ===== V364.41 PERMANENT FIX - MAYA SEARCHES, NOT REMEMBERS =====
+// Problem: hardcoded answers can never cover "any query". Every new question = new deploy.
+// Fix: Before Maya answers, she SEARCHES 3 places, then answers from search results:
+//   1) OWN FILES - BIZMAPIA_KNOWLEDGE text below + Google Sheet "Knowledge" tab if present (edit sheet, NO deploy needed)
+//   2) PREVIOUS MEMORY - this user's own chat history (Redis state aiHistory) - already in prompt
+//   3) OPEN WEB - DuckDuckGo Instant Answer + Wikipedia (public, no login, no key) for any general / external query
+//   4) OPEN SOCIAL - public YouTube / Play Store / web search for Bizmapia social proof - via web search, NOT private login.
+// LIMIT (honest): Bot CANNOT log into Instagram/Facebook as you to read private posts/DMs. It CAN search public web.
+// If you want a new fact to be answered forever, add 1 line to the Knowledge Sheet / KNOWLEDGE text - NO code deploy.
+const BIZMAPIA_KNOWLEDGE = `
+BIZMAPIA OFFICIAL FACTS (use these first, do not invent):
+- Bizmapia is All India platform - First 4-in-1 App in India: Ride-Hailing / Cab Booking, Business Directory, Online Delivery, Online Booking + Business Opportunity.
+- Business Opportunity types: Business Center, Municipal / Corporation Franchisee, District Franchisee.
+- Services numbers: Business Opportunity 8590175977, Services 8590183646. NEVER put numbers in message body - only in Call button.
+- Calling time: Monday to Saturday, 11 AM - 4 PM. Callback never promised. "vilikku" = reminder only, never a human call.
+- Token locks slot. After token, team verifies. No refund promise. Trust: Annexure B shows Return.
+- App: Play Store search Bizmapia > Install > OTP login. iPhone: App Store search Bizmapia > Get > OTP login.
+- Driver: watch Company Video, install app, give all permissions, Google sign-in, mobile + OTP, photo, license front/back, vehicle documents.
+`;
+async function m41_fetchText(url, timeoutMs){
+  try{
+    const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), timeoutMs||4000);
+    try{ const r = await fetch(url,{signal:ctl.signal, headers:{'User-Agent':'Mozilla/5.0 BizmapiaBot'}}); if(!r.ok) return ''; return await r.text(); }finally{ clearTimeout(to); }
+  }catch(e){ return ''; }
+}
+async function m41_searchWeb(query){
+  // Public web, no key, no login. DuckDuckGo Instant + Wikipedia. Returns short facts text for prompt.
+  const q = String(query||'').slice(0,200).trim();
+  if(!q) return '';
+  try{
+    const out = [];
+    // 1) DuckDuckGo Instant Answer
+    try{
+      const dd = await m41_fetchText('https://api.duckduckgo.com/?q='+encodeURIComponent(q)+'&format=json&no_html=1&skip_disambig=1', 4000);
+      if(dd){ const j = JSON.parse(dd); if(j.AbstractText) out.push('WEB: '+j.AbstractText.slice(0,600)); if(j.Answer) out.push('WEB ANSWER: '+String(j.Answer).slice(0,300)); (j.RelatedTopics||[]).slice(0,3).forEach(x=>{ if(x.Text) out.push('WEB: '+String(x.Text).slice(0,300)); }); }
+    }catch(_){}
+    // 2) Wikipedia summary
+    try{
+      const wk = await m41_fetchText('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q), 4000);
+      if(wk){ const j2 = JSON.parse(wk); if(j2.extract) out.push('WIKIPEDIA: '+String(j2.extract).slice(0,800)); }
+    }catch(_){}
+    // 3) If query is about Bizmapia social / proof, add official links (public)
+    if(/bizmapia|instagram|facebook|youtube|review|rating|play store/i.test(q)){
+      out.push('OFFICIAL PUBLIC LINKS: Website https://bizmapia.com/ | Play Store search Bizmapia | YouTube search Bizmapia | Instagram search @bizmapia. Do NOT invent follower counts, ratings or reviews. If web search did not return a number, say "check official page" and give link button.');
+    }
+    return out.join('\n').slice(0,2500);
+  }catch(e){ return ''; }
+}
+async function m41_searchOwnFiles(query){
+  // OWN FILES: 1) Embedded KNOWLEDGE above (edit code once, or better 2) Google Sheet "Knowledge" tab - edit sheet, NO deploy.
+  // Sheet Knowledge tab format: Column A = Question / Keyword, Column B = Answer. Bot reads it live via same Sheets client.
+  let parts = [BIZMAPIA_KNOWLEDGE];
+  try{
+    // V364.41: Read Knowledge tab live via Sheets client (same client as saveToSheet). If tab missing, skip - no crash.
+    let rows = null;
+    try{
+      if(typeof sheets!=='undefined' && sheets && sheets.spreadsheets && sheets.spreadsheets.values){
+        const _sid = (typeof SHEET_ID!=='undefined' && SHEET_ID) ? SHEET_ID : ((typeof getSheetIdForUid==='function') ? getSheetIdForUid('') : '');
+        if(_sid){ const _res = await sheets.spreadsheets.values.get({spreadsheetId:_sid, range:`'Knowledge'!A2:B200`}); rows = _res.data.values||[]; }
+      }
+    }catch(_e){ rows = null; }
+    if(rows && rows.length){
+      if(rows && rows.length){
+        const ql = String(query||'').toLowerCase();
+        const words = ql.split(/[^a-z0-9\u0d00-\u0d7f]+/i).filter(w=>w.length>2);
+        for(const r of rows){
+          const key = String(r[0]||''); const ans = String(r[1]||'');
+          if(!key || !ans) continue;
+          const kl = key.toLowerCase();
+          if(words.some(w=>kl.includes(w)) || ql.includes(kl.slice(0,20))){
+            parts.push('OWN FILE (Knowledge Sheet): Q: '+key+' | A: '+ans.slice(0,800));
+          }
+        }
+      }
+    }
+  }catch(e){ try{ console.log('M41 own-files fail', e.message); }catch(_){} }
+  return parts.join('\n').slice(0,4000);
+}
+async function m41_buildSearchContext(userText, history){
+  // Decide if search is needed: always include OWN FILES (cheap, local), include WEB only for external / general / social / "what is" / news / outside Bizmapia.
+  const low = String(userText||'').toLowerCase();
+  const needsWeb = /what is|enthanu|enth|how|why|when|where|news|latest|today|price|rate|meaning|who is|search|google|youtube|instagram|facebook|review|rating|online|internet|weather|stock|result|exam|government|scheme|yojana|loan|bank|hospital|school|college|train|bus|flight|movie|song|cricket|football/i.test(low) || /[\u0d00-\u0d7f]/.test(String(userText||'')) && /entha|enthanu|evide|eppo|ethra|aara|enthu/.test(low);
+  const own = await m41_searchOwnFiles(userText);
+  let web = '';
+  if(needsWeb) web = await m41_searchWeb(userText);
+  // PREVIOUS MEMORY: history is already passed to callMayaAI, keep it - this function just adds search context.
+  return { own, web, needsWeb };
+}
+
 async function callMayaAI(lang, userText, history){
   const historyText = (history||[]).slice(-8).map(h=>`${h.role}: ${h.text}`).join('\n');
   globalThis.__mayaGrounding = getBizmapiaGrounding(userText);
-  const prompt = buildMayaPrompt(lang, historyText) + `\nUser: ${userText}\nMaya:`;
+  // V364.41: SEARCH FIRST, THEN ANSWER. Own files + web + memory, not hardcoded answers.
+  let _searchCtx = '';
+  try{
+    const _sc = (typeof m41_buildSearchContext==='function') ? await m41_buildSearchContext(userText, history) : {own:'', web:''};
+    _searchCtx = `\nSEARCH CONTEXT - USE THIS, DO NOT INVENT:\nOWN FILES:\n${_sc.own||''}\nOPEN WEB / SOCIAL (public only):\n${_sc.web||'(no web result - say you could not find it, do not invent)'}\nRULES: If OWN FILES has the answer, use it first. If WEB has the answer, use it and say "from web". If neither has it, say "I could not find this, team will check" + offer Team button, NEVER invent numbers, dates, prices, follower counts, ratings.\n`;
+    try{ console.log('M41 search needsWeb='+(_sc.needsWeb?'yes':'no')+' webLen='+(String(_sc.web||'').length)+' ownLen='+(String(_sc.own||'').length)); }catch(_){}
+  }catch(e){ _searchCtx=''; }
+  const prompt = buildMayaPrompt(lang, historyText) + _searchCtx + `\nUser: ${userText}\nMaya:`;
   try{
     if(GEMINI_API_KEY){
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
@@ -3509,7 +3677,7 @@ app.post('/webhook', async(req,res)=>{
       if(_m37IsFreeText && !state.driverFlow && state.lang){ // V364.38: NO m37Pause gate - every feeling message must be checked, not only first
         const _m37Lang = state.lang || 'ml';
         const _m37Mind = state.mindset || state.intent || '';
-        const _m37 = (typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'};
+        const _m37 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, _m37Lang, _m37Mind) : ((typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'});
           try{ console.log('M37 CHECK txt='+String(txt).slice(0,60)+' lang='+_m37Lang+' feeling='+(_m37.feeling||'')+' action='+_m37.action); }catch(e){}
         if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH'){
           // Map Trust buttons to existing working ids + M37 continue ids (handled above)
@@ -4605,8 +4773,9 @@ Welcome to Bizmapia! 🙏
         const _wantsBalance = !_isNoBalance300 && /balance|remaining|bakki|bakki.*(amount|details|ethra|entha)|full.*(fee|amount)|total.*(fee|amount)/.test(_v);
         // V364.38 TRUST GUARD INSIDE V300: if feeling is pause-type, NEVER send Balance Details here.
         // Send Golden Draft instead and return - this guard works even if top hook was skipped.
-        if(isFreeText && (typeof m37_detectFeeling==='function') && ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','RUDE'].includes(m37_detectFeeling(txt))){
-          const _f38 = m37_detectFeeling(txt);
+        const _d40v300 = (typeof m40_decideAI==='function') ? await m40_decideAI(txt, lang || state.lang || 'ml', state.mindset || state.intent || '') : null;
+        if(isFreeText && _d40v300 && ['COMFORT_PAUSE','SORRY_ONLY','TRUST_PATH'].includes(_d40v300.action) && ['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM','RUDE'].includes(_d40v300.feeling)){
+          const _f38 = _d40v300.feeling;
           const _L38 = lang || state.lang || 'ml';
           const _r38 = (typeof m37_goldenReply==='function') ? m37_goldenReply(_L38, _f38) : '';
           await setState(uid,{...state, m37Pause:true, m37Feeling:_f38, lastStep:'V364.38 - Trust - '+_f38, phoneId: incomingPhoneId});
@@ -6342,7 +6511,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.39 TRUST-FIRST-MALAYALAM-SCRIPT - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.41 SEARCH-FIRST-AUTO-REPLY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
