@@ -3484,6 +3484,55 @@ app.post('/webhook', async(req,res)=>{
       }
     }catch(_){}
 
+    // ===== V364.37 WIRED - TRUST-FIRST HOOK - FREE-TEXT ONLY =====
+    // Placed AFTER Stop-confirm, BEFORE Driver / Resume / Outer / all routers.
+    // Only free-text (no button). Buttons keep old flow. Driver flow skipped.
+    // If user already got 1 comfort pause, next message goes to OLD flow (no loop).
+    try{
+      const _m37IsFreeText = !btnId && msg.type==='text' && txt && String(txt).trim();
+      const _m37IsTrustBtn = ['M37_YOU_ANSWER','M37_CONTINUE','M37_RETURN','M37_START_SMALL'].includes(String(btnId||''));
+      if(_m37IsTrustBtn){
+        const _l37b = state.lang || 'ml';
+        await setState(uid,{...state, m37Pause:false, lastStep:'V364.37 - Trust - User wants answer', phoneId: incomingPhoneId});
+        await sendWithDelay(textMessage(uid, _l37b==='ml' ? `Dharyamaayi parayoo 🙏 Ningalude samshayam enthaanu? Njan marupadi tharaam.` : _l37b==='hi' ? `Befikar hokar batayiye 🙏 Aapka doubt kya hai? Main jawab dungi.` : `Tell me boldly 🙏 What is your doubt? I will answer.`, incomingPhoneId));
+        return;
+      }
+      if(_m37IsFreeText && !state.driverFlow && state.lang && !state.m37Pause){
+        const _m37Lang = state.lang || 'ml';
+        const _m37Mind = state.mindset || state.intent || '';
+        const _m37 = (typeof m37_decide==='function') ? m37_decide(txt, _m37Lang, _m37Mind) : {action:'CONTINUE_V364_36'};
+        if(_m37.action==='COMFORT_PAUSE' || _m37.action==='SORRY_ONLY' || _m37.action==='TRUST_PATH'){
+          // Map Trust buttons to existing working ids + M37 continue ids (handled above)
+          const _mapBtn = (t)=>{
+            if(/Teamumaayi|Talk to Team|ടീമിനോട്|टीम से/.test(t)) return {id:'AI_TALK', title: t.length>20 ? t.slice(0,20) : t};
+            if(/Pinneedu|Remind Later/.test(t)) return {id:'AI_LATER', title: t.length>20 ? t.slice(0,20) : t};
+            if(/Service Nokkaam|Look at Service/.test(t)) return {id:'AI_SERVICES', title: t.length>20 ? t.slice(0,20) : t};
+            if(/Marupadi|You Answer/.test(t)) return {id:'M37_YOU_ANSWER', title: 'You Answer'};
+            if(/Return Nokkaam|Look at Return/.test(t)) return {id:'M37_RETURN', title: 'Look at Return'};
+            if(/Cheruthaayi|Start Small/.test(t)) return {id:'M37_START_SMALL', title: 'Start Small'};
+            if(/Chodyam|Ask Question/.test(t)) return {id:'M37_CONTINUE', title: 'Ask Question'};
+            return {id:'M37_CONTINUE', title: t.length>20 ? t.slice(0,20) : t};
+          };
+          const _btns = (_m37.buttons||[]).map(_mapBtn);
+          await setState(uid,{...state, m37Pause:true, m37Feeling:_m37.feeling||'', lastStep:'V364.37 - Trust - '+(_m37.feeling||'Pause'), phoneId: incomingPhoneId});
+          await sendWithDelay(textMessage(uid, _m37.reply, incomingPhoneId));
+          if(_btns.length) await sendWithDelay(interactiveButton(uid, _m37Lang==='ml' ? `👇 Ini parayoo:` : _m37Lang==='hi' ? `👇 Ab batayiye:` : `👇 Tell me now:`, _btns, incomingPhoneId));
+          try{ await saveToSheet('System_Logs',[getISTTime(),String(uid),_m37Lang,'V364.37 Trust-First','Feeling=' + (_m37.feeling||'') + ' action=' + _m37.action,'Trust Pause',HELP_ADMIN,'V364.37 Trust',''],false); }catch(e){}
+          return;
+        }
+        // STOP via feeling (e.g. "don't message me") - not exact "stop" - also go to Stop confirm, not old flow
+        if(_m37.action==='STOP'){
+          const _l37 = _m37Lang;
+          await setState(uid,{...state, m37Pause:false, lastStep:'V364.37 - Stop - Confirm', phoneId: incomingPhoneId});
+          const _cf = _l37==='ml' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = അപേക്ഷ നിർത്താം, Yes = കുറച്ച് സമയത്തിന് ശേഷം ഓർമ്മിപ്പിക്കാം:` : _l37==='hi' ? `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = आवेदन रोकें, Yes = कुछ समय बाद याद दिलाएँ:` : `Thanks for sharing your feedback 🙏\n\n*Do you need to stop your application, or want me to remind you after some time?*\n\n👉 Stop = stop application, Yes = remind after some time:`;
+          await sendWithDelay(interactiveButton(uid,_cf,[{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+          return;
+        }
+      }
+      // Clear pause flag when user sends a new free-text after a pause - old flow handles it
+      if(_m37IsFreeText && state.m37Pause){ await setState(uid,{...state, m37Pause:false, phoneId: incomingPhoneId}); state={...state, m37Pause:false}; }
+    }catch(_){}
+
 
 
     
@@ -6268,7 +6317,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.37 OUTER-OPPORTUNITY - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.37 TRUST-FIRST-WIRED - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
