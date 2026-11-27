@@ -1,235 +1,167 @@
-BIZMAPIA - MAYA WHATSAPP BOT
-COMPLETE WORKING FLOW - V364.37 - TRUST-FIRST OWNER ENGINE - LOCKED
-Built from V364.15 COMPLETE FLOW (uploaded file) + Owner Golden Draft + Trust-First decisions
-Main numbers + Franchisee numbers (10 slots) | Live on Render | 27 Nov 2026
-
-================================================================
-0. WHAT CHANGED IN V364.37 - READ FIRST
-================================================================
-V364.15 to V364.36 was prefix / template funnel:
-Template -> Step -> Fee -> Token -> Reminder -> Reminder.
-That funnel made users vanish, say STOP, react rude, vanish without reply.
-Maya kept sending reminders. Owner paid for unresponsive replies. Loss.
-
-V364.37 REPLACES the funnel, it does NOT delete V364.15 infra.
-Infra stays: same server, same webhook, same sheets, same inbox, same franchisee slots.
-Only BEHAVIOUR changes:
-
-OLD: Predefined flow system, like a burden to user.
-NEW: Feeling first, then sale. Trust -> Comfort -> Right Solution -> Commitment.
-
-OLD: Fee / Token repeated when user says "no balance".
-NEW: Golden Draft (owner's exact words) for ALL pause / doubt situations. Fee NEVER repeated in same reply.
-
-OLD: "vilikku / call" buttons = human call task.
-NEW: "vilikku" = ONLY Maya reminder. NEVER a human call. No team call task created.
-
-OLD: Fixed reminders (3-min / 1h / 12h / 24h) for everyone, even dead chats.
-NEW: One separate reminder only, from HIS words. Normal reminders OFF for that user. After 1 soft reminder with no reply -> STOP ALL. No waste.
-
-OLD: Q1 = button -> next step.
-NEW: Q1 = Diagnosis. Running / Planning / Just Checking = 3 different Trust Paths.
-
-If Maya does not understand feeling, Maya must NEVER sell. Comfort only. Safe side always.
-
-================================================================
-1. START - SAME SERVER, SAME WEBHOOK (UNCHANGED FROM V364.15)
-================================================================
-- One server.js, one Render service, one webhook for all numbers.
-- Webhook routes by incoming phone_number_id: main numbers vs franchisee slots.
-- Version check: Render log must say V364.37 TRUST-FIRST - BOOT OK. /health must say version V364.37.
-- Team Inbox restores after deploy - old chats never vanish. Inbox restored 1077 msgs on V364.15 deploy.
-- Deploy rule: Build each version from previous FINAL file only. Never rewrite from scratch, never copy old V363 / V352.
-- Update version codes EVERYWHERE: banner + BOOT log + VERSION constant + /health + all endpoints.
-- Rename file to EXACTLY server.js and overwrite old server.js in Render. Do NOT deploy without user confirmation.
-- Verify ONLY via /health + Render logs, not deploy success alone.
-
-================================================================
-2. FIRST MESSAGE - WELCOME + LANGUAGE FIRST (UNCHANGED + TRUST ADD)
-================================================================
-- First welcome in English only. Then ask language: English / Hindi / Malayalam.
-- After language selected, reply ONLY in that language. Malayalam = pure Malayalam, no Manglish, except brand Bizmapia.
-- Manglish / Malayalam input -> Malayalam reply. Never switch away from selected language.
-- Ask real intention + taste before showing options. Never show full option list before taste.
-- Call window: Monday to Saturday, 11 AM - 4 PM. Number only in Call button. Callback never promised.
-- NEW TRUST ADD: First 2-3 messages, Maya must NOT talk about fee at all. Maya must only prove: I am real, I listen, I will not cheat you, I will not force you. Owner line: "Dhairyamaayi chodikkoo, enthu samshayavum. Paisayude karyam pinne, aadyam ningalkku poornnamaayi manassilaakatte."
-
-================================================================
-3. MENU - MAIN NUMBERS (OPPORTUNITY FIRST) (UNCHANGED)
-================================================================
-- Main: 8590175977 (Business Opportunity) / 8590183646 (Services).
-- After language: 2 buttons - [Business Opportunity] [Use Other Services].
-- Business Opportunity first - marketing / ads flow.
-
-================================================================
-4. MENU - FRANCHISEE NUMBERS (SERVICES FIRST) - V364.15 (UNCHANGED)
-================================================================
-- Applies to all 10 franchisee slots. Slot 1 = Malappuram 99954 41970. Slots 2-10 empty, fill later via Render env.
-- WhatsApp max 3 buttons per message, so 5 buttons = 2 messages.
-- Message 1 (3 buttons): 1 Ride Hailing / Cab Booking, 2 Business Directory, 3 Online Delivery.
-- Message 2 (2 buttons): 4 Online Booking, 5 Business Opportunity.
-- Ride = customer cab OR driver attach. Directory / Delivery / Booking = existing service flows. Business Opportunity = same opportunity flow below.
-- Sheet + Token + Inbox separate per franchisee number. No cross-mixing.
-- Adding a franchisee = 3 Render env vars only: PHONE_NUMBER_ID_Fx + WHATSAPP_TOKEN_Fx + SHEET_ID_Fx. No flow change.
-
-================================================================
-5. BUSINESS OPPORTUNITY FLOW - ORDER (V364.15 ORDER KEPT, BEHAVIOUR CHANGED)
-================================================================
-Order stays:
-Company Video (See Video button, never raw link) -> 3-min capacity reminder -> Capacity / Price Range: 30K-1L / 2L-5L / 5L-15L.
-Price is RANGE, not rate. Never say 7 days as a rule. Agreement Date warning (>7 days = less chance) stays separate.
-Level Opportunity Video (different from Company Video) -> Reconfirm / Upgrade -> Benefits / Support / Requirements (Skip allowed) -> Corp Check -> Pay Token -> Details LAST after payment verified.
-
-V364.37 CHANGE: Order is the MAP, not the forcing. Maya must NOT force next step if feeling = pause / doubt / fear. If feeling = pause, Maya must STOP the order and use Golden Draft (Section 7). Only when feeling = READY, Maya gives ONE pinpoint next step, finish in 1 minute.
-
-- Registration Fee: save as values array to Registration_Fee tab. Fixed: object {phone...} caused Unknown name phone error.
-- Payment reminder: registration fee not yet reflected in bank statement, with Pay Now + Call Now buttons. Stays as finalized. V364.37: Payment reminder is sent ONLY if user already committed and feeling = READY. Never as a chase to a paused user.
-- Trust question: answer with Annexure B + only registration fee risk + team contact. Tender + Annexure B after payment.
-- Continue / New Chat: returning user can Continue from saved step or start New Chat.
-
-================================================================
-6. SERVICES FLOW (UNCHANGED)
-================================================================
-- Services: Ride Hailing / Cab Booking, Business Directory, Online Delivery, Online Booking.
-- Driver attach: App install from chat link -> Install -> Open -> All permissions incl. location + in-app call -> Google sign-in -> Mobile + OTP -> Name / Password -> Login again -> Driver photo (latest clear photo, shows in booking) + Driving Licence front/back + Vehicle documents.
-- Customer cab: pickup / drop / vehicle type. App link + rating/review prompt where needed.
-
-================================================================
-7. V364.37 - TRUST-FIRST OWNER ENGINE (NEW - CORE OF THIS VERSION)
-================================================================
-7A. WHY USER BEHAVES LIKE THIS - OWNER TRUTH, LOCKED
-- Bizmapia gives a beautiful opportunity no one else gives. Other opportunities are fraud / scam / killing trust.
-- User comes already scared: "Ithum pattikkal aano? Paisa vaangi mungumo?"
-- When user clicks Business Opportunity, he is mentally prepared to find: Is this right one or not?
-- He is NOT ready to pay. He is ready to JUDGE. He is TESTING Maya: Is this also fraud, or real trustworthy person?
-- If Maya replies like salesman (Step, Fee, Token, Reminder), he thinks "same fraud" and vanishes / says STOP / becomes rude.
-- If Maya replies like owner (polite, patient, understanding, no hurry), he thinks "this is different". Then Trust -> Solution -> Commitment by himself.
-
-7B. FEELING CHECK - BEFORE EVERY REPLY, MANDATORY
-Before ANY template, Maya must detect feeling from user text:
-
-READY: ok, yes, seri, thudaram, continue
-NO_BALANCE: no balance, balance illa, no money, paisa illa, cash illa, salary varumbo
-ASK_FAMILY: wife, bharya, veettil chodikkanam, husband
-NEED_TIME: alochikkate, think, samayam venam, pinne, later, nale
-EMI_FEAR: EMI, thavanakal, gadu, pedi, bayam, risk, nashtam
-FEAR_SCAM: fraud, pattik, cheat, scam, fake
-WANTS_RETURN: return, labham, profit, income, entha kittum
-NEEDS_HOPE: nadakkumo, pattumo, cheyyan pattumo, hope
-JUST_CHECKING: just checking, nokkan, ariyan
-RUDE: rude, shut, bore, annoy
-STOP: stop, venda, don't message, block, parayaruth
-
-RULE: If feeling = UNKNOWN (Maya does not understand), Maya must NEVER sell. Comfort only. Safe side always.
-
-7C. GOLDEN DRAFT - OWNER'S EXACT WORDS, LOCKED FOR ALL PAUSE SITUATIONS
-Use for: NO_BALANCE, ASK_FAMILY, NEED_TIME, EMI_FEAR, FEAR_SCAM, RUDE, UNKNOWN.
-Do NOT invent own words for these. Use this structure, in user's language only.
-
-Malayalam Golden Draft:
-"Manassilaayi 🙏
-
-[His situation in HIS words] ... , prashnamilla.
-
-Njan ningalude chat prathyegam maatti vaykkaam. Oru pakshae mattenthenkilum samshayamundenkil dhairyamaayi ennodu parayaam, njan enikku kazhiyunna vidham marupadikal nalkaam. Athalla ningalude teamumaayi samsarikkamenundenkil athum saadhyamaakkaam. Ellaam thaankalude soukaryathinaayi njan thayyaraakkaam.
-
-Ini parayoo - teamumaayi samsarikkanaamo atho njan marupadikal nalkaal mathiyo atho pinneedu ormmippikkanaamo?"
-
-Situation lines (examples, use his words):
-- NO_BALANCE: "Petteannu payment ennu parayumbol chilappol balance illennu varaam,"
-- ASK_FAMILY: "Bharyayodu / veettil chodikkathe theerumanikkaan pattillallo,"
-- EMI_FEAR: "EMI ennu kelkkumbol pedi thonnunnathu swaabhavikamaanu,"
-- FEAR_SCAM: "Palarum pattikkappedunna kaalathu pedi thonnunnathu swaabhavikamaanu,"
-- NEED_TIME: "Onnu aalochikkaan samayam venam ennu thonnunnathu swaabhavikamaanu,"
-- JUST_CHECKING: "Aadyam nokki manassilaakkanam ennu thonnunnathu shariyaanu,"
-
-Buttons after Golden Draft (max 3):
-[👥 Teamumaayi Samsarikkam] [💬 Nee Marupadi Tharoo] [🔔 Pinneedu Ormmippikkoo]
-
-NEVER in same reply: Fee, Token, Balance Details, EMI amount, full fee list. Fee repeat = forbidden in Golden Draft reply.
-
-7D. 3 MINDSET PATHS - Q1 IS DIAGNOSIS, NOT A BUTTON
-Q1 question stays: Running Business / Planning to Start / Just Checking. But meaning changes: Diagnosis -> Different Trust Path.
-
-PATH 1 - RUNNING BUSINESS (Office, 1-2 staff, curious, wants return first)
-- Maya talks business-to-business, with respect. No fee / Token / EMI first.
-- Reply: "Ningalkku ippol thanne business undallo, athukondu return-nte karyam aadyam manassilaakkendathu shariyaanu. Dhairyamaayi nokkoo, ningalkku return manassilaayaal mathram munnottu poyaal mathi."
-- Then ONLY: Annexure B, return, monthly breakup - one small piece. He will calculate himself.
-
-PATH 2 - PLANNING TO START (Needs hope)
-- Maya gives hope + safety. No scare with 1 Lakh / EMI / Token.
-- Reply: "Thudangaan plan cheyyunnathu thanne valiya karyamaanu 🙏 Cheruthaayi thudangaam, manassilaakki, viswasam aayittu mathram munnottu pokaam. Dhrythi illa."
-- Then ONLY: Small start, Business Centre story, how others started small. Confidence first.
-
-PATH 3 - JUST CHECKING (50-50 chance)
-- Maya must NOT sell at all. No Q2, no video push, no EMI.
-- Reply: "Aadyam ningalude service padikkoo 😊 Ningalkku ithu nallathanennu thonniyaal, eppol venamenkilum thirichu vannu Business Opportunity theranjedukkam. Appol nammal orumichu finalize cheyyaam."
-- Door open. He comes back himself when trust builds. 50-50 becomes 80-20 because we did not force.
-
-7E. ACTIVE USER = NO SCHEDULED REMINDERS
-If user is replying NOW, Maya must cancel all scheduled reminders for that user immediately. Do NOT wait 3-min / 1h. Give next step NOW, in one line, one button. Finish in 1 minute if ready.
-
-7F. TRUST CHECK BEFORE FEE
-If trust is NOT built yet, NO fee, NO Token, NO EMI talk. Doubt first, in his words, then only one small next step.
-
-================================================================
-8. REMINDERS - V364.37 NO-WASTE RULE (REPLACES V364.12 CHASE)
-================================================================
-V364.12 had Type 1 Stuck + Type 2 No Action with 1h / 12h / 24h. That caused waste on dead chats.
-V364.37 keeps the timing infra, but adds STOP + SEPARATE logic on top:
-
-- SEPARATE REMINDER ONLY: When user picks "🔔 Pinneedu Ormmippikkoo", Maya must ASK WHEN in his words: "Eppol ormmippikkanam ennu ningalude vaakkil parayoo - udhaharanam: nale vaikittu, allenkil shambalam varumbol." Then set ONLY that one reminder from HIS words: Tomorrow / Today Evening / Salary Day (ask date) / Later-One-Soft. Cancel ALL normal reminders for him. Normal follow-ups OFF. No disturbance.
-- "vilikku / call" = ONLY Maya reminder. NEVER a human call. No team call task. Buttons must say "Ormmippikkoo", NOT "Vilikkoo". Example: [🔔 Naale Ormmippikkoo] [🔔 Innu Vaikittu Ormmippikkoo].
-- STOP: Free-text Stop OR [Stop] button -> Stop / Yes confirm ONLY. Never resend Company Video. On STOP, delete ALL reminders immediately. Sheet: STOPPED - Do Not Disturb. Never send again unless user himself messages.
-- RUDE: Only one sorry + Golden Draft. No fee, no Token, no reminder that day. Then pause.
-- VANISH / NO REPLY: Only ONE soft reminder after Comfort reply. If NO reply to that ONE soft reminder -> STOP ALL reminders. Sheet: COLD - No Reply After 1 Soft Reminder. No 2nd / 3rd / 4th reminder. This saves money.
-- Paused must NOT block reminders (V364.15 rule stays), BUT Paused + Separate Reminder = only separate reminder fires, normal reminders stay OFF.
-- Test numbers 8590175977 / 8590183646 get NO reminders. (unchanged)
-- Fired Date = Column H in Fired_Loser_List, IST format. Columns A-G unchanged. (unchanged)
-
-Soft Reminder text (comfort only, no fee):
-Malayalam: "Namaskaaram 😊 Thaledivasam paranja samayathu ormmippikkunnu. Ippol nokkatte? Ningalude avasaram ippozhum surakshithamaanu. Oru minittil thudaraam 👇 [▶️ Thudaraam]"
-
-================================================================
-9. OUTER OPPORTUNITY - DO NOT INVENT (UNCHANGED)
-================================================================
-- If user asks for opportunity NOT in Bizmapia (e.g. professional college admission office): do NOT reset step, do NOT resend video, do NOT invent profile.
-- Direct to service provider / banker for project loan, then bring back to current step.
-
-================================================================
-10. VOICE NOTES (UNCHANGED)
-================================================================
-- Maya must mention what user said in voice note, then answer in same language. Text-only reply, no TTS.
-
-================================================================
-11. STOP - V364.14 FIX (KEPT + EXTENDED IN SECTION 8)
-================================================================
-- Free-text Stop OR tapped [Stop] button -> Stop / Yes confirm ONLY. Never resend Company Video.
-- Stop check matches button_reply title + list_reply title + button text, not only text body.
-- V364.37 extension: STOP also deletes reminders, sets STOPPED in sheet.
-
-================================================================
-12. TEAM INBOX + SHEETS (UNCHANGED + NEW COLUMNS)
-================================================================
-- Team Inbox per number: main + each franchisee separate. Paused chats, search, notes.
-- Sheets per number: System_Logs, Registration_Fee, Fired_Loser_List + 10 tabs. Malappuram Sheet: 1EyY_TB84wGnctyr_7K786NGS6hBoWpP82ttm2C85DUE.
-- Render env for Malappuram: WHATSAPP_TOKEN_99954 (pending - Verify account with 9567742507), PHONE_NUMBER_ID_99954 = 1481022538422254.
-- Malappuram campaign starts Friday. Verification to finish tomorrow: Meta Business Settings > System Users > make_bot > Generate Token > Verify account with 9567742507.
-- NEW V364.37 SHEET FIELDS (add, do not delete old columns):
-  Feeling: NO_BALANCE / ASK_FAMILY / NEED_TIME / EMI_FEAR / FEAR_SCAM / WANTS_RETURN / NEEDS_HOPE / JUST_CHECKING / READY / RUDE / STOP / COLD
-  Mindset: RUNNING / PLANNING / JUST_CHECKING
-  Decision: COMFORT_PAUSE / TRUST_PATH / SELL_FAST / SORRY_ONLY / STOP
-  Reminder: SEPARATE_ONLY: TOMORROW / TODAY_EVENING / SALARY_DAY / NONE
-  NormalReminders: OFF / ON
-  Stopped_At: NO_BALANCE / STOP / RUDE / COLD / etc.
-- Owner does NOT need to monitor every chat. Sheet tells: Who is ready, who needs time, who needs human call. Dead chats are STOPPED, no money waste.
-
-================================================================
-13. DEPLOY - V364.37
-================================================================
-- File name: server.js ONLY. Version V364.37 everywhere.
-- Do NOT deploy without user confirmation.
-- Verify via /health + Render logs only.
-- After deploy, test: (1) No-Balance -> Golden Draft, no fee repeat. (2) Just Checking -> Study First, no Q2. (3) STOP -> no more messages. (4) No reply after 1 soft reminder -> no more reminders. (5) Running -> Return first.
-
-END OF V364.37 - LOCKED
+/* BIZMAPIA - MAYA WHATSAPP BOT - server.js - V364.37 - TRUST-FIRST OWNER ENGINE - LOCKED
+   Built from uploaded V364.15 COMPLETE FLOW + Owner Golden Draft
+   One server.js, one Render service, one webhook for all numbers.
+   DO NOT deploy without user confirmation. Verify ONLY via /health + Render logs. */
+const express = require('express');
+const axios = require('axios');
+const app = express();
+app.use(express.json());
+const VERSION = 'V364.37';
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'bizmapia_verify';
+const PORT = process.env.PORT || 3000;
+function configFor(phoneNumberId){
+  const map = {
+    [process.env.PHONE_NUMBER_ID_MAIN_OPP || 'MAIN_OPP']: { token: process.env.WHATSAPP_TOKEN_MAIN, sheet: process.env.SHEET_ID_MAIN, label:'MAIN_OPP', servicesFirst:false },
+    [process.env.PHONE_NUMBER_ID_MAIN_SVC || 'MAIN_SVC']: { token: process.env.WHATSAPP_TOKEN_MAIN, sheet: process.env.SHEET_ID_MAIN, label:'MAIN_SVC', servicesFirst:false },
+    [process.env.PHONE_NUMBER_ID_99954 || '1481022538422254']: { token: process.env.WHATSAPP_TOKEN_99954, sheet: process.env.SHEET_ID_99954 || '1EyY_TB84wGnctyr_7K786NGS6hBoWpP82ttm2C85DUE', label:'FRANCHISEE_MALAPPURAM', servicesFirst:true },
+  };
+  for(let i=2;i<=10;i++){ const pid=process.env['PHONE_NUMBER_ID_F'+i]; if(pid) map[pid]={token:process.env['WHATSAPP_TOKEN_F'+i], sheet:process.env['SHEET_ID_F'+i], label:'FRANCHISEE_F'+i, servicesFirst:true}; }
+  return map[phoneNumberId] || { token: process.env.WHATSAPP_TOKEN_MAIN, sheet: process.env.SHEET_ID_MAIN, label:'MAIN', servicesFirst:false };
+}
+const chats = new Map();
+const reminders = new Map();
+const TEST_NUMBERS = ['918590175977','918590183646','8590175977','8590183646'];
+function getChat(phone){ if(!chats.has(phone)) chats.set(phone,{lang:null,mindset:null,feeling:null,step:'WELCOME',stopped:false,cold:false,separateReminder:null,normalRemindersOff:false,lastMsgAt:Date.now(),pendingCold:false,phone}); return chats.get(phone); }
+function log(){ console.log('['+VERSION+']', ...arguments); }
+async function sheetLog(phone, data){ log('SHEET', phone, JSON.stringify(data)); }
+async function sheetSetFired(phone){ log('SHEET FIRED', phone, 'Column H Fired Date IST'); }
+async function sendTo(senderId, token, to, body, buttons){
+  if(!token){ log('NO TOKEN - mock send to', to, String(body).slice(0,150)); return; }
+  const payload = { messaging_product:'whatsapp', recipient_type:'individual', to, type:'text', text:{preview_url:false, body} };
+  if(buttons && buttons.length){ payload.type='interactive'; payload.interactive={ type:'button', body:{text:body}, action:{buttons: buttons.slice(0,3).map(function(b,i){ return {type:'reply', reply:{id:'BTN_'+i, title:String(b).slice(0,20)}}; })} }; delete payload.text; }
+  try{ await axios.post('https://graph.facebook.com/v21.0/'+senderId+'/messages', payload, {headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}}); }
+  catch(e){ log('SEND ERR', (e.response && e.response.data) || e.message); }
+}
+function detectFeeling(t){
+  const s = ' ' + String(t||'').toLowerCase() + ' ';
+  const has = function(){ return Array.prototype.some.call(arguments, function(x){ return s.includes(x); }); };
+  if(has('stop','vendaa','venda',"don't message",'dont message',"don't msg",'msg venda','parayaruth','block','unsubscribe')) return 'STOP';
+  if(has('fraud','pattik','cheat','scam','thattip','fake','kalav')) return 'FEAR_SCAM';
+  if(has("don't have balance",'no balance','balance illa','balance ill','no money','paisa illa','cash illa','money illa','kaash illa','salary varumbo','salary varumbol','salary')) return 'NO_BALANCE';
+  if(has('wife','bharya','husband','veettil chodikk','veettil chodik','veettil paray','family')) return 'ASK_FAMILY';
+  if(has('aloikk','aalo','think','samayam venam','pinne','later','nale','naale','tomorrow','yochikk')) return 'NEED_TIME';
+  if(has('emi','thavanakal','gadu','pedi','bayam','fear','risk','nashtam','lose')) return 'EMI_FEAR';
+  if(has('return','labham','profit','income','varumanam','entha kittum','enthu kittum','kittum')) return 'WANTS_RETURN';
+  if(has('hope','nadakkumo','pattumo','cheyyan pattumo','sadhikkumo','can i','will it work')) return 'NEEDS_HOPE';
+  if(has('just checking','just check','nokkan','ariyan','check cheyyan','just enquiry')) return 'JUST_CHECKING';
+  if(has('shut','mind','annoy','bore','angry','rude')) return 'RUDE';
+  if(has('ok','yes','seri','sheri','thudaram','continue','thudar','start')) return 'READY';
+  return 'UNKNOWN';
+}
+function situationLine(feeling, lang){
+  const ml = { NO_BALANCE:'Petteannu payment ennu parayumbol chilappol balance illennu varaam,', ASK_FAMILY:'Bharyayodu / veettil chodikkathe theerumanikkaan pattillallo,', EMI_FEAR:'EMI ennu kelkkumbol pedi thonnunnathu swaabhavikamaanu,', FEAR_SCAM:'Palarum pattikkappedunna kaalathu pedi thonnunnathu swaabhavikamaanu,', NEED_TIME:'Onnu aalochikkaan samayam venam ennu thonnunnathu swaabhavikamaanu,', RUDE:'Njan dhrythi pidippichathu pole thonniyenkil kshamikkaanam,', JUST_CHECKING:'Aadyam nokki manassilaakkanam ennu thonnunnathu shariyaanu,', WANTS_RETURN:'Business ullaa aalaayathukondu return aadyam manassilaakkanam ennu thonnunnathu shariyaanu,', NEEDS_HOPE:'Thudangaan plan cheyyumbol ithu nadakkumo ennu samshayam thonnunnathu swaabhavikamaanu,', UNKNOWN:'Ippol munnottu pokaan pattaatha avasthayaanaanennu manassilaayi,' };
+  const en = { NO_BALANCE:'When payment is asked suddenly, sometimes balance may not be there,', ASK_FAMILY:'Without asking family at home, a decision cannot be taken,', EMI_FEAR:'It is natural to feel fear when hearing EMI,', FEAR_SCAM:'In a time when many are cheated, fear is natural,', NEED_TIME:'It is natural to need time to think,', RUDE:'Sorry if I seemed to hurry you,', JUST_CHECKING:'It is right to first look and understand,', WANTS_RETURN:'As a businessman, it is right to first understand return,', NEEDS_HOPE:'When planning to start, doubt whether it will work is natural,', UNKNOWN:'I understand you cannot move forward right now,' };
+  return lang==='ml' ? (ml[feeling]||ml.UNKNOWN) : (en[feeling]||en.UNKNOWN);
+}
+function goldenReply(lang, feeling){
+  const line = situationLine(feeling, lang);
+  if(lang==='ml') return 'Manassilaayi 🙏\n\n' + line + ' prashnamilla.\n\nNjan ningalude chat prathyegam maatti vaykkaam. Oru pakshae mattenthenkilum samshayamundenkil dhairyamaayi ennodu parayaam, njan enikku kazhiyunna vidham marupadikal nalkaam. Athalla ningalude teamumaayi samsarikkamenundenkil athum saadhyamaakkaam. Ellaam thaankalude soukaryathinaayi njan thayyaraakkaam.\n\nIni parayoo - teamumaayi samsarikkanaamo atho njan marupadikal nalkaal mathiyo atho pinneedu ormmippikkanaamo?';
+  if(lang==='hi') return 'Samajh gaya 🙏\n\n' + line + ' Koi baat nahi.\n\nMain aapki chat alag se rakh dungi. Agar koi aur doubt ho to bejhijhak mujhse poochiye, main jitna ho sake utna jawab dungi. Ya agar team se baat karni ho to wo bhi ho jayega. Sab aapki suvidha ke liye taiyaar hai.\n\nAb batayiye - team se baat karni hai, ya main jawab doon, ya baad me yaad dila doon?';
+  return 'Understood 🙏\n\n' + line + ' No problem.\n\nI will keep your chat separately. If you have any other doubt, please tell me boldly, I will answer as best I can. Or if you want to talk to our team, that is also possible. Everything is arranged for your convenience.\n\nTell me now - do you want to talk to the team, or shall I answer, or shall I remind you later?';
+}
+function mindsetReply(mindset, lang){
+  if(mindset==='RUNNING') return lang==='ml' ? 'Ningalkku ippol thanne business undallo, athukondu return-nte karyam aadyam manassilaakkendathu shariyaanu. Dhairyamaayi nokkoo, ningalkku return manassilaayaal mathram munnottu poyaal mathi.\n\nAadyam Annexure B - Return onnu nokkaam. Paisayude karyam pinne.' : 'You already have a business, so it is right to first understand return. Look boldly, move forward only if return is clear to you.\n\nFirst let us look at Annexure B - Return. Money talk later.';
+  if(mindset==='PLANNING') return lang==='ml' ? 'Thudangaan plan cheyyunnathu thanne valiya karyamaanu 🙏 Cheruthaayi thudangaam, manassilaakki, viswasam aayittu mathram munnottu pokaam. Dhrythi illa.\n\nAadyam Business Centre engane cheruthaayi thudangaam ennu nokkaam.' : 'Planning to start itself is a big thing 🙏 Start small, understand, move only when you trust. No hurry.\n\nFirst let us see how Business Centre can start small.';
+  return lang==='ml' ? 'Aadyam ningalude service padikkoo 😊 Ningalkku ithu nallathanennu thonniyaal, eppol venamenkilum thirichu vannu Business Opportunity theranjedukkam. Appol nammal orumichu finalize cheyyaam.\n\nIppol vilkilla, dhrythi illa. Service nokkiyittu parayoo.' : 'First study our service 😊 If you feel it is good, you can come back anytime and choose Business Opportunity. Then we will finalise together.\n\nNo selling now, no hurry. Look at service and tell me.';
+}
+function cancelAllReminders(phone){ if(reminders.has(phone)){ reminders.get(phone).forEach(clearTimeout); reminders.delete(phone); } log('REMINDERS CANCELLED', phone); }
+function scheduleSoftReminder(senderId, token, phone, chat, delayMs, label){
+  if(TEST_NUMBERS.indexOf(phone) !== -1) return;
+  if(chat.stopped || chat.cold) return;
+  cancelAllReminders(phone);
+  const id = setTimeout(async function(){
+    if(Date.now() - chat.lastMsgAt < delayMs) return;
+    if(chat.stopped || chat.cold) return;
+    const txt = chat.lang==='ml' ? 'Namaskaaram 😊 Thaledivasam paranja samayathu ormmippikkunnu. Ippol nokkatte? Ningalude avasaram ippozhum surakshithamaanu. Oru minittil thudaraam 👇' : 'Namaste 😊 Reminding you at the time you mentioned. Shall we look now? Your opportunity is still safe. We can continue in one minute 👇';
+    await sendTo(senderId, token, phone, txt, [chat.lang==='ml'?'▶️ Thudaraam':'▶️ Continue']);
+    await sheetSetFired(phone);
+    chat.pendingCold = true;
+    const id2 = setTimeout(function(){ if(chat.pendingCold && !chat.stopped){ chat.cold=true; chat.separateReminder=null; chat.normalRemindersOff=true; sheetLog(phone,{Feeling:'COLD',Stopped_At:'COLD - No Reply After 1 Soft Reminder',Reminder:'NONE'}); log('COLD STOP', phone); } }, 24*60*60*1000);
+    reminders.set(phone, [id2]);
+  }, delayMs);
+  reminders.set(phone,[id]);
+  log('SEPARATE REMINDER SCHEDULED', phone, label, delayMs);
+}
+function setSeparateReminder(senderId, token, phone, chat, userText){
+  const t = String(userText||'').toLowerCase();
+  let when='ONE_SOFT_TOMORROW', delay=24*60*60*1000;
+  if(t.includes('nale')||t.includes('naale')||t.includes('tomorrow')){ when='TOMORROW'; delay=24*60*60*1000; }
+  else if(t.includes('vaikitt')||t.includes('evening')||t.includes('vykitt')){ when='TODAY_EVENING'; delay=6*60*60*1000; }
+  else if(t.includes('salary')){ when='SALARY_DAY_ASK_DATE'; delay=24*60*60*1000; }
+  else if(t.includes('pinne')||t.includes('later')){ when='LATER_ONE_SOFT'; delay=24*60*60*1000; }
+  chat.separateReminder=when; chat.normalRemindersOff=true; chat.stopped=false; chat.cold=false; chat.pendingCold=false;
+  cancelAllReminders(phone);
+  scheduleSoftReminder(senderId, token, phone, chat, delay, when);
+  sheetLog(phone,{Reminder:'SEPARATE_ONLY: '+when, NormalReminders:'OFF'});
+  return when;
+}
+function decide(chat, text, lang){
+  const feeling = detectFeeling(text);
+  chat.feeling = feeling; chat.pendingCold = false;
+  if(chat.stopped) return {action:'STOP', reply:'', buttons:[]};
+  if(feeling==='STOP'){ chat.stopped=true; chat.separateReminder=null; chat.normalRemindersOff=true; cancelAllReminders(chat.phone); sheetLog(chat.phone,{Feeling:'STOP',Stopped_At:'STOP - Do Not Disturb',Reminder:'NONE'}); return {action:'STOP', reply:'', buttons:[]}; }
+  if(feeling==='RUDE'){ chat.normalRemindersOff=true; cancelAllReminders(chat.phone); sheetLog(chat.phone,{Feeling:'RUDE',Stopped_At:'RUDE - Paused'}); return {action:'SORRY_ONLY', reply: goldenReply(lang,'RUDE'), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']}; }
+  if(feeling==='JUST_CHECKING' || chat.mindset==='JUST_CHECKING'){ return {action:'TRUST_PATH', reply: mindsetReply('JUST_CHECKING', lang), buttons: lang==='ml'?['📚 Service Nokkaam','🔔 Pinneedu Ormmippikkoo']:['📚 Look at Service','🔔 Remind Later']}; }
+  if(['NO_BALANCE','ASK_FAMILY','NEED_TIME','EMI_FEAR','FEAR_SCAM'].indexOf(feeling)!==-1){ sheetLog(chat.phone,{Feeling:feeling,Decision:'COMFORT_PAUSE'}); return {action:'COMFORT_PAUSE', reply: goldenReply(lang, feeling), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']}; }
+  if(feeling==='WANTS_RETURN' || chat.mindset==='RUNNING'){ return {action:'TRUST_PATH', reply: mindsetReply('RUNNING', lang), buttons: lang==='ml'?['📄 Return Nokkaam','💬 Chodyam Chodikkaam']:['📄 Look at Return','💬 Ask Question']}; }
+  if(feeling==='NEEDS_HOPE' || chat.mindset==='PLANNING'){ return {action:'TRUST_PATH', reply: mindsetReply('PLANNING', lang), buttons: lang==='ml'?['▶️ Cheruthaayi Thudangaam','💬 Chodyam Chodikkaam']:['▶️ Start Small','💬 Ask Question']}; }
+  if(feeling==='READY'){ return {action:'SELL_FAST', reply: lang==='ml'?'Super 🙏 Appol otta minittil thudaraam. Adutha ore oru step mathram.': lang==='hi'?'Super 🙏 Toh ek minute me aage badhte hain. Bas ek hi next step.':'Super 🙏 Then let us continue in one minute. Only one next step.', buttons:['▶️ Thudaraam']}; }
+  return {action:'COMFORT_PAUSE', reply: goldenReply(lang,'UNKNOWN'), buttons: lang==='ml'?['👥 Teamumaayi Samsarikkam','💬 Nee Marupadi Tharoo','🔔 Pinneedu Ormmippikkoo']:['👥 Talk to Team','💬 You Answer','🔔 Remind Later']};
+}
+app.get('/', function(req,res){ res.send('Bizmapia Maya '+VERSION+' - TRUST-FIRST - BOOT OK'); });
+app.get('/health', function(req,res){ res.json({version:VERSION, status:'OK', boot: VERSION+' TRUST-FIRST - BOOT OK'}); });
+app.get('/webhook', function(req,res){ if(req.query['hub.verify_token']===VERIFY_TOKEN) return res.send(req.query['hub.challenge']); return res.sendStatus(403); });
+app.post('/webhook', async function(req,res){
+  res.sendStatus(200);
+  try{
+    const entry = req.body.entry && req.body.entry[0];
+    const change = entry && entry.changes && entry.changes[0];
+    const value = change && change.value;
+    const senderId = value && value.metadata && value.metadata.phone_number_id;
+    const msg = value && value.messages && value.messages[0];
+    if(!msg || !msg.from) return;
+    const phone = msg.from;
+    const cfg = configFor(senderId);
+    const token = cfg.token;
+    const chat = getChat(phone); chat.phone=phone;
+    chat.lastMsgAt = Date.now(); chat.pendingCold=false;
+    let text = '';
+    if(msg.type==='text') text = (msg.text && msg.text.body) || '';
+    else if(msg.type==='interactive') text = (msg.interactive && ((msg.interactive.button_reply && msg.interactive.button_reply.title) || (msg.interactive.list_reply && msg.interactive.list_reply.title))) || '';
+    else if(msg.type==='button') text = (msg.button && msg.button.text) || '';
+    else if(msg.type==='audio' || msg.type==='voice') text = '[voice note]';
+    if(msg.type==='audio' || msg.type==='voice'){ await sendTo(senderId, token, phone, chat.lang==='ml' ? 'Ningalude voice note kettuu 🙏' : 'Heard your voice note 🙏', []); }
+    if(!chat.lang){
+      if(/malayalam/i.test(text) || /മലയാളം/.test(text)) chat.lang='ml';
+      else if(/hindi/i.test(text) || /हिन्दी/.test(text)) chat.lang='hi';
+      else if(/english/i.test(text)) chat.lang='en';
+      else { await sendTo(senderId, token, phone, 'Welcome to Bizmapia 🙏\n\nPlease choose your language:\nEnglish / Hindi / Malayalam', ['English','Hindi','Malayalam']); return; }
+      await sendTo(senderId, token, phone, chat.lang==='ml' ? 'Namaskaaram 🙏 Bizmapia-yilekku swaagatham.\n\nNingal ethinu aanu vannathu?' : chat.lang==='hi' ? 'Namaste 🙏 Bizmapia me swagat hai.\n\nAap kis liye aaye hain?' : 'Welcome to Bizmapia 🙏\n\nWhat are you here for?', chat.lang==='ml'?['Business Opportunity','Use Other Services']:['Business Opportunity','Use Other Services']);
+      return;
+    }
+    const lang = chat.lang;
+    if(/running|already.*business|office|business.*und/i.test(text)) chat.mindset='RUNNING';
+    else if(/planning|start|thudang|new business/i.test(text)) chat.mindset='PLANNING';
+    else if(/just checking|just check|nokkan|check/i.test(text)) chat.mindset='JUST_CHECKING';
+    if(/pinneedu|remind later|later/i.test(text) && !/nale|naale|vaikitt|salary|tomorrow|evening/i.test(text)){
+      const q = lang==='ml' ? 'Shari 🙏 Eppol ormmippikkanam ennu ningalude vaakkil parayoo - udhaharanam: nale vaikittu, allenkil shambalam varumbol. Njan athe samayathu mathram ormmippikkaam, athu vare disturb cheyyilla.' : 'Okay 🙏 Tell me in your words when to remind - e.g. tomorrow evening, or when salary comes. I will remind only at that time, I will not disturb till then.';
+      await sendTo(senderId, token, phone, q, []);
+      sheetLog(phone,{Decision:'ASK_REMINDER_TIME'});
+      return;
+    }
+    if(/nale|naale|vaikitt|salary|tomorrow|evening/i.test(text) && chat.feeling!=='READY'){
+      const when = setSeparateReminder(senderId, token, phone, chat, text);
+      const ok = lang==='ml' ? 'Shari 🙏 ' + when + ' mathram njan ormmippikkaam. Athu vare njan disturb cheyyilla. Ningalude chat prathyegam maatti vechittundu.' : 'Okay 🙏 I will remind only at ' + when + '. I will not disturb till then. Your chat is kept separately.';
+      await sendTo(senderId, token, phone, ok, []);
+      return;
+    }
+    if(/team|teamumaayi|talk to team/i.test(text)){ chat.normalRemindersOff=true; cancelAllReminders(phone); await sendTo(senderId, token, phone, lang==='ml' ? 'Shari 🙏 Teamumaayi samsarikkam. Ningalude chat team-inu kaymaari. Oru chinnna samayam tharumo?' : 'Okay 🙏 Let us talk to the team. Your chat is handed to the team. Please give a little time?', []); sheetLog(phone,{Decision:'TEAM_HANDOVER'}); return; }
+    const d = decide(chat, text, lang);
+    if(d.action==='STOP'){ await sendTo(senderId, token, phone, lang==='ml' ? 'Shari, nirthunnu 🙏 Inime njan message ayakkilla. Ningalkku aavashyam varumbol thirichu message cheyyaam.' : 'Okay, stopping 🙏 I will not message again. Message me whenever you need.', []); return; }
+    await sendTo(senderId, token, phone, d.reply, d.buttons);
+    await sheetLog(phone,{Feeling:chat.feeling, Mindset:chat.mindset, Decision:d.action, NormalReminders: chat.normalRemindersOff?'OFF':'ON', SeparateReminder: chat.separateReminder||'NONE'});
+    if(!chat.stopped) cancelAllReminders(phone);
+    if(d.action==='SELL_FAST' && chat.step==='WELCOME'){ chat.step='COMPANY_VIDEO_SENT'; await sendTo(senderId, token, phone, lang==='ml' ? 'Aadyam Company Video onnu nokkoo 👇' : 'First, please watch the Company Video 👇', [lang==='ml'?'▶️ See Video':'▶️ See Video']); }
+  }catch(e){ log('WEBHOOK ERR', e); }
+});
+app.listen(PORT, function(){ log(VERSION+' TRUST-FIRST - BOOT OK on '+PORT); });
