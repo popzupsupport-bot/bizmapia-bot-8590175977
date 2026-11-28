@@ -639,6 +639,8 @@ function mayaIdleButtons(lang, stage){
 // Reading speed ~210 words/min (~3.5 words/sec). Clamped 60s - 300s so short msgs don't spam and long msgs get time.
 function readingWaitMs(text){ try{ const words=String(text||'').trim().split(/\s+/).filter(Boolean).length||1; const readingSec=words/3.5; const waitSec=readingSec*1.5; return Math.round(Math.min(300, Math.max(60, waitSec))*1000); }catch(e){ return 120000; } }
 async function scheduleIdleNudges(uid, lang, phoneId, firstDelayMs){
+  // V364.46 FIX: if final Idle stage already sent, NEVER start a new chain - this is the restart that made Stage 1-4 loop all day for 919447528223
+  try{ const _chk = await getState(uid); if(_chk && _chk.lead && _chk.lead.idleDone){ console.log('V364.46 SKIP idle - already done, no restart for', uid); return; } }catch(e){}
   // V348 chain: 1=reading-time, 2=+2min after 1st, 3=+2min after 2nd, 4=1H after 3rd, 5=12H after 3rd, 6=24H after 3rd. Reply cancels all.
   try{
     for(let k of [...reminders.keys()]){ if(k.startsWith(uid+':maya_idle')){ clearTimeout(reminders.get(k)); reminders.delete(k); } }
@@ -2263,6 +2265,7 @@ async function sendWithDelay(msg){
       // V364: never empty body - fallback in locked language (default Malayalam, caller should pass locked text)
       msg.text={body:'Sorry, please tap button again.'};
     }
+    const _wasIdle = !!msg._isIdle; // V364.46 FIX: capture BEFORE delete - V364.45 deleted _isIdle then checked it, so check was always false and every Idle msg rescheduled a new chain -> Stage1-4 loop forever
     delete msg._ctaList; delete msg._fromTeam; delete msg._isIdle;
     const phoneIdToUse = msg._phoneId || PHONE_ID_OLD;
     delete msg._phoneId;
@@ -2271,7 +2274,7 @@ async function sendWithDelay(msg){
     console.log(`OUT to ${msg.to} via ${phoneIdToUse} - ${msg.type}`, res.data.messages?.[0]?.id||'ok');
     try{ const _st = await getState(msg.to); if(_st){ _st.lastBotMsgAt = Date.now(); await setState(msg.to, _st); } }catch(_){}
     // V345: Every Maya message schedules Are-you-there from its own reading time, in ALL steps. Skip team msgs and skip idle reminders themselves (avoid loop).
-    try{ if(!msg._fromTeam && !msg._isIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
+    try{ if(!msg._fromTeam && !_wasIdle && msg.to){ let _t=''; if(msg.type==='text') _t=msg.text?.body||''; else if(msg.type==='interactive') _t=msg.interactive?.body?.text||''; const _isIdle=/Are you there|Yahan hain|Still interested|Abhi bhi interest|Shall I remind|Thodi der baad|One last check|Aakhri baar|ഇവിടെ ഉണ്ടോ|ഇപ്പോഴും താല്പര്യം|ഓർമ്മിപ്പിക്കട്ടെ|അവസാനമായി|തുടരട്ടെ|Are you still there|Still you not replied|Do you really want to stop|Talk later|1 hour ho gaya|12 hours|24 hours|1 hour ആയി|12 hours ആയി|24 hours ആയി|You have not replied yet|it has been 1 hour|it has been 12 hours|it has been 24 hours|one hour has passed|twelve hours have passed|twenty four hours have passed|1 hour\.\s*$/i.test(_t); if(!_isIdle && _t){ let _lang='ml'; try{ const _s2=await getState(msg.to); if(_s2 && _s2.lang) _lang=_s2.lang; }catch(e){} scheduleIdleNudges(msg.to, _lang, msg._phoneId||PHONE_NUMBER_ID, readingWaitMs(_t)); } } }catch(e){}
     return res.data;
   }catch(e){
     const err = e.response?.data?.error;
@@ -2847,10 +2850,12 @@ async function notifyAdminPayment({uid, amount, paymentId, event, lang, state, f
         state.lead = state.lead || {};
         state.lead.idleCount = (state.lead.idleCount||0)+1;
         state.lead.lastIdleStage = stage;
+        if(stage>=6){ state.lead.idleDone = true; /* V364.46: final stage - chain ends here, never restart */ }
         // If user already said NOT_INTERESTED, stop idle nudges
         if(state.lead.sentiment==='not_interested') return;
         await setState(uid, state);
         try{ const _im=interactiveButton(uid, getIdleCheckText(actualLang, stage), mayaIdleButtons(actualLang, stage), actualPhoneId); _im._isIdle=true; await sendWithDelay(_im); }catch(e){ const _tm2=textMessage(uid, getIdleCheckText(actualLang, stage), actualPhoneId); _tm2._isIdle=true; await sendWithDelay(_tm2); } // V347: idle msgs must NOT reschedule idle
+        if(stage>=6){ try{ clearIdleNudges(uid); }catch(e){} } // V364.46: final stage - clear leftover idle timers
         await saveToSheet('System_Logs',[getISTTime(), uid, actualLang, 'Idle Check Stage '+stage+' '+actualPhoneId, `No reply - Idle Stage ${stage} - Lead:${state.lead.intent||''} Sent:${state.lead.sentiment||''}`, 'Idle Check', HELP_ADMIN, 'Idle Check', ''], false);
         await logLeadPerfect(uid, state, {lastMsg:'[IDLE] No reply stage '+stage, summary:'Idle check sent stage '+stage});
         return;
@@ -3716,7 +3721,7 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
-    // ===== V364.45 FINAL - ONE BRAIN FOR ALL INPUTS - BUTTON + TYPING + VOICE + IMAGE =====
+    // ===== V364.46 FINAL - ONE BRAIN FOR ALL INPUTS - BUTTON + TYPING + VOICE + IMAGE =====
     // This is the ONLY router now. Old funnel code below is fallback only - it never runs when Brain replies.
     // Why this exists: V364.44 Brain only ran for free-text. Buttons (Talk Later, Stop, Language, kandu, etc.)
     // fell through to old funnel and pushed Video/Balance. That was the design fault. Fixed here.
@@ -3751,13 +3756,13 @@ app.post('/webhook', async(req,res)=>{
       const _isTalkLater45 = /talk later|pinne|later/i.test(_unified45) || ['AI_LATER','IDLE_LATER','BUSY_LATER','LATER','TALK_LATER','IDLE_TALK_LATER'].includes(_btnId45);
       const _isStop45 = /^(stop|nirthu|nirthuka|vend|niruthu)[\s.!]*$/i.test(_unified45.toLowerCase()) || ['STOP','IDLE_STOP','BUSY_STOP'].includes(_btnId45);
       if(_isTalkLater45 && !_isPayBtn45 && !_isDriverBtn45){
-        await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Talk Later - Paused', mayaPaused:true, phoneId: incomingPhoneId});
+        await setState(uid,{...state, lang:_lang45, lastStep:'V364.46 - Talk Later - Paused', mayaPaused:true, phoneId: incomingPhoneId});
         try{ if(typeof clearReminders==='function') clearReminders(uid); }catch(_){}
         await sendWithDelay(textMessage(uid, _lang45==='ml' ? 'Sorry 🙏 Talk later ennu paranjathu manassilaayi. Njan ippol shaliyapeduthilla.\\n\\nNingal parayumbol mathram njan thirichu varam. Dhrythi illa.' : _lang45==='hi' ? 'Sorry 🙏 Baad me baat karenge, samajh gaya. Main ab pareshan nahi karunga.\\n\\nJab aap kahenge tabhi main wapas aunga. Koi jaldi nahi.' : 'Sorry 🙏 Talk later - understood. I will not disturb you now.\\n\\nI will come back only when you say. No hurry.', incomingPhoneId));
         return;
       }
       if(_isStop45 && !_isPayBtn45){
-        await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Stop - Confirm', phoneId: incomingPhoneId});
+        await setState(uid,{...state, lang:_lang45, lastStep:'V364.46 - Stop - Confirm', phoneId: incomingPhoneId});
         await sendWithDelay(interactiveButton(uid, `Thanks for sharing your feedback 🙏\\n\\n*Do you need to stop your application, or want me to remind you after some time?*`, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
         return;
       }
@@ -3768,11 +3773,11 @@ app.post('/webhook', async(req,res)=>{
         if(_b45 && _b45.reply){
           try{ console.log('M45 UNIFIED BRAIN feeling='+(_b45.feeling||'')+' input='+_unified45.slice(0,60)+' btn='+_btnId45); }catch(_){}
           if(_b45.action==='STOP'){
-            await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Brain - Stop', phoneId: incomingPhoneId});
+            await setState(uid,{...state, lang:_lang45, lastStep:'V364.46 - Brain - Stop', phoneId: incomingPhoneId});
             await sendWithDelay(interactiveButton(uid, `Thanks for sharing your feedback 🙏\\n\\n*Do you need to stop your application, or want me to remind you after some time?*`, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
             return;
           }
-          await setState(uid,{...state, lang:_lang45, m37Pause:false, m37Feeling:_b45.feeling||'', lastStep:'V364.45 - Brain - '+(_b45.feeling||''), phoneId: incomingPhoneId, aiHistory:[...((state.aiHistory||[]).slice(-10)), {role:'user',text:_unified45.slice(0,300)}, {role:'maya',text:String(_b45.reply).slice(0,500)}]});
+          await setState(uid,{...state, lang:_lang45, m37Pause:false, m37Feeling:_b45.feeling||'', lastStep:'V364.46 - Brain - '+(_b45.feeling||''), phoneId: incomingPhoneId, aiHistory:[...((state.aiHistory||[]).slice(-10)), {role:'user',text:_unified45.slice(0,300)}, {role:'maya',text:String(_b45.reply).slice(0,500)}]});
           await sendWithDelay(textMessage(uid, _b45.reply, incomingPhoneId));
           const _bb45 = (_b45.buttons||[]).map(b=>{ const s=String(b); if(/Call Team|Team/i.test(s)) return {id:'AI_TALK', title:'Call Team'}; if(/You Answer|Marupadi/i.test(s)) return {id:'M37_YOU_ANSWER', title:'You Answer'}; if(/Remind Later|Pinneedu|Talk later/i.test(s)) return {id:'AI_LATER', title:'Talk Later'}; if(/Service/i.test(s)) return {id:'AI_SERVICES', title:'Look at Service'}; if(/Return/i.test(s)) return {id:'M37_RETURN', title:'Look at Return'}; if(/Business Opportunity/i.test(s)) return {id:'AI_BUSINESS', title:'Business Opportunity'}; return {id:'M37_CONTINUE', title: s.slice(0,20)}; });
           if(_bb45.length) await sendWithDelay(interactiveButton(uid, _lang45==='ml' ? `👇 Ini parayoo:` : `👇 Tell me now:`, _bb45, incomingPhoneId));
@@ -3781,7 +3786,7 @@ app.post('/webhook', async(req,res)=>{
         // Brain returned null -> fall through to old code (fallback, never blank)
       }
     }catch(_e45){ try{ console.log('M45 unified fail', _e45.message); }catch(_){} }
-    // ===== END V364.45 UNIFIED BRAIN - old code below is fallback only =====
+    // ===== END V364.46 UNIFIED BRAIN - old code below is fallback only =====
 
     // ===== V364.37 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
     // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
@@ -6681,7 +6686,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.45 ONE-BRAIN-ALL-INPUTS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.46 ONE-BRAIN-ALL-INPUTS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
