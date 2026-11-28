@@ -3716,6 +3716,73 @@ app.post('/webhook', async(req,res)=>{
     const incomingPhoneId = value?.metadata?.phone_number_id || PHONE_NUMBER_ID; try{ if(uid && incomingPhoneId) globalThis.__phoneIdByUid.set(String(uid), String(incomingPhoneId)); }catch(e){}
     const txt = msg.text?.body||'';
     let btnId = msg.button?.payload || msg.interactive?.button_reply?.id || msg.interactive?.list_reply?.id || '';
+    // ===== V364.45 FINAL - ONE BRAIN FOR ALL INPUTS - BUTTON + TYPING + VOICE + IMAGE =====
+    // This is the ONLY router now. Old funnel code below is fallback only - it never runs when Brain replies.
+    // Why this exists: V364.44 Brain only ran for free-text. Buttons (Talk Later, Stop, Language, kandu, etc.)
+    // fell through to old funnel and pushed Video/Balance. That was the design fault. Fixed here.
+    // Rule: EVERY input -> 1) translate button/voice/image to words, 2) Brain decides, 3) send Brain reply, 4) STOP.
+    try{
+      const _btnTitle45 = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || msg.button?.text || '';
+      const _btnId45 = String(btnId||'');
+      // --- Button ID -> words (so Brain understands buttons exactly like typing) ---
+      const _btnWords45 = {
+        'AI_LATER':'Talk later', 'IDLE_LATER':'Talk later', 'BUSY_LATER':'Talk later', 'LATER':'Talk later', 'TALK_LATER':'Talk later',
+        'AI_TALK':'Talk to team', 'TALK_TEAM':'Talk to team', 'AI_SERVICES':'Use services', 'AI_BUSINESS':'Business Opportunity',
+        'LANG_ML':'Malayalam', 'LANG_EN':'English', 'LANG_HI':'Hindi', 'ML':'Malayalam', 'EN':'English', 'HI':'Hindi',
+        'KANDU':'kandu', 'KANDILLA':'kandilla', 'SEEN':'kandu', 'NOT_SEEN':'kandilla',
+        'STOP':'Stop', 'IDLE_STOP':'Stop', 'BUSY_STOP':'Stop', 'IDLE_TALK_LATER':'Talk later'
+      };
+      let _unified45 = String(txt||'').trim();
+      if(!_unified45 && _btnTitle45) _unified45 = String(_btnTitle45);
+      if(!_unified45 && _btnWords45[_btnId45]) _unified45 = _btnWords45[_btnId45];
+      if(!_unified45 && _btnId45) _unified45 = _btnId45.replace(/_/g,' ').toLowerCase();
+      // Image / audio with no text -> ask for 1 line, do NOT restart, do NOT push step
+      if(!_unified45 && (msg.type==='image' || msg.type==='video')) _unified45 = 'I sent an image/video, please tell me in one line what it is about';
+      if(!_unified45 && msg.type==='audio') _unified45 = 'I sent a voice note';
+      if(!_unified45) _unified45 = '';
+      // Language button -> lock lang BEFORE Brain
+      if(/^LANG_ML$|^ML$/.test(_btnId45) || _unified45.toLowerCase()==='malayalam') state = {...state, lang:'ml'};
+      if(/^LANG_EN$|^EN$/.test(_btnId45) || _unified45.toLowerCase()==='english') state = {...state, lang:'en'};
+      if(/^LANG_HI$|^HI$/.test(_btnId45) || _unified45.toLowerCase()==='hindi') state = {...state, lang:'hi'};
+      const _lang45 = state.lang || (/[\u0D00-\u0D7F]/.test(_unified45) ? 'ml' : (/[\u0900-\u097F]/.test(_unified45) ? 'hi' : 'ml'));
+      const _isDriverBtn45 = _btnId45.startsWith('DRV_') || _btnId45==='RIDE_ATTACH';
+      const _isPayBtn45 = ['PAY_TOKEN','PAY_CONFIRM_CHECK','PAY_NOW_AGAIN','PAY_CONFIRM','STOP_FINAL'].includes(_btnId45);
+      // --- HARD STOPS - never fall through to funnel ---
+      const _isTalkLater45 = /talk later|pinne|later/i.test(_unified45) || ['AI_LATER','IDLE_LATER','BUSY_LATER','LATER','TALK_LATER','IDLE_TALK_LATER'].includes(_btnId45);
+      const _isStop45 = /^(stop|nirthu|nirthuka|vend|niruthu)[\s.!]*$/i.test(_unified45.toLowerCase()) || ['STOP','IDLE_STOP','BUSY_STOP'].includes(_btnId45);
+      if(_isTalkLater45 && !_isPayBtn45 && !_isDriverBtn45){
+        await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Talk Later - Paused', mayaPaused:true, phoneId: incomingPhoneId});
+        try{ if(typeof clearReminders==='function') clearReminders(uid); }catch(_){}
+        await sendWithDelay(textMessage(uid, _lang45==='ml' ? 'Sorry 🙏 Talk later ennu paranjathu manassilaayi. Njan ippol shaliyapeduthilla.\\n\\nNingal parayumbol mathram njan thirichu varam. Dhrythi illa.' : _lang45==='hi' ? 'Sorry 🙏 Baad me baat karenge, samajh gaya. Main ab pareshan nahi karunga.\\n\\nJab aap kahenge tabhi main wapas aunga. Koi jaldi nahi.' : 'Sorry 🙏 Talk later - understood. I will not disturb you now.\\n\\nI will come back only when you say. No hurry.', incomingPhoneId));
+        return;
+      }
+      if(_isStop45 && !_isPayBtn45){
+        await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Stop - Confirm', phoneId: incomingPhoneId});
+        await sendWithDelay(interactiveButton(uid, `Thanks for sharing your feedback 🙏\\n\\n*Do you need to stop your application, or want me to remind you after some time?*`, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+        return;
+      }
+      // --- BRAIN FOR ALL OTHER INPUTS (text + buttons + image/audio placeholder) ---
+      // Skip only: payment confirm buttons + driver flow buttons (they have their own verification logic)
+      if(_unified45 && !_isDriverBtn45 && !_isPayBtn45 && typeof m43_brain==='function'){
+        const _b45 = await m43_brain(_unified45, _lang45, {...state, lang:_lang45});
+        if(_b45 && _b45.reply){
+          try{ console.log('M45 UNIFIED BRAIN feeling='+(_b45.feeling||'')+' input='+_unified45.slice(0,60)+' btn='+_btnId45); }catch(_){}
+          if(_b45.action==='STOP'){
+            await setState(uid,{...state, lang:_lang45, lastStep:'V364.45 - Brain - Stop', phoneId: incomingPhoneId});
+            await sendWithDelay(interactiveButton(uid, `Thanks for sharing your feedback 🙏\\n\\n*Do you need to stop your application, or want me to remind you after some time?*`, [{id:'STOP_FINAL',title:'Stop'},{id:'STOP_LATER',title:'Yes'}], incomingPhoneId));
+            return;
+          }
+          await setState(uid,{...state, lang:_lang45, m37Pause:false, m37Feeling:_b45.feeling||'', lastStep:'V364.45 - Brain - '+(_b45.feeling||''), phoneId: incomingPhoneId, aiHistory:[...((state.aiHistory||[]).slice(-10)), {role:'user',text:_unified45.slice(0,300)}, {role:'maya',text:String(_b45.reply).slice(0,500)}]});
+          await sendWithDelay(textMessage(uid, _b45.reply, incomingPhoneId));
+          const _bb45 = (_b45.buttons||[]).map(b=>{ const s=String(b); if(/Call Team|Team/i.test(s)) return {id:'AI_TALK', title:'Call Team'}; if(/You Answer|Marupadi/i.test(s)) return {id:'M37_YOU_ANSWER', title:'You Answer'}; if(/Remind Later|Pinneedu|Talk later/i.test(s)) return {id:'AI_LATER', title:'Talk Later'}; if(/Service/i.test(s)) return {id:'AI_SERVICES', title:'Look at Service'}; if(/Return/i.test(s)) return {id:'M37_RETURN', title:'Look at Return'}; if(/Business Opportunity/i.test(s)) return {id:'AI_BUSINESS', title:'Business Opportunity'}; return {id:'M37_CONTINUE', title: s.slice(0,20)}; });
+          if(_bb45.length) await sendWithDelay(interactiveButton(uid, _lang45==='ml' ? `👇 Ini parayoo:` : `👇 Tell me now:`, _bb45, incomingPhoneId));
+          return;
+        }
+        // Brain returned null -> fall through to old code (fallback, never blank)
+      }
+    }catch(_e45){ try{ console.log('M45 unified fail', _e45.message); }catch(_){} }
+    // ===== END V364.45 UNIFIED BRAIN - old code below is fallback only =====
+
     // ===== V364.37 EDIT 2 - FREE-TEXT + BUTTON STOP = TOP PRIORITY, ALL MESSAGE FORMS =====
     // BUG (screenshot 919095216700): customer typed/tapped "Stop" after "You have not replied yet" reminder,
     // Maya ignored it and replied "Now you are on Company Video step..." + [kandu | kandilla].
@@ -6614,7 +6681,7 @@ app.post('/fire-batch1', async (req,res)=>{
   }catch(e){ console.log('fire-batch1 error', e.message); return res.status(500).json({error:e.message}); }
 });
 
-app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.44 BRAIN-NO-LANG-GATE - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
+app.listen(PORT,'0.0.0.0',async()=>{ try{ scheduleWeeklySummary(); setInterval(async()=>{ try{ await dailyBackupLog(); }catch(e){} }, 24*60*60*1000); startReminderChecker(); setTimeout(async()=>{ try{ await restoreRemindersFromRedis(); }catch(e){} try{ await restoreTeamInboxFromRedis(); }catch(e){} }, 5000); }catch(e){}  console.log(`V364.45 ONE-BRAIN-ALL-INPUTS - BOOT OK - listening on ${PORT} - IST ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`); await getSheets(); });
 
 
 // ==================== LOCKED - END OF FILE - V321 TRY-FREE-5PCT-24H - 12 TENDERS GUARANTEED AFTER PAYMENT - RAZORPAY WEBHOOK FIXED - PAY NOW PURE LANGUAGE + SHORT BUTTONS + INDIAN TIME IST
